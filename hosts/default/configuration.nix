@@ -8,12 +8,14 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ../../modules/steam.nix
       inputs.home-manager.nixosModules.default
     ];
 
   # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "/dev/nvme0n1";
+  boot.loader.grub.useOSProber = true;
 
   # Bluetooth
   hardware.bluetooth.enable = true;
@@ -53,8 +55,10 @@
   services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  # services.xserver.displayManager.gdm.enable = true;
+  # services.xserver.desktopManager.gnome.enable = true;
+  services.xserver.displayManager.sddm.enable = true;
+  services.xserver.desktopManager.plasma5.enable = true;
 
   # Configure keymap in X11
   services.xserver = {
@@ -101,7 +105,16 @@
 	    floorp
       fish
       git
+      insomnia
       gnome.seahorse
+      pigz
+      gparted
+      deluge
+      google-chrome
+      zoxide
+      obsidian
+      baobab
+      tree
     #  thunderbird
     ];
   };
@@ -130,6 +143,7 @@
 	wget
 	wget
 	vim
+  neofetch
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
