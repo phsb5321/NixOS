@@ -2,13 +2,12 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      ../../modules/steam.nix
       inputs.home-manager.nixosModules.default
     ];
 
@@ -115,9 +114,21 @@
       obsidian
       baobab
       tree
-    #  thunderbird
+      eza
     ];
   };
+
+  programs.steam.enable = true; # Enable Steam
+  programs.steam.remotePlay.openFirewall = true; # Open ports for Steam Remote Play
+  programs.steam.dedicatedServer.openFirewall = true; # Open ports for Source Dedicated Server
+
+  # Allow unfree packages necessary for Steam
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "steam"
+    "steam-original"
+    "steam-run"
+  ];
+
 
   home-manager = {
   	# also pass inputs to home-manager modules
