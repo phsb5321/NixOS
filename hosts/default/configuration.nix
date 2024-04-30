@@ -115,6 +115,7 @@
       baobab
       tree
       eza
+      mangohud
     ];
   };
 
@@ -128,6 +129,11 @@
     "steam-original"
     "steam-run"
   ];
+
+  hardware.opengl = {
+    enable = true;
+    driSupport32Bit = true; 
+  };
 
 
   home-manager = {
