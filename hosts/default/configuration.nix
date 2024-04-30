@@ -93,7 +93,6 @@
     extraGroups = [ "networkmanager" "wheel" "audio" "video" "disk" "input" "bluetooth" ];
     packages = with pkgs; [
       firefox
-      neovim
 	    kitty
 	    vscode
 	    floorp
@@ -114,6 +113,7 @@
     ];
   };
 
+  # Steam
   programs.steam.enable = true; # Enable Steam
   programs.steam.remotePlay.openFirewall = true; # Open ports for Steam Remote Play
   programs.steam.dedicatedServer.openFirewall = true; # Open ports for Source Dedicated Server
@@ -127,7 +127,7 @@
 
   hardware.opengl = {
     enable = true;
-    driSupport32Bit = true; 
+    driSupport32Bit = true;
   };
 
 
@@ -140,10 +140,6 @@
   # Enable automatic login for the user.
   services.xserver.displayManager.autoLogin.enable = true;
   services.xserver.displayManager.autoLogin.user = "notroot";
-
-  # Workaround for GNOME autologin: https://github.com/NixOS/nixpkgs/issues/103746#issuecomment-945091229
-  systemd.services."getty@tty1".enable = false;
-  systemd.services."autovt@tty1".enable = false;
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;

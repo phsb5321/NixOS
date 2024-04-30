@@ -1,6 +1,9 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 {
+  imports = [
+    inputs.nixvim.homeManagerModules.nixvim
+  ];
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = "notroot";
@@ -72,4 +75,44 @@
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
+
+  # NixVim
+  programs.nixvim = {
+    enable = true;
+
+    enableMan = true;
+
+    # Plugins
+    plugins = {
+      bufferline.enable = true;
+      lualine.enable = true;
+      fzf-lua.enable = true;
+      dashboard.enable = true;
+      nvim-tree.enable = true;
+      treesitter.enable = true;
+
+      lsp = {
+        enable = true;
+
+        servers = {
+          # javascript / typescript
+          tsserver.enable = true;
+
+          # lua
+          lua-ls.enable = true;
+
+          # rust
+          rust-analyzer.enable = true;
+        };
+      };
+    };
+
+    # Keymaps
+    keymaps = [
+      {
+        key = "<leader>n";
+        action = "<cmd>NvimTreeToggle<cr>";
+      }
+    ];
+  };
 }
