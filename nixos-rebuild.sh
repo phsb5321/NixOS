@@ -25,3 +25,9 @@ gen=$(nixos-rebuild --flake "$FLAKE_PATH" list-generations | grep current)
 
 # Commit changes with the generation as a message
 git commit -am "$gen"
+
+# Push changes to the remote repository
+git push
+
+# Return to the original directory
+popd

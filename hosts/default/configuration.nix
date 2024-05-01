@@ -45,8 +45,6 @@
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
-    shell = pkgs.fish;
-    useDefaultShell = true;
     extraGroups = [
       "networkmanager"
       "wheel"
