@@ -18,12 +18,10 @@
 
   programs.fish = {
     enable = true;
-    interactiveShellInit = ''
-      set fish_greeting # Disable greeting
-    '';
-    plugins = [
-
-    ];
+    shellAliases = {
+      vim = "nvim";
+      fishconfig = "source ~/.config/fish/config.fish";
+    };
   };
 
   # Environment Variables
