@@ -19,7 +19,8 @@
   programs.fish = {
     enable = true;
     interactiveShellInit = ''
-      zoxide init fish | source
+      # Initialize zoxide for fish
+      ${pkgs.zoxide}/bin/zoxide init fish | source
     '';
     shellAliases = {
       vim = "nvim";
