@@ -16,7 +16,7 @@
     fish
     kitty
     grc
-    exa
+    eza
   ];
 
   # Fish Shell Configuration
@@ -31,7 +31,7 @@
       fishconfig = "source ~/.config/fish/config.fish";
       textractor = "~/NixOS/user-scripts/file-text-extractor";
       nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh";
-      ls = "exa";
+      ls = "eza";
     };
     plugins = [
       { name = "tide"; src = pkgs.fishPlugins.tide.src; }
