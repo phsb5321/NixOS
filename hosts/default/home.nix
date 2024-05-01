@@ -16,6 +16,9 @@
     fish
   ];
 
+  # Set fish as the default shell
+  programs.fish.enable = true;
+
   # Dotfiles Management
   home.file = {
     # ".screenrc".source = dotfiles/screenrc;
