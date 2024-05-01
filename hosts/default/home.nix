@@ -14,7 +14,6 @@
   home.packages = with pkgs; [
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
     fish
-    fishPlugins.tide
   ];
 
   programs.fish = {
@@ -29,7 +28,10 @@
       textractor = "~/NixOS/user-scripts/file-text-extractor";
       nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh";
     };
-
+    plugins = [
+      { name = "tyde"; src = pkgs.fishPlugins.tide; }
+      { name = "grc"; src = pkgs.fishPlugins.grc.src; }
+    ];
   };
 
   # Environment Variables
