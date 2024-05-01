@@ -29,7 +29,7 @@
       nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh";
     };
     plugins = [
-      { name = "tyde"; src = pkgs.fishPlugins.tide; }
+      { name = "tide"; src = pkgs.fishPlugins.tide.src; }
       { name = "grc"; src = pkgs.fishPlugins.grc.src; }
     ];
   };
