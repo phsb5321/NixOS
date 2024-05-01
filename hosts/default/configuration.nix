@@ -93,6 +93,7 @@
 
   # Gaming and applications
   programs.fish.enable = true;
+  users.defaultUserShell = pkgs.fish;
   programs.steam.enable = true;
   programs.steam.remotePlay.openFirewall = true;
   programs.steam.dedicatedServer.openFirewall = true;
