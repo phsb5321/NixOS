@@ -16,6 +16,7 @@
     fish
   ];
 
+  # Fish Shell Configuration
   programs.fish = {
     enable = true;
     interactiveShellInit = ''
@@ -32,6 +33,18 @@
       { name = "tide"; src = pkgs.fishPlugins.tide.src; }
       { name = "grc"; src = pkgs.fishPlugins.grc.src; }
     ];
+  };
+
+  #Kitty config
+  programs.kitty = {
+    enable = true;
+    theme = "Tokyo Night";
+    font.name = "JetBrainsMono Nerd Font";
+    settings = {
+      confirm_os_window_close = -0;
+      copy_on_select = true;
+      clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
+    };
   };
 
   # Environment Variables
