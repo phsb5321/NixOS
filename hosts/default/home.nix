@@ -14,6 +14,7 @@
   home.packages = with pkgs; [
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
     fish
+    fishPlugins.tide
   ];
 
   programs.fish = {
