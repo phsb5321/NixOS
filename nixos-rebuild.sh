@@ -28,6 +28,3 @@ git commit -am "$gen"
 
 # Push changes to the remote repository
 git push
-
-# Return to the original directory
-popd
