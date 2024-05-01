@@ -74,6 +74,7 @@
       eza
       mangohud
       nixpkgs-fmt
+      go
     ];
   };
 
