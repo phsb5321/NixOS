@@ -18,12 +18,16 @@
 
   programs.fish = {
     enable = true;
+    interactiveShellInit = ''
+      zoxide init fish | source
+    '';
     shellAliases = {
       vim = "nvim";
       fishconfig = "source ~/.config/fish/config.fish";
       textractor = "~/NixOS/user-scripts/file-text-extractor";
       nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh";
     };
+
   };
 
   # Environment Variables
