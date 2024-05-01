@@ -93,8 +93,6 @@
 
   # Gaming and applications
   programs.fish.enable = true;
-  # Set the default shell to fish
-  users.users.notroot.shell = pkgs.fish;
   programs.steam.enable = true;
   programs.steam.remotePlay.openFirewall = true;
   programs.steam.dedicatedServer.openFirewall = true;
