@@ -14,6 +14,9 @@
   home.packages = with pkgs; [
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
     fish
+    kitty
+    grc
+    exa
   ];
 
   # Fish Shell Configuration
@@ -28,6 +31,7 @@
       fishconfig = "source ~/.config/fish/config.fish";
       textractor = "~/NixOS/user-scripts/file-text-extractor";
       nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh";
+      ls = "exa";
     };
     plugins = [
       { name = "tide"; src = pkgs.fishPlugins.tide.src; }
