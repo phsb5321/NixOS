@@ -26,7 +26,10 @@
 
   # Environment Variables
   home.sessionVariables = {
-    # EDITOR = "emacs";
+    EDITOR = "nvim";
+    # Shell Configuration => Fish Shell
+    SHELL = "${pkgs.fish}/bin/fish";
+
   };
 
   # Home Manager Self-Management
