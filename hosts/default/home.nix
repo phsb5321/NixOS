@@ -31,7 +31,7 @@
       fishconfig = "source ~/.config/fish/config.fish";
       textractor = "~/NixOS/user-scripts/file-text-extractor";
       nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh";
-      ls = "eza -l -icons";
+      ls = "eza -l --icons";
     };
     plugins = [
       { name = "tide"; src = pkgs.fishPlugins.tide.src; }
