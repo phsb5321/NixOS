@@ -13,6 +13,7 @@
   # Package Installation
   home.packages = with pkgs; [
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    fish
   ];
 
   # Dotfiles Management
