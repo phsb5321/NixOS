@@ -53,6 +53,7 @@
       "disk"
       "input"
       "bluetooth"
+      "docker"
     ];
     packages = with pkgs; [
       firefox
@@ -105,6 +106,7 @@
   services.pipewire.pulse.enable = true;
   hardware.opengl.enable = true;
   hardware.opengl.driSupport32Bit = true;
+  virtualisation.docker.enable = true;
 
   # Gaming and applications
   programs.fish.enable = true;
