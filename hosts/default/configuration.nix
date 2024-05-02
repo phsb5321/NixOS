@@ -108,6 +108,7 @@
   hardware.opengl.driSupport32Bit = true;
 
   # Docker
+  virtualisation.docker.enable = true;
   virtualisation.docker.rootless = {
     enable = true;
     setSocketVariable = true;
