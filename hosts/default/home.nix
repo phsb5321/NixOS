@@ -97,7 +97,6 @@
       };
       treesitter-context.enable = true;
       rainbow-delimiters.enable = true;
-      obsidian.enable = true;
       lsp = {
         enable = true;
         servers = {
