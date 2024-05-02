@@ -106,7 +106,12 @@
   services.pipewire.pulse.enable = true;
   hardware.opengl.enable = true;
   hardware.opengl.driSupport32Bit = true;
-  virtualisation.docker.enable = true;
+
+  # Docker
+  virtualisation.docker.rootless = {
+    enable = true;
+    setSocketVariable = true;
+  };
 
   # Gaming and applications
   programs.fish.enable = true;
