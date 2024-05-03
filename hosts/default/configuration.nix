@@ -77,6 +77,7 @@
       nixpkgs-fmt
       go
       appimage-run
+      zellij
     ];
   };
 
