@@ -78,7 +78,7 @@
       go
       appimage-run
       zellij
-      poetry
+      python3
     ];
   };
 
