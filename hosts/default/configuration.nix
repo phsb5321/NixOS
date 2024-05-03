@@ -78,6 +78,7 @@
       go
       appimage-run
       zellij
+      poetry
     ];
   };
 
