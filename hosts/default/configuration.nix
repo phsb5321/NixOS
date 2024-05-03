@@ -133,7 +133,11 @@
   };
 
   # System-wide packages
-  environment.systemPackages = with pkgs; [ wget vim neofetch ];
+  environment.systemPackages = with pkgs; [
+    wget
+    vim
+    neofetch
+  ];
 
   # SSH and security
   services.openssh.enable = true;
