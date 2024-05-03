@@ -56,7 +56,6 @@
       "docker"
     ];
     packages = with pkgs; [
-      firefox
       kitty
       vscode
       floorp
@@ -66,7 +65,6 @@
       gnome.seahorse
       pigz
       gparted
-      deluge
       google-chrome
       zoxide
       obsidian
@@ -76,7 +74,6 @@
       mangohud
       nixpkgs-fmt
       go
-      appimage-run
       zellij
       python3
       pipx
