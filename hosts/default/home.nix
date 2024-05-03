@@ -17,7 +17,6 @@
     kitty
     grc
     eza
-    zellij
   ];
 
   # Fish Shell Configuration
@@ -52,14 +51,6 @@
     };
   };
 
-  # Zellij Configuration
-  programs.zellij = {
-    enable = true;
-    enableFishIntegration = true;
-    settings = {
-      theme = "Tokyo Night";
-    };
-  };
 
   # Environment Variables
   home.sessionVariables = {
