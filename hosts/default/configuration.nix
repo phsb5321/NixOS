@@ -74,7 +74,6 @@
       mangohud
       nixpkgs-fmt
       go
-      zellij
       python3
       pipx
     ];
