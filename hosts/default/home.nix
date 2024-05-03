@@ -17,6 +17,7 @@
     kitty
     grc
     eza
+    zellij
   ];
 
   # Fish Shell Configuration
@@ -48,6 +49,15 @@
       confirm_os_window_close = -0;
       copy_on_select = true;
       clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
+    };
+  };
+
+  # Zellij Configuration
+  programs.zellij = {
+    enable = true;
+    enableFishIntegration = true;
+    settings = {
+      theme = "Tokyo Night";
     };
   };
 
