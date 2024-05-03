@@ -45,6 +45,7 @@
     enable = true;
     theme = "Tokyo Night";
     font.name = "JetBrainsMono Nerd Font";
+    shellIntegration.enableFishIntegration = true;
     settings = {
       confirm_os_window_close = -0;
       copy_on_select = true;
