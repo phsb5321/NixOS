@@ -79,6 +79,7 @@
       appimage-run
       zellij
       python3
+      pipx
     ];
   };
 
