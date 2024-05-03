@@ -75,6 +75,7 @@
       nixpkgs-fmt
       go
       python3
+      conda
     ];
   };
 
