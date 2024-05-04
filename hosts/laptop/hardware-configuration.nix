@@ -10,9 +10,18 @@
     ];
 
   # Bootloader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "/dev/nvme0n1";
-  boot.loader.grub.useOSProber = true;
+  # Bootloader configuration for UEFI
+  boot.loader.grub = {
+    enable = true;
+    efiSupport = true;
+    device = "nodev"; # 'nodev' is typical for UEFI systems
+    efiInstallAsRemovable = true; # Useful for ensuring EFI boot on systems that may not follow the standard NVRAM boot entries
+    copyKernels = true; # Ensure that the kernel is available to the EFI bootloader
+  };
+
+  # Ensure that the system is set up for EFI boot
+  boot.loader.efi.canTouchEfiVariables = true;
+
 
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" "rtsx_usb_sdmmc" ];
   boot.initrd.kernelModules = [ ];
