@@ -135,6 +135,7 @@
     vim
     neofetch
     gcc
+    glibc
   ];
 
   # SSH and security
