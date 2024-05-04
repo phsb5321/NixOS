@@ -9,6 +9,12 @@
       (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
+  boot.loader.grub = {
+    enable = true;
+    version = 2;
+    devices = [ "/dev/nvme0n1" ]; # Adapt this to your actual boot device
+  };
+
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" "rtsx_usb_sdmmc" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" ];
