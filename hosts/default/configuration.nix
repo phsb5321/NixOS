@@ -79,7 +79,7 @@
 
       # Python
       python3
-      python3Packages.pipx
+      poetry
     ];
   };
 
