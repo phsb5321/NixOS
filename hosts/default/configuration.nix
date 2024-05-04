@@ -139,6 +139,7 @@
     vim
     neofetch
     gcc
+    zeromq
   ];
 
   # SSH and security
