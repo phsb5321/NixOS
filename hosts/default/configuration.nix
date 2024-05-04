@@ -56,7 +56,6 @@
       "docker"
     ];
     packages = with pkgs; [
-      firefox
       kitty
       vscode
       floorp
@@ -66,7 +65,6 @@
       gnome.seahorse
       pigz
       gparted
-      deluge
       google-chrome
       zoxide
       obsidian
@@ -75,8 +73,13 @@
       eza
       mangohud
       nixpkgs-fmt
+
+      # Go
       go
-      appimage-run
+
+      # Python
+      python3
+      python3Packages.pipx
     ];
   };
 
@@ -131,7 +134,11 @@
   };
 
   # System-wide packages
-  environment.systemPackages = with pkgs; [ wget vim neofetch ];
+  environment.systemPackages = with pkgs; [
+    wget
+    vim
+    neofetch
+  ];
 
   # SSH and security
   services.openssh.enable = true;
