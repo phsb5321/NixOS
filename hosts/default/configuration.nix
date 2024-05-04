@@ -75,6 +75,7 @@
       nixpkgs-fmt
       go
       python3
+      poetry
     ];
   };
 
@@ -133,6 +134,7 @@
     wget
     vim
     neofetch
+    gcc
   ];
 
   # SSH and security
