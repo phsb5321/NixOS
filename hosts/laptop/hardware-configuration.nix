@@ -5,13 +5,14 @@
 
 {
   imports =
-    [ (modulesPath + "/installer/scan/not-detected.nix")
+    [
+      (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
   # Bootloader
   boot.loader.grub.enable = true;
   boot.loader.grub.efiSupport = true;
-  boot.loader.grub.device = "nodev"; # GRUB installs to the ESP, no device needed
+  boot.loader.grub.device = "/dev/nvme0n1"; # Ensure GRUB is installed to the NVMe disk
   boot.loader.grub.useOSProber = true;
   boot.loader.efi.efiSysMountPoint = "/boot"; # Ensure this points to the mount point of your EFI partition
 
@@ -22,12 +23,14 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/568cefeb-880e-45d7-9600-d3ac9e3669ee";
+    {
+      device = "/dev/disk/by-uuid/568cefeb-880e-45d7-9600-d3ac9e3669ee";
       fsType = "ext4";
     };
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/A6AB-4990";
+    {
+      device = "/dev/disk/by-uuid/A6AB-4990";
       fsType = "vfat";
       options = [ "fmask=0022" "dmask=0022" ];
     };
