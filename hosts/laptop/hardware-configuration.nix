@@ -5,24 +5,32 @@
 
 {
   imports =
-    [
-      (modulesPath + "/installer/scan/not-detected.nix")
+    [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  # Bootloader.
+  # Bootloader
   boot.loader.grub.enable = true;
-  boot.loader.grub.device = "/dev/nvme0n1";
+  boot.loader.grub.version = 2;
+  boot.loader.grub.efiSupport = true;
+  boot.loader.grub.device = "nodev"; # GRUB installs to the ESP, no device needed
   boot.loader.grub.useOSProber = true;
+  boot.loader.efi.efiSysMountPoint = "/boot"; # Ensure this points to the mount point of your EFI partition
 
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+
+  boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" "rtsx_usb_sdmmc" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    {
-      device = "/dev/disk/by-uuid/66429e28-aff7-4427-a85e-5f742179ae25";
+    { device = "/dev/disk/by-uuid/568cefeb-880e-45d7-9600-d3ac9e3669ee";
       fsType = "ext4";
+    };
+
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/A6AB-4990";
+      fsType = "vfat";
+      options = [ "fmask=0022" "dmask=0022" ];
     };
 
   swapDevices = [ ];
@@ -32,8 +40,8 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp8s0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp9s0.useDHCP = lib.mkDefault true;
+  # networking.interfaces.enp4s0.useDHCP = lib.mkDefault true;
+  # networking.interfaces.wlo1.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
