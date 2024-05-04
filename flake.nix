@@ -26,6 +26,15 @@
             ./hosts/default/configuration.nix
           ];
         };
+
+        laptop = nixpkgs.lib.nixosSystem {
+          system = system;
+          modules = [
+            ./hosts/laptop/configuration.nix
+            ./hosts/laptop/hardware-configuration.nix
+            inputs.home-manager.nixosModules.home-manager
+          ];
+        };
       };
     };
 }
