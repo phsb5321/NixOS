@@ -10,7 +10,6 @@
 
   # Bootloader
   boot.loader.grub.enable = true;
-  boot.loader.grub.version = 2;
   boot.loader.grub.efiSupport = true;
   boot.loader.grub.device = "nodev"; # GRUB installs to the ESP, no device needed
   boot.loader.grub.useOSProber = true;
