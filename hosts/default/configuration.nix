@@ -79,6 +79,7 @@
 
       # Python
       python3
+      poetry
     ];
   };
 
