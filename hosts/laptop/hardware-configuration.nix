@@ -9,14 +9,6 @@
       (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  # Bootloader
-  boot.loader.grub.enable = true;
-  boot.loader.grub.efiSupport = true;
-  boot.loader.grub.device = "/dev/nvme0n1"; # Ensure GRUB is installed to the NVMe disk
-  boot.loader.grub.useOSProber = true;
-  boot.loader.efi.efiSysMountPoint = "/boot"; # Ensure this points to the mount point of your EFI partition
-
-
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" "rtsx_usb_sdmmc" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" ];
