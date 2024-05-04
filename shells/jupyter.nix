@@ -17,7 +17,8 @@ mkShell {
     (python3.withPackages (ps: with ps; with python3Packages; [
       jupyter
       ipython
-
+      pydantic
+      requests
       # Uncomment the following lines to make them available in the shell.
       # pandas
       # numpy
