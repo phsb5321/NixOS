@@ -73,7 +73,11 @@
       eza
       mangohud
       nixpkgs-fmt
+
+      # Go
       go
+
+      # Python
       python3
       poetry
     ];
@@ -134,8 +138,6 @@
     wget
     vim
     neofetch
-    gcc
-    glibc
   ];
 
   # SSH and security
