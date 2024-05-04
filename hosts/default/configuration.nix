@@ -79,7 +79,7 @@
 
       # Python
       python3
-      poetry
+      python3Packages.pipx
     ];
   };
 
@@ -138,8 +138,6 @@
     wget
     vim
     neofetch
-    gcc
-    zeromq
   ];
 
   # SSH and security
