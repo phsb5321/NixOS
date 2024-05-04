@@ -9,19 +9,17 @@
       (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  # Bootloader.
-  # Bootloader configuration for UEFI
   boot.loader.grub = {
     enable = true;
     efiSupport = true;
-    device = "nodev"; # 'nodev' is typical for UEFI systems
-    efiInstallAsRemovable = true; # Useful for ensuring EFI boot on systems that may not follow the standard NVRAM boot entries
-    copyKernels = true; # Ensure that the kernel is available to the EFI bootloader
+    device = "nodev"; # Typically for UEFI systems
+    efiInstallAsRemovable = false; # Change based on your scenario
+    copyKernels = true;
   };
 
-  # Ensure that the system is set up for EFI boot
-  boot.loader.efi.canTouchEfiVariables = true;
-
+  boot.loader.efi = {
+    canTouchEfiVariables = true; # Set to false if efiInstallAsRemovable is true
+  };
 
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" "rtsx_usb_sdmmc" ];
   boot.initrd.kernelModules = [ ];
