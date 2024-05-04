@@ -138,6 +138,7 @@
     wget
     vim
     neofetch
+    gcc
   ];
 
   # SSH and security
