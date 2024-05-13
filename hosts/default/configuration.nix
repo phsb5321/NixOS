@@ -73,7 +73,6 @@
       eza
       mangohud
       nixpkgs-fmt
-      appimage-run
 
       # Go
       go
@@ -81,6 +80,9 @@
       # Python
       python3
       poetry
+
+      # Game Dev
+      godot_4
     ];
   };
 
