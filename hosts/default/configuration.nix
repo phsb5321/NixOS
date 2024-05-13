@@ -73,6 +73,7 @@
       eza
       mangohud
       nixpkgs-fmt
+      spotify
 
       # Go
       go
