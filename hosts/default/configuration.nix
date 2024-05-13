@@ -84,6 +84,9 @@
 
       # Game Dev
       godot_4
+
+      # Video Editing
+      davinci-resolve
     ];
   };
 
