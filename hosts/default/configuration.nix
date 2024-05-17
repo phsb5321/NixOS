@@ -90,6 +90,7 @@
       pigz
       mangohud
       stow
+      gcc
 
       # Note-taking and Knowledge Management
       obsidian
