@@ -51,7 +51,6 @@
     };
   };
 
-
   # Environment Variables
   home.sessionVariables = {
     EDITOR = "nvim";

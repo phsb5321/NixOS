@@ -60,7 +60,6 @@
       # Terminals and Shells
       kitty
       fish
-      alacritty
 
       # Terminal Tools
       tree
