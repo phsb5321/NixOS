@@ -92,6 +92,7 @@
       mangohud
       stow
       gcc
+      xclip
 
       # Note-taking and Knowledge Management
       obsidian
