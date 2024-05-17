@@ -56,25 +56,47 @@
       "docker"
     ];
     packages = with pkgs; [
+
+      # Terminals and Shells
       kitty
-      vscode
-      floorp
       fish
-      git
-      insomnia
-      gnome.seahorse
-      pigz
-      gparted
-      google-chrome
-      zoxide
-      obsidian
-      baobab
+
+      # Terminal Tools
       tree
       eza
-      mangohud
+      zoxide
+
+      # Editors and IDEs
+      vscode
+      neovim
+
+      # Web Browsers
+      floorp
+      google-chrome
+
+      # Development Tools
+      git
+      gnome.seahorse
       nixpkgs-fmt
+
+      # API Testing
+      insomnia
+
+      # File Management
+      gparted
+      baobab
+
+      # System Utilities
+      pigz
+      mangohud
+
+      # Note-taking and Knowledge Management
+      obsidian
+
+      # Music Streaming
       spotify
 
+      # Programming Languages
       # Go
       go
 
@@ -82,12 +104,10 @@
       python3
       poetry
 
-      # Game Dev
+      # Game Development
       godot_4
-
-      # Video Editing
-      davinci-resolve
     ];
+
   };
 
   # Ollama
