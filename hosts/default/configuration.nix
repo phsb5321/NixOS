@@ -90,9 +90,6 @@
       # System Utilities
       pigz
       mangohud
-      stow
-      gcc
-      xclip
 
       # Note-taking and Knowledge Management
       obsidian
@@ -110,6 +107,11 @@
 
       # Game Development
       godot_4
+
+      # Nvim Dependencies
+      stow
+      gcc
+      xclip
     ];
 
   };
