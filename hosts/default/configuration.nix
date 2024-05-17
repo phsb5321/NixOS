@@ -65,6 +65,7 @@
       tree
       eza
       zoxide
+      ripgrep
 
       # Editors and IDEs
       vscode
