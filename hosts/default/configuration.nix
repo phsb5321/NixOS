@@ -89,6 +89,7 @@
       # System Utilities
       pigz
       mangohud
+      stow
 
       # Note-taking and Knowledge Management
       obsidian
