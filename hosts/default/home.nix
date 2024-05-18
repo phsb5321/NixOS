@@ -30,6 +30,11 @@
       ${pkgs.zoxide}/bin/zoxide init fish | source
 
       # Initialize Zellij
+      set -gx ZELLIJ_AUTO_ATTACH true # Set ZELLIJ_AUTO_ATTACH to true
+
+      set -gx ZELLIJ_AUTO_EXIT true # Set ZELLIJ_AUTO_EXIT to true
+
+      # Set ZELLIJ_AUTO_START to fish
       eval (zellij setup --generate-auto-start fish | string collect)
 
     '';
