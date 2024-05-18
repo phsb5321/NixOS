@@ -17,6 +17,9 @@
     kitty
     grc
     eza
+
+    # Development Tools
+    nodejs_22
   ];
 
   # Fish Shell Configuration
