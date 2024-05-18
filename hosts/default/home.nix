@@ -32,10 +32,10 @@
       # Initialize Zellij
       set -gx ZELLIJ_AUTO_ATTACH false # Zellij will not attach to the current session
 
-      set -gx ZELLIJ_AUTO_EXIT true # Zellij will exit when the last pane is closed
+      set -gx ZELLIJ_AUTO_EXIT false # Zellij will not exit when the last pane is closed
 
       # Set ZELLIJ_AUTO_START to fish
-      eval (zellij setup --generate-auto-start fish | string collect)
+      #   eval (zellij setup --generate-auto-start fish | string collect)
 
     '';
     shellAliases = {
