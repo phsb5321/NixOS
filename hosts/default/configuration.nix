@@ -60,6 +60,7 @@
       # Terminals and Shells
       kitty
       fish
+      zellij
 
       # Terminal Tools
       tree
