@@ -75,6 +75,7 @@ return {
     commit = "29be0919b91fb59eca9e90690d76014233392bef"
   },
   {
-    "github/copilot.vim"
+    "github/copilot.vim",
+    lazy = false,
   }
 }
