@@ -20,10 +20,16 @@ return {
     "williamboman/mason.nvim",
     opts = {
       ensure_installed = {
+        -- Lua
         "lua-language-server",
         "stylua",
+        -- HTML & CSS
         "html-lsp",
         "css-lsp",
+        -- JS & TS
+        "typescript-language-server",
+        "js-debug-adapter",
+        "eslint-lsp",
         "prettier"
       }
     }
