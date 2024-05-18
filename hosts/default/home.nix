@@ -42,7 +42,7 @@
     ];
   };
 
-  #Kitty config
+  #Kitty Configuration
   programs.kitty = {
     enable = true;
     theme = "Tokyo Night";
@@ -51,6 +51,15 @@
     settings = {
       copy_on_select = true;
       clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
+    };
+  };
+
+  # Zellij Configuration
+  programs.zellij = {
+    enable = true;
+    settings = {
+      theme = "one-half-dark";
+      default_shell = "fish";
     };
   };
 
