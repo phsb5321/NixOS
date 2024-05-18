@@ -19,7 +19,7 @@
     eza
 
     # Development Tools
-    nodejs_22
+    nodejs_22 # Necessary for copilot nvim plugin
   ];
 
   # Fish Shell Configuration
