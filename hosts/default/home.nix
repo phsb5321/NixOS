@@ -28,6 +28,10 @@
     interactiveShellInit = ''
       # Initialize zoxide for fish
       ${pkgs.zoxide}/bin/zoxide init fish | source
+
+      # Initialize Zellij
+      eval (zellij setup --generate-auto-start fish | string collect)
+
     '';
     shellAliases = {
       vim = "nvim";
