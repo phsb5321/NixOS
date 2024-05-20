@@ -20,6 +20,9 @@
 
     # Development Tools
     nodejs_22 # Necessary for copilot nvim plugin
+
+    # Ebooks
+    calibre
   ];
 
   # Fish Shell Configuration
