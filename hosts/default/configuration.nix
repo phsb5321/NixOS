@@ -61,6 +61,7 @@
       kitty
       fish
       zellij
+      sshfs
 
       # Terminal Tools
       tree
