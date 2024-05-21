@@ -92,7 +92,6 @@
       # System Utilities
       pigz
       mangohud
-      gnome.seahorse
 
       # Note-taking and Knowledge Management
       obsidian
