@@ -30,7 +30,10 @@ return {
         "typescript-language-server",
         "js-debug-adapter",
         "eslint-lsp",
-        "prettier"
+        "prettier",
+        -- markdown
+        "markdownlint",
+        "marksman"
       }
     }
   },
@@ -42,7 +45,9 @@ return {
         "lua",
         "vimdoc",
         "html",
-        "css"
+        "css",
+        "markdown",
+        "markdown_inline"
       }
     }
   },
@@ -83,5 +88,10 @@ return {
   {
     "github/copilot.vim",
     lazy = false
+  },
+  {
+    "lukas-reineke/headlines.nvim",
+    dependencies = "nvim-treesitter/nvim-treesitter",
+    config = true -- or `opts = {}`
   }
 }

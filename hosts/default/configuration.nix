@@ -62,6 +62,7 @@
       fish
       zellij
       sshfs
+      tailscale
 
       # Terminal Tools
       tree
