@@ -63,7 +63,6 @@
       fish
       zellij
       sshfs
-      tailscale
 
       # Terminal Tools
       tree
@@ -175,6 +174,7 @@
     wget
     vim
     neofetch
+    tailscale
   ];
 
   # SSH and security
