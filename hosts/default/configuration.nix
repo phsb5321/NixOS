@@ -114,6 +114,9 @@
       stow
       gcc
       xclip
+
+      # Learning
+      anki
     ];
 
   };

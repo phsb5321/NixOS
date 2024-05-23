@@ -22,7 +22,6 @@ return {
       ensure_installed = {
         -- Lua
         "lua-language-server",
-        "stylua",
         -- HTML & CSS
         "html-lsp",
         "css-lsp",
