@@ -88,6 +88,7 @@
       # File Management
       gparted
       baobab
+      syncthing
 
       # System Utilities
       pigz
