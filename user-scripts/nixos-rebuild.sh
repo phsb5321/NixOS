@@ -1,9 +1,22 @@
 #!/usr/bin/env bash
 set -e
 
+# Check if exactly one parameter is passed
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 {laptop|default}"
+  exit 1
+fi
+
+# Set the flake name based on the parameter
+FLAKE_NAME=$1
+if [ "$FLAKE_NAME" != "laptop" ] && [ "$FLAKE_NAME" != "default" ]; then
+  echo "Invalid parameter. Use 'laptop' or 'default'."
+  exit 1
+fi
+
 # Configuration
-FLAKE_PATH=~/NixOS/#default   # Path to the Nix Flake
-LOG_FILE=nixos-switch.log     # Log file name for NixOS rebuild output
+FLAKE_PATH=~/NixOS/#"$FLAKE_NAME" # Path to the Nix Flake
+LOG_FILE=nixos-switch.log         # Log file name for NixOS rebuild output
 
 # Navigate to the directory containing the Flake
 cd "$(dirname "$FLAKE_PATH")"
