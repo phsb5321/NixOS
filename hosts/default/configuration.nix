@@ -76,7 +76,6 @@
       # Web Browsers
       floorp
       google-chrome
-      firefox
 
       # Development Tools
       git
