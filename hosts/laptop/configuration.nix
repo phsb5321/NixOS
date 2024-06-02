@@ -56,27 +56,67 @@
       "docker"
     ];
     packages = with pkgs; [
-      firefox
+      # Terminals and Shells
       kitty
-      vscode
-      floorp
       fish
-      git
-      insomnia
-      gnome.seahorse
-      pigz
-      gparted
-      deluge
-      google-chrome
-      zoxide
-      obsidian
-      baobab
+      zellij
+      sshfs
+
+      # Terminal Tools
       tree
       eza
-      mangohud
+      zoxide
+      ripgrep
+
+      # Editors and IDEs
+      vscode
+      neovim
+
+      # Web Browsers
+      floorp
+      google-chrome
+
+      # Development Tools
+      git
+      gnome.seahorse
       nixpkgs-fmt
+
+      # API Testing
+      insomnia
+
+      # File Management
+      gparted
+      baobab
+      syncthing
+
+      # System Utilities
+      pigz
+      mangohud
+
+      # Note-taking and Knowledge Management
+      obsidian
+
+      # Music Streaming
+      spotify
+
+      # Programming Languages
+      # Go
       go
-      appimage-run
+
+      # Python
+      python3
+      poetry
+
+      # Game Development
+      godot_4
+
+      # Nvim Dependencies
+      stow
+      gcc
+      xclip
+
+      # Learning
+      anki
     ];
   };
 
