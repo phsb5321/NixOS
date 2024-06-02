@@ -97,6 +97,7 @@
       gparted
       baobab
       syncthing
+      vlc
 
       # System Utilities
       pigz
