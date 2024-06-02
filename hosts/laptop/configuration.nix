@@ -124,8 +124,6 @@
       # Learning
       anki
 
-      # Gaming
-      heroic-unwrapped
     ];
   };
 
