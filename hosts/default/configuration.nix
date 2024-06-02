@@ -65,7 +65,6 @@
       "docker"
     ];
     packages = with pkgs; [
-
       # Terminals and Shells
       kitty
       fish
@@ -128,7 +127,6 @@
       # Learning
       anki
     ];
-
   };
 
   # Ollama
