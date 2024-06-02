@@ -17,6 +17,12 @@
     kitty
     grc
     eza
+
+    # Development Tools
+    nodejs_22 # Necessary for copilot nvim plugin
+
+    # Ebooks
+    calibre
   ];
 
   # Fish Shell Configuration
@@ -25,12 +31,21 @@
     interactiveShellInit = ''
       # Initialize zoxide for fish
       ${pkgs.zoxide}/bin/zoxide init fish | source
+
+      # Initialize Zellij
+      set -gx ZELLIJ_AUTO_ATTACH false # Zellij will not attach to the current session
+
+      set -gx ZELLIJ_AUTO_EXIT false # Zellij will not exit when the last pane is closed
+
+      # Set ZELLIJ_AUTO_START to fish
+      #   eval (zellij setup --generate-auto-start fish | string collect)
+
     '';
     shellAliases = {
       vim = "nvim";
       fishconfig = "source ~/.config/fish/config.fish";
       textractor = "~/NixOS/user-scripts/file-text-extractor";
-      nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh";
+      nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh laptop"; # Laptop specific
       ls = "eza -l --icons";
     };
     plugins = [
@@ -39,11 +54,12 @@
     ];
   };
 
-  #Kitty config
+  #Kitty Configuration
   programs.kitty = {
     enable = true;
     theme = "Tokyo Night";
     font.name = "JetBrainsMono Nerd Font";
+    font.size = 18;
     shellIntegration.enableFishIntegration = true;
     settings = {
       copy_on_select = true;
@@ -51,6 +67,14 @@
     };
   };
 
+  # Zellij Configuration
+  programs.zellij = {
+    enable = true;
+    settings = {
+      theme = "one-half-dark";
+      default_shell = "fish";
+    };
+  };
 
   # Environment Variables
   home.sessionVariables = {
@@ -71,4 +95,5 @@
 
   # Home Manager Self-Management
   programs.home-manager.enable = true;
+
 }

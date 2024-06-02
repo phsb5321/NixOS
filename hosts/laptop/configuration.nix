@@ -1,3 +1,4 @@
+# /etc/nixos/configuration.nix
 { config, pkgs, lib, inputs, ... }:
 
 {
@@ -5,6 +6,11 @@
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
   ];
+
+  # Bootloader configuration for EFI
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.efi.efiSysMountPoint = "/boot/efi";
 
   # Set system options
   networking.hostName = "nixos"; # Define your hostname
@@ -61,9 +67,7 @@
       vscode
       floorp
       fish
-      git
       insomnia
-      gnome.seahorse
       pigz
       gparted
       deluge
@@ -74,25 +78,16 @@
       tree
       eza
       mangohud
-      nixpkgs-fmt
       go
       appimage-run
+
+      # Development Tools
+      git
+      gnome.seahorse
+      nixpkgs-fmt
+
     ];
   };
-
-  # # Ollama
-  # services.ollama = {
-  #   #package = pkgs.unstable.ollama; # Uncomment if you want to use the unstable channel, see https://fictionbecomesfact.com/nixos-unstable-channel
-  #   enable = true;
-  #   acceleration = "cuda"; # Or "rocm"
-  #   #environmentVariables = { # I haven't been able to get this to work myself yet, but I'm sharing it for the sake of completeness
-  #   # HOME = "/home/ollama";
-  #   # OLLAMA_MODELS = "/home/ollama/models";
-  #   # OLLAMA_HOST = "0.0.0.0:11434"; # Make Ollama accesible outside of localhost
-  #   # OLLAMA_ORIGINS = "http://localhost:8080,http://192.168.0.10:*"; # Allow access, otherwise Ollama returns 403 forbidden due to CORS
-  #   #};
-  # };
-
 
   # Enable hardware and system services
   hardware.bluetooth.enable = true;
