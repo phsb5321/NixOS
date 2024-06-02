@@ -123,6 +123,7 @@
 
       # Learning
       anki
+
     ];
   };
 
@@ -177,7 +178,13 @@
   };
 
   # System-wide packages
-  environment.systemPackages = with pkgs; [ wget vim neofetch ];
+  environment.systemPackages = with pkgs; [
+    wget
+    vim
+    neofetch
+    cmatrix
+    htop
+  ];
 
   # SSH and security
   services.openssh.enable = true;
