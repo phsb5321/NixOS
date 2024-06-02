@@ -19,6 +19,15 @@
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
+  networking.nameservers = [
+    "8.8.8.8" # Google's public DNS
+    "8.8.4.4" # Google's public DNS
+    "1.1.1.1" # Cloudflare's public DNS
+    "1.0.0.1" # Cloudflare's public DNS
+    "208.67.222.222" # OpenDNS
+    "208.67.220.220" # OpenDNS
+  ];
+
   # Locale settings for different aspects
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
