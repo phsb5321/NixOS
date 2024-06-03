@@ -116,6 +116,9 @@
       # Game Development
       godot_4
 
+      # Gaming
+      lutris-unwrapped
+
       # Nvim Dependencies
       stow
       gcc
