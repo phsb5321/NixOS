@@ -18,6 +18,7 @@
   networking.networkmanager.enable = true;
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+  networking.networkmanager.dns = "none";
 
   networking.nameservers = [
     "8.8.8.8" # Google's public DNS
@@ -26,6 +27,10 @@
     "1.0.0.1" # Cloudflare's public DNS
     "208.67.222.222" # OpenDNS
     "208.67.220.220" # OpenDNS
+    "9.9.9.9" # Quad9 DNS
+    "149.112.112.112" # Quad9 DNS
+    "64.6.64.6" # Verisign Public DNS
+    "64.6.65.6" # Verisign Public DNS
   ];
 
   # Locale settings for different aspects
