@@ -16,10 +16,10 @@
 
   # Networking
   networking.networkmanager.enable = true;
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
   networking.networkmanager.dns = "none";
+  networking.useDHCP = lib.mkDefault false;
 
+  # Specify DNS servers
   networking.nameservers = [
     "8.8.8.8" # Google's public DNS
     "8.8.4.4" # Google's public DNS
@@ -32,6 +32,8 @@
     "64.6.64.6" # Verisign Public DNS
     "64.6.65.6" # Verisign Public DNS
   ];
+
+  networking.resolvconf.enable = false; # Disable resolvconf
 
   # Locale settings for different aspects
   i18n.extraLocaleSettings = {
