@@ -178,7 +178,11 @@
   programs.steam.enable = true;
   programs.steam.remotePlay.openFirewall = true;
   programs.steam.dedicatedServer.openFirewall = true;
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "steam" "steam-original" "steam-run" ];
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "steam"
+    "steam-original"
+    "steam-run"
+  ];
   nixpkgs.config.allowUnfree = true;
 
   # Home Manager integration
@@ -192,6 +196,8 @@
     wget
     vim
     neofetch
+    cmatrix
+    htop
   ];
 
   # SSH and security
