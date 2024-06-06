@@ -82,6 +82,13 @@
     SHELL = "${pkgs.fish}/bin/fish"; # Environment shell set to Fish
   };
 
+  dconf.settings = {
+    "org/virt-manager/virt-manager/connections" = {
+      autoconnect = [ "qemu:///system" ];
+      uris = [ "qemu:///system" ];
+    };
+  };
+
   # Dotfiles Management
   home.file = {
     # ".screenrc".source = dotfiles/screenrc;
@@ -90,8 +97,6 @@
     #   org.gradle.daemon.idletimeout=3600000
     # '';
   };
-
-
 
   # Home Manager Self-Management
   programs.home-manager.enable = true;
