@@ -134,6 +134,9 @@
 
       # Learning
       anki
+
+      # Virtualisation
+      virt-manager
     ];
   };
 
@@ -165,12 +168,17 @@
   hardware.opengl.enable = true;
   hardware.opengl.driSupport32Bit = true;
 
-  # Docker
+  # Virtualisation
+
+  ## Docker
   virtualisation.docker.enable = true;
   virtualisation.docker.rootless = {
     enable = true;
     setSocketVariable = true;
   };
+
+  # QEMU
+  virtualisation.libvirtd.enable = true;
 
   # Gaming and applications
   programs.fish.enable = true;
@@ -204,6 +212,6 @@
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "no";
 
-  # Tailscale VPN 
+  # Tailscale VPN
   services.tailscale.enable = true;
 }
