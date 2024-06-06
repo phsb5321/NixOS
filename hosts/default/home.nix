@@ -27,6 +27,7 @@
     # Virtualization
     virt-manager
     qemu
+    libvirt
   ];
 
   # Fish Shell Configuration
