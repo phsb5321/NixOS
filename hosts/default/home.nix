@@ -23,6 +23,10 @@
 
     # Ebooks
     calibre
+
+    # Virtualization
+    virt-manager
+    qemu
   ];
 
   # Fish Shell Configuration
