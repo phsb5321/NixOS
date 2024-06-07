@@ -99,6 +99,7 @@
 
       # API Testing
       insomnia
+      postman
 
       # File Management
       gparted
