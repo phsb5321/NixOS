@@ -114,7 +114,6 @@
 
       # Music Streaming
       spotify
-      puddletag
 
       # Programming Languages
       # Go
