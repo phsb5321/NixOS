@@ -214,5 +214,5 @@
   services.openssh.settings.PermitRootLogin = "no";
 
   # Tailscale VPN
-  services.tailscale.enable = true;
+  services.tailscale.enable = false;
 }

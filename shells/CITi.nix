@@ -5,6 +5,7 @@ pkgs.mkShell {
     pkgs.bun
     pkgs.corepack_22
     pkgs.nodejs_22
+    pkgs.openssl
   ];
 
   shellHook = ''
