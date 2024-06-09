@@ -33,8 +33,6 @@
     "64.6.65.6" # Verisign Public DNS
   ];
 
-  networking.resolvconf.enable = false; # Disable resolvconf
-
   # Locale settings for different aspects
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
