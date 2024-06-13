@@ -23,6 +23,7 @@
 
     # Ebooks
     calibre
+    librum
   ];
 
   # Fish Shell Configuration
