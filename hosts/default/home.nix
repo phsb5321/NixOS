@@ -24,6 +24,9 @@
     # Ebooks
     calibre
     librum
+
+    # Editors
+    zed-editor
   ];
 
   # Fish Shell Configuration
