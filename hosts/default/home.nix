@@ -25,6 +25,9 @@
     calibre
     librum
 
+    # Image Processing
+    gimp
+
   ];
 
   # Fish Shell Configuration
