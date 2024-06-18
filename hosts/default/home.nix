@@ -25,8 +25,6 @@
     calibre
     librum
 
-    # Image Processing
-    gimp
 
   ];
 
