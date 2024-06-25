@@ -25,7 +25,8 @@
     calibre
     librum
 
-
+    # Productivity
+    activitywatch
   ];
 
   # Fish Shell Configuration
