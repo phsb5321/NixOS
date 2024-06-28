@@ -20,6 +20,7 @@
 
     # Development Tools
     nodejs_22 # Necessary for copilot nvim plugin
+    awscli2
 
     # Ebooks
     calibre
