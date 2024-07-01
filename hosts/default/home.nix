@@ -28,6 +28,9 @@
 
     # Productivity
     activitywatch
+
+    # Learning
+    anki
   ];
 
   # Fish Shell Configuration
