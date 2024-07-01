@@ -131,9 +131,6 @@
       gcc
       xclip
 
-      # Learning
-      anki
-
       # Virtualisation
       virt-manager
     ];
