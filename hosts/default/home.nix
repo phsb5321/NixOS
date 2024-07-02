@@ -17,6 +17,7 @@
     kitty
     grc
     eza
+    ffmpeg
 
     # Development Tools
     nodejs_22 # Necessary for copilot nvim plugin
