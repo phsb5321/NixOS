@@ -115,17 +115,6 @@
       # Music Streaming
       spotify
 
-      # Programming Languages
-      # Go
-      go
-
-      # Python
-      python3
-      poetry
-
-      # Game Development
-      godot_4
-
       # Nvim Dependencies
       stow
       gcc
