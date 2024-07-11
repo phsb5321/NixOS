@@ -32,6 +32,9 @@
 
     # Learning
     anki
+
+    # Programming
+    gh
   ];
 
   # Fish Shell Configuration
