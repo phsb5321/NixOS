@@ -35,6 +35,7 @@
 
     # Programming
     gh
+    zed-editor
   ];
 
   # Fish Shell Configuration
