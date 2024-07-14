@@ -92,7 +92,7 @@
 
       # Development Tools
       git
-      gnome.seahorse
+      seahorse
       nixpkgs-fmt
 
       # API Testing
@@ -145,8 +145,8 @@
   services.pipewire.alsa.enable = true;
   services.pipewire.alsa.support32Bit = true;
   services.pipewire.pulse.enable = true;
-  hardware.opengl.enable = true;
-  hardware.opengl.driSupport32Bit = true;
+  hardware.graphics.enable = true;
+  hardware.graphics.enable32Bit = true;
 
   # Virtualisation
 
@@ -176,6 +176,7 @@
   # Home Manager integration
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
+    backupFileExtension = "bkp";
     users = { "notroot" = import ./home.nix; };
   };
 
