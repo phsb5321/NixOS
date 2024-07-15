@@ -1,41 +1,43 @@
 { config, pkgs, inputs, ... }:
 
 {
+  # Import External Modules
   imports = [
     inputs.nixvim.homeManagerModules.nixvim
   ];
 
-  # User and Home Directory Configuration
-  home.username = "notroot";
-  home.homeDirectory = "/home/notroot";
-  home.stateVersion = "23.11"; # Compatible Home Manager release version
-
-  # Package Installation
-  home.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
-    fish
-    kitty
-    grc
-    eza
-    ffmpeg
-
-    # Development Tools
-    nodejs_22 # Necessary for copilot nvim plugin
-    awscli2
-
-    # Ebooks
-    calibre
-    librum
-
-    # Productivity
-    activitywatch
-
-    # Learning
-    anki
-
-    # Programming
-    gh
-  ];
+  # User Configuration
+  home = {
+    username = "notroot";
+    homeDirectory = "/home/notroot";
+    stateVersion = "23.11"; # Ensure compatibility with Home Manager release
+    packages = with pkgs; [
+      (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+      fish
+      kitty
+      grc
+      eza
+      ffmpeg
+      nodejs_22 # For copilot nvim plugin
+      awscli2
+      calibre
+      librum
+      activitywatch
+      anki
+      gh
+    ];
+    sessionVariables = {
+      EDITOR = "nvim";
+      SHELL = "${pkgs.fish}/bin/fish"; # Use Fish as default shell
+    };
+    file = {
+      # ".screenrc".source = dotfiles/screenrc;
+      # ".gradle/gradle.properties".text = '''
+      #   org.gradle.console=verbose
+      #   org.gradle.daemon.idletimeout=3600000
+      # ''';
+    };
+  };
 
   # Fish Shell Configuration
   programs.fish = {
@@ -44,14 +46,12 @@
       # Initialize zoxide for fish
       ${pkgs.zoxide}/bin/zoxide init fish | source
 
-      # Initialize Zellij
-      set -gx ZELLIJ_AUTO_ATTACH false # Zellij will not attach to the current session
+      # Zellij Settings
+      set -gx ZELLIJ_AUTO_ATTACH false
+      set -gx ZELLIJ_AUTO_EXIT false
 
-      set -gx ZELLIJ_AUTO_EXIT false # Zellij will not exit when the last pane is closed
-
-      # Set ZELLIJ_AUTO_START to fish
-      #   eval (zellij setup --generate-auto-start fish | string collect)
-
+      # Uncomment to generate auto-start
+      # eval (zellij setup --generate-auto-start fish | string collect)
     '';
     shellAliases = {
       vim = "nvim";
@@ -66,12 +66,14 @@
     ];
   };
 
-  #Kitty Configuration
+  # Kitty Terminal Configuration
   programs.kitty = {
     enable = true;
     theme = "Tokyo Night";
-    font.name = "JetBrainsMono Nerd Font";
-    font.size = 18;
+    font = {
+      name = "JetBrainsMono Nerd Font";
+      size = 18;
+    };
     shellIntegration.enableFishIntegration = true;
     settings = {
       copy_on_select = true;
@@ -79,7 +81,7 @@
     };
   };
 
-  # Zellij Configuration
+  # Zellij Terminal Multiplexer Configuration
   programs.zellij = {
     enable = true;
     settings = {
@@ -88,12 +90,7 @@
     };
   };
 
-  # Environment Variables
-  home.sessionVariables = {
-    EDITOR = "nvim";
-    SHELL = "${pkgs.fish}/bin/fish"; # Environment shell set to Fish
-  };
-
+  # DConf Settings (specific to GNOME)
   dconf.settings = {
     "org/virt-manager/virt-manager/connections" = {
       autoconnect = [ "qemu:///system" ];
@@ -101,16 +98,6 @@
     };
   };
 
-  # Dotfiles Management
-  home.file = {
-    # ".screenrc".source = dotfiles/screenrc;
-    # ".gradle/gradle.properties".text = ''
-    #   org.gradle.console=verbose
-    #   org.gradle.daemon.idletimeout=3600000
-    # '';
-  };
-
   # Home Manager Self-Management
   programs.home-manager.enable = true;
-
 }
