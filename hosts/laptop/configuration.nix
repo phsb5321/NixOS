@@ -219,4 +219,7 @@
   xdg.portal.enable = true;
   xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 
+  # Tailscale VPN 
+  services.tailscale.enable = true;
+
 }
