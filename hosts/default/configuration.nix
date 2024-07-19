@@ -16,10 +16,10 @@
 
   # Networking
   networking.networkmanager.enable = true;
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
   networking.networkmanager.dns = "none";
+  networking.useDHCP = lib.mkDefault false;
 
+  # Specify DNS servers
   networking.nameservers = [
     "8.8.8.8" # Google's public DNS
     "8.8.4.4" # Google's public DNS
@@ -92,11 +92,12 @@
 
       # Development Tools
       git
-      gnome.seahorse
+      seahorse
       nixpkgs-fmt
 
       # API Testing
       insomnia
+      postman
 
       # File Management
       gparted
@@ -114,40 +115,24 @@
       # Music Streaming
       spotify
 
-      # Programming Languages
-      # Go
-      go
-
-      # Python
-      python3
-      poetry
-
-      # Game Development
-      godot_4
-
       # Nvim Dependencies
       stow
       gcc
       xclip
 
-      # Learning
-      anki
+      # Virtualisation
+      virt-manager
     ];
   };
 
   # Ollama
   services.ollama = {
-    #package = pkgs.unstable.ollama; # Uncomment if you want to use the unstable channel, see https://fictionbecomesfact.com/nixos-unstable-channel
     enable = true;
-    acceleration = "rocm"; # Or "rocm"
-    #environmentVariables = { # I haven't been able to get this to work myself yet, but I'm sharing it for the sake of completeness
-    # HOME = "/home/ollama";
-    # OLLAMA_MODELS = "/home/ollama/models";
-    # OLLAMA_HOST = "0.0.0.0:11434"; # Make Ollama accesible outside of localhost
-    # OLLAMA_ORIGINS = "http://localhost:8080,http://192.168.0.10:*"; # Allow access, otherwise Ollama returns 403 forbidden due to CORS
-    #};
+    acceleration = "rocm";
+    environmentVariables = {
+      HSA_OVERRIDE_GFX_VERSION = "10.1.0";
+    };
   };
-
 
   # Enable hardware and system services
   hardware.bluetooth.enable = true;
@@ -160,15 +145,20 @@
   services.pipewire.alsa.enable = true;
   services.pipewire.alsa.support32Bit = true;
   services.pipewire.pulse.enable = true;
-  hardware.opengl.enable = true;
-  hardware.opengl.driSupport32Bit = true;
+  hardware.graphics.enable = true;
+  hardware.graphics.enable32Bit = true;
 
-  # Docker
+  # Virtualisation
+
+  ## Docker
   virtualisation.docker.enable = true;
   virtualisation.docker.rootless = {
     enable = true;
     setSocketVariable = true;
   };
+
+  # QEMU
+  virtualisation.libvirtd.enable = true;
 
   # Gaming and applications
   programs.fish.enable = true;
@@ -176,12 +166,17 @@
   programs.steam.enable = true;
   programs.steam.remotePlay.openFirewall = true;
   programs.steam.dedicatedServer.openFirewall = true;
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "steam" "steam-original" "steam-run" ];
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "steam"
+    "steam-original"
+    "steam-run"
+  ];
   nixpkgs.config.allowUnfree = true;
 
   # Home Manager integration
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
+    backupFileExtension = "bkp";
     users = { "notroot" = import ./home.nix; };
   };
 
@@ -190,12 +185,14 @@
     wget
     vim
     neofetch
+    cmatrix
+    htop
   ];
 
   # SSH and security
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "no";
 
-  # Tailscale VPN 
-  services.tailscale.enable = true;
+  # Tailscale VPN
+  services.tailscale.enable = false;
 }
