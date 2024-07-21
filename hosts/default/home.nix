@@ -25,6 +25,7 @@
       activitywatch
       anki
       gh
+      brave
     ];
     sessionVariables = {
       EDITOR = "nvim";
