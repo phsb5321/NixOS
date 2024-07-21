@@ -22,9 +22,22 @@
 
   # Networking
   networking.networkmanager.enable = true;
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+  networking.networkmanager.dns = "none";
+  networking.useDHCP = lib.mkDefault false;
 
+  # Specify DNS servers
+  networking.nameservers = [
+    "8.8.8.8" # Google's public DNS
+    "8.8.4.4" # Google's public DNS
+    "1.1.1.1" # Cloudflare's public DNS
+    "1.0.0.1" # Cloudflare's public DNS
+    "208.67.222.222" # OpenDNS
+    "208.67.220.220" # OpenDNS
+    "9.9.9.9" # Quad9 DNS
+    "149.112.112.112" # Quad9 DNS
+    "64.6.64.6" # Verisign Public DNS
+    "64.6.65.6" # Verisign Public DNS
+  ];
   # Locale settings for different aspects
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
@@ -84,7 +97,7 @@
 
       # Development Tools
       git
-      gnome.seahorse
+      seahorse
       nixpkgs-fmt
 
       # API Testing
@@ -192,10 +205,9 @@
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "no";
 
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
+    enable32Bit = true;
   };
 
   # nvidia configuration
@@ -218,8 +230,5 @@
 
   xdg.portal.enable = true;
   xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-
-  # Tailscale VPN 
-  services.tailscale.enable = true;
 
 }
