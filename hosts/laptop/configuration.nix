@@ -22,9 +22,22 @@
 
   # Networking
   networking.networkmanager.enable = true;
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+  networking.networkmanager.dns = "none";
+  networking.useDHCP = lib.mkDefault false;
 
+  # Specify DNS servers
+  networking.nameservers = [
+    "8.8.8.8" # Google's public DNS
+    "8.8.4.4" # Google's public DNS
+    "1.1.1.1" # Cloudflare's public DNS
+    "1.0.0.1" # Cloudflare's public DNS
+    "208.67.222.222" # OpenDNS
+    "208.67.220.220" # OpenDNS
+    "9.9.9.9" # Quad9 DNS
+    "149.112.112.112" # Quad9 DNS
+    "64.6.64.6" # Verisign Public DNS
+    "64.6.65.6" # Verisign Public DNS
+  ];
   # Locale settings for different aspects
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
@@ -84,7 +97,7 @@
 
       # Development Tools
       git
-      gnome.seahorse
+      seahorse
       nixpkgs-fmt
 
       # API Testing
@@ -155,8 +168,6 @@
   services.pipewire.alsa.enable = true;
   services.pipewire.alsa.support32Bit = true;
   services.pipewire.pulse.enable = true;
-  hardware.opengl.enable = true;
-  hardware.opengl.driSupport32Bit = true;
 
   # Docker
   virtualisation.docker.enable = true;
@@ -168,10 +179,11 @@
   # Gaming and applications
   programs.fish.enable = true;
   users.defaultUserShell = pkgs.fish;
-  programs.steam.enable = true;
-  programs.steam.remotePlay.openFirewall = true;
-  programs.steam.dedicatedServer.openFirewall = true;
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "steam" "steam-original" "steam-run" ];
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "steam"
+    "steam-original"
+    "steam-run"
+  ];
   nixpkgs.config.allowUnfree = true;
 
   # Home Manager integration
@@ -192,4 +204,31 @@
   # SSH and security
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "no";
+
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
+
+  # nvidia configuration
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = false;
+    powerManagement.finegrained = false;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  # Steam
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+    gamescopeSession.enable = true;
+  };
+
+  xdg.portal.enable = true;
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+
 }
