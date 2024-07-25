@@ -26,6 +26,7 @@
       anki
       gh
       brave
+      yazi-unwrapped
     ];
     sessionVariables = {
       EDITOR = "nvim";
