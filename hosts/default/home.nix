@@ -27,6 +27,7 @@
       gh
       brave
       yazi-unwrapped
+      texlive.combined.scheme-full
     ];
     sessionVariables = {
       EDITOR = "nvim";
