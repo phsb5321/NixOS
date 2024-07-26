@@ -28,6 +28,7 @@
       brave
       yazi-unwrapped
       texlive.combined.scheme-full
+      dbeaver-bin
     ];
     sessionVariables = {
       EDITOR = "nvim";
