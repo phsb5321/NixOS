@@ -93,7 +93,7 @@
     enable = true;
     settings = {
       theme = "one-half-dark";
-      default_shell = "kitty"; # Use Kitty within Zellij
+      default_shell = "fish";
     };
   };
 
