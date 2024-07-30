@@ -30,6 +30,7 @@
       texlive.combined.scheme-full
       dbeaver-bin
       d2 # D2 is a Diagram as Code tool
+      zed-editor
     ];
     sessionVariables = {
       EDITOR = "nvim";
