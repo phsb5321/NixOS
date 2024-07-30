@@ -84,6 +84,7 @@
     settings = {
       copy_on_select = true;
       clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
+      enable_ligatures = true;
     };
   };
 
