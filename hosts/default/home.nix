@@ -77,7 +77,7 @@
     enable = true;
     theme = "Tokyo Night";
     font = {
-      name = "JetBrainsMono Nerd Font";
+      name = "JetBrainsMono";
       size = 18;
     };
     shellIntegration.enableFishIntegration = true;
