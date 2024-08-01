@@ -125,15 +125,6 @@
     ];
   };
 
-  # Ollama
-  services.ollama = {
-    enable = true;
-    acceleration = "rocm";
-    environmentVariables = {
-      HSA_OVERRIDE_GFX_VERSION = "10.1.0";
-    };
-  };
-
   # Enable hardware and system services
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
