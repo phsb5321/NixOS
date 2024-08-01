@@ -18,7 +18,6 @@
       grc
       eza
       ffmpeg
-      nodejs_22 # For copilot nvim plugin
       awscli2
       calibre
       activitywatch
