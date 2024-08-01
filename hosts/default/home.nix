@@ -21,7 +21,6 @@
       nodejs_22 # For copilot nvim plugin
       awscli2
       calibre
-      librum
       activitywatch
       anki
       gh
