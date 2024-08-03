@@ -11,7 +11,7 @@
   time.timeZone = "America/Recife";
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "br-abnt2";
-  system.stateVersion = "23.11";
+  system.stateVersion = "23.11"; # Use the same version as Home Manager
 
   # Nix settings
   nix = {
@@ -88,7 +88,16 @@
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
-    extraGroups = [ "networkmanager" "wheel" "audio" "video" "disk" "input" "bluetooth" "docker" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "audio"
+      "video"
+      "disk"
+      "input"
+      "bluetooth"
+      "docker"
+    ];
     packages = with pkgs; [
       # Terminals and Shells
       kitty
@@ -143,7 +152,6 @@
       # Virtualisation
       virt-manager
 
-      firefox-unwrapped
     ];
   };
 
