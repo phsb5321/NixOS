@@ -104,6 +104,17 @@
     };
   };
 
+  # Enable and configure Git
+  programs.git = {
+    enable = true;
+    userName = "Pedro Balbino";
+    userEmail = "phsb5321@gmail.com";
+    extraConfig = {
+      core.editor = "nvim";
+      init.defaultBranch = "main";
+    };
+  };
+
   # Home Manager Self-Management
   programs.home-manager.enable = true;
 }
