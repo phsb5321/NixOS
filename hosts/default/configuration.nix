@@ -69,17 +69,22 @@
   # Desktop Environment and Display Manager
   services.xserver = {
     enable = true;
+    displayManager.gdm.enable = true;
+    desktopManager.gnome.enable = true;
     xkb.layout = "br";
     xkb.variant = "";
   };
-  services.displayManager = {
-    sddm.enable = true;
-    autoLogin = {
-      enable = true;
-      user = "notroot";
-    };
+
+  # Enable Wayland by default
+  services.xserver.displayManager.defaultSession = "gnome";
+
+  # GNOME settings
+  services.xserver.desktopManager.gnome = {
+    extraGSettingsOverrides = ''
+      [org.gnome.desktop.interface]
+      enable-hot-corners=false
+    '';
   };
-  services.desktopManager.plasma6.enable = true;
 
   # User configuration
   users.users.notroot = {
@@ -94,6 +99,7 @@
       "input"
       "bluetooth"
       "docker"
+      "gnome"
     ];
     packages = with pkgs; [
       # Terminals and Shells
@@ -225,6 +231,8 @@
     neofetch
     cmatrix
     htop
+    gnome.gnome-tweaks
+    gnome.dconf-editor
   ];
 
   # Security enhancements
@@ -283,6 +291,10 @@
       user = "notroot";
       dataDir = "/home/notroot/.config/syncthing";
       configDir = "/home/notroot/.config/syncthing";
+    };
+    gnome = {
+      core-utilities.enable = true;
+      gnome-keyring.enable = true;
     };
   };
 
