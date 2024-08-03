@@ -142,6 +142,8 @@
 
       # Virtualisation
       virt-manager
+
+      firefox-unwrapped
     ];
   };
 
