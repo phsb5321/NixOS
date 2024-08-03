@@ -61,7 +61,7 @@
     shellAliases = {
       vim = "nvim";
       fishconfig = "source ~/.config/fish/config.fish";
-      textractor = "~/NixOS/user-scripts/file-text-extractor";
+      textractor = "~/NixOS/user-scripts/textractor.sh";
       nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh default"; # Default flake
       ls = "eza -l --icons";
     };
