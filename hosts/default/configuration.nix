@@ -7,33 +7,56 @@
   ];
 
   # Set system options
-  networking.hostName = "nixos"; # Define your hostname
+  networking.hostName = "nixos";
   time.timeZone = "America/Recife";
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "br-abnt2";
-  nix.settings.experimental-features = "nix-command flakes";
-  system.stateVersion = "23.11"; # Use consistent NixOS release settings
+  system.stateVersion = "23.11";
+
+  # Nix settings
+  nix = {
+    settings = {
+      auto-optimise-store = true;
+      experimental-features = [ "nix-command" "flakes" ];
+    };
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 30d";
+    };
+  };
 
   # Networking
-  networking.networkmanager.enable = true;
-  networking.networkmanager.dns = "none";
-  networking.useDHCP = lib.mkDefault false;
+  networking = {
+    networkmanager.enable = true;
+    # Remove the conflicting DNS setting
+    # networkmanager.dns = "none";
+    useDHCP = lib.mkDefault false;
+    nameservers = [
+      "1.1.1.1"
+      "1.0.0.1" # Cloudflare
+      "8.8.8.8"
+      "8.8.4.4" # Google
+    ];
+    firewall = {
+      enable = true;
+      allowedTCPPorts = [ 80 443 ];
+      allowedUDPPorts = [ ];
+    };
+  };
 
-  # Specify DNS servers
-  networking.nameservers = [
-    "8.8.8.8" # Google's public DNS
-    "8.8.4.4" # Google's public DNS
-    "1.1.1.1" # Cloudflare's public DNS
-    "1.0.0.1" # Cloudflare's public DNS
-    "208.67.222.222" # OpenDNS
-    "208.67.220.220" # OpenDNS
-    "9.9.9.9" # Quad9 DNS
-    "149.112.112.112" # Quad9 DNS
-    "64.6.64.6" # Verisign Public DNS
-    "64.6.65.6" # Verisign Public DNS
-  ];
+  # Use systemd-resolved for DNS resolution
+  services.resolved = {
+    enable = true;
+    fallbackDns = [ "1.1.1.1" "8.8.8.8" ];
+    dnssec = "allow-downgrade";
+    extraConfig = ''
+      DNSOverTLS=opportunistic
+    '';
+  };
 
-  # Locale settings for different aspects
+
+  # Locale settings
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
     LC_IDENTIFICATION = "pt_BR.UTF-8";
@@ -47,28 +70,25 @@
   };
 
   # Desktop Environment and Display Manager
-  services.xserver.enable = true;
-  services.xserver.xkb.layout = "br";
-  services.xserver.xkb.variant = "";
-  services.displayManager.sddm.enable = true;
-  services.xserver.desktopManager.plasma5.enable = true;
-  services.displayManager.autoLogin.enable = true;
-  services.displayManager.autoLogin.user = "notroot";
+  services.xserver = {
+    enable = true;
+    xkb.layout = "br";
+    xkb.variant = "";
+    displayManager = {
+      sddm.enable = true;
+      autoLogin = {
+        enable = true;
+        user = "notroot";
+      };
+    };
+    desktopManager.plasma5.enable = true;
+  };
 
   # User configuration
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "audio"
-      "video"
-      "disk"
-      "input"
-      "bluetooth"
-      "docker"
-    ];
+    extraGroups = [ "networkmanager" "wheel" "audio" "video" "disk" "input" "bluetooth" "docker" ];
     packages = with pkgs; [
       # Terminals and Shells
       kitty
@@ -126,42 +146,64 @@
   };
 
   # Enable hardware and system services
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
-  services.printing.enable = true;
-  hardware.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire.enable = true;
-  services.pipewire.alsa.enable = true;
-  services.pipewire.alsa.support32Bit = true;
-  services.pipewire.pulse.enable = true;
-  hardware.graphics.enable = true;
-  hardware.graphics.enable32Bit = true;
-
-  # Virtualisation
-
-  ## Docker
-  virtualisation.docker.enable = true;
-  virtualisation.docker.rootless = {
-    enable = true;
-    setSocketVariable = true;
+  hardware = {
+    bluetooth = {
+      enable = true;
+      powerOnBoot = true;
+    };
+    pulseaudio.enable = false;
+    opengl = {
+      enable = true;
+      driSupport32Bit = true;
+    };
   };
 
-  # QEMU
-  virtualisation.libvirtd.enable = true;
+  services = {
+    printing.enable = true;
+    pipewire = {
+      enable = true;
+      alsa = {
+        enable = true;
+        support32Bit = true;
+      };
+      pulse.enable = true;
+    };
+  };
+
+  security.rtkit.enable = true;
+
+  # Virtualization
+  virtualisation = {
+    docker = {
+      enable = true;
+      rootless = {
+        enable = true;
+        setSocketVariable = true;
+      };
+    };
+    libvirtd.enable = true;
+  };
 
   # Gaming and applications
-  programs.fish.enable = true;
+  programs = {
+    fish.enable = true;
+    steam = {
+      enable = true;
+      remotePlay.openFirewall = true;
+      dedicatedServer.openFirewall = true;
+    };
+  };
+
   users.defaultUserShell = pkgs.fish;
-  programs.steam.enable = true;
-  programs.steam.remotePlay.openFirewall = true;
-  programs.steam.dedicatedServer.openFirewall = true;
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "steam"
-    "steam-original"
-    "steam-run"
-  ];
-  nixpkgs.config.allowUnfree = true;
+
+  nixpkgs.config = {
+    allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+      "steam"
+      "steam-original"
+      "steam-run"
+    ];
+    allowUnfree = true;
+  };
 
   # Home Manager integration
   home-manager = {
@@ -179,10 +221,93 @@
     htop
   ];
 
-  # SSH and security
-  services.openssh.enable = true;
-  services.openssh.settings.PermitRootLogin = "no";
+  # Security enhancements
+  security = {
+    sudo.wheelNeedsPassword = false; # Allows members of group wheel to gain root privileges without password
+    auditd.enable = true;
+    apparmor = {
+      enable = true;
+      killUnconfinedConfinables = true;
+    };
+  };
 
-  # Tailscale VPN
+  # SSH configuration
+  services.openssh = {
+    enable = true;
+    settings = {
+      PermitRootLogin = "no";
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+    };
+  };
+
+  # Enable automatic security updates
+  system.autoUpgrade = {
+    enable = true;
+    allowReboot = false;
+    channel = "https://nixos.org/channels/nixos-23.11";
+  };
+
+  # Enable fail2ban
+  services.fail2ban = {
+    enable = true;
+    jails = {
+      ssh-iptables = ''
+        enabled = true
+        filter = sshd
+        action = iptables[name=SSH, port=ssh, protocol=tcp]
+        logpath = /var/log/auth.log
+        maxretry = 5
+        bantime = 3600
+      '';
+    };
+  };
+
+  # Performance optimizations
+  boot = {
+    kernelParams = [ "mitigations=off" ]; # Disable Spectre and Meltdown mitigations for better performance
+    tmp.useTmpfs = true; # Mount /tmp using tmpfs for improved performance
+  };
+
+  # Enable zram for better memory management
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+  };
+
+  # System management improvements
+  services = {
+    fstrim.enable = true; # Enable periodic TRIM for SSDs
+    thermald.enable = true; # CPU temperature management
+    syncthing = {
+      enable = true;
+      user = "notroot";
+      dataDir = "/home/notroot/.config/syncthing";
+      configDir = "/home/notroot/.config/syncthing";
+    };
+  };
+
+  # Fonts
+  fonts = {
+    fontDir.enable = true;
+    fonts = with pkgs; [
+      noto-fonts
+      noto-fonts-cjk
+      noto-fonts-emoji
+      liberation_ttf
+      fira-code
+      fira-code-symbols
+      (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    ];
+    fontconfig = {
+      defaultFonts = {
+        serif = [ "Noto Serif" "Liberation Serif" ];
+        sansSerif = [ "Noto Sans" "Liberation Sans" ];
+        monospace = [ "Fira Code" "Liberation Mono" ];
+      };
+    };
+  };
+
+  # Tailscale VPN (disabled by default)
   services.tailscale.enable = false;
 }
