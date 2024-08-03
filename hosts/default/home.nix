@@ -30,6 +30,7 @@
       d2 # D2 is a Diagram as Code tool
       zed-editor
       go
+      firefox-unwrapped
     ];
     sessionVariables = {
       EDITOR = "nvim";
