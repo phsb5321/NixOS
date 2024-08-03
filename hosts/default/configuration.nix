@@ -233,7 +233,7 @@
 
   # Security enhancements
   security = {
-    sudo.wheelNeedsPassword = false; # Allows members of group wheel to gain root privileges without password
+    sudo.wheelNeedsPassword = true; # Allows members of group wheel to gain root privileges without password
     auditd.enable = true;
     apparmor = {
       enable = true;
@@ -251,12 +251,7 @@
     };
   };
 
-  # Enable automatic security updates
-  system.autoUpgrade = {
-    enable = true;
-    allowReboot = false;
-    channel = "https://nixos.org/channels/nixos-23.11";
-  };
+
 
   # Enable fail2ban
   services.fail2ban = {
