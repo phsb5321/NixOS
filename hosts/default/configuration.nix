@@ -29,8 +29,6 @@
   # Networking
   networking = {
     networkmanager.enable = true;
-    # Remove the conflicting DNS setting
-    # networkmanager.dns = "none";
     useDHCP = lib.mkDefault false;
     nameservers = [
       "1.1.1.1"
@@ -55,7 +53,6 @@
     '';
   };
 
-
   # Locale settings
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
@@ -74,15 +71,15 @@
     enable = true;
     xkb.layout = "br";
     xkb.variant = "";
-    displayManager = {
-      sddm.enable = true;
-      autoLogin = {
-        enable = true;
-        user = "notroot";
-      };
-    };
-    desktopManager.plasma5.enable = true;
   };
+  services.displayManager = {
+    sddm.enable = true;
+    autoLogin = {
+      enable = true;
+      user = "notroot";
+    };
+  };
+  services.desktopManager.plasma6.enable = true;
 
   # User configuration
   users.users.notroot = {
@@ -151,7 +148,6 @@
 
       # Virtualisation
       virt-manager
-
     ];
   };
 
@@ -162,9 +158,9 @@
       powerOnBoot = true;
     };
     pulseaudio.enable = false;
-    opengl = {
+    graphics = {
       enable = true;
-      driSupport32Bit = true;
+      enable32Bit = true;
     };
   };
 
@@ -233,7 +229,7 @@
 
   # Security enhancements
   security = {
-    sudo.wheelNeedsPassword = true; # Allows members of group wheel to gain root privileges without password
+    sudo.wheelNeedsPassword = true;
     auditd.enable = true;
     apparmor = {
       enable = true;
@@ -250,8 +246,6 @@
       KbdInteractiveAuthentication = false;
     };
   };
-
-
 
   # Enable fail2ban
   services.fail2ban = {
@@ -270,8 +264,8 @@
 
   # Performance optimizations
   boot = {
-    kernelParams = [ "mitigations=off" ]; # Disable Spectre and Meltdown mitigations for better performance
-    tmp.useTmpfs = true; # Mount /tmp using tmpfs for improved performance
+    kernelParams = [ "mitigations=off" ];
+    tmp.useTmpfs = true;
   };
 
   # Enable zram for better memory management
@@ -282,8 +276,8 @@
 
   # System management improvements
   services = {
-    fstrim.enable = true; # Enable periodic TRIM for SSDs
-    thermald.enable = true; # CPU temperature management
+    fstrim.enable = true;
+    thermald.enable = true;
     syncthing = {
       enable = true;
       user = "notroot";
@@ -295,7 +289,7 @@
   # Fonts
   fonts = {
     fontDir.enable = true;
-    fonts = with pkgs; [
+    packages = with pkgs; [
       noto-fonts
       noto-fonts-cjk
       noto-fonts-emoji
