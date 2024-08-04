@@ -67,19 +67,14 @@
   };
 
   # Desktop Environment and Display Manager
-  services.xserver = {
-    enable = true;
-    xkb.layout = "br";
-    xkb.variant = "";
-  };
-  services.displayManager = {
-    sddm.enable = true;
-    autoLogin = {
-      enable = true;
-      user = "notroot";
-    };
-  };
-  services.desktopManager.plasma6.enable = true;
+  # Desktop Environment and Display Manager
+  services.xserver.enable = true;
+  services.xserver.xkb.layout = "br";
+  services.xserver.xkb.variant = "";
+  services.displayManager.sddm.enable = true;
+  services.xserver.desktopManager.plasma5.enable = true;
+  services.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.user = "notroot";
 
   # User configuration
   users.users.notroot = {
