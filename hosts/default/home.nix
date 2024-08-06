@@ -2,9 +2,7 @@
 
 {
   # Import External Modules
-  imports = [
-    inputs.nixvim.homeManagerModules.nixvim
-  ];
+  imports = [ ];
 
   # User Configuration
   home = {

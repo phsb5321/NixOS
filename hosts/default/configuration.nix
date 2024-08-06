@@ -31,12 +31,19 @@
     networkmanager.enable = true;
     useDHCP = lib.mkDefault false;
     nameservers = [
-      "1.1.1.1"
-      "1.0.0.1" # Cloudflare
-      "8.8.8.8"
-      "8.8.4.4" # Google
+      "8.8.8.8" # Google's public DNS
+      "8.8.4.4" # Google's public DNS
+      "1.1.1.1" # Cloudflare's public DNS
+      "1.0.0.1" # Cloudflare's public DNS
+      "208.67.222.222" # OpenDNS
+      "208.67.220.220" # OpenDNS
+      "9.9.9.9" # Quad9 DNS
+      "149.112.112.112" # Quad9 DNS
+      "64.6.64.6" # Verisign Public DNS
+      "64.6.65.6" # Verisign Public DNS
     ];
   };
+
 
   # Locale settings
   i18n.extraLocaleSettings = {
