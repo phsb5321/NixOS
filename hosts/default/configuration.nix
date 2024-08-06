@@ -36,21 +36,6 @@
       "8.8.8.8"
       "8.8.4.4" # Google
     ];
-    firewall = {
-      enable = true;
-      allowedTCPPorts = [ 80 443 ];
-      allowedUDPPorts = [ ];
-    };
-  };
-
-  # Use systemd-resolved for DNS resolution
-  services.resolved = {
-    enable = true;
-    fallbackDns = [ "1.1.1.1" "8.8.8.8" ];
-    dnssec = "allow-downgrade";
-    extraConfig = ''
-      DNSOverTLS=opportunistic
-    '';
   };
 
   # Locale settings
