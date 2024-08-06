@@ -240,12 +240,6 @@
     tmp.useTmpfs = true;
   };
 
-  # Enable zram for better memory management
-  zramSwap = {
-    enable = true;
-    algorithm = "zstd";
-  };
-
   # System management improvements
   services = {
     fstrim.enable = true;
