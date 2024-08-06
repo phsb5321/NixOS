@@ -1,5 +1,8 @@
 { pkgs ? import <nixpkgs> { } }:
 
+let
+  pythonPackages = pkgs.python3Packages;
+in
 pkgs.mkShell {
   buildInputs = with pkgs; [
     # Python
@@ -7,44 +10,50 @@ pkgs.mkShell {
     poetry
 
     # Virtual environment management
-    python3Packages.virtualenv
+    pythonPackages.virtualenv
 
     # Dependency management
-    python3Packages.pip-tools
+    pythonPackages.pip-tools
 
     # Linting and formatting
-    python3Packages.flake8
-    python3Packages.black
-    python3Packages.isort
+    pythonPackages.flake8
+    pythonPackages.black
+    pythonPackages.isort
 
     # Type checking
-    python3Packages.mypy
+    pythonPackages.mypy
 
     # Testing
-    python3Packages.pytest
-    python3Packages.pytest-cov
+    pythonPackages.pytest
+    pythonPackages.pytest-cov
 
     # Documentation
-    python3Packages.sphinx
+    pythonPackages.sphinx
 
     # Build tools
-    python3Packages.setuptools
-    python3Packages.wheel
-    python3Packages.twine
+    pythonPackages.setuptools
+    pythonPackages.wheel
+    pythonPackages.twine
 
     # Debugging
-    python3Packages.ipdb
+    pythonPackages.ipdb
 
     # Development tools
     pre-commit
 
     # Keep tkinter and related packages
-    python3Packages.tkinter
+    pythonPackages.tkinter
     tcl
     tk
+
+    # Add system libraries required by pandas
+    stdenv.cc.cc.lib
+    zlib
+    openssl
   ];
 
   shellHook = ''
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
     export TCLLIBPATH=${pkgs.tcl}/lib
     export TK_LIBRARY=${pkgs.tk}/lib
 
@@ -56,7 +65,7 @@ pkgs.mkShell {
 
     # Activate the virtual environment
     source .venv/bin/activate
-  
+
     # Upgrade pip, setuptools, and wheel
     pip install --upgrade pip setuptools wheel
 
