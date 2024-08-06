@@ -63,7 +63,6 @@
       textractor = "~/NixOS/user-scripts/textractor.sh";
       nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh default"; # Default flake
       ls = "eza -l --icons";
-      nixshell = "~/NixOS/user-scripts/open-nix-shell.sh";
     };
     plugins = [
       { name = "tide"; src = pkgs.fishPlugins.tide.src; }
