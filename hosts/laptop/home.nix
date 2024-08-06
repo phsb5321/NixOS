@@ -1,9 +1,7 @@
 { config, pkgs, inputs, ... }:
 
 {
-  imports = [
-    inputs.nixvim.homeManagerModules.nixvim
-  ];
+  imports = [ ];
 
   # User and Home Directory Configuration
   home.username = "notroot";
