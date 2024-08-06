@@ -227,21 +227,6 @@
     };
   };
 
-  # Enable fail2ban
-  services.fail2ban = {
-    enable = true;
-    jails = {
-      ssh-iptables = ''
-        enabled = true
-        filter = sshd
-        action = iptables[name=SSH, port=ssh, protocol=tcp]
-        logpath = /var/log/auth.log
-        maxretry = 5
-        bantime = 3600
-      '';
-    };
-  };
-
   # Performance optimizations
   boot = {
     kernelParams = [ "mitigations=off" ];
