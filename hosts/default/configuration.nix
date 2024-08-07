@@ -29,7 +29,7 @@
   # Networking
   networking = {
     networkmanager.enable = true;
-    useDHCP = lib.mkDefault false;
+    useDHCP = lib.mkDefault true;
     nameservers = [
       "8.8.8.8" # Google's public DNS
       "8.8.4.4" # Google's public DNS
@@ -135,6 +135,8 @@
 
       # Virtualisation
       virt-manager
+
+      networkmanagerapplet
     ];
   };
 
@@ -229,7 +231,7 @@
     enable = true;
     settings = {
       PermitRootLogin = "no";
-      PasswordAuthentication = false;
+      PasswordAuthentication = true;
       KbdInteractiveAuthentication = false;
     };
   };
@@ -273,6 +275,4 @@
     };
   };
 
-  # Tailscale VPN (disabled by default)
-  services.tailscale.enable = false;
 }
