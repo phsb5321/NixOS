@@ -136,7 +136,7 @@
       # Virtualisation
       virt-manager
 
-      networkmanagerapplet
+      bruno
     ];
   };
 
