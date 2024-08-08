@@ -140,6 +140,17 @@
     ];
   };
 
+  # Ollama
+  services.ollama = {
+    enable = true;
+    acceleration = "rocm";
+    environmentVariables = {
+      HCC_AMDGPU_TARGET = "gfx1010"; # used to be necessary, but doesn't seem to anymore
+    };
+    rocmOverrideGfx = "10.1.0";
+  };
+
+
   # Enable hardware and system services
   hardware = {
     bluetooth = {
