@@ -7,6 +7,7 @@ pkgs.mkShell {
     cargo
     rustfmt
     rust-analyzer
+    rustfmt
 
     # Build essentials
     gcc
