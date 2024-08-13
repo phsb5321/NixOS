@@ -137,6 +137,7 @@
       virt-manager
 
       bruno
+      lsof
     ];
   };
 
