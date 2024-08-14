@@ -139,12 +139,19 @@
     ];
   };
 
-  # ROCm configuration
-  hardware.graphics.enable = true;
-  hardware.graphics.extraPackages = with pkgs; [
-    rocmPackages.rocm-runtime
-    rocmPackages.rocm-device-libs
-  ];
+  # AMD GPU configuration
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      rocmPackages.rocm-runtime
+      amdvlk
+    ];
+  };
+
+  hardware.opengl = {
+    enable = true;
+    driSupport32Bit = true;
+  };
 
   # Ollama
   services.ollama = {
@@ -152,7 +159,6 @@
     acceleration = "rocm";
     environmentVariables = {
       HCC_AMDGPU_TARGET = "gfx1010";
-      LD_LIBRARY_PATH = "/run/opengl-driver/lib:/run/opengl-driver-32/lib";
     };
     rocmOverrideGfx = "10.1.0";
   };
@@ -233,8 +239,17 @@
     rocmPackages.rocm-smi
     rocmPackages.rocminfo
     rocmPackages.rocm-runtime
-    rocmPackages.rocm-device-libs
+    gperftools
+    qt5.qtbase
+    qt5.qtwayland
+    libsForQt5.qt5.qtx11extras
   ];
+
+  # Environment variables
+  environment.variables = {
+    LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.gperftools}/lib";
+    QT_QPA_PLATFORM = "xcb";
+  };
 
   # Security enhancements
   security = {
