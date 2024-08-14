@@ -44,7 +44,6 @@
     ];
   };
 
-
   # Locale settings
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
@@ -58,7 +57,6 @@
     LC_TIME = "pt_BR.UTF-8";
   };
 
-  # Desktop Environment and Display Manager
   # Desktop Environment and Display Manager
   services.xserver.enable = true;
   services.xserver.xkb.layout = "br";
@@ -141,16 +139,23 @@
     ];
   };
 
+  # ROCm configuration
+  hardware.graphics.enable = true;
+  hardware.graphics.extraPackages = with pkgs; [
+    rocmPackages.rocm-runtime
+    rocmPackages.rocm-device-libs
+  ];
+
   # Ollama
   services.ollama = {
     enable = true;
     acceleration = "rocm";
     environmentVariables = {
-      HCC_AMDGPU_TARGET = "gfx1010"; # used to be necessary, but doesn't seem to anymore
+      HCC_AMDGPU_TARGET = "gfx1010";
+      LD_LIBRARY_PATH = "/run/opengl-driver/lib:/run/opengl-driver-32/lib";
     };
     rocmOverrideGfx = "10.1.0";
   };
-
 
   # Enable hardware and system services
   hardware = {
@@ -159,10 +164,9 @@
       powerOnBoot = true;
     };
     pulseaudio.enable = false;
-    graphics = {
-      enable = true;
-      enable32Bit = true;
-    };
+    enableRedistributableFirmware = true;
+    cpu.amd.updateMicrocode = true;
+    enableAllFirmware = true;
   };
 
   services = {
@@ -226,6 +230,10 @@
     neofetch
     cmatrix
     htop
+    rocmPackages.rocm-smi
+    rocmPackages.rocminfo
+    rocmPackages.rocm-runtime
+    rocmPackages.rocm-device-libs
   ];
 
   # Security enhancements
@@ -250,7 +258,11 @@
 
   # Performance optimizations
   boot = {
-    kernelParams = [ "mitigations=off" ];
+    kernelParams = [
+      "mitigations=off"
+      "amdgpu.aspm=0"
+      "pcie_aspm=off"
+    ];
     tmp.useTmpfs = true;
   };
 
@@ -286,5 +298,4 @@
       };
     };
   };
-
 }

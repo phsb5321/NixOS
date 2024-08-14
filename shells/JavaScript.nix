@@ -35,9 +35,6 @@ pkgs.mkShell {
     # Add pnpm to PATH
     export PATH="$PNPM_HOME:$PATH"
 
-    # Initialize pnpm in the current directory (with --force to override existing configuration)
-    pnpm setup --force
-
     echo "JavaScript/TypeScript development environment is ready!"
     echo "Node.js version: $(node --version)"
     echo "pnpm version: $(pnpm --version)"
