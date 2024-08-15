@@ -16,7 +16,6 @@
       grc
       eza
       ffmpeg
-      awscli2
       calibre
       activitywatch
       anki
