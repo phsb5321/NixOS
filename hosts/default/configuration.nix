@@ -12,6 +12,7 @@
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "br-abnt2";
   system.stateVersion = "23.11"; # Use the same version as Home Manager
+  users.defaultUserShell = pkgs.fish;
 
   # Nix settings
   nix = {
@@ -58,13 +59,24 @@
   };
 
   # Desktop Environment and Display Manager
-  services.xserver.enable = true;
-  services.xserver.xkb.layout = "br";
-  services.xserver.xkb.variant = "";
-  services.displayManager.sddm.enable = true;
-  services.xserver.desktopManager.plasma5.enable = true;
-  services.displayManager.autoLogin.enable = true;
-  services.displayManager.autoLogin.user = "notroot";
+  services = {
+    xserver = {
+      enable = true;
+      xkb = {
+        layout = "br";
+        variant = "";
+      };
+      desktopManager.plasma5.enable = true;
+    };
+
+    displayManager = {
+      sddm.enable = true;
+      autoLogin = {
+        enable = true;
+        user = "notroot";
+      };
+    };
+  };
 
   # User configuration
   users.users.notroot = {
@@ -136,6 +148,7 @@
 
       bruno
       lsof
+      discord
     ];
   };
 
@@ -157,9 +170,6 @@
   services.ollama = {
     enable = true;
     acceleration = "rocm";
-    environmentVariables = {
-      HCC_AMDGPU_TARGET = "gfx1010";
-    };
     rocmOverrideGfx = "10.1.0";
   };
 
@@ -211,14 +221,9 @@
     };
   };
 
-  users.defaultUserShell = pkgs.fish;
 
   nixpkgs.config = {
-    allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "steam"
-      "steam-original"
-      "steam-run"
-    ];
+    # Allow all unfree packages
     allowUnfree = true;
   };
 
@@ -236,20 +241,7 @@
     neofetch
     cmatrix
     htop
-    rocmPackages.rocm-smi
-    rocmPackages.rocminfo
-    rocmPackages.rocm-runtime
-    gperftools
-    qt5.qtbase
-    qt5.qtwayland
-    libsForQt5.qt5.qtx11extras
   ];
-
-  # Environment variables
-  environment.variables = {
-    LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.gperftools}/lib";
-    QT_QPA_PLATFORM = "xcb";
-  };
 
   # Security enhancements
   security = {
@@ -275,8 +267,6 @@
   boot = {
     kernelParams = [
       "mitigations=off"
-      "amdgpu.aspm=0"
-      "pcie_aspm=off"
     ];
     tmp.useTmpfs = true;
   };
