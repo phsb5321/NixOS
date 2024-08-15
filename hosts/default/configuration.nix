@@ -225,6 +225,11 @@
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
     };
+    corectrl = {
+      enable = true;
+      gpuOverclock.enable = true;
+      gpuOverclock.ppfeaturemask = "0xffffffff";
+    };
   };
 
   nixpkgs.config = {
@@ -256,6 +261,7 @@
       enable = true;
       killUnconfinedConfinables = true;
     };
+    polkit.enable = true;
   };
 
   # SSH configuration
@@ -310,4 +316,13 @@
       };
     };
   };
+
+  # Allow users in the "wheel" group to use CoreCtrl without password
+  security.sudo.extraRules = [{
+    groups = [ "wheel" ];
+    commands = [{
+      command = "${pkgs.corectrl}/bin/corectrl";
+      options = [ "NOPASSWD" ];
+    }];
+  }];
 }
