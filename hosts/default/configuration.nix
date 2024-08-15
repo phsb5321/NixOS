@@ -67,6 +67,12 @@
         variant = "";
       };
       desktopManager.plasma5.enable = true;
+      # Add AMDGPU driver
+      videoDrivers = [ "amdgpu" ];
+      # Add TearFree option
+      deviceSection = ''
+        Option "TearFree" "true"
+      '';
     };
 
     displayManager = {
@@ -149,22 +155,23 @@
       bruno
       lsof
       discord
+      corectrl
     ];
   };
 
   # AMD GPU configuration
   hardware.graphics = {
     enable = true;
+    enable32Bit = true;
     extraPackages = with pkgs; [
-      rocmPackages.rocm-runtime
       amdvlk
+      rocm-opencl-icd
+      rocm-opencl-runtime
     ];
   };
 
-  hardware.opengl = {
-    enable = true;
-    driSupport32Bit = true;
-  };
+  # Enable redistributable firmware
+  hardware.enableRedistributableFirmware = true;
 
   # Ollama
   services.ollama = {
@@ -180,7 +187,6 @@
       powerOnBoot = true;
     };
     pulseaudio.enable = false;
-    enableRedistributableFirmware = true;
     cpu.amd.updateMicrocode = true;
     enableAllFirmware = true;
   };
@@ -220,7 +226,6 @@
       dedicatedServer.openFirewall = true;
     };
   };
-
 
   nixpkgs.config = {
     # Allow all unfree packages
@@ -265,8 +270,10 @@
 
   # Performance optimizations
   boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "mitigations=off"
+      "amdgpu.ppfeaturemask=0xffffffff"
     ];
     tmp.useTmpfs = true;
   };
