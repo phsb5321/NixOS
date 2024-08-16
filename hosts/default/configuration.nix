@@ -67,11 +67,11 @@
         variant = "";
       };
       desktopManager.plasma5.enable = true;
-      # Add AMDGPU driver
+      # Updated GPU configuration
       videoDrivers = [ "amdgpu" ];
-      # Add TearFree option
       deviceSection = ''
         Option "TearFree" "true"
+        Option "DRI" "3"
       '';
     };
 
@@ -159,29 +159,20 @@
     ];
   };
 
-  # AMD GPU configuration
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-    extraPackages = with pkgs; [
-      amdvlk
-      rocm-opencl-icd
-      rocm-opencl-runtime
-    ];
-  };
-
-  # Enable redistributable firmware
-  hardware.enableRedistributableFirmware = true;
-
-  # Ollama
-  services.ollama = {
-    enable = true;
-    acceleration = "rocm";
-    rocmOverrideGfx = "10.1.0";
-  };
-
-  # Enable hardware and system services
+  # Updated AMD GPU configuration
   hardware = {
+    graphics = {
+      enable = true;
+      extraPackages = with pkgs; [
+        amdvlk
+        rocm-opencl-icd
+        rocm-opencl-runtime
+      ];
+      extraPackages32 = with pkgs; [
+        driversi686Linux.amdvlk
+      ];
+    };
+    enableRedistributableFirmware = true;
     bluetooth = {
       enable = true;
       powerOnBoot = true;
@@ -189,6 +180,13 @@
     pulseaudio.enable = false;
     cpu.amd.updateMicrocode = true;
     enableAllFirmware = true;
+  };
+
+  # Ollama
+  services.ollama = {
+    enable = true;
+    acceleration = "rocm";
+    rocmOverrideGfx = "10.1.0";
   };
 
   services = {
@@ -225,15 +223,17 @@
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
     };
+    # Updated CoreCtrl configuration
     corectrl = {
       enable = true;
-      gpuOverclock.enable = true;
-      gpuOverclock.ppfeaturemask = "0xffffffff";
+      gpuOverclock = {
+        enable = true;
+        ppfeaturemask = "0xffffffff";
+      };
     };
   };
 
   nixpkgs.config = {
-    # Allow all unfree packages
     allowUnfree = true;
   };
 
@@ -274,12 +274,16 @@
     };
   };
 
-  # Performance optimizations
+  # Performance optimizations and GPU-related kernel parameters
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "mitigations=off"
       "amdgpu.ppfeaturemask=0xffffffff"
+      "radeon.si_support=0"
+      "amdgpu.si_support=1"
+      "radeon.cik_support=0"
+      "amdgpu.cik_support=1"
     ];
     tmp.useTmpfs = true;
   };
