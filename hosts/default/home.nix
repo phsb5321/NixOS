@@ -25,7 +25,6 @@
       texlive.combined.scheme-full
       dbeaver-bin
       zed-editor
-      go
     ];
     sessionVariables = {
       EDITOR = "nvim";
