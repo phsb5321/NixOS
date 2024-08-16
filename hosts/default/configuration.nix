@@ -27,6 +27,22 @@
     };
   };
 
+  # Necessary for AMD ROCm
+  systemd.tmpfiles.rules =
+    let
+      rocmEnv = pkgs.symlinkJoin {
+        name = "rocm-combined";
+        paths = with pkgs.rocmPackages; [
+          rocblas
+          hipblas
+          clr
+        ];
+      };
+    in
+    [
+      "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
+    ];
+
   # Networking
   networking = {
     networkmanager.enable = true;
@@ -162,8 +178,10 @@
 
   # Updated AMD GPU configuration
   hardware = {
+    opengl.driSupport32Bit = true;
     graphics = {
       enable = true;
+      enable32Bit = true;
       extraPackages = with pkgs; [
         amdvlk
         rocm-opencl-icd
@@ -252,7 +270,12 @@
     neofetch
     cmatrix
     htop
+    lact # Added LACT for AMD GPU control
   ];
+
+  # LACT daemon service
+  systemd.packages = with pkgs; [ lact ];
+  systemd.services.lactd.wantedBy = [ "multi-user.target" ];
 
   # Security enhancements
   security = {
