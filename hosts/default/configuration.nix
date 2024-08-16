@@ -156,6 +156,7 @@
       lsof
       discord
       corectrl
+      davinci-resolve
     ];
   };
 
