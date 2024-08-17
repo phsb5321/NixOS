@@ -129,6 +129,7 @@
       # Learning
       anki
 
+      corectrl
     ];
   };
 
