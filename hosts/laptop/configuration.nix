@@ -150,7 +150,10 @@
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
   services.printing.enable = true;
-  sound.enable = true;
+
+  # Remove deprecated sound option
+  # sound.enable = true;
+
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire.enable = true;
@@ -219,5 +222,8 @@
 
   xdg.portal.enable = true;
   xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+
+  nix.settings.trusted-substituters = [ "https://ai.cachix.org" ];
+  nix.settings.trusted-public-keys = [ "ai.cachix.org-1:N9dzRK+alWwoKXQlnn0H6aUx0lU/mspIoz8hMvGvbbc=" ];
 
 }
