@@ -29,7 +29,6 @@
         };
 
         laptop = nixpkgs.lib.nixosSystem {
-          system = system;
           specialArgs = { inherit inputs; };
           modules = [
             ./hosts/laptop/configuration.nix
