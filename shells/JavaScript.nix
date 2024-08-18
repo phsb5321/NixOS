@@ -1,12 +1,14 @@
-{ pkgs ? import <nixpkgs> { } }:
-
+let
+  # Pin nixpkgs to 24.05 release
+  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz") { };
+in
 pkgs.mkShell {
   buildInputs = with pkgs; [
     # Node.js and related tools
     nodejs_22
-    nodePackages_latest.pnpm
-    nodePackages_latest.vercel
-    nodePackages_latest.prisma
+    nodePackages.pnpm
+    nodePackages.vercel
+    nodePackages.prisma
 
     # Core build tools
     gcc
@@ -35,7 +37,7 @@ pkgs.mkShell {
     # Add pnpm to PATH
     export PATH="$PNPM_HOME:$PATH"
 
-    echo "JavaScript/TypeScript development environment is ready!"
+    echo "JavaScript/TypeScript development environment (NixOS 24.05) is ready!"
     echo "Node.js version: $(node --version)"
     echo "pnpm version: $(pnpm --version)"
     echo "Chromium version: $(chromium --product-version)"
