@@ -28,21 +28,24 @@
     };
   };
 
-  # Necessary for AMD ROCm
   systemd.tmpfiles.rules =
     let
       rocmEnv = pkgs.symlinkJoin {
         name = "rocm-combined";
         paths = with pkgs.rocmPackages; [
-          rocblas
-          hipblas
-          clr
+          rocblas # Required for miopen
+          clr # HIP runtime
+          rocminfo # ROCm device info tool
+          # miopen          # MIOpen for machine learning
+          rocsolver # ROCm linear algebra solver library
+          rocalution # ROCm sparse linear algebra library
         ];
       };
     in
     [
       "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
     ];
+
 
   # Networking
   networking = {
@@ -273,7 +276,13 @@
     lact # Added LACT for AMD GPU control
     llvm
     clang
+    rocmPackages.clr # HIP runtime
+    rocmPackages.rocminfo # ROCm device information tool
+    rocmPackages.rocm-smi # ROCm system management interface tool
+
+    gum # I need Gum for some pretty TUIs in the terminal
   ];
+
 
   # LACT daemon service
   systemd.packages = with pkgs; [ lact ];
