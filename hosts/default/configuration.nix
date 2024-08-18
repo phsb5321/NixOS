@@ -19,6 +19,7 @@
     settings = {
       auto-optimise-store = true;
       experimental-features = [ "nix-command" "flakes" ];
+      timeout = 3600;
     };
     gc = {
       automatic = true;
@@ -178,7 +179,6 @@
 
   # Updated AMD GPU configuration
   hardware = {
-    opengl.driSupport32Bit = true;
     graphics = {
       enable = true;
       enable32Bit = true;
@@ -271,6 +271,8 @@
     cmatrix
     htop
     lact # Added LACT for AMD GPU control
+    llvm
+    clang
   ];
 
   # LACT daemon service
