@@ -26,7 +26,6 @@
       dbeaver-bin
       zed-editor
       polonium
-      thunderbird
     ];
     sessionVariables = {
       EDITOR = "nvim";
