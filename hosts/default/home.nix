@@ -25,6 +25,8 @@
       texlive.combined.scheme-full
       dbeaver-bin
       zed-editor
+      polonium
+      thunderbird
     ];
     sessionVariables = {
       EDITOR = "nvim";
