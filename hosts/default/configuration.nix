@@ -236,6 +236,7 @@
     };
     libvirtd.enable = true;
   };
+  programs.virt-manager.enable = true;
 
   # Gaming and applications
   programs = {
@@ -281,6 +282,7 @@
     rocmPackages.rocm-smi # ROCm system management interface tool
 
     gum # I need Gum for some pretty TUIs in the terminal
+    libvirt-glib
   ];
 
 
