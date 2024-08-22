@@ -24,7 +24,6 @@
       yazi-unwrapped
       texlive.combined.scheme-full
       dbeaver-bin
-      zed-editor
       polonium
       amberol
     ];
