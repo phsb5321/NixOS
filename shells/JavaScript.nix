@@ -10,6 +10,9 @@ pkgs.mkShell {
     nodePackages.vercel
     nodePackages.prisma
 
+    # Bun tools
+    bun
+
     # Core build tools
     gcc
     gnumake
