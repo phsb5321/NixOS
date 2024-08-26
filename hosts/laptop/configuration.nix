@@ -130,6 +130,7 @@
       anki
 
       corectrl
+      hwinfo
     ];
   };
 
