@@ -21,6 +21,11 @@
 
     # Ebooks
     calibre
+
+    # Arduino
+    arduino-core
+    arduino-ide
+    arduino-cli
   ];
 
   # Fish Shell Configuration
