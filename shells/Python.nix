@@ -11,49 +11,15 @@ let
 
 in
 pkgs.mkShell {
+  name = "python-dev-env";
   buildInputs = with pkgs; [
-    # Python
     python3
+    python3Packages.venvShellHook
     poetry
-
-    # Virtual environment management
-    pythonPackages.virtualenv
-
-    # Dependency management
-    pythonPackages.pip-tools
-
-    # Linting and formatting
-    pythonPackages.flake8
-    pythonPackages.black
-    pythonPackages.isort
-
-    # Type checking
-    pythonPackages.mypy
-
-    # Testing
-    pythonPackages.pytest
-    pythonPackages.pytest-cov
-
-    # Documentation
-    pythonPackages.sphinx
-
-    # Build tools
-    pythonPackages.setuptools
-    pythonPackages.wheel
-    pythonPackages.twine
-
-    # Debugging
-    pythonPackages.ipdb
-
-    # Development tools
     pre-commit
-
-    # Keep tkinter and related packages
-    pythonPackages.tkinter
+    autoPatchelfHook
     tcl
     tk
-
-    # Add system libraries required by numpy, opencv, and other dependencies
     stdenv.cc.cc.lib
     zlib
     openssl
@@ -71,37 +37,39 @@ pkgs.mkShell {
     pango
     ffmpeg
     opencvGtk
+    postgresql
   ];
 
+  propagatedBuildInputs = [ pkgs.stdenv.cc.cc.lib ];
+
+  venvDir = "./.venv";
+
+  postVenvCreation = ''
+    unset SOURCE_DATE_EPOCH
+    pip install -U pip setuptools wheel
+    pip install flake8 black isort mypy pytest pytest-cov sphinx twine ipdb
+    if [ -f "pyproject.toml" ]; then
+      poetry install
+    elif [ -f "requirements.txt" ]; then
+      pip install -r requirements.txt
+    fi
+    autoPatchelf $venvDir
+  '';
+
   shellHook = ''
-    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:${pkgs.libGL}/lib:${pkgs.glib}/lib:${pkgs.gtk3}/lib:${opencvGtk}/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:${pkgs.libGL}/lib:${pkgs.glib}/lib:${pkgs.gtk3}/lib:${opencvGtk}/lib:${pkgs.postgresql}/lib:$LD_LIBRARY_PATH
     export TCLLIBPATH=${pkgs.tcl}/lib
     export TK_LIBRARY=${pkgs.tk}/lib
     export GI_TYPELIB_PATH=${pkgs.gtk3}/lib/girepository-1.0:${pkgs.glib}/lib/girepository-1.0:${pkgs.pango}/lib/girepository-1.0:${pkgs.gdk-pixbuf}/lib/girepository-1.0:${pkgs.cairo}/lib/girepository-1.0
     export PYTHONPATH=${opencvGtk}/lib/python3.12/site-packages:$PYTHONPATH
+    export PATH=${pkgs.postgresql}/bin:$PATH
 
-    # Create a virtual environment if it doesn't exist
-    if [ ! -d ".venv" ]; then
-      echo "Creating virtual environment..."
-      python3 -m venv .venv
-    fi
-
-    # Activate the virtual environment
-    source .venv/bin/activate
-
-    # Upgrade pip, setuptools, and wheel
-    pip install --upgrade pip setuptools wheel
-
-    # Install or update project dependencies using Poetry
-    if [ -f "pyproject.toml" ]; then
-      echo "Installing project dependencies with Poetry..."
-      poetry install
-    else
-      echo "No pyproject.toml found. Skipping dependency installation."
-    fi
+    # Set SOURCE_DATE_EPOCH so that we can use python wheels
+    export SOURCE_DATE_EPOCH=315532800
 
     echo "Python development environment is ready!"
     echo "Activated virtual environment: $VIRTUAL_ENV"
+    echo "Poetry root: $PWD"
   '';
 
   # Set environment variables for OpenCV

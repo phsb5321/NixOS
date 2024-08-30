@@ -26,6 +26,7 @@
       dbeaver-bin
       polonium
       amberol
+      zed-editor
     ];
     sessionVariables = {
       EDITOR = "nvim";

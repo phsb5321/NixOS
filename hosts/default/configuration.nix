@@ -117,6 +117,7 @@
       "input"
       "bluetooth"
       "docker"
+      "dialout"
     ];
     packages = with pkgs; [
       # Terminals and Shells
@@ -177,6 +178,9 @@
       discord
       corectrl
       davinci-resolve
+
+      python3
+      jetbrains.pycharm-professional
     ];
   };
 
@@ -284,7 +288,6 @@
     gum # I need Gum for some pretty TUIs in the terminal
     libvirt-glib
   ];
-
 
   # LACT daemon service
   systemd.packages = with pkgs; [ lact ];
