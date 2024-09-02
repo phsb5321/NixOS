@@ -351,7 +351,7 @@
       defaultFonts = {
         serif = [ "Noto Serif" "Liberation Serif" ];
         sansSerif = [ "Noto Sans" "Liberation Sans" ];
-        monospace = [ "Fira Code" "Liberation Mono" ];
+        monospace = [ "JetBrains Mono" "Fira Code" "Liberation Mono" ];
       };
     };
   };
