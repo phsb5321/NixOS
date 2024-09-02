@@ -178,11 +178,12 @@
       discord
       corectrl
       davinci-resolve
+      zed-editor
 
       python3
-      jetbrains.pycharm-professional
     ];
   };
+
 
   # Updated AMD GPU configuration
   hardware = {
@@ -332,12 +333,6 @@
   services = {
     fstrim.enable = true;
     thermald.enable = true;
-    syncthing = {
-      enable = true;
-      user = "notroot";
-      dataDir = "/home/notroot/.config/syncthing";
-      configDir = "/home/notroot/.config/syncthing";
-    };
   };
 
   # Fonts
@@ -369,7 +364,4 @@
       options = [ "NOPASSWD" ];
     }];
   }];
-
-  nix.settings.trusted-substituters = [ "https://ai.cachix.org" ];
-  nix.settings.trusted-public-keys = [ "ai.cachix.org-1:N9dzRK+alWwoKXQlnn0H6aUx0lU/mspIoz8hMvGvbbc=" ];
 }
