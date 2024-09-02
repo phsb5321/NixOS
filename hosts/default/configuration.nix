@@ -177,8 +177,6 @@
       lsof
       discord
       corectrl
-      davinci-resolve
-      zed-editor
 
       python3
     ];
