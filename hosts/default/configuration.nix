@@ -183,6 +183,8 @@
     ];
   };
 
+  services.syncthing.enable = true;
+
 
   # Updated AMD GPU configuration
   hardware = {
