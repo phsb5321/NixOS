@@ -158,6 +158,7 @@
       # System Utilities
       pigz
       mangohud
+      unzip
 
       # Note-taking and Knowledge Management
       obsidian
