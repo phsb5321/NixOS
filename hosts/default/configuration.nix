@@ -183,8 +183,15 @@
     ];
   };
 
-  services.syncthing.enable = true;
-
+  # Syncthing service configuration
+  services.syncthing = {
+    enable = true;
+    user = "notroot";
+    dataDir = "/home/notroot/Sync"; # Adjust this path as needed
+    configDir = "/home/notroot/.config/syncthing";
+    overrideDevices = true; # overrides any devices added or deleted through the WebUI
+    overrideFolders = true; # overrides any folders added or deleted through the WebUI
+  };
 
   # Updated AMD GPU configuration
   hardware = {
