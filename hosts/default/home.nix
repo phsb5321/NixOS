@@ -26,7 +26,6 @@
       dbeaver-bin
       polonium
       amberol
-      zed-editor
       awscli2
     ];
     sessionVariables = {
