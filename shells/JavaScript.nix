@@ -1,56 +1,94 @@
+{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz") { } }:
+
 let
-  # Pin nixpkgs to 24.05 release
-  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz") { };
-in
-pkgs.mkShell {
-  buildInputs = with pkgs; [
-    # Node.js and related tools
-    nodejs_22
-    nodePackages.pnpm
-    nodePackages.vercel
-    nodePackages.prisma
+  centralizedStore = "$HOME/.nix-js-environments";
 
-    # Bun tools
-    bun
+  # Helper function to create a tagged package group
+  mkPackageGroup = name: packages: {
+    inherit name packages;
+  };
 
-    # Core build tools
-    gcc
-    gnumake
-
-    # Additional tools
-    jq # JSON processor
-    yq # YAML processor
-
-    # Prisma dependencies
-    openssl
-    postgresql_16
-
-    # Add Chromium instead of Google Chrome
-    chromium
-
-    # Prisma engines
-    prisma-engines
+  # Define package groups
+  packageGroups = [
+    (mkPackageGroup "Core JavaScript Tools" [
+      pkgs.nodejs_22
+      pkgs.nodePackages.pnpm
+      pkgs.bun
+      pkgs.nodePackages.yarn
+      pkgs.nodePackages.npm
+    ])
+    (mkPackageGroup "Development Frameworks and CLIs" [
+      pkgs.nodePackages.vercel
+      pkgs.nodePackages."@nestjs/cli"
+    ])
+    (mkPackageGroup "Database Tools" [
+      pkgs.nodePackages.prisma
+      pkgs.postgresql_16
+      pkgs.prisma-engines
+    ])
+    (mkPackageGroup "Build Tools" [
+      pkgs.gcc
+      pkgs.gnumake
+    ])
+    (mkPackageGroup "Utility Tools" [
+      pkgs.jq
+      pkgs.yq
+      pkgs.openssl
+    ])
+    (mkPackageGroup "Browser Tools" [
+      pkgs.chromium
+    ])
   ];
 
+  # Flatten package groups into a single list
+  allPackages = builtins.concatLists (map (group: group.packages) packageGroups);
+
+  # Function to generate environment setup for a package manager
+  setupPackageManager = name: ''
+    mkdir -p "${centralizedStore}/${name}"
+    export ${name}_HOME="${centralizedStore}/${name}"
+    export PATH="$${name}_HOME/bin:$PATH"
+  '';
+
+  # List of package managers to set up
+  packageManagers = [ "pnpm" "npm" "yarn" "bun" ];
+
+in
+pkgs.mkShell {
+  buildInputs = allPackages;
+
   shellHook = ''
-    # Create a temporary directory for pnpm global installations
-    export PNPM_HOME="$PWD/.pnpm-store"
-    mkdir -p $PNPM_HOME
+    # Set up centralized store for package managers
+    ${builtins.concatStringsSep "\n" (map setupPackageManager packageManagers)}
 
-    # Add pnpm to PATH
-    export PATH="$PNPM_HOME:$PATH"
+    # Configure pnpm to use the centralized store
+    pnpm config set store-dir "${centralizedStore}/pnpm/store" &>/dev/null
 
-    echo "JavaScript/TypeScript development environment (NixOS 24.05) is ready!"
-    echo "Node.js version: $(node --version)"
-    echo "pnpm version: $(pnpm --version)"
-    echo "Chromium version: $(chromium --product-version)"
-
-    # Set the Chromium executable path for Puppeteer
-    export PUPPETEER_EXECUTABLE_PATH="$(which chromium)"
-
-    # Prisma-specific environment variables
+    # Set up Prisma environment variables
     export PRISMA_QUERY_ENGINE_LIBRARY="${pkgs.prisma-engines}/lib/libquery_engine.node"
     export PRISMA_QUERY_ENGINE_BINARY="${pkgs.prisma-engines}/bin/query-engine"
     export PRISMA_SCHEMA_ENGINE_BINARY="${pkgs.prisma-engines}/bin/schema-engine"
+
+    # Set up Puppeteer
+    export PUPPETEER_EXECUTABLE_PATH="$(which chromium)"
+
+    # Function to run commands only in project directories
+    run_in_project() {
+      if [ -f "package.json" ]; then
+        "$@"
+      else
+        echo "Error: No package.json found. Please run this command in a JavaScript project directory."
+      fi
+    }
+
+    # Set up aliases for package managers
+    ${builtins.concatStringsSep "\n" (map (pm: "alias ${pm}='run_in_project ${pm}'") packageManagers)}
+
+    # Print environment information
+    echo "🚀 JavaScript/TypeScript development environment (NixOS 24.05) is ready!"
+    echo "📦 Installed package groups:"
+    ${builtins.concatStringsSep "\n" (map (group: "echo \"  - ${group.name}\"") packageGroups)}
+    echo "🔧 Use 'pnpm', 'npm', 'yarn', or 'bun' to manage your project dependencies."
+    echo "🏗️  NestJS CLI is available. Use 'nest' to create and manage NestJS projects."
   '';
 }
