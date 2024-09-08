@@ -20,7 +20,7 @@ command_exists() {
 # Animated loading function
 loading_animation() {
   local message="$1"
-  gum spin --spinner dot --title "${message}" -- sleep 1
+  gum spin --spinner dot --title "${message}" -- sleep 0.5
 }
 
 # Ensure required commands are available
