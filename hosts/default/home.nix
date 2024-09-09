@@ -60,7 +60,7 @@
       fishconfig = "source ~/.config/fish/config.fish";
       textractor = "~/NixOS/user-scripts/textractor.sh";
       ls = "eza -l --icons";
-      nix-rebuild = "~/NixOS/user-scripts/nixos-rebuild.sh default"; # Default flake
+      nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh default"; # Default flake
       nix-select-shell = "~/NixOS/user-scripts/nix-shell-selector.sh";
     };
     plugins = [
