@@ -372,4 +372,15 @@
       options = [ "NOPASSWD" ];
     }];
   }];
+
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      # Add any necessary libraries here
+      stdenv.cc.cc
+      zlib
+      glib
+      libelf
+    ];
+  };
 }
