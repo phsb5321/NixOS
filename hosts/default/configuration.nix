@@ -173,6 +173,7 @@
 
       # Virtualisation
       virt-manager
+      qemu
 
       bruno
       lsof
