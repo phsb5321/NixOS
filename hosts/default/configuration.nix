@@ -372,41 +372,4 @@
       options = [ "NOPASSWD" ];
     }];
   }];
-
-  programs.nix-ld = {
-    enable = true;
-    libraries = with pkgs; [
-      # Existing libraries
-      stdenv.cc.cc
-      zlib
-      glib
-      libelf
-
-      # Corrected and additional libraries
-      glib
-      gtk3
-      pango
-      cairo
-      gdk-pixbuf
-      atk
-      at-spi2-atk
-      dbus
-      cups.lib
-      expat
-      libdrm
-      libxkbcommon
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXrandr
-      xorg.libXi
-      xorg.libXcursor
-      xorg.libxcb
-      libglvnd
-      libnotify
-      nspr
-      nss
-      alsa-lib
-      at-spi2-core
-    ];
-  };
 }
