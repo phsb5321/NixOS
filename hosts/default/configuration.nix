@@ -250,6 +250,7 @@
     libvirtd.enable = true;
   };
   programs.virt-manager.enable = true;
+  programs.dconf.enable = true; # virt-manager requires dconf to remember settings
 
   # Gaming and applications
   programs = {
