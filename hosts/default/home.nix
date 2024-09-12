@@ -52,8 +52,10 @@
       set -gx ZELLIJ_AUTO_ATTACH false
       set -gx ZELLIJ_AUTO_EXIT false
 
-      # Uncomment to generate auto-start
-      # eval (zellij setup --generate-auto-start fish | string collect)
+      # Define custom CLI tool "vscatch" to open matching files in VSCode
+      function vscatch
+        for f in $argv; code $f; end
+      end
     '';
     shellAliases = {
       vim = "nvim";
@@ -68,6 +70,7 @@
       { name = "grc"; src = pkgs.fishPlugins.grc.src; }
     ];
   };
+
 
   # Kitty Terminal Configuration
   programs.kitty = {
