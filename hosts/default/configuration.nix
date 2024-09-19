@@ -181,6 +181,7 @@
       corectrl
       inputs.zen-browser.packages."${system}".default
 
+
       python3
     ];
   };
