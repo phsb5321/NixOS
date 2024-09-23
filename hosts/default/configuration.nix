@@ -11,7 +11,7 @@
   time.timeZone = "America/Recife";
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "br-abnt2";
-  system.stateVersion = "23.11"; # Use the same version as Home Manager
+  system.stateVersion = "24.05"; # Use the same version as Home Manager
   users.defaultUserShell = pkgs.fish;
 
   # Nix settings
