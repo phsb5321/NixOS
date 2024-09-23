@@ -27,6 +27,7 @@
       polonium
       amberol
       awscli2
+      zed-editor
     ];
     sessionVariables = {
       EDITOR = "nvim";
