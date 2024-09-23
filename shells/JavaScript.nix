@@ -16,6 +16,7 @@ let
       pkgs.bun
       pkgs.nodePackages.yarn
       pkgs.nodePackages.npm
+      pkgs.deno
     ])
     (mkPackageGroup "Development Frameworks and CLIs" [
       pkgs.nodePackages.vercel
@@ -89,6 +90,7 @@ pkgs.mkShell {
     echo "📦 Installed package groups:"
     ${builtins.concatStringsSep "\n" (map (group: "echo \"  - ${group.name}\"") packageGroups)}
     echo "🔧 Use 'pnpm', 'npm', 'yarn', or 'bun' to manage your project dependencies."
+    echo "🦕 Deno is now available in your environment."
     echo "🏗️  NestJS CLI is available. Use 'nest' to create and manage NestJS projects."
   '';
 }
