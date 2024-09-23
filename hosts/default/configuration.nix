@@ -161,7 +161,7 @@
       unzip
 
       # Note-taking and Knowledge Management
-      obsidian
+      # obsidian
 
       # Music Streaming
       spotify
