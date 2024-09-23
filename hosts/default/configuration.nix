@@ -19,7 +19,7 @@
     settings = {
       auto-optimise-store = true;
       experimental-features = [ "nix-command" "flakes" ];
-      timeout = 14400; # for example, set to 4 hours   
+      timeout = 14400; # for example, set to 4 hours
     };
     gc = {
       automatic = true;
@@ -180,7 +180,6 @@
       discord
       corectrl
       inputs.zen-browser.packages."${system}".default
-
 
       python3
     ];
