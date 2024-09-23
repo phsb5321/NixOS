@@ -18,7 +18,7 @@
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "br-abnt2";
   nix.settings.experimental-features = "nix-command flakes";
-  system.stateVersion = "23.11"; # Use consistent NixOS release settings
+  system.stateVersion = "24.05"; # Use consistent NixOS release settings
 
   # Networking
   networking.networkmanager.enable = true;
