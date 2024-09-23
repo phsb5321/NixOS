@@ -19,7 +19,7 @@
     settings = {
       auto-optimise-store = true;
       experimental-features = [ "nix-command" "flakes" ];
-      timeout = 3600;
+      timeout = 14400; # for example, set to 4 hours   
     };
     gc = {
       automatic = true;
@@ -220,12 +220,12 @@
     enableAllFirmware = true;
   };
 
-  # Ollama
-  services.ollama = {
-    enable = true;
-    acceleration = "rocm";
-    rocmOverrideGfx = "10.1.0";
-  };
+  # # Ollama
+  # services.ollama = {
+  #   enable = true;
+  #   acceleration = "rocm";
+  #   rocmOverrideGfx = "10.1.0";
+  # };
 
   services = {
     printing.enable = true;
