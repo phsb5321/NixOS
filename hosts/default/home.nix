@@ -8,7 +8,7 @@
   home = {
     username = "notroot";
     homeDirectory = "/home/notroot";
-    stateVersion = "23.11"; # Ensure compatibility with Home Manager release
+    stateVersion = "24.05"; # Ensure compatibility with Home Manager release
     packages = with pkgs; [
       (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
       fish

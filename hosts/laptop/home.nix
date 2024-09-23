@@ -6,7 +6,7 @@
   # User and Home Directory Configuration
   home.username = "notroot";
   home.homeDirectory = "/home/notroot";
-  home.stateVersion = "23.11"; # Compatible Home Manager release version
+  home.stateVersion = "24.05"; # Compatible Home Manager release version
 
   # Package Installation
   home.packages = with pkgs; [
