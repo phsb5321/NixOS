@@ -164,6 +164,10 @@
       mangohud
       unzip
 
+      # Note-taking and Knowledge Management
+      obsidian
+      logseq
+
       # Music Streaming
       spotify
 
