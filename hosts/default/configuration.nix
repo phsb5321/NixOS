@@ -86,7 +86,7 @@
         layout = "br";
         variant = "";
       };
-      desktopManager.plasma5.enable = true;
+      desktopManager.plasma6.enable = true;
       # Updated GPU configuration
       videoDrivers = [ "amdgpu" ];
       deviceSection = ''
@@ -96,7 +96,11 @@
     };
 
     displayManager = {
-      sddm.enable = true;
+      sddm =
+        {
+          enable = true;
+          wayland.enable = true;
+        };
       autoLogin = {
         enable = true;
         user = "notroot";
@@ -274,6 +278,7 @@
 
   nixpkgs.config = {
     allowUnfree = true;
+    qt.preferQt6 = true;
   };
 
   # Home Manager integration
@@ -299,6 +304,8 @@
 
     gum # I need Gum for some pretty TUIs in the terminal
     libvirt-glib
+
+    speechd # Speech Dispatcher for Firefox
   ];
 
   # LACT daemon service
