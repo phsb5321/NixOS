@@ -86,7 +86,7 @@
         layout = "br";
         variant = "";
       };
-      desktopManager.plasma6.enable = true;
+      desktopManager.plasma5.enable = true;
       # Updated GPU configuration
       videoDrivers = [ "amdgpu" ];
       deviceSection = ''
