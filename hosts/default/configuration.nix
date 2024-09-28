@@ -164,9 +164,6 @@
       mangohud
       unzip
 
-      # Note-taking and Knowledge Management
-      obsidian
-
       # Music Streaming
       spotify
 
