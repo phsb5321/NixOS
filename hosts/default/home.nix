@@ -2,7 +2,10 @@
 
 {
   # Import External Modules
-  imports = [ ];
+  imports = [
+    # NixVim Flake
+    inputs.nixvim.homeManagerModules.nixvim
+  ];
 
   # User Configuration
   home = {
@@ -59,7 +62,6 @@
       end
     '';
     shellAliases = {
-      vim = "nvim";
       fishconfig = "source ~/.config/fish/config.fish";
       textractor = "~/NixOS/user-scripts/textractor.sh";
       ls = "eza -l --icons";
@@ -115,6 +117,12 @@
       core.editor = "nvim";
       init.defaultBranch = "main";
     };
+  };
+
+  # Enable and configure NixVim
+  programs.nixvim = {
+    colorschemes.catppuccin.enable = true;
+    plugins.lualine.enable = true;
   };
 
   # Home Manager Self-Management
