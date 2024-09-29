@@ -86,7 +86,6 @@
         layout = "br";
         variant = "";
       };
-      desktopManager.plasma6.enable = true;
       # Updated GPU configuration
       videoDrivers = [ "amdgpu" ];
       deviceSection = ''
@@ -95,12 +94,13 @@
       '';
     };
 
+    desktopManager.plasma6.enable = true;
+
     displayManager = {
-      sddm =
-        {
-          enable = true;
-          wayland.enable = true;
-        };
+      sddm = {
+        enable = true;
+        wayland.enable = true;
+      };
       autoLogin = {
         enable = true;
         user = "notroot";
