@@ -124,29 +124,13 @@
       "dialout"
     ];
     packages = with pkgs; [
-      # Terminals and Shells
-      kitty
-      fish
-      zellij
-      sshfs
-
-      # Terminal Tools
-      tree
-      eza
-      zoxide
-      ripgrep
-
       # Editors and IDEs
       vscode
+      emacsGcc # Emacs 28+ with native compilation via emacs-overlay
 
       # Web Browsers
       floorp
       google-chrome
-
-      # Development Tools
-      git
-      seahorse
-      nixpkgs-fmt
 
       # API Testing
       insomnia
@@ -166,20 +150,22 @@
       # Music Streaming
       spotify
 
-
       # Virtualisation
       virt-manager
       qemu
 
+      # Miscellaneous Tools
       bruno
       lsof
       discord
       corectrl
       inputs.zen-browser.packages."${system}".default
 
+      # Programming Languages
       python3
     ];
   };
+
 
   # Syncthing service configuration
   services.syncthing = {
@@ -280,32 +266,67 @@
     users = { "notroot" = import ./home.nix; };
   };
 
+  services.emacs.package = pkgs.emacs-unstable;
+
+  nixpkgs.overlays = [
+    (import (builtins.fetchTarball {
+      url = "https://github.com/nix-community/emacs-overlay/archive/master.tar.gz";
+      sha256 = "1w8zv9nggjdissxx11mg9gl961pqx7a4m9gnx48c5xz62pn85jx0";
+    }))
+  ];
+
+
   # System-wide packages
   environment.systemPackages = with pkgs; [
+    # System Utilities
     wget
     vim
 
-    # Nvim Dependencies
+    # Neovim Dependencies
     neovim
     stow
     gcc
     xclip
 
+    # System Information Tools
     neofetch
     cmatrix
     htop
     lact # Added LACT for AMD GPU control
+
+    # Development Tools
     llvm
     clang
     rocmPackages.clr # HIP runtime
     rocmPackages.rocminfo # ROCm device information tool
     rocmPackages.rocm-smi # ROCm system management interface tool
+    git
+    seahorse
+    nixpkgs-fmt
+    emacsGcc # Emacs 28+ with native compilation via emacs-overlay
 
-    gum # I need Gum for some pretty TUIs in the terminal
+    # Terminal Enhancements
+    gum # For pretty TUIs in the terminal
     libvirt-glib
+    coreutils
+    fd
 
+    # Speech Services
     speechd # Speech Dispatcher for Firefox
+
+    # File and Directory Tools
+    tree
+    eza
+    zoxide
+    ripgrep
+
+    # Terminals and Shells
+    kitty
+    fish
+    zellij
+    sshfs
   ];
+
 
   # LACT daemon service
   systemd.packages = with pkgs; [ lact ];
