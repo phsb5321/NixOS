@@ -29,7 +29,6 @@
       amberol
       awscli2
       remmina
-      obsidian
     ];
     sessionVariables = {
       EDITOR = "nvim";
