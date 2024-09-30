@@ -92,14 +92,12 @@
         Option "TearFree" "true"
         Option "DRI" "3"
       '';
+      desktopManager.plasma5.enable = true;
     };
-
-    desktopManager.plasma6.enable = true;
 
     displayManager = {
       sddm = {
         enable = true;
-        wayland.enable = true;
       };
       autoLogin = {
         enable = true;
@@ -126,7 +124,6 @@
     packages = with pkgs; [
       # Editors and IDEs
       vscode
-      emacsGcc # Emacs 28+ with native compilation via emacs-overlay
 
       # Web Browsers
       floorp
@@ -266,12 +263,11 @@
     users = { "notroot" = import ./home.nix; };
   };
 
-  services.emacs.package = pkgs.emacs-unstable;
 
   nixpkgs.overlays = [
     (import (builtins.fetchTarball {
       url = "https://github.com/nix-community/emacs-overlay/archive/master.tar.gz";
-      sha256 = "1w8zv9nggjdissxx11mg9gl961pqx7a4m9gnx48c5xz62pn85jx0";
+      sha256 = "1i3k0rvfjlanbgr9qfv40aa12jdcrrpmjcd47fkhvbrs77wiv597";
     }))
   ];
 
