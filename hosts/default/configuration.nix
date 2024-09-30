@@ -138,7 +138,6 @@
 
       # Editors and IDEs
       vscode
-      neovim
 
       # Web Browsers
       floorp
@@ -167,10 +166,6 @@
       # Music Streaming
       spotify
 
-      # Nvim Dependencies
-      stow
-      gcc
-      xclip
 
       # Virtualisation
       virt-manager
@@ -289,6 +284,13 @@
   environment.systemPackages = with pkgs; [
     wget
     vim
+
+    # Nvim Dependencies
+    neovim
+    stow
+    gcc
+    xclip
+
     neofetch
     cmatrix
     htop
