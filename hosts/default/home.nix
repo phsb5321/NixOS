@@ -3,8 +3,6 @@
 {
   # Import External Modules
   imports = [
-    # NixVim Flake
-    inputs.nixvim.homeManagerModules.nixvim
   ];
 
   # User Configuration
@@ -117,13 +115,6 @@
       core.editor = "nvim";
       init.defaultBranch = "main";
     };
-  };
-
-  # Enable and configure NixVim
-  programs.nixvim = {
-    enable = true;
-    colorschemes.catppuccin.enable = true;
-    plugins.lualine.enable = true;
   };
 
   # Home Manager Self-Management
