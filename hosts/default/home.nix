@@ -5,6 +5,10 @@
   imports = [
   ];
 
+  nixpkgs.config = {
+    allowUnfree = true;
+  };
+
   # User Configuration
   home = {
     username = "notroot";
@@ -29,6 +33,7 @@
       amberol
       awscli2
       remmina
+      obsidian
     ];
     sessionVariables = {
       EDITOR = "nvim";
