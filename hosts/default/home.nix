@@ -3,6 +3,7 @@
 {
   # Import External Modules
   imports = [
+    inputs.nixvim.homeManagerModules.nixvim
   ];
 
   nixpkgs.config = {
@@ -34,6 +35,8 @@
       awscli2
       remmina
       obsidian
+      inputs.nixvim
+      zed-editor
     ];
     sessionVariables = {
       EDITOR = "nvim";
@@ -120,6 +123,95 @@
       core.editor = "nvim";
       init.defaultBranch = "main";
     };
+  };
+
+  # NixVim Configuration
+  programs.nixvim = {
+    enable = true;
+    colorschemes.catppuccin.enable = true;
+
+    # Global options
+    globals.mapleader = " ";
+
+    # General options
+    opts = {
+      number = true; # Show line numbers
+      shiftwidth = 2; # Tab width should be 2
+      # Use xclip to copy to clipboard
+      clipboard = "unnamedplus";
+    };
+
+    plugins = {
+      lualine.enable = true;
+      obsidian = {
+        enable = true;
+        settings = {
+          workspaces = [
+            {
+              name = "Notes";
+              path = "~/Documents/Obsidian/Notes";
+            }
+          ];
+          conceallevel = 2; # Set conceal level (0-2)
+
+        };
+      };
+      treesitter = {
+        enable = true;
+        settings.ensure_installed = "all"; # Changed from ensureInstalled
+      };
+      lsp = {
+        enable = true;
+        servers = {
+          rust-analyzer = {
+            enable = true;
+            installCargo = true; # Add this line
+            installRustc = true; # Add this line
+          };
+          pyright.enable = true;
+          ts-ls.enable = true; # Changed from tsserver
+          nil-ls.enable = true; # Changed from nil_ls
+        };
+      };
+      telescope = {
+        enable = true;
+        keymaps = {
+          "<leader>ff" = "find_files";
+          "<leader>fg" = "live_grep";
+          "<leader>fb" = "buffers";
+          "<leader>fh" = "help_tags";
+        };
+      };
+      gitsigns.enable = true;
+      neo-tree = {
+        enable = true;
+        closeIfLastWindow = true;
+        window.width = 30;
+      };
+      which-key.enable = true;
+      comment.enable = true; # Changed from comment-nvim
+      nvim-autopairs.enable = true;
+      neoscroll.enable = true;
+      indent-blankline.enable = true;
+      markdown-preview.enable = true;
+      dashboard.enable = true;
+      # Explicitly enable web-devicons to address the deprecation warning
+      web-devicons.enable = true;
+      copilot-vim = {
+        enable = true;
+        settings = { };
+      };
+    };
+    # Additional settings for Obsidian markdown files
+    extraConfigLua = ''
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function()
+          vim.opt_local.conceallevel = 2
+          vim.opt_local.concealcursor = 'n'
+        end
+      })
+    '';
   };
 
   # Home Manager Self-Management

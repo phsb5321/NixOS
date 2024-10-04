@@ -13,6 +13,11 @@
       inputs.home-manager.follows = "home-manager";
     };
     zen-browser.url = "github:MarceColl/zen-browser-flake";
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
   };
 
   outputs = { self, nixpkgs, ... }@inputs:
