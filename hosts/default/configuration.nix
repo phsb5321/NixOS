@@ -263,15 +263,6 @@
     users = { "notroot" = import ./home.nix; };
   };
 
-
-  nixpkgs.overlays = [
-    (import (builtins.fetchTarball {
-      url = "https://github.com/nix-community/emacs-overlay/archive/master.tar.gz";
-      sha256 = "1i3k0rvfjlanbgr9qfv40aa12jdcrrpmjcd47fkhvbrs77wiv597";
-    }))
-  ];
-
-
   # System-wide packages
   environment.systemPackages = with pkgs; [
     # System Utilities
@@ -279,7 +270,6 @@
     vim
 
     # Neovim Dependencies
-    neovim
     stow
     gcc
     xclip
@@ -298,8 +288,10 @@
     rocmPackages.rocm-smi # ROCm system management interface tool
     git
     seahorse
-    nixpkgs-fmt
-    emacsGcc # Emacs 28+ with native compilation via emacs-overlay
+
+    # Nix Tools
+    nixpkgs-fmt # NixOS formatting tool
+    nixd
 
     # Terminal Enhancements
     gum # For pretty TUIs in the terminal
