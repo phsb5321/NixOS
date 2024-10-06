@@ -153,7 +153,9 @@
             }
           ];
           conceallevel = 2; # Set conceal level (0-2)
-
+          daily_notes = {
+            folder = "Daily";
+          };
         };
       };
       treesitter = {
