@@ -154,7 +154,9 @@
           ];
           conceallevel = 2; # Set conceal level (0-2)
           daily_notes = {
-            folder = "Daily";
+            folder = "3. Resources/Daily";
+            alias_format = "%A_%d_%m_%Y";
+            date_format = "%dd%mm%yy";
           };
         };
       };
