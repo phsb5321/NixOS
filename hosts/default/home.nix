@@ -17,6 +17,9 @@
     stateVersion = "24.05"; # Ensure compatibility with Home Manager release
     packages = with pkgs; [
       (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+      noto-fonts-emoji
+      noto-fonts
+      noto-fonts-cjk
       fish
       kitty
       grc
@@ -80,7 +83,6 @@
     ];
   };
 
-
   # Kitty Terminal Configuration
   programs.kitty = {
     enable = true;
@@ -94,6 +96,8 @@
       copy_on_select = true;
       clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
       enable_ligatures = true;
+      # Add fallback fonts for better emoji support
+      font_family = "JetBrainsMono Nerd Font, Noto Color Emoji, Noto Sans Symbols";
     };
   };
 
@@ -155,8 +159,7 @@
           conceallevel = 2; # Set conceal level (0-2)
           daily_notes = {
             folder = "3. Resources/Daily";
-            alias_format = "%A_%d_%m_%Y";
-            date_format = "%dd%mm%yy";
+            date_format = "%Y/%B/%d (%A)";
           };
         };
       };
