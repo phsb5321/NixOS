@@ -313,6 +313,8 @@
     fish
     zellij
     sshfs
+
+    nodejs_22 # Node.js LTS for Copilot
   ];
 
 
