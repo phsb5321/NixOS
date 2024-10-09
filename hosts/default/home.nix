@@ -69,6 +69,11 @@
       function vscatch
         for f in $argv; code $f; end
       end
+
+      # Define custom CLI tool "zedcatch" to open matching files in Zed
+      function zedcatch
+        for f in $argv; zeditor $f; end
+      end
     '';
     shellAliases = {
       fishconfig = "source ~/.config/fish/config.fish";
@@ -165,19 +170,19 @@
       };
       treesitter = {
         enable = true;
-        settings.ensure_installed = "all"; # Changed from ensureInstalled
+        settings.ensure_installed = "all";
       };
       lsp = {
         enable = true;
         servers = {
-          rust-analyzer = {
+          rust_analyzer = {
             enable = true;
-            installCargo = true; # Add this line
-            installRustc = true; # Add this line
+            installCargo = true;
+            installRustc = true;
           };
           pyright.enable = true;
-          ts-ls.enable = true; # Changed from tsserver
-          nil-ls.enable = true; # Changed from nil_ls
+          ts_ls.enable = true;
+          nil_ls.enable = true;
         };
       };
       telescope = {
@@ -196,13 +201,12 @@
         window.width = 30;
       };
       which-key.enable = true;
-      comment.enable = true; # Changed from comment-nvim
+      comment.enable = true;
       nvim-autopairs.enable = true;
       neoscroll.enable = true;
       indent-blankline.enable = true;
       markdown-preview.enable = true;
       dashboard.enable = true;
-      # Explicitly enable web-devicons to address the deprecation warning
       web-devicons.enable = true;
       copilot-vim = {
         enable = true;
