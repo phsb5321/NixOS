@@ -314,7 +314,12 @@
     zellij
     sshfs
 
+    # Coopilot
     nodejs_22 # Node.js LTS for Copilot
+
+    # Python
+    python3
+    python312Packages.ipykernel
   ];
 
 
