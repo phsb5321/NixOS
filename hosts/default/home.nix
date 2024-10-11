@@ -40,6 +40,8 @@
       obsidian
       inputs.nixvim
       zed-editor
+      gitbutler
+      ngrok
     ];
     sessionVariables = {
       EDITOR = "nvim";
