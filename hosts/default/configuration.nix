@@ -397,4 +397,10 @@
       options = [ "NOPASSWD" ];
     }];
   }];
+
+  # ESP 32 Development
+  services.udev.packages = [
+    pkgs.platformio-core
+    pkgs.openocd
+  ];
 }
