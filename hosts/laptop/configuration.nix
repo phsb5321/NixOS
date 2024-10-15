@@ -193,7 +193,6 @@
     neofetch
     cmatrix
     htop
-    aria2
   ];
 
   # SSH and security
