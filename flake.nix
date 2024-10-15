@@ -40,6 +40,13 @@
             ./hosts/laptop/configuration.nix
           ];
         };
+
+        experimental-vm = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./hosts/experimental-vm/configuration.nix
+          ];
+        };
       };
     };
 }
