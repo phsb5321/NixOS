@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
+    ../modules/virtualization # Import the virtualization module
   ];
 
   # Set system options
@@ -120,6 +121,8 @@
       "bluetooth"
       "docker"
       "dialout"
+      "libvirtd"
+      "kvm"
     ];
     packages = with pkgs; [
       # Editors and IDEs
@@ -146,10 +149,6 @@
 
       # Music Streaming
       spotify
-
-      # Virtualisation
-      virt-manager
-      qemu
 
       # Miscellaneous Tools
       bruno
@@ -213,10 +212,18 @@
         setSocketVariable = true;
       };
     };
-    libvirtd.enable = true;
   };
-  programs.virt-manager.enable = true;
-  programs.dconf.enable = true; # virt-manager requires dconf to remember settings
+
+  modules.virtualization = {
+    enable = true;
+    enableQemu = true;
+    enableLibvirtd = true;
+    enableVirtManager = true;
+    enable3DAcceleration = true;
+  };
+
+  # Ensure dconf is enabled for virt-manager
+  programs.dconf.enable = true;
 
   # Gaming and applications
   programs = {
