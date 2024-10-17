@@ -38,10 +38,10 @@
   modules.desktop = {
     enable = true;
     environment = "hyprland"; # Choose "hyprland" to enable Hyprland
-    extraPackages = with pkgs; [ firefox ]; # Add any extra packages you need
+    extraPackages = with pkgs; [ firefox ];
     autoLogin = {
       enable = true;
-      user = "notroot"; # Replace with your username
+      user = "notroot";
     };
   };
 
