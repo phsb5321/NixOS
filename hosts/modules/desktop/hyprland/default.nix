@@ -214,7 +214,6 @@ in
 
       # Waybar configuration
       programs.waybar = {
-        enable = true;
         settings = [{
           layer = "top";
           position = "top";
