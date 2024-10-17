@@ -37,11 +37,11 @@
   # Desktop environment configuration
   modules.desktop = {
     enable = true;
-    environment = "gnome"; # Change to "kde" or "hyprland" as needed
-    extraPackages = with pkgs; [ firefox ];
+    environment = "hyprland"; # Choose "hyprland" to enable Hyprland
+    extraPackages = with pkgs; [ firefox ]; # Add any extra packages you need
     autoLogin = {
       enable = true;
-      user = "notroot";
+      user = "notroot"; # Replace with your username
     };
   };
 
@@ -64,7 +64,7 @@
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "wheel" "networkmanager" "video" "input" ];
   };
 
   # Allow unfree packages
