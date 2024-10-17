@@ -74,18 +74,6 @@ in {
       (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
     ];
 
-    programs.waybar = {
-      enable = true;
-      settings = [{
-        layer = "top";
-        position = "top";
-        height = 30;
-        modules-left = [ "hyprland/workspaces" "hyprland/mode" "hyprland/window" ];
-        modules-center = [ "clock" ];
-        modules-right = [ "pulseaudio" "network" "cpu" "memory" "temperature" "backlight" "battery" "tray" ];
-      }];
-    };
-
     # Add Home Manager configuration for Hyprland
     home-manager.users.${cfg.autoLogin.user} = { pkgs, ... }: {
       wayland.windowManager.hyprland = {
@@ -237,6 +225,19 @@ in {
         text-color=#cdd6f4
         border-color=#89b4fa
       '';
+
+      # Waybar configuration
+      programs.waybar = {
+        enable = true;
+        settings = [{
+          layer = "top";
+          position = "top";
+          height = 30;
+          modules-left = [ "hyprland/workspaces" "hyprland/mode" "hyprland/window" ];
+          modules-center = [ "clock" ];
+          modules-right = [ "pulseaudio" "network" "cpu" "memory" "temperature" "backlight" "battery" "tray" ];
+        }];
+      };
     };
   };
 }
