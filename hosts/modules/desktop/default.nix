@@ -135,7 +135,6 @@ in
       # Enable OpenGL
       hardware.opengl = {
         enable = true;
-        driSupport = true;
       };
     })
   ]);
