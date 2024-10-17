@@ -179,14 +179,6 @@
     graphics = {
       enable = true;
       enable32Bit = true;
-      extraPackages = with pkgs; [
-        amdvlk
-        rocm-opencl-icd
-        rocm-opencl-runtime
-      ];
-      extraPackages32 = with pkgs; [
-        driversi686Linux.amdvlk
-      ];
     };
     enableRedistributableFirmware = true;
     bluetooth = {
@@ -197,13 +189,6 @@
     cpu.amd.updateMicrocode = true;
     enableAllFirmware = true;
   };
-
-  # # Ollama
-  # services.ollama = {
-  #   enable = true;
-  #   acceleration = "rocm";
-  #   rocmOverrideGfx = "10.1.0";
-  # };
 
   services = {
     printing.enable = true;
@@ -253,7 +238,6 @@
 
   nixpkgs.config = {
     allowUnfree = true;
-    qt.preferQt6 = true;
   };
 
   # Home Manager integration
@@ -316,10 +300,6 @@
 
     # Coopilot
     nodejs_22 # Node.js LTS for Copilot
-
-    # Python
-    python3
-    python312Packages.ipykernel
   ];
 
 
