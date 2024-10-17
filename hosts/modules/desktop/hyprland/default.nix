@@ -47,7 +47,7 @@ in {
       grim
       slurp
       wl-clipboard
-      mako
+      mako # Keep mako in system packages
       libnotify
       swaylock-effects
       wlogout
@@ -61,6 +61,28 @@ in {
       brightnessctl
       pamixer
     ];
+
+    # Add Home Manager configuration for Hyprland
+    home-manager.users.${cfg.autoLogin.user} = { pkgs, ... }: {
+      wayland.windowManager.hyprland = {
+        enable = true;
+        extraConfig = ''
+          # ... (keep the existing Hyprland configuration)
+        '';
+      };
+
+      # Add Mako configuration to Home Manager
+      programs.mako = {
+        enable = true;
+        defaultTimeout = 5000;
+        borderSize = 2;
+        borderRadius = 5;
+        backgroundColor = "#1e1e2e";
+        textColor = "#cdd6f4";
+        borderColor = "#89b4fa";
+      };
+    };
+  };
 
     xdg.portal = {
       enable = true;
