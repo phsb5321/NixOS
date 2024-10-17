@@ -164,7 +164,7 @@
   # Wayland and Hyprland configuration
   wayland.windowManager.hyprland = {
     enable = true;
-    systemdIntegration = true;
+    systemd.enable = true;  # Changed from systemdIntegration
     xwayland.enable = true;
   };
 
