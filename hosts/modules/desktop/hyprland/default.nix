@@ -20,12 +20,7 @@ in
           command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd Hyprland";
           user = "greeter";
         };
-      } // (if cfg.autoLogin.enable then {
-        initial_session = {
-          command = "Hyprland";
-          user = cfg.autoLogin.user;
-        };
-      } else { });
+      };
     };
 
     environment.sessionVariables = {
@@ -119,7 +114,6 @@ in
 
           decoration {
               rounding = 10
-              # Removed blur options as they caused errors
               drop_shadow = yes
               shadow_range = 4
               shadow_render_power = 3
@@ -142,10 +136,6 @@ in
           dwindle {
               pseudotile = yes # master switch for pseudotiling
               preserve_split = yes # you probably want this
-          }
-
-          master {
-              new_is_master = true
           }
 
           gestures {
