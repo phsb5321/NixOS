@@ -66,15 +66,20 @@ in
         };
         wireplumber.enable = true;
 
-        # Enable Wayland display manager
-        seatd.enable = true;
-        swaylock.enable = true; # For screen locking
+        # Enable seat management
+        seatd = {
+          enable = true;
+          group = "seatd";
+        };
+
+        # Enable screen locking
+        swaylock.enable = true;
       };
 
       # Use greetd as the login manager with wlgreet for Wayland
       services.greetd = {
         enable = true;
-        greeter = {
+        greeters = {
           wlgreet = {
             enable = true;
           };
