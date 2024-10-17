@@ -66,7 +66,7 @@ in
     security.pam.services.swaylock = { };
 
     fonts.packages = with pkgs; [
-      (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
+      (nerdfonts.override { fonts = ["JetBrainsMono" "FiraCode" "DroidSansMono" ]; })
     ];
 
     # Add Home Manager configuration for Hyprland
@@ -198,7 +198,7 @@ in
           bindm = ${mod}, mouse:273, resizewindow
 
           # Execute custom scripts
-          exec-once = hyprpaper & mako
+          exec-once = waybar & hyprpaper & mako
         '';
       };
 
