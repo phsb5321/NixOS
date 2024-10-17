@@ -104,6 +104,5 @@
 
   # Disable AMD-specific configurations
   hardware.opengl.extraPackages = lib.mkForce [ ];
-  hardware.opengl.driSupport = false;
   hardware.opengl.driSupport32Bit = false;
 }
