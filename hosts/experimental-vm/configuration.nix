@@ -91,7 +91,7 @@
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users.notroot = import ./home.nix;
-    backupFileExtension = "backup"; # Enable backups
+    backupFileExtension = "backup";
   };
 
   # Nix settings
