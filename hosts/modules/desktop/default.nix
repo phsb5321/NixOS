@@ -79,7 +79,7 @@ in
       # Use greetd as the login manager with wlgreet for Wayland
       services.greetd = {
         enable = true;
-        greeters = {
+        greeter = {
           wlgreet = {
             enable = true;
           };
