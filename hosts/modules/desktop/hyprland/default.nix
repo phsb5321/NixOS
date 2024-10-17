@@ -5,7 +5,8 @@ with lib;
 let
   cfg = config.modules.desktop;
   mod = "ALT"; # Changed from SUPER to ALT for better VM compatibility
-in {
+in
+{
   config = mkIf (cfg.enable && cfg.environment == "hyprland") {
     programs.hyprland = {
       enable = true;
@@ -67,7 +68,7 @@ in {
       extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
     };
 
-    security.pam.services.swaylock = {};
+    security.pam.services.swaylock = { };
 
     fonts.packages = with pkgs; [
       (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
