@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
+    ../modules/virtualization  # Import the virtualization module
   ];
 
   # Set system options
@@ -45,7 +46,6 @@
     [
       "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
     ];
-
 
   # Networking
   networking = {
@@ -147,10 +147,6 @@
       # Music Streaming
       spotify
 
-      # Virtualisation
-      virt-manager
-      qemu
-
       # Miscellaneous Tools
       bruno
       lsof
@@ -162,7 +158,6 @@
       python3
     ];
   };
-
 
   # Syncthing service configuration
   services.syncthing = {
@@ -203,20 +198,6 @@
   };
 
   security.rtkit.enable = true;
-
-  # Virtualization
-  virtualisation = {
-    docker = {
-      enable = true;
-      rootless = {
-        enable = true;
-        setSocketVariable = true;
-      };
-    };
-    libvirtd.enable = true;
-  };
-  programs.virt-manager.enable = true;
-  programs.dconf.enable = true; # virt-manager requires dconf to remember settings
 
   # Gaming and applications
   programs = {
@@ -302,7 +283,6 @@
     nodejs_22 # Node.js LTS for Copilot
   ];
 
-
   # LACT daemon service
   systemd.packages = with pkgs; [ lact ];
   systemd.services.lactd.wantedBy = [ "multi-user.target" ];
@@ -383,4 +363,12 @@
     pkgs.platformio-core
     pkgs.openocd
   ];
+
+  # Enable virtualization module
+  modules.virtualization = {
+    enable = true;
+    enableQemu = true;
+    enableLibvirtd = true;
+    enableVirtManager = true;
+  };
 }

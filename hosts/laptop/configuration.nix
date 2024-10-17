@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
+    ../modules
   ];
 
   # Bootloader configuration for EFI
@@ -131,8 +132,12 @@
     ];
   };
 
-
-
+  modules.virtualization = {
+    enable = true;
+    enableQemu = true;
+    enableLibvirtd = true;
+    enableVirtManager = true;
+  };
 
   # Enable hardware and system services
   hardware.bluetooth.enable = true;
