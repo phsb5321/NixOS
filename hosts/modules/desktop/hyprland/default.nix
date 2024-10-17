@@ -82,7 +82,6 @@ in {
         borderColor = "#89b4fa";
       };
     };
-  };
 
     xdg.portal = {
       enable = true;
