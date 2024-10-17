@@ -37,8 +37,19 @@
   # Desktop environment configuration
   modules.desktop = {
     enable = true;
-    environment = "hyprland"; # Choose "hyprland" to enable Hyprland
-    extraPackages = with pkgs; [ firefox ];
+    environment = "hyprland";
+    extraPackages = with pkgs; [
+      firefox
+      waybar
+      wofi
+      swww
+      hyprpaper
+      grim
+      slurp
+      wl-clipboard
+      mako
+      swaylock
+    ];
     autoLogin = {
       enable = true;
       user = "notroot";
@@ -51,20 +62,20 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire
-  hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+    jack.enable = true;
   };
 
   # Define user account
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
-    extraGroups = [ "wheel" "networkmanager" "video" "input" "seatd" ];
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "seat" ];
   };
 
   # Allow unfree packages
@@ -76,6 +87,11 @@
     wget
     git
     gh
+    libsForQt5.qt5.qtwayland
+    qt6.qtwayland
+    xdg-desktop-portal-wlr
+    xdg-desktop-portal-gtk
+    greetd.tuigreet
   ];
 
   # Enable some programs
@@ -97,12 +113,34 @@
     users.notroot = import ./home.nix;
   };
 
+  # Enable OpenGL
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
+  };
+
+  # XDG Portal configuration
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  };
+
+  # Enable DBus
+  services.dbus.enable = true;
+
+  # Environment variables for Wayland
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    WLR_NO_HARDWARE_CURSORS = "1";
+    XDG_SESSION_TYPE = "wayland";
+    XDG_CURRENT_DESKTOP = "Hyprland";
+    XDG_SESSION_DESKTOP = "Hyprland";
+  };
+
   system.stateVersion = "24.05";
 
   # Nix settings
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
-  # Disable AMD-specific configurations
-  hardware.opengl.extraPackages = lib.mkForce [ ];
-  hardware.opengl.driSupport32Bit = false;
 }

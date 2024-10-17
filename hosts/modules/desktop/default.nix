@@ -71,7 +71,6 @@ in
         # Enable seat management
         seatd = {
           enable = true;
-          group = "seatd";
         };
 
         # Enable greetd service
@@ -79,21 +78,27 @@ in
           enable = true;
           settings = {
             default_session = {
-              command = "${pkgs.hyprland}/bin/Hyprland";
+              command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd Hyprland";
+              user = "greeter";
             };
           } // (if cfg.autoLogin.enable then {
             initial_session = {
-              command = "${pkgs.hyprland}/bin/Hyprland";
+              command = "Hyprland";
               user = cfg.autoLogin.user;
             };
           } else { });
         };
       };
 
-      # Environment variables for keyboard layout
-      environment.variables = {
+      # Environment variables for keyboard layout and Wayland compatibility
+      environment.sessionVariables = {
         XKB_DEFAULT_LAYOUT = "br";
         XKB_DEFAULT_VARIANT = "";
+        NIXOS_OZONE_WL = "1";
+        WLR_NO_HARDWARE_CURSORS = "1";
+        XDG_SESSION_TYPE = "wayland";
+        XDG_CURRENT_DESKTOP = "Hyprland";
+        XDG_SESSION_DESKTOP = "Hyprland";
       };
 
       # Additional system packages required for Hyprland
@@ -106,9 +111,12 @@ in
         slurp
         wl-clipboard
         xdg-desktop-portal-wlr
+        xdg-desktop-portal-gtk
         mako
         swaylock
-        seatd
+        greetd.tuigreet
+        libsForQt5.qt5.qtwayland
+        qt6.qtwayland
       ]);
 
       # Enable XDG portal
@@ -120,6 +128,15 @@ in
 
       # Enable dbus
       services.dbus.enable = true;
+
+      # Add user to necessary groups
+      users.users.${cfg.autoLogin.user}.extraGroups = [ "seat" "video" "audio" "input" ];
+
+      # Enable OpenGL
+      hardware.opengl = {
+        enable = true;
+        driSupport = true;
+      };
     })
   ]);
 }
