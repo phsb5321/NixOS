@@ -168,10 +168,10 @@
     settings = [{
       layer = "top";
       position = "top";
-      modules-left = ["hyprland/workspaces" "hyprland/mode"];
-      modules-center = ["clock"];
-      modules-right = ["pulseaudio" "network" "cpu" "memory" "battery"];
-      // Add more configuration as needed
+      modules-left = [ "hyprland/workspaces" "hyprland/mode" ];
+      modules-center = [ "clock" ];
+      modules-right = [ "pulseaudio" "network" "cpu" "memory" "battery" ];
+      # Add more configuration as needed
     }];
   };
 
