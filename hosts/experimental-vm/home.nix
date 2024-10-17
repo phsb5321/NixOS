@@ -5,6 +5,8 @@
     inputs.nixvim.homeManagerModules.nixvim
   ];
 
+  nixpkgs.config.allowUnfree = true;
+
   home = {
     username = "notroot";
     homeDirectory = "/home/notroot";
