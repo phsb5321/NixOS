@@ -79,10 +79,11 @@
     globals.mapleader = " ";
 
     # General options
-    options = {
+    opts = {
       number = true; # Show line numbers
       shiftwidth = 2; # Tab width should be 2
-      clipboard = "unnamedplus"; # Use system clipboard
+      # Use xclip to copy to clipboard
+      clipboard = "unnamedplus";
     };
 
     plugins = {
@@ -96,20 +97,27 @@
               path = "~/Documents/Obsidian/Notes";
             }
           ];
-          conceallevel = 2;
+          conceallevel = 2; # Set conceal level (0-2)
           daily_notes = {
             folder = "3. Resources/Daily";
             date_format = "%Y/%B/%d (%A)";
           };
         };
       };
-      treesitter.enable = true;
+      treesitter = {
+        enable = true;
+        settings.ensure_installed = "all";
+      };
       lsp = {
         enable = true;
         servers = {
-          rust-analyzer.enable = true;
+          rust_analyzer = {
+            enable = true;
+            installCargo = true;
+            installRustc = true;
+          };
           pyright.enable = true;
-          tsserver.enable = true;
+          ts_ls.enable = true;
           nil_ls.enable = true;
         };
       };
@@ -138,8 +146,10 @@
       web-devicons.enable = true;
       copilot-vim = {
         enable = true;
+        settings = { };
       };
     };
+    # Additional settings for Obsidian markdown files
     extraConfigLua = ''
       vim.api.nvim_create_autocmd("FileType", {
         pattern = "markdown",
