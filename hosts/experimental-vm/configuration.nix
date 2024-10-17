@@ -42,6 +42,7 @@
       firefox
       kitty
       neofetch
+      font-awesome
     ];
     autoLogin = {
       enable = true;
