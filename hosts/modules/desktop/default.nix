@@ -47,16 +47,13 @@ in
 
     # Hyprland configuration
     (mkIf (cfg.environment == "hyprland") {
-      # Disable X server as Hyprland is Wayland-based
-      services.xserver.enable = false;
-
       # Enable Hyprland
       programs.hyprland = {
         enable = true;
-        # You can add additional settings here if needed
+        xwayland.enable = true;
       };
 
-      # Enable required services
+      # Wayland-specific services
       services = {
         # For audio support
         pipewire = {
@@ -64,16 +61,10 @@ in
           alsa.enable = true;
           alsa.support32Bit = true;
           pulse.enable = true;
-          # Enable WirePlumber
-          wireplumber.enable = true;
+          jack.enable = true;
         };
 
         # Enable seat management
-        seatd = {
-          enable = true;
-        };
-
-        # Enable greetd service
         greetd = {
           enable = true;
           settings = {
@@ -90,34 +81,37 @@ in
         };
       };
 
-      # Environment variables for keyboard layout and Wayland compatibility
+      # Environment variables for Wayland
       environment.sessionVariables = {
-        XKB_DEFAULT_LAYOUT = "br";
-        XKB_DEFAULT_VARIANT = "";
         NIXOS_OZONE_WL = "1";
         WLR_NO_HARDWARE_CURSORS = "1";
         XDG_SESSION_TYPE = "wayland";
         XDG_CURRENT_DESKTOP = "Hyprland";
         XDG_SESSION_DESKTOP = "Hyprland";
+        GDK_BACKEND = "wayland,x11";
+        QT_QPA_PLATFORM = "wayland;xcb";
+        SDL_VIDEODRIVER = "wayland";
+        CLUTTER_BACKEND = "wayland";
       };
 
       # Additional system packages required for Hyprland
-      environment.systemPackages = cfg.extraPackages ++ (with pkgs; [
+      environment.systemPackages = with pkgs; [
         waybar
         wofi
         swww
-        hyprpaper
         grim
         slurp
         wl-clipboard
-        xdg-desktop-portal-wlr
-        xdg-desktop-portal-gtk
         mako
-        swaylock
-        greetd.tuigreet
-        libsForQt5.qt5.qtwayland
-        qt6.qtwayland
-      ]);
+        libnotify
+        swaylock-effects
+        wlogout
+        hyprpaper
+        xdg-desktop-portal-hyprland
+        xdg-utils
+        polkit-kde-agent
+        networkmanagerapplet
+      ] ++ cfg.extraPackages;
 
       # Enable XDG portal
       xdg.portal = {
@@ -126,16 +120,38 @@ in
         extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
       };
 
-      # Enable dbus
+      # Enable dbus and polkit
       services.dbus.enable = true;
+      security.polkit.enable = true;
 
       # Add user to necessary groups
-      users.users.${cfg.autoLogin.user}.extraGroups = [ "seat" "video" "audio" "input" ];
+      users.users.${cfg.autoLogin.user}.extraGroups = [ "video" "audio" "input" ];
 
       # Enable OpenGL
       hardware.opengl = {
         enable = true;
+        driSupport = true;
+        driSupport32Bit = true;
       };
+
+      # Enable fonts
+      fonts.enableDefaultFonts = true;
+
+      # Enable Bluetooth
+      hardware.bluetooth.enable = true;
+      services.blueman.enable = true;
+
+      # Enable networking
+      networking.networkmanager.enable = true;
+
+      # Enable CUPS for printing
+      services.printing.enable = true;
+
+      # Enable sound
+      security.rtkit.enable = true;
+
+      # Configure PAM for swaylock
+      security.pam.services.swaylock = {};
     })
   ]);
 }
