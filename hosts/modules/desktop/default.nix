@@ -62,9 +62,11 @@ in
         pipewire = {
           enable = true;
           alsa.enable = true;
+          alsa.support32Bit = true;
           pulse.enable = true;
+          # Enable WirePlumber
+          wireplumber.enable = true;
         };
-        wireplumber.enable = true;
 
         # Enable seat management
         seatd = {
@@ -108,6 +110,16 @@ in
         swaylock
         seatd
       ]);
+
+      # Enable XDG portal
+      xdg.portal = {
+        enable = true;
+        wlr.enable = true;
+        extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+      };
+
+      # Enable dbus
+      services.dbus.enable = true;
     })
   ]);
 }
