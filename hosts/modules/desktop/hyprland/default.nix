@@ -66,7 +66,7 @@ in
     security.pam.services.swaylock = { };
 
     fonts.packages = with pkgs; [
-      (nerdfonts.override { fonts = ["JetBrainsMono" "FiraCode" "DroidSansMono" ]; })
+      (nerdfonts.override { fonts = [ "JetBrainsMono" "FiraCode" "DroidSansMono" ]; })
     ];
 
     # Add Home Manager configuration for Hyprland
@@ -79,7 +79,7 @@ in
 
           # Set programs that you use
           $terminal = kitty
-          $menu = wofi --show drun
+          $menu = wofi --show drun --show-icons
           $browser = firefox
 
           # Some default env vars.
@@ -198,7 +198,7 @@ in
           bindm = ${mod}, mouse:273, resizewindow
 
           # Execute custom scripts
-          exec-once = waybar & hyprpaper & mako
+          exec-once = hyprpaper & mako
         '';
       };
 
