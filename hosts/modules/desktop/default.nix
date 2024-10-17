@@ -72,20 +72,18 @@ in
           group = "seatd";
         };
 
-        # Enable screen locking
-        swaylock.enable = true;
-
         # Enable greetd service
         greetd = {
           enable = true;
           settings = {
-            greet = {
-              command = "${pkgs.wlgreet}/bin/wlgreet";
+            default_session = {
+              command = "${pkgs.hyprland}/bin/Hyprland";
             };
-            default_session = "hyprland";
           } // (if cfg.autoLogin.enable then {
-            default_user = cfg.autoLogin.user;
-            auto_login = true;
+            initial_session = {
+              command = "${pkgs.hyprland}/bin/Hyprland";
+              user = cfg.autoLogin.user;
+            };
           } else { });
         };
       };
@@ -109,7 +107,6 @@ in
         mako
         swaylock
         seatd
-        wlgreet # Install wlgreet
       ]);
     })
   ]);
