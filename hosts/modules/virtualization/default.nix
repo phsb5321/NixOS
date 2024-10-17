@@ -32,7 +32,7 @@ in
     username = mkOption {
       type = types.str;
       default = "notroot"; # Replace with your actual username
-      description = "The username to add to the libvirtd and kvm groups.";
+      description = "The username to add to the libvirtd, kvm, and render groups.";
     };
   };
 
@@ -46,11 +46,24 @@ in
           swtpm.enable = true;
           package =
             if cfg.enable3DAcceleration
-            then pkgs.qemu_kvm.override { gtkSupport = true; virglSupport = true; spiceSupport = true; }
+            then
+              pkgs.qemu_kvm.override
+                {
+                  gtkSupport = true;
+                  virglSupport = true;
+                  spiceSupport = true;
+                }
             else pkgs.qemu_kvm;
         };
         onBoot = "start";
         onShutdown = "shutdown";
+
+        # Use extraConfig to set SPICE listen address in qemu.conf
+        extraConfig = ''
+          ${lib.optionalString cfg.enable3DAcceleration ''
+            spice_listen = "unix"
+          ''}
+        '';
       };
     };
 
@@ -74,7 +87,6 @@ in
       wantedBy = [ "multi-user.target" ];
       requires = [ "libvirtd.service" ];
       after = [ "libvirtd.service" ];
-      # Use 'script' for ExecStart
       script = ''
         #!/usr/bin/env bash
         # If the network is already defined, skip defining it
@@ -87,11 +99,12 @@ in
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = "yes";
-        # Define ExecStop directly
-        ExecStop = "${pkgs.bash}/bin/bash -c '\
-          ${pkgs.libvirt}/bin/virsh net-destroy default || true;\
-          ${pkgs.libvirt}/bin/virsh net-undefine default || true\
-        '";
+        ExecStop = ''
+          ${pkgs.bash}/bin/bash -c '
+            ${pkgs.libvirt}/bin/virsh net-destroy default || true
+            ${pkgs.libvirt}/bin/virsh net-undefine default || true
+          '
+        '';
       };
     };
 
@@ -118,8 +131,12 @@ in
     # Enable dconf, which virt-manager requires to remember settings
     programs.dconf.enable = cfg.enableVirtManager;
 
-    # Add the specified user to the libvirtd and kvm groups
-    users.users.${cfg.username}.extraGroups = mkIf cfg.enableLibvirtd [ "libvirtd" "kvm" ];
+    # Add the specified user to the libvirtd, kvm, and render groups
+    users.users.${cfg.username}.extraGroups = mkIf cfg.enableLibvirtd [
+      "libvirtd"
+      "kvm"
+      "render"
+    ];
 
     # Ensure the libvirtd service starts at boot
     systemd.services.libvirtd = {
