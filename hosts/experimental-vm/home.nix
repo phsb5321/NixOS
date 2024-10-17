@@ -191,23 +191,6 @@
     xwayland.enable = true;
   };
 
-  # Waybar configuration
-  programs.waybar = {
-    enable = true;
-    systemd.enable = true;
-    style = ''
-      /* Your custom CSS here */
-    '';
-    settings = [{
-      layer = "top";
-      position = "top";
-      modules-left = [ "hyprland/workspaces" "hyprland/mode" ];
-      modules-center = [ "clock" ];
-      modules-right = [ "pulseaudio" "network" "cpu" "memory" "battery" ];
-      # Add more configuration as needed
-    }];
-  };
-
   # Home Manager Self-Management
   programs.home-manager.enable = true;
 }
