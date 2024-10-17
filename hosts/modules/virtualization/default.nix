@@ -26,6 +26,14 @@ in
       default = true;
       description = "Enable virt-manager";
     };
+
+    enable3DAcceleration = mkEnableOption "3D acceleration for QEMU/KVM";
+
+    username = mkOption {
+      type = types.str;
+      default = "notroot"; # Replace with your actual username
+      description = "The username to add to the libvirtd and kvm groups.";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -35,28 +43,55 @@ in
         qemu = {
           ovmf.enable = true;
           runAsRoot = true;
+          swtpm.enable = true;
+          package =
+            if cfg.enable3DAcceleration
+            then pkgs.qemu_kvm.override { gtkSupport = true; virglSupport = true; spiceSupport = true; }
+            else pkgs.qemu_kvm;
         };
-        onBoot = "start"; # Changed from "ignore" to "start"
+        onBoot = "start";
         onShutdown = "shutdown";
+      };
+    };
 
-        # Configure the default network for libvirtd
-        networks = {
-          default = {
-            autoStart = true;
-            config = ''
-              <network>
-                <name>default</name>
-                <bridge name="virbr0"/>
-                <forward/>
-                <ip address="192.168.122.1" netmask="255.255.255.0">
-                  <dhcp>
-                    <range start="192.168.122.2" end="192.168.122.254"/>
-                  </dhcp>
-                </ip>
-              </network>
-            '';
-          };
-        };
+    # Define the network XML file
+    environment.etc."libvirt/qemu/networks/default.xml".text = ''
+      <network>
+        <name>default</name>
+        <bridge name="virbr0"/>
+        <forward/>
+        <ip address="192.168.122.1" netmask="255.255.255.0">
+          <dhcp>
+            <range start="192.168.122.2" end="192.168.122.254"/>
+          </dhcp>
+        </ip>
+      </network>
+    '';
+
+    # Adjust the systemd service to handle the network
+    systemd.services.libvirtd-default-network = {
+      enable = true;
+      wantedBy = [ "multi-user.target" ];
+      requires = [ "libvirtd.service" ];
+      after = [ "libvirtd.service" ];
+      # Use 'script' for ExecStart
+      script = ''
+        #!/usr/bin/env bash
+        # If the network is already defined, skip defining it
+        if ! ${pkgs.libvirt}/bin/virsh net-info default >/dev/null 2>&1; then
+          ${pkgs.libvirt}/bin/virsh net-define /etc/libvirt/qemu/networks/default.xml
+        fi
+        ${pkgs.libvirt}/bin/virsh net-autostart default
+        ${pkgs.libvirt}/bin/virsh net-start default
+      '';
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = "yes";
+        # Define ExecStop directly
+        ExecStop = "${pkgs.bash}/bin/bash -c '\
+          ${pkgs.libvirt}/bin/virsh net-destroy default || true;\
+          ${pkgs.libvirt}/bin/virsh net-undefine default || true\
+        '";
       };
     };
 
@@ -64,34 +99,32 @@ in
       enable = true;
     };
 
-    environment.systemPackages = mkIf cfg.enableQemu [
-      pkgs.qemu
+    environment.systemPackages = with pkgs; [
+      virt-manager
+      virt-viewer
+      spice
+      spice-gtk
+      spice-protocol
+      virglrenderer
+      win-virtio
+      win-spice
+    ] ++ lib.optionals cfg.enable3DAcceleration [
+      mesa
+      mesa.drivers
+    ] ++ lib.optionals cfg.enableQemu [
+      qemu
     ];
 
     # Enable dconf, which virt-manager requires to remember settings
     programs.dconf.enable = cfg.enableVirtManager;
 
-    # Add the current user to the libvirtd group
-    users.users.${config.user.name}.extraGroups = mkIf cfg.enableLibvirtd [ "libvirtd" ];
+    # Add the specified user to the libvirtd and kvm groups
+    users.users.${cfg.username}.extraGroups = mkIf cfg.enableLibvirtd [ "libvirtd" "kvm" ];
 
     # Ensure the libvirtd service starts at boot
     systemd.services.libvirtd = {
       enable = true;
       wantedBy = [ "multi-user.target" ];
-    };
-
-    # Ensure the default network starts automatically
-    systemd.services.libvirtd-default-network = {
-      enable = true;
-      wantedBy = [ "multi-user.target" ];
-      requires = [ "libvirtd.service" ];
-      after = [ "libvirtd.service" ];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = "yes";
-        ExecStart = "${pkgs.libvirt}/bin/virsh net-start default";
-        ExecStop = "${pkgs.libvirt}/bin/virsh net-destroy default";
-      };
     };
   };
 }
