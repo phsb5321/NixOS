@@ -74,22 +74,20 @@ in
 
         # Enable screen locking
         swaylock.enable = true;
-      };
 
-      # Use greetd as the login manager with wlgreet for Wayland
-      services.greetd = {
-        enable = true;
-        greeter = {
-          wlgreet = {
-            enable = true;
-          };
+        # Enable greetd service
+        greetd = {
+          enable = true;
+          settings = {
+            greet = {
+              command = "${pkgs.wlgreet}/bin/wlgreet";
+            };
+            default_session = "hyprland";
+          } // (if cfg.autoLogin.enable then {
+            default_user = cfg.autoLogin.user;
+            auto_login = true;
+          } else { });
         };
-        settings = {
-          default_session = "hyprland";
-        } // (mkIf cfg.autoLogin.enable {
-          default_user = cfg.autoLogin.user;
-          auto_login = true;
-        });
       };
 
       # Environment variables for keyboard layout
@@ -111,6 +109,7 @@ in
         mako
         swaylock
         seatd
+        wlgreet # Install wlgreet
       ]);
     })
   ]);
