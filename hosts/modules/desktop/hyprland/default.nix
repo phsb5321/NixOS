@@ -198,7 +198,7 @@ in
           bindm = ${mod}, mouse:273, resizewindow
 
           # Execute custom scripts
-          exec-once = waybar & hyprpaper & mako
+          exec-once = hyprpaper & mako
         '';
       };
 
