@@ -94,32 +94,32 @@ in
 
         # Auto-login configuration for greetd
         (mkIf cfg.autoLogin.enable {
-          services.greetd.settings = {
-            default_user = cfg.autoLogin.user;
-            auto_login = true;
-          };
-        })
-
-        # Environment variables for keyboard layout
-        environment.variables = {
-          XKB_DEFAULT_LAYOUT = "br";
-          XKB_DEFAULT_VARIANT = "";
+        services.greetd.settings = {
+          default_user = cfg.autoLogin.user;
+          auto_login = true;
         };
+      })
 
-        # Additional system packages required for Hyprland
-        environment.systemPackages = cfg.extraPackages ++ (with pkgs; [
-          waybar
-          wofi
-          swww
-          hyprpaper
-          grim
-          slurp
-          wl-clipboard
-          xdg-desktop-portal-wlr
-          mako
-          swaylock
-          seatd
-        ]);
+      # Environment variables for keyboard layout
+      environment.variables = {
+      XKB_DEFAULT_LAYOUT = "br";
+      XKB_DEFAULT_VARIANT = "";
+    };
+
+      # Additional system packages required for Hyprland
+      environment.systemPackages = cfg.extraPackages ++ (with pkgs; [
+      waybar
+      wofi
+      swww
+      hyprpaper
+      grim
+      slurp
+      wl-clipboard
+      xdg-desktop-portal-wlr
+      mako
+      swaylock
+      seatd
+    ]);
       }
     ]))
   ]);
