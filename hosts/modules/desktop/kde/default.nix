@@ -4,7 +4,8 @@ with lib;
 
 let
   cfg = config.modules.desktop;
-in {
+in
+{
   config = mkIf (cfg.enable && cfg.environment == "kde") {
     services.xserver = {
       enable = true;
