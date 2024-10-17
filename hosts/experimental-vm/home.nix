@@ -17,7 +17,6 @@
       noto-fonts-emoji
       noto-fonts
       fish
-      kitty
       eza
       htop
       neofetch
@@ -49,7 +48,8 @@
 
   programs.kitty = {
     enable = true;
-    theme = "Tokyo Night";
+    # Use themeFile instead of theme
+    themeFile = "${pkgs.kitty-themes}/share/kitty-themes/Tokyo_Night.conf";
     font = {
       name = "JetBrainsMono Nerd Font";
       size = 14;
@@ -79,11 +79,10 @@
     globals.mapleader = " ";
 
     # General options
-    opts = {
+    options = {
       number = true; # Show line numbers
       shiftwidth = 2; # Tab width should be 2
-      # Use xclip to copy to clipboard
-      clipboard = "unnamedplus";
+      clipboard = "unnamedplus"; # Use system clipboard
     };
 
     plugins = {
@@ -97,27 +96,20 @@
               path = "~/Documents/Obsidian/Notes";
             }
           ];
-          conceallevel = 2; # Set conceal level (0-2)
+          conceallevel = 2;
           daily_notes = {
             folder = "3. Resources/Daily";
             date_format = "%Y/%B/%d (%A)";
           };
         };
       };
-      treesitter = {
-        enable = true;
-        settings.ensure_installed = "all";
-      };
+      treesitter.enable = true;
       lsp = {
         enable = true;
         servers = {
-          rust_analyzer = {
-            enable = true;
-            installCargo = true;
-            installRustc = true;
-          };
+          rust-analyzer.enable = true;
           pyright.enable = true;
-          ts_ls.enable = true;
+          tsserver.enable = true;
           nil_ls.enable = true;
         };
       };
@@ -146,10 +138,8 @@
       web-devicons.enable = true;
       copilot-vim = {
         enable = true;
-        settings = { };
       };
     };
-    # Additional settings for Obsidian markdown files
     extraConfigLua = ''
       vim.api.nvim_create_autocmd("FileType", {
         pattern = "markdown",
@@ -159,6 +149,30 @@
         end
       })
     '';
+  };
+
+  # Wayland and Hyprland configuration
+  wayland.windowManager.hyprland = {
+    enable = true;
+    systemdIntegration = true;
+    xwayland.enable = true;
+  };
+
+  # Waybar configuration
+  programs.waybar = {
+    enable = true;
+    systemd.enable = true;
+    style = ''
+      /* Your custom CSS here */
+    '';
+    settings = [{
+      layer = "top";
+      position = "top";
+      modules-left = ["hyprland/workspaces" "hyprland/mode"];
+      modules-center = ["clock"];
+      modules-right = ["pulseaudio" "network" "cpu" "memory" "battery"];
+      // Add more configuration as needed
+    }];
   };
 
   # Home Manager Self-Management
