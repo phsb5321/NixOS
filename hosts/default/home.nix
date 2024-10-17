@@ -25,9 +25,6 @@
       grc
       eza
       ffmpeg
-      calibre
-      activitywatch
-      anki
       gh
       brave
       yazi-unwrapped
