@@ -40,15 +40,8 @@
     environment = "hyprland";
     extraPackages = with pkgs; [
       firefox
-      waybar
-      wofi
-      swww
-      hyprpaper
-      grim
-      slurp
-      wl-clipboard
-      mako
-      swaylock
+      kitty
+      neofetch
     ];
     autoLogin = {
       enable = true;
@@ -58,7 +51,68 @@
 
   console.keyMap = "br-abnt2";
 
-  # Enable CUPS to print documents
+  # Define user account
+  users.users.notroot = {
+    isNormalUser = true;
+    description = "Pedro Balbino";
+    extraGroups = [ "wheel" "networkmanager" ];
+    packages = with pkgs; [
+      git
+      gh
+    ];
+  };
+
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
+
+  # System packages
+  environment.systemPackages = with pkgs; [
+    vim
+    wget
+  ];
+
+  # Enable some programs
+  programs = {
+    mtr.enable = true;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+    fish.enable = true;
+  };
+
+  # Set default shell to fish
+  users.defaultUserShell = pkgs.fish;
+
+  # Enable OpenSSH daemon
+  services.openssh.enable = true;
+
+  # Home Manager configuration
+  home-manager = {
+    extraSpecialArgs = { inherit inputs; };
+    users.notroot = import ./home.nix;
+  };
+
+  # Nix settings
+  nix = {
+    settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+      auto-optimise-store = true;
+    };
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 30d";
+    };
+  };
+
+  # System-wide environment variables
+  environment.sessionVariables = {
+    EDITOR = "nvim";
+    VISUAL = "nvim";
+  };
+
+  # Enable CUPS for printing
   services.printing.enable = true;
 
   # Enable sound with pipewire
@@ -71,75 +125,12 @@
     jack.enable = true;
   };
 
-  # Define user account
-  users.users.notroot = {
-    isNormalUser = true;
-    description = "Pedro Balbino";
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "seat" ];
-  };
+  # Enable Bluetooth
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
-  # System packages
-  environment.systemPackages = with pkgs; [
-    vim
-    wget
-    git
-    gh
-    libsForQt5.qt5.qtwayland
-    qt6.qtwayland
-    xdg-desktop-portal-wlr
-    xdg-desktop-portal-gtk
-    greetd.tuigreet
-  ];
-
-  # Enable some programs
-  programs.mtr.enable = true;
-  programs.gnupg.agent = {
-    enable = true;
-    enableSSHSupport = true;
-  };
-
-  # Disable Steam
-  programs.steam.enable = false;
-
-  # Enable OpenSSH daemon
-  services.openssh.enable = true;
-
-  # Home Manager configuration
-  home-manager = {
-    extraSpecialArgs = { inherit inputs; };
-    users.notroot = import ./home.nix;
-  };
-
-  # Enable OpenGL
-  hardware.opengl = {
-    enable = true;
-    driSupport32Bit = true;
-  };
-
-  # XDG Portal configuration
-  xdg.portal = {
-    enable = true;
-    wlr.enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-  };
-
-  # Enable DBus
-  services.dbus.enable = true;
-
-  # Environment variables for Wayland
-  environment.sessionVariables = {
-    NIXOS_OZONE_WL = "1";
-    WLR_NO_HARDWARE_CURSORS = "1";
-    XDG_SESSION_TYPE = "wayland";
-    XDG_CURRENT_DESKTOP = "Hyprland";
-    XDG_SESSION_DESKTOP = "Hyprland";
-  };
+  # Enable automatic login for the user
+  services.getty.autologinUser = "notroot";
 
   system.stateVersion = "24.05";
-
-  # Nix settings
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 }
