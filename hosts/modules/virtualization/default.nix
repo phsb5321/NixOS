@@ -7,72 +7,65 @@ let
 in
 {
   options.modules.virtualization = {
-    enable = mkEnableOption "Virtualization module";
-
-    enableQemu = mkOption {
-      type = types.bool;
-      default = true;
-      description = "Enable QEMU";
-    };
+    enable = mkEnableOption "Enable the virtualization module";
 
     enableLibvirtd = mkOption {
       type = types.bool;
       default = true;
-      description = "Enable libvirtd";
+      description = "Enable libvirtd for managing virtual machines";
     };
 
     enableVirtManager = mkOption {
       type = types.bool;
       default = true;
-      description = "Enable virt-manager";
+      description = "Enable virt-manager for VM GUI management";
     };
-
-    enable3DAcceleration = mkEnableOption "3D acceleration for QEMU/KVM";
 
     username = mkOption {
       type = types.str;
-      default = "notroot"; # Replace with your actual username
-      description = "The username to add to the libvirtd, kvm, and render groups.";
+      example = "alice";
+      description = "Username to add to virtualization groups";
     };
   };
 
   config = mkIf cfg.enable {
-    virtualisation = mkIf cfg.enableLibvirtd {
-      libvirtd = {
-        enable = true;
-        qemu = {
-          ovmf.enable = true;
-          runAsRoot = true;
-          swtpm.enable = true;
-          package =
-            if cfg.enable3DAcceleration
-            then
-              pkgs.qemu_kvm.override
-                {
-                  gtkSupport = true;
-                  virglSupport = true;
-                  spiceSupport = true;
-                }
-            else pkgs.qemu_kvm;
-        };
-        onBoot = "start";
-        onShutdown = "shutdown";
-
-        # Use extraConfig to set SPICE listen address in qemu.conf
-        extraConfig = ''
-          ${lib.optionalString cfg.enable3DAcceleration ''
-            spice_listen = "unix"
-          ''}
+    # Libvirtd configuration
+    virtualisation.libvirtd = mkIf cfg.enableLibvirtd {
+      enable = true;
+      qemu = {
+        ovmf.enable = true;
+        runAsRoot = true;
+        swtpm.enable = true;
+        verbatimConfig = ''
+          unix_sock_group = "libvirtd"
+          unix_sock_rw_perms = "0770"
+          spice_listen = "unix"
+          spice_auto_unix_socket = "on"
+          nographics_allow_host_audio = 1
+          vnc_allow_host_audio = 1
+          spice_gl = "on"
+          spice_rendernode = "/dev/dri/renderD128"
         '';
       };
+      onBoot = "start";
+      onShutdown = "shutdown";
     };
 
-    # Define the network XML file
+    # QEMU configuration for SPICE and GL support
+    virtualisation.spiceUSBRedirection.enable = true;
+    environment.sessionVariables.LIBVIRT_DEFAULT_URI = "qemu:///system";
+
+    # Virt-manager configuration
+    programs.virt-manager = mkIf cfg.enableVirtManager {
+      enable = true;
+    };
+
+    # Default network configuration for libvirtd
     environment.etc."libvirt/qemu/networks/default.xml".text = ''
       <network>
         <name>default</name>
         <bridge name="virbr0"/>
-        <forward/>
+        <forward mode="nat"/>
         <ip address="192.168.122.1" netmask="255.255.255.0">
           <dhcp>
             <range start="192.168.122.2" end="192.168.122.254"/>
@@ -81,67 +74,73 @@ in
       </network>
     '';
 
-    # Adjust the systemd service to handle the network
-    systemd.services.libvirtd-default-network = {
-      enable = true;
-      wantedBy = [ "multi-user.target" ];
-      requires = [ "libvirtd.service" ];
+    # Systemd service to ensure the default network is started
+    systemd.services.libvirtd-default-network = mkIf cfg.enableLibvirtd {
+      description = "libvirtd default network";
       after = [ "libvirtd.service" ];
-      script = ''
-        #!/usr/bin/env bash
-        # If the network is already defined, skip defining it
-        if ! ${pkgs.libvirt}/bin/virsh net-info default >/dev/null 2>&1; then
-          ${pkgs.libvirt}/bin/virsh net-define /etc/libvirt/qemu/networks/default.xml
-        fi
-        ${pkgs.libvirt}/bin/virsh net-autostart default
-        ${pkgs.libvirt}/bin/virsh net-start default
-      '';
+      requires = [ "libvirtd.service" ];
+      wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
-        RemainAfterExit = "yes";
-        ExecStop = ''
+        RemainAfterExit = true;
+        ExecStart = ''
           ${pkgs.bash}/bin/bash -c '
-            ${pkgs.libvirt}/bin/virsh net-destroy default || true
-            ${pkgs.libvirt}/bin/virsh net-undefine default || true
+            ${pkgs.libvirt}/bin/virsh net-define /etc/libvirt/qemu/networks/default.xml
+            ${pkgs.libvirt}/bin/virsh net-autostart default
+            ${pkgs.libvirt}/bin/virsh net-start default
           '
         '';
       };
     };
 
-    programs.virt-manager = mkIf cfg.enableVirtManager {
-      enable = true;
-    };
-
+    # Include necessary packages
     environment.systemPackages = with pkgs; [
       virt-manager
       virt-viewer
-      spice
       spice-gtk
       spice-protocol
-      virglrenderer
-      win-virtio
-      win-spice
-    ] ++ lib.optionals cfg.enable3DAcceleration [
-      mesa
-      mesa.drivers
-    ] ++ lib.optionals cfg.enableQemu [
       qemu
+      OVMF
     ];
 
-    # Enable dconf, which virt-manager requires to remember settings
+    # Enable dconf for virt-manager settings persistence
     programs.dconf.enable = cfg.enableVirtManager;
 
-    # Add the specified user to the libvirtd, kvm, and render groups
-    users.users.${cfg.username}.extraGroups = mkIf cfg.enableLibvirtd [
+    # Add the user to required groups for virtualization
+    users.users.${cfg.username}.extraGroups = [
       "libvirtd"
       "kvm"
-      "render"
     ];
 
-    # Ensure the libvirtd service starts at boot
+    # Load necessary kernel modules for virtualization
+    boot.kernelModules = [ "kvm-intel" "kvm-amd" ];
+
+    # Enable nested virtualization (if supported by hardware)
+    boot.extraModprobeConfig = ''
+      options kvm-intel nested=1
+      options kvm-amd nested=1
+    '';
+
+    # Enable 3D acceleration
+    hardware.opengl.enable = true;
+    hardware.opengl.driSupport32Bit = true;
+
+    # Ensure libvirtd service is running and enabled
     systemd.services.libvirtd = {
       enable = true;
       wantedBy = [ "multi-user.target" ];
+      path = [ pkgs.qemu ];
+      serviceConfig = {
+        KillMode = lib.mkForce "process";
+        Restart = lib.mkForce "on-failure";
+        RestartSec = lib.mkForce "1s";
+      };
     };
+
+    # Set permissions for libvirt socket directory
+    systemd.tmpfiles.rules = [
+      "d /var/run/libvirt 0755 root root -"
+      "d /var/run/libvirt/qemu 0755 root root -"
+    ];
   };
 }

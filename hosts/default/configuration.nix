@@ -216,10 +216,9 @@
 
   modules.virtualization = {
     enable = true;
-    enableQemu = true;
     enableLibvirtd = true;
     enableVirtManager = true;
-    enable3DAcceleration = true;
+    username = "notroot";
   };
 
   # Ensure dconf is enabled for virt-manager

@@ -134,7 +134,6 @@
 
   modules.virtualization = {
     enable = true;
-    enableQemu = true;
     enableLibvirtd = true;
     enableVirtManager = true;
   };
