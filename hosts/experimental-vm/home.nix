@@ -75,6 +75,7 @@
       comment.enable = true;
       nvim-autopairs.enable = true;
       gitsigns.enable = true;
+      web-devicons.enable = true;
     };
   };
 
