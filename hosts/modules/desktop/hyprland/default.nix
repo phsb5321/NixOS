@@ -38,7 +38,6 @@ in
 
     hardware = {
       opengl.enable = true;
-      vulkan.enable = true;
       nvidia.modesetting.enable = true;
     };
 
