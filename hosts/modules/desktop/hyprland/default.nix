@@ -14,26 +14,16 @@ in
       xwayland.enable = true;
     };
 
-    # SDDM configuration
-    services.xserver = {
+    # Reintroduce greetd configuration
+    services.greetd = {
       enable = true;
-      displayManager.sddm = {
-        enable = true;
-        wayland.enable = true;
-        theme = "breeze"; # You can change this to any installed SDDM theme
+      settings = {
+        default_session = {
+          command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd Hyprland";
+          user = "greeter";
+        };
       };
     };
-
-    # Remove greetd configuration as we're now using SDDM
-    # services.greetd = {
-    #   enable = true;
-    #   settings = {
-    #     default_session = {
-    #       command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd Hyprland";
-    #       user = "greeter";
-    #     };
-    #   };
-    # };
 
     environment.sessionVariables = {
       NIXOS_OZONE_WL = "1";
@@ -69,7 +59,8 @@ in
       firefox
       brightnessctl
       pamixer
-      sddm-kcm # SDDM configuration tool
+      # Remove sddm-kcm as it's no longer needed
+      # sddm-kcm
     ];
 
     xdg.portal = {
