@@ -36,7 +36,7 @@ in
       CLUTTER_BACKEND = "wayland";
     };
 
-    hardware.opengl.enable = true;
+    hardware.graphics.enable = true;
 
     environment.systemPackages = with pkgs; [
       waybar

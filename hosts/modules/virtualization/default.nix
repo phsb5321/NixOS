@@ -91,9 +91,9 @@ in
     '';
 
     # Enable 3D acceleration
-    hardware.opengl = {
+    hardware.graphics = {
       enable = true;
-      driSupport32Bit = true;
+      enable32Bit = true;
     };
 
     # Add user to necessary groups
