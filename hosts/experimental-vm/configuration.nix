@@ -8,11 +8,13 @@
     ../modules/virtualization
   ];
 
-  # Bootloader configuration
-  boot.loader.grub = {
-    enable = true;
-    device = "/dev/vda";
-    useOSProber = true;
+  # Bootloader configuration for UEFI
+  boot.loader = {
+    systemd-boot.enable = true;
+    efi = {
+      canTouchEfiVariables = true;
+      efiSysMountPoint = "/boot";
+    };
   };
 
   networking = {
