@@ -11,10 +11,7 @@
   # Bootloader configuration for UEFI
   boot.loader = {
     systemd-boot.enable = true;
-    efi = {
-      canTouchEfiVariables = true;
-      efiSysMountPoint = "/boot";
-    };
+    efi.canTouchEfiVariables = true;
   };
 
   networking = {
