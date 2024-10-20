@@ -10,6 +10,7 @@ in
   config = mkIf (cfg.enable && cfg.environment == "hyprland") {
     programs.hyprland = {
       enable = true;
+      nvidiaPatches = true;
       xwayland.enable = true;
     };
 
@@ -26,8 +27,6 @@ in
     environment.sessionVariables = {
       NIXOS_OZONE_WL = "1";
       WLR_NO_HARDWARE_CURSORS = "1";
-      WLR_RENDERER_ALLOW_SOFTWARE = "1";
-      LIBGL_ALWAYS_SOFTWARE = "1";
       XDG_SESSION_TYPE = "wayland";
       XDG_CURRENT_DESKTOP = "Hyprland";
       XDG_SESSION_DESKTOP = "Hyprland";
@@ -35,6 +34,12 @@ in
       QT_QPA_PLATFORM = "wayland;xcb";
       SDL_VIDEODRIVER = "wayland";
       CLUTTER_BACKEND = "wayland";
+    };
+
+    hardware = {
+      opengl.enable = true;
+      vulkan.enable = true;
+      nvidia.modesetting.enable = true;
     };
 
     environment.systemPackages = with pkgs; [
@@ -123,7 +128,16 @@ in
           }
 
           animations {
-              enabled = no # Disabled animations for better VM performance
+              enabled = yes
+
+              bezier = myBezier, 0.05, 0.9, 0.1, 1.05
+
+              animation = windows, 1, 7, myBezier
+              animation = windowsOut, 1, 7, default, popin 80%
+              animation = border, 1, 10, default
+              animation = borderangle, 1, 8, default
+              animation = fade, 1, 7, default
+              animation = workspaces, 1, 6, default
           }
 
           dwindle {
@@ -192,11 +206,6 @@ in
 
           # Execute custom scripts
           exec-once = hyprpaper & mako
-
-          # VM-specific tweaks
-          misc {
-              vfr = false
-          }
         '';
       };
 
@@ -212,7 +221,6 @@ in
 
       # Waybar configuration
       programs.waybar = {
-        enable = true;
         settings = [{
           layer = "top";
           position = "top";

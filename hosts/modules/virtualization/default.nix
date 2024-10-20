@@ -39,6 +39,24 @@ in
       };
     };
 
+    # VM-specific configurations to support Wayland compositors like Hyprland
+    virtualisation.vmVariant = {
+      virtualisation.qemu.options = [
+        "-device virtio-vga-gl"
+        "-display sdl,gl=on,show-cursor=off"
+        # Wire up pipewire audio
+        "-audiodev pipewire,id=audio0"
+        "-device intel-hda"
+        "-device hda-output,audiodev=audio0"
+      ];
+
+      environment.sessionVariables = lib.mkVMOverride {
+        WLR_NO_HARDWARE_CURSORS = "1";
+        WLR_RENDERER_ALLOW_SOFTWARE = "1";
+        LIBGL_ALWAYS_SOFTWARE = "1";
+      };
+    };
+
     # Enable SPICE USB redirection
     services.spice-vdagentd.enable = true;
 
