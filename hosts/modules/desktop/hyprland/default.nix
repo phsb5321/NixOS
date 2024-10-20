@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 with lib;
 
@@ -8,6 +8,7 @@ let
 in
 {
   config = mkIf (cfg.enable && cfg.environment == "hyprland") {
+    # System-level Hyprland configuration
     programs.hyprland = {
       enable = true;
       xwayland.enable = true;
@@ -35,9 +36,7 @@ in
       CLUTTER_BACKEND = "wayland";
     };
 
-    hardware = {
-      opengl.enable = true;
-    };
+    hardware.opengl.enable = true;
 
     environment.systemPackages = with pkgs; [
       waybar
@@ -46,7 +45,7 @@ in
       grim
       slurp
       wl-clipboard
-      dunst # Replace mako with dunst
+      dunst
       libnotify
       swaylock-effects
       wlogout
@@ -73,140 +72,110 @@ in
       (nerdfonts.override { fonts = [ "JetBrainsMono" "FiraCode" "DroidSansMono" ]; })
     ];
 
-    # Add Home Manager configuration for Hyprland
+    # Home Manager configuration for Hyprland
     home-manager.users.${cfg.autoLogin.user} = { pkgs, ... }: {
+      imports = [
+        inputs.hyprland.homeManagerModules.default
+      ];
+
       wayland.windowManager.hyprland = {
         enable = true;
-        extraConfig = ''
-          # Monitor configuration
-          monitor=,preferred,auto,1
+        systemd.enable = true;
+        xwayland.enable = true;
 
-          # Set programs that you use
-          $terminal = kitty
-          $menu = wofi --show drun --show-icons
-          $browser = firefox
+        settings = {
+          monitor = ",preferred,auto,1";
 
-          # Some default env vars.
-          env = XCURSOR_SIZE,24
+          "$mod" = "ALT";
+          "$terminal" = "kitty";
+          "$menu" = "wofi --show drun --show-icons";
+          "$browser" = "firefox";
 
-          # For all categories, see https://wiki.hyprland.org/Configuring/Variables/
-          input {
-              kb_layout = br
-              kb_variant =
-              kb_model =
-              kb_options =
-              kb_rules =
+          env = "XCURSOR_SIZE,24";
 
-              follow_mouse = 1
+          input = {
+            kb_layout = "br";
+            follow_mouse = 1;
+            touchpad.natural_scroll = true;
+            sensitivity = 0;
+          };
 
-              touchpad {
-                  natural_scroll = yes
-              }
+          general = {
+            gaps_in = 5;
+            gaps_out = 5;
+            border_size = 2;
+            "col.active_border" = "rgba(33ccffee) rgba(00ff99ee) 45deg";
+            "col.inactive_border" = "rgba(595959aa)";
+            layout = "dwindle";
+          };
 
-              sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
-          }
+          decoration = {
+            rounding = 10;
+            drop_shadow = true;
+            shadow_range = 4;
+            shadow_render_power = 3;
+            "col.shadow" = "rgba(1a1a1aee)";
+          };
 
-          general {
-              gaps_in = 5
-              gaps_out = 5
-              border_size = 2
-              col.active_border = rgba(33ccffee) rgba(00ff99ee) 45deg
-              col.inactive_border = rgba(595959aa)
+          animations = {
+            enabled = true;
+            bezier = "myBezier, 0.05, 0.9, 0.1, 1.05";
+            animation = [
+              "windows, 1, 7, myBezier"
+              "windowsOut, 1, 7, default, popin 80%"
+              "border, 1, 10, default"
+              "borderangle, 1, 8, default"
+              "fade, 1, 7, default"
+              "workspaces, 1, 6, default"
+            ];
+          };
 
-              layout = dwindle
-          }
+          dwindle = {
+            pseudotile = true;
+            preserve_split = true;
+          };
 
-          decoration {
-              rounding = 10
-              drop_shadow = yes
-              shadow_range = 4
-              shadow_render_power = 3
-              col.shadow = rgba(1a1a1aee)
-          }
+          gestures.workspace_swipe = true;
 
-          animations {
-              enabled = yes
+          # Example keybinds
+          bind = [
+            "$mod, RETURN, exec, $terminal"
+            "$mod, Q, killactive"
+            "$mod, M, exit"
+            "$mod, E, exec, $fileManager"
+            "$mod, V, togglefloating"
+            "$mod, R, exec, $menu"
+            "$mod, P, pseudo"
+            "$mod, J, togglesplit"
+            "$mod, left, movefocus, l"
+            "$mod, right, movefocus, r"
+            "$mod, up, movefocus, u"
+            "$mod, down, movefocus, d"
+          ] ++ (
+            # Workspaces
+            builtins.concatLists (builtins.genList (
+              x: let
+                ws = let
+                  c = (x + 1) / 10;
+                in
+                  builtins.toString (x + 1 - (c * 10));
+              in [
+                "$mod, ${ws}, workspace, ${toString (x + 1)}"
+                "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
+              ]
+            ) 10)
+          );
 
-              bezier = myBezier, 0.05, 0.9, 0.1, 1.05
+          bindm = [
+            "$mod, mouse:272, movewindow"
+            "$mod, mouse:273, resizewindow"
+          ];
 
-              animation = windows, 1, 7, myBezier
-              animation = windowsOut, 1, 7, default, popin 80%
-              animation = border, 1, 10, default
-              animation = borderangle, 1, 8, default
-              animation = fade, 1, 7, default
-              animation = workspaces, 1, 6, default
-          }
-
-          dwindle {
-              pseudotile = yes # master switch for pseudotiling
-              preserve_split = yes # you probably want this
-          }
-
-          gestures {
-              workspace_swipe = yes
-          }
-
-          # Example windowrule v1
-          # windowrule = float, ^(kitty)$
-          # Example windowrule v2
-          # windowrulev2 = float,class:^(kitty)$,title:^(kitty)$
-
-          # See https://wiki.hyprland.org/Configuring/Keywords/ for more
-
-          # Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
-          bind = ${mod}, RETURN, exec, $terminal
-          bind = ${mod}, Q, killactive,
-          bind = ${mod}, M, exit,
-          bind = ${mod}, E, exec, $fileManager
-          bind = ${mod}, V, togglefloating,
-          bind = ${mod}, R, exec, $menu
-          bind = ${mod}, P, pseudo, # dwindle
-          bind = ${mod}, J, togglesplit, # dwindle
-
-          # Move focus with mod + arrow keys
-          bind = ${mod}, left, movefocus, l
-          bind = ${mod}, right, movefocus, r
-          bind = ${mod}, up, movefocus, u
-          bind = ${mod}, down, movefocus, d
-
-          # Switch workspaces with mod + [0-9]
-          bind = ${mod}, 1, workspace, 1
-          bind = ${mod}, 2, workspace, 2
-          bind = ${mod}, 3, workspace, 3
-          bind = ${mod}, 4, workspace, 4
-          bind = ${mod}, 5, workspace, 5
-          bind = ${mod}, 6, workspace, 6
-          bind = ${mod}, 7, workspace, 7
-          bind = ${mod}, 8, workspace, 8
-          bind = ${mod}, 9, workspace, 9
-          bind = ${mod}, 0, workspace, 10
-
-          # Move active window to a workspace with mod + SHIFT + [0-9]
-          bind = ${mod} SHIFT, 1, movetoworkspace, 1
-          bind = ${mod} SHIFT, 2, movetoworkspace, 2
-          bind = ${mod} SHIFT, 3, movetoworkspace, 3
-          bind = ${mod} SHIFT, 4, movetoworkspace, 4
-          bind = ${mod} SHIFT, 5, movetoworkspace, 5
-          bind = ${mod} SHIFT, 6, movetoworkspace, 6
-          bind = ${mod} SHIFT, 7, movetoworkspace, 7
-          bind = ${mod} SHIFT, 8, movetoworkspace, 8
-          bind = ${mod} SHIFT, 9, movetoworkspace, 9
-          bind = ${mod} SHIFT, 0, movetoworkspace, 10
-
-          # Scroll through existing workspaces with mod + scroll
-          bind = ${mod}, mouse_down, workspace, e+1
-          bind = ${mod}, mouse_up, workspace, e-1
-
-          # Move/resize windows with mod + LMB/RMB and dragging
-          bindm = ${mod}, mouse:272, movewindow
-          bindm = ${mod}, mouse:273, resizewindow
-
-          # Execute custom scripts
-          exec-once = hyprpaper & dunst
-        '';
+          exec-once = "hyprpaper & dunst";
+        };
       };
 
-      # Configure dunst
+      # Dunst configuration
       services.dunst = {
         enable = true;
         settings = {
