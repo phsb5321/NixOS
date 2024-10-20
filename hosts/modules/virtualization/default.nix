@@ -91,9 +91,10 @@ in
     '';
 
     # Enable 3D acceleration
-    hardware.graphics = {
+    hardware.opengl = {
       enable = true;
-      enable32Bit = true;
+      driSupport = true;
+      driSupport32Bit = true;
     };
 
     # Add user to necessary groups
@@ -109,10 +110,19 @@ in
       });
     '';
 
-    # Network configuration for libvirt (optional, adjust as needed)
-    networking.firewall.trustedInterfaces = [ "virbr0" ];
-    networking.firewall.allowedUDPPorts = [ 5353 ];
-    networking.firewall.allowedTCPPorts = [ 5900 5901 ];
+    # Network configuration for libvirt
+    networking = {
+      firewall = {
+        trustedInterfaces = [ "virbr0" ];
+        allowedUDPPorts = [ 5353 ];
+        allowedTCPPorts = [ 22 5900 5901 ];
+      };
+      bridges = {
+        "virbr0" = {
+          interfaces = [ ];
+        };
+      };
+    };
 
     # Systemd service to ensure the default network is started
     systemd.services.libvirtd-default-network = {

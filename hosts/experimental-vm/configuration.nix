@@ -18,6 +18,8 @@
   networking = {
     hostName = "nixos";
     networkmanager.enable = true;
+    useDHCP = false;
+    interfaces.enp1s0.useDHCP = true;
   };
 
   time.timeZone = "America/Recife";
@@ -95,7 +97,13 @@
   users.defaultUserShell = pkgs.fish;
 
   # Enable OpenSSH daemon
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    settings = {
+      PermitRootLogin = "no";
+      PasswordAuthentication = true;
+    };
+  };
 
   # Home Manager configuration
   home-manager = {
@@ -121,6 +129,12 @@
   environment.sessionVariables = {
     EDITOR = "nvim";
     VISUAL = "nvim";
+  };
+
+  # Firewall configuration
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 ];
   };
 
   system.stateVersion = "24.05";
