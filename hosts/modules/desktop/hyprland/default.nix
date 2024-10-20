@@ -59,8 +59,6 @@ in
       firefox
       brightnessctl
       pamixer
-      # Remove sddm-kcm as it's no longer needed
-      # sddm-kcm
     ];
 
     xdg.portal = {
@@ -178,7 +176,7 @@ in
             "$mod, mouse:273, resizewindow"
           ];
 
-          exec-once = "hyprpaper & dunst";
+          exec-once = "waybar & hyprpaper & dunst";
         };
       };
 
