@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.home-manager
     ../modules/desktop
+    ../modules/virtualization
   ];
 
   # Bootloader configuration
@@ -50,6 +51,14 @@
     };
   };
 
+  # Virtualization module
+  modules.virtualization = {
+    enable = true;
+    enableLibvirtd = true;
+    enableVirtManager = true;
+    username = "notroot";
+  };
+
   console.keyMap = "br-abnt2";
 
   # Define user account
@@ -92,7 +101,6 @@
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users.notroot = import ./home.nix;
-    backupFileExtension = "backup";
   };
 
   # Nix settings
@@ -113,26 +121,6 @@
     EDITOR = "nvim";
     VISUAL = "nvim";
   };
-
-  # Enable CUPS for printing
-  services.printing.enable = true;
-
-  # Enable sound with pipewire
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    jack.enable = true;
-  };
-
-  # Enable Bluetooth
-  hardware.bluetooth.enable = true;
-  services.blueman.enable = true;
-
-  # Enable automatic login for the user
-  services.getty.autologinUser = "notroot";
 
   system.stateVersion = "24.05";
 }
