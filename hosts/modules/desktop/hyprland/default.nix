@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 with lib;
 
@@ -11,6 +11,7 @@ in
     programs.hyprland = {
       enable = true;
       xwayland.enable = true;
+      package = inputs.hyprland.packages."${pkgs.system}".hyprland;
     };
 
     services.greetd = {
@@ -143,7 +144,7 @@ in
           }
 
           gestures {
-              workspace_swipe = off
+              workspace_swipe = yes
           }
 
           # Example windowrule v1
