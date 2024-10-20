@@ -1,4 +1,4 @@
-{ config, lib, pkgs, inputs, ... }:
+{ config, lib, pkgs, ... }:
 
 with lib;
 
@@ -11,7 +11,6 @@ in
     programs.hyprland = {
       enable = true;
       xwayland.enable = true;
-      package = inputs.hyprland.packages."${pkgs.system}".hyprland;
     };
 
     services.greetd = {
@@ -47,7 +46,7 @@ in
       grim
       slurp
       wl-clipboard
-      mako
+      dunst # Replace mako with dunst
       libnotify
       swaylock-effects
       wlogout
@@ -203,22 +202,46 @@ in
           bindm = ${mod}, mouse:273, resizewindow
 
           # Execute custom scripts
-          exec-once = hyprpaper & mako
+          exec-once = hyprpaper & dunst
         '';
       };
 
-      # Configure Mako manually
-      home.file.".config/mako/config".text = ''
-        default-timeout=5000
-        border-size=2
-        border-radius=5
-        background-color=#1e1e2e
-        text-color=#cdd6f4
-        border-color=#89b4fa
-      '';
+      # Configure dunst
+      services.dunst = {
+        enable = true;
+        settings = {
+          global = {
+            font = "JetBrainsMono Nerd Font 11";
+            frame_width = 2;
+            frame_color = "#89b4fa";
+            separator_color = "frame";
+            corner_radius = 10;
+          };
+
+          urgency_low = {
+            background = "#1e1e2e";
+            foreground = "#cdd6f4";
+            timeout = 5;
+          };
+
+          urgency_normal = {
+            background = "#1e1e2e";
+            foreground = "#cdd6f4";
+            timeout = 10;
+          };
+
+          urgency_critical = {
+            background = "#1e1e2e";
+            foreground = "#cdd6f4";
+            frame_color = "#f38ba8";
+            timeout = 0;
+          };
+        };
+      };
 
       # Waybar configuration
       programs.waybar = {
+        enable = true;
         settings = [{
           layer = "top";
           position = "top";
