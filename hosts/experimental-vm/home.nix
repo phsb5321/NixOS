@@ -23,6 +23,7 @@
       git
       gh
       wget
+      zoxide
     ];
 
     sessionVariables = {
