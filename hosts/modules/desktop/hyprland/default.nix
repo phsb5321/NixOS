@@ -38,7 +38,6 @@ in
 
     hardware = {
       opengl.enable = true;
-      nvidia.modesetting.enable = true;
     };
 
     environment.systemPackages = with pkgs; [
