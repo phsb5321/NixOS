@@ -10,7 +10,6 @@ in
   config = mkIf (cfg.enable && cfg.environment == "hyprland") {
     programs.hyprland = {
       enable = true;
-      nvidiaPatches = true;
       xwayland.enable = true;
     };
 
