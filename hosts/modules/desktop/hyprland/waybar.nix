@@ -17,12 +17,10 @@ in {
           layer = "top";
           position = "top";
           height = 25;
-          margin = {
-            left = 5;
-            right = 5;
-            top = 5;
-            bottom = 0;
-          };
+          margin-left = 5;
+          margin-right = 5;
+          margin-top = 5;
+          margin-bottom = 0;
           spacing = 1;
 
           modules-left = ["hyprland/workspaces" "river/tags" "tray"];
