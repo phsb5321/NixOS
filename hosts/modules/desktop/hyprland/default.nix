@@ -8,25 +8,10 @@ let
 in
 {
   imports = [
+    ../options.nix
     ./waybar.nix
     ./dunst.nix
   ];
-
-  options.modules.desktop = {
-    enable = mkEnableOption "Desktop environment";
-    environment = mkOption {
-      type = types.enum [ "hyprland" ];
-      default = "hyprland";
-      description = "The desktop environment to use";
-    };
-    autoLogin = {
-      enable = mkEnableOption "Automatic login";
-      user = mkOption {
-        type = types.str;
-        description = "The user to automatically log in";
-      };
-    };
-  };
 
   config = mkIf (cfg.enable && cfg.environment == "hyprland") {
     # System-level Hyprland configuration
