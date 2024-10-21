@@ -68,6 +68,7 @@
     packages = with pkgs; [
       git
       gh
+      zed-editor
     ];
   };
 
