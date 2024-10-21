@@ -9,7 +9,7 @@ in {
     enable = mkEnableOption "Dunst configuration";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf (cfg.enable && config.modules.desktop.enable) {
     home-manager.users.${config.modules.desktop.autoLogin.user} = { ... }: {
       services.dunst = {
         enable = true;
