@@ -186,9 +186,42 @@ in
             "$mod, mouse:273, resizewindow"
           ];
 
-          exec-once = "waybar & hyprpaper & dunst";
+          # Remove exec-once from here
         };
       };
+
+      # Create a startup script
+      home.file.".config/hypr/startup.sh" = {
+        text = ''
+          #!/bin/sh
+          waybar &
+          hyprpaper &
+          dunst &
+        '';
+        executable = true;
+      };
+
+      # Create a systemd user service for the startup script
+      systemd.user.services.hyprland-startup = {
+        Unit = {
+          Description = "Hyprland startup script";
+          PartOf = [ "graphical-session.target" ];
+          After = [ "graphical-session.target" ];
+        };
+        Service = {
+          Type = "oneshot";
+          ExecStart = "${config.home.homeDirectory}/.config/hypr/startup.sh";
+          Restart = "on-failure";
+        };
+        Install = {
+          WantedBy = [ "graphical-session.target" ];
+        };
+      };
+
+      # Ensure the service starts with Hyprland
+      wayland.windowManager.hyprland.extraConfig = ''
+        exec-once = systemctl --user start hyprland-startup.service
+      '';
     };
   };
 }

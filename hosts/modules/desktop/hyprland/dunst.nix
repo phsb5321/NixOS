@@ -4,7 +4,8 @@ with lib;
 
 let
   cfg = config.modules.dunst;
-in {
+in
+{
   options.modules.dunst = {
     enable = mkEnableOption "Dunst configuration";
   };
