@@ -12,6 +12,22 @@ in
     ./dunst.nix
   ];
 
+  options.modules.desktop = {
+    enable = mkEnableOption "Desktop environment";
+    environment = mkOption {
+      type = types.enum [ "hyprland" ];
+      default = "hyprland";
+      description = "The desktop environment to use";
+    };
+    autoLogin = {
+      enable = mkEnableOption "Automatic login";
+      user = mkOption {
+        type = types.str;
+        description = "The user to automatically log in";
+      };
+    };
+  };
+
   config = mkIf (cfg.enable && cfg.environment == "hyprland") {
     # System-level Hyprland configuration
     programs.hyprland = {
@@ -78,14 +94,15 @@ in
       (nerdfonts.override { fonts = [ "JetBrainsMono" "FiraCode" "DroidSansMono" ]; })
     ];
 
+    # Enable Waybar and Dunst modules
+    modules.waybar.enable = true;
+    modules.dunst.enable = true;
+
     # Home Manager configuration for Hyprland
     home-manager.users.${cfg.autoLogin.user} = { pkgs, ... }: {
       imports = [
         inputs.hyprland.homeManagerModules.default
       ];
-
-      modules.waybar.enable = true;
-      modules.dunst.enable = true;
 
       wayland.windowManager.hyprland = {
         enable = true;
