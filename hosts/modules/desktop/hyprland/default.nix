@@ -7,6 +7,11 @@ let
   mod = "ALT"; # Changed from SUPER to ALT for better VM compatibility
 in
 {
+  imports = [
+    ./waybar.nix
+    ./dunst.nix
+  ];
+
   config = mkIf (cfg.enable && cfg.environment == "hyprland") {
     # System-level Hyprland configuration
     programs.hyprland = {
@@ -78,6 +83,9 @@ in
       imports = [
         inputs.hyprland.homeManagerModules.default
       ];
+
+      modules.waybar.enable = true;
+      modules.dunst.enable = true;
 
       wayland.windowManager.hyprland = {
         enable = true;
@@ -178,52 +186,6 @@ in
 
           exec-once = "waybar & hyprpaper & dunst";
         };
-      };
-
-      # Dunst configuration
-      services.dunst = {
-        enable = true;
-        settings = {
-          global = {
-            font = "JetBrainsMono Nerd Font 11";
-            frame_width = 2;
-            frame_color = "#89b4fa";
-            separator_color = "frame";
-            corner_radius = 10;
-          };
-
-          urgency_low = {
-            background = "#1e1e2e";
-            foreground = "#cdd6f4";
-            timeout = 5;
-          };
-
-          urgency_normal = {
-            background = "#1e1e2e";
-            foreground = "#cdd6f4";
-            timeout = 10;
-          };
-
-          urgency_critical = {
-            background = "#1e1e2e";
-            foreground = "#cdd6f4";
-            frame_color = "#f38ba8";
-            timeout = 0;
-          };
-        };
-      };
-
-      # Waybar configuration
-      programs.waybar = {
-        enable = true;
-        settings = [{
-          layer = "top";
-          position = "top";
-          height = 30;
-          modules-left = [ "hyprland/workspaces" "hyprland/mode" "hyprland/window" ];
-          modules-center = [ "clock" ];
-          modules-right = [ "pulseaudio" "network" "cpu" "memory" "temperature" "backlight" "battery" "tray" ];
-        }];
       };
     };
   };
