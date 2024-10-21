@@ -37,6 +37,7 @@
       obsidian
       inputs.nixvim
       zed-editor
+      zoxide
     ];
     sessionVariables = {
       EDITOR = "nvim";
