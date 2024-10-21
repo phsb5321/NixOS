@@ -53,7 +53,8 @@ let
       to { background-color: #ff9e64; }
     }
   '';
-in {
+in
+{
   options.modules.waybar.enable = mkEnableOption "Waybar configuration";
 
   config = mkIf (cfg.enable && config.modules.desktop.enable) {
@@ -64,9 +65,9 @@ in {
         settings = [{
           layer = "top";
           position = "top";
-          modules-left = ["hyprland/workspaces" "custom/spotify"];
-          modules-center = ["clock"];
-          modules-right = ["cpu" "memory" "battery" "pulseaudio" "network" "tray"];
+          modules-left = [ "hyprland/workspaces" "custom/spotify" ];
+          modules-center = [ "clock" ];
+          modules-right = [ "cpu" "memory" "battery" "pulseaudio" "network" "tray" ];
 
           "hyprland/workspaces" = {
             format = "{icon}";
@@ -105,7 +106,7 @@ in {
             format = "{icon} {capacity}%";
             format-charging = " {capacity}%";
             format-plugged = " {capacity}%";
-            format-icons = ["" "" "" "" ""];
+            format-icons = [ "" "" "" "" "" ];
           };
 
           "network" = {
@@ -127,7 +128,7 @@ in {
               phone = "";
               portable = "";
               car = "";
-              default = ["" ""];
+              default = [ "" "" ];
             };
             on-click = "pavucontrol";
           };
@@ -140,8 +141,8 @@ in {
           };
 
           "tray" = {
-            icon-size = 18,
-            spacing = 10,
+            icon-size = 18;
+            spacing = 10;
           };
         }];
       };
