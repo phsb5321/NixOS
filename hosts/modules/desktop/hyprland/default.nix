@@ -190,13 +190,34 @@ in
         };
       };
 
-      # Create a startup script
       home.file.".config/hypr/startup.sh" = {
         text = ''
-          #!/bin/sh
-          waybar &
-          hyprpaper &
-          dunst &
+          #!/usr/bin/env bash
+
+          # Function to start a program
+          start_program() {
+            program_name=$1
+            command=$2
+
+            # Kill existing instances
+            pkill -x "$program_name"
+
+            # Start the program and disown it
+            $command &
+            disown
+          }
+
+          # Start Waybar
+          start_program "waybar" "waybar"
+
+          # Start Hyprpaper
+          start_program "hyprpaper" "hyprpaper"
+
+          # Start Dunst
+          start_program "dunst" "dunst"
+
+          # You can add more programs here following the same pattern
+          # start_program "program_name" "command_to_start_program"
         '';
         executable = true;
       };
