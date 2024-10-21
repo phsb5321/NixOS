@@ -17,8 +17,6 @@
   networking = {
     hostName = "nixos";
     networkmanager.enable = true;
-    useDHCP = false;
-    interfaces.enp1s0.useDHCP = true;
   };
 
   time.timeZone = "America/Recife";

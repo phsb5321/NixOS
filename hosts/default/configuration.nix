@@ -51,7 +51,6 @@
   # Networking
   networking = {
     networkmanager.enable = true;
-    useDHCP = lib.mkDefault true;
     nameservers = [
       "8.8.8.8" # Google's public DNS
       "8.8.4.4" # Google's public DNS
