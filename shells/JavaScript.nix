@@ -1,5 +1,5 @@
-# { pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz") { } }: # Uses Nixpkgs 24.05
-{ pkgs ? import <nixpkgs> { } }: # Uses the latest Nixpkgs
+{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz") { } }: # Uses Nixpkgs 24.05
+# { pkgs ? import <nixpkgs> { } }: # Uses the latest Nixpkgs
 
 let
   centralizedStore = "$HOME/.nix-js-environments";
