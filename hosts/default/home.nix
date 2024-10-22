@@ -19,7 +19,7 @@
       (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
       noto-fonts-emoji
       noto-fonts
-      noto-fonts-cjk
+      noto-fonts-cjk-sans
       fish
       kitty
       grc
