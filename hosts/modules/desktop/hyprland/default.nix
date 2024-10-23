@@ -231,7 +231,7 @@ in
         };
         Service = {
           Type = "oneshot";
-          ExecStart = "${config.home.homeDirectory}/.config/hypr/startup.sh";
+          ExecStart = "%h/.config/hypr/startup.sh";  # Use %h instead of absolute path
           Restart = "on-failure";
         };
         Install = {
