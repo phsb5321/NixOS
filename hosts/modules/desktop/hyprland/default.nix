@@ -1,12 +1,14 @@
-{ config, lib, pkgs, inputs, ... }:
-
-with lib;
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  inputs,
+  ...
+}:
+with lib; let
   cfg = config.modules.desktop;
   mod = "ALT"; # Changed from SUPER to ALT for better VM compatibility
-in
-{
+in {
   imports = [
     ../options.nix
     ./waybar.nix
@@ -70,13 +72,13 @@ in
     xdg.portal = {
       enable = true;
       wlr.enable = true;
-      extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+      extraPortals = [pkgs.xdg-desktop-portal-gtk];
     };
 
-    security.pam.services.swaylock = { };
+    security.pam.services.swaylock = {};
 
     fonts.packages = with pkgs; [
-      (nerdfonts.override { fonts = [ "JetBrainsMono" "FiraCode" "DroidSansMono" ]; })
+      (nerdfonts.override {fonts = ["JetBrainsMono" "FiraCode" "DroidSansMono"];})
     ];
 
     # Enable Waybar and Dunst modules
@@ -84,7 +86,7 @@ in
     modules.dunst.enable = true;
 
     # Home Manager configuration for Hyprland
-    home-manager.users.${cfg.autoLogin.user} = { pkgs, ... }: {
+    home-manager.users.${cfg.autoLogin.user} = {pkgs, ...}: {
       imports = [
         inputs.hyprland.homeManagerModules.default
       ];
@@ -149,37 +151,37 @@ in
           gestures.workspace_swipe = true;
 
           # Example keybinds
-          bind = [
-            "$mod, RETURN, exec, $terminal"
-            "$mod, Q, killactive"
-            "$mod, M, exit"
-            "$mod, E, exec, $fileManager"
-            "$mod, V, togglefloating"
-            "$mod, R, exec, $menu"
-            "$mod, P, pseudo"
-            "$mod, J, togglesplit"
-            "$mod, left, movefocus, l"
-            "$mod, right, movefocus, r"
-            "$mod, up, movefocus, u"
-            "$mod, down, movefocus, d"
-          ] ++ (
-            # Workspaces
-            builtins.concatLists (builtins.genList
-              (
-                x:
-                let
-                  ws =
-                    let
+          bind =
+            [
+              "$mod, RETURN, exec, $terminal"
+              "$mod, Q, killactive"
+              "$mod, M, exit"
+              "$mod, E, exec, $fileManager"
+              "$mod, V, togglefloating"
+              "$mod, R, exec, $menu"
+              "$mod, P, pseudo"
+              "$mod, J, togglesplit"
+              "$mod, left, movefocus, l"
+              "$mod, right, movefocus, r"
+              "$mod, up, movefocus, u"
+              "$mod, down, movefocus, d"
+            ]
+            ++ (
+              # Workspaces
+              builtins.concatLists (builtins.genList
+                (
+                  x: let
+                    ws = let
                       c = (x + 1) / 10;
                     in
-                    builtins.toString (x + 1 - (c * 10));
-                in
-                [
-                  "$mod, ${ws}, workspace, ${toString (x + 1)}"
-                  "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
-                ]
-              ) 10)
-          );
+                      builtins.toString (x + 1 - (c * 10));
+                  in [
+                    "$mod, ${ws}, workspace, ${toString (x + 1)}"
+                    "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
+                  ]
+                )
+                10)
+            );
 
           bindm = [
             "$mod, mouse:272, movewindow"
@@ -226,16 +228,16 @@ in
       systemd.user.services.hyprland-startup = {
         Unit = {
           Description = "Hyprland startup script";
-          PartOf = [ "graphical-session.target" ];
-          After = [ "graphical-session.target" ];
+          PartOf = ["graphical-session.target"];
+          After = ["graphical-session.target"];
         };
         Service = {
           Type = "oneshot";
-          ExecStart = "%h/.config/hypr/startup.sh";  # Use %h instead of absolute path
+          ExecStart = "%h/.config/hypr/startup.sh"; # Use %h instead of absolute path
           Restart = "on-failure";
         };
         Install = {
-          WantedBy = [ "graphical-session.target" ];
+          WantedBy = ["graphical-session.target"];
         };
       };
 

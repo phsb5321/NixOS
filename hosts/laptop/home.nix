@@ -1,7 +1,10 @@
-{ config, pkgs, inputs, ... }:
-
 {
-  imports = [ ];
+  config,
+  pkgs,
+  inputs,
+  ...
+}: {
+  imports = [];
 
   # User and Home Directory Configuration
   home.username = "notroot";
@@ -10,7 +13,7 @@
 
   # Package Installation
   home.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    (nerdfonts.override {fonts = ["JetBrainsMono"];})
     fish
     kitty
     grc
@@ -49,8 +52,14 @@
       ls = "eza -l --icons";
     };
     plugins = [
-      { name = "tide"; src = pkgs.fishPlugins.tide.src; }
-      { name = "grc"; src = pkgs.fishPlugins.grc.src; }
+      {
+        name = "tide";
+        src = pkgs.fishPlugins.tide.src;
+      }
+      {
+        name = "grc";
+        src = pkgs.fishPlugins.grc.src;
+      }
     ];
   };
 
@@ -91,9 +100,6 @@
     # '';
   };
 
-
-
   # Home Manager Self-Management
   programs.home-manager.enable = true;
-
 }

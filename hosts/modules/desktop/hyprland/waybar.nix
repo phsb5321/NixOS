@@ -1,8 +1,10 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
   cfg = config.modules.waybar;
   user = config.modules.desktop.autoLogin.user;
   customStyle = ''
@@ -53,98 +55,99 @@ let
       to { background-color: #ff9e64; }
     }
   '';
-in
-{
+in {
   options.modules.waybar.enable = mkEnableOption "Waybar configuration";
 
   config = mkIf (cfg.enable && config.modules.desktop.enable) {
-    home-manager.users.${user} = { pkgs, ... }: {
+    home-manager.users.${user} = {pkgs, ...}: {
       programs.waybar = {
         enable = true;
         style = customStyle;
-        settings = [{
-          layer = "top";
-          position = "top";
-          modules-left = [ "hyprland/workspaces" "custom/spotify" ];
-          modules-center = [ "clock" ];
-          modules-right = [ "cpu" "memory" "battery" "pulseaudio" "network" "tray" ];
+        settings = [
+          {
+            layer = "top";
+            position = "top";
+            modules-left = ["hyprland/workspaces" "custom/spotify"];
+            modules-center = ["clock"];
+            modules-right = ["cpu" "memory" "battery" "pulseaudio" "network" "tray"];
 
-          "hyprland/workspaces" = {
-            format = "{icon}";
-            format-icons = {
-              "1" = "";
-              "2" = "";
-              "3" = "";
-              "4" = "";
-              "5" = "";
-              urgent = "";
-              default = "";
+            "hyprland/workspaces" = {
+              format = "{icon}";
+              format-icons = {
+                "1" = "";
+                "2" = "";
+                "3" = "";
+                "4" = "";
+                "5" = "";
+                urgent = "";
+                default = "";
+              };
+              on-click = "activate";
             };
-            on-click = "activate";
-          };
 
-          "clock" = {
-            format = " {:%H:%M}";
-            format-alt = " {:%Y-%m-%d}";
-            tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
-          };
-
-          "cpu" = {
-            format = " {usage}%";
-            tooltip = false;
-          };
-
-          "memory" = {
-            format = " {}%";
-          };
-
-          "battery" = {
-            states = {
-              warning = 30;
-              critical = 15;
+            "clock" = {
+              format = " {:%H:%M}";
+              format-alt = " {:%Y-%m-%d}";
+              tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
             };
-            format = "{icon} {capacity}%";
-            format-charging = " {capacity}%";
-            format-plugged = " {capacity}%";
-            format-icons = [ "" "" "" "" "" ];
-          };
 
-          "network" = {
-            format-wifi = " {essid}";
-            format-ethernet = " {ifname}";
-            format-linked = " {ifname} (No IP)";
-            format-disconnected = "⚠ Disconnected";
-            format-alt = "{ifname}: {ipaddr}/{cidr}";
-          };
-
-          "pulseaudio" = {
-            format = "{icon} {volume}%";
-            format-bluetooth = "{icon} {volume}%";
-            format-muted = "";
-            format-icons = {
-              headphone = "";
-              hands-free = "";
-              headset = "";
-              phone = "";
-              portable = "";
-              car = "";
-              default = [ "" "" ];
+            "cpu" = {
+              format = " {usage}%";
+              tooltip = false;
             };
-            on-click = "pavucontrol";
-          };
 
-          "custom/spotify" = {
-            format = " {}";
-            max-length = 40;
-            exec = "$HOME/.config/waybar/mediaplayer.py 2> /dev/null";
-            exec-if = "pgrep spotify";
-          };
+            "memory" = {
+              format = " {}%";
+            };
 
-          "tray" = {
-            icon-size = 18;
-            spacing = 10;
-          };
-        }];
+            "battery" = {
+              states = {
+                warning = 30;
+                critical = 15;
+              };
+              format = "{icon} {capacity}%";
+              format-charging = " {capacity}%";
+              format-plugged = " {capacity}%";
+              format-icons = ["" "" "" "" ""];
+            };
+
+            "network" = {
+              format-wifi = " {essid}";
+              format-ethernet = " {ifname}";
+              format-linked = " {ifname} (No IP)";
+              format-disconnected = "⚠ Disconnected";
+              format-alt = "{ifname}: {ipaddr}/{cidr}";
+            };
+
+            "pulseaudio" = {
+              format = "{icon} {volume}%";
+              format-bluetooth = "{icon} {volume}%";
+              format-muted = "";
+              format-icons = {
+                headphone = "";
+                hands-free = "";
+                headset = "";
+                phone = "";
+                portable = "";
+                car = "";
+                default = ["" ""];
+              };
+              on-click = "pavucontrol";
+            };
+
+            "custom/spotify" = {
+              format = " {}";
+              max-length = 40;
+              exec = "$HOME/.config/waybar/mediaplayer.py 2> /dev/null";
+              exec-if = "pgrep spotify";
+            };
+
+            "tray" = {
+              icon-size = 18;
+              spacing = 10;
+            };
+          }
+        ];
       };
     };
   };

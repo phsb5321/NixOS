@@ -1,11 +1,12 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-  cfg = config.modules.virtualization;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
+  cfg = config.modules.virtualization;
+in {
   options.modules.virtualization = {
     enable = mkEnableOption "Enable the virtualization module";
 
@@ -82,7 +83,7 @@ in
     programs.dconf.enable = cfg.enableVirtManager;
 
     # Load necessary kernel modules for virtualization
-    boot.kernelModules = [ "kvm-intel" "kvm-amd" ];
+    boot.kernelModules = ["kvm-intel" "kvm-amd"];
 
     # Enable nested virtualization (if supported by hardware)
     boot.extraModprobeConfig = ''
@@ -97,7 +98,7 @@ in
     };
 
     # Add user to necessary groups
-    users.users.${cfg.username}.extraGroups = [ "libvirtd" "kvm" ];
+    users.users.${cfg.username}.extraGroups = ["libvirtd" "kvm"];
 
     # Polkit rule to allow users in libvirt group to manage VMs
     security.polkit.extraConfig = ''
@@ -112,13 +113,13 @@ in
     # Network configuration for libvirt
     networking = {
       firewall = {
-        trustedInterfaces = [ "virbr0" ];
-        allowedUDPPorts = [ 5353 ];
-        allowedTCPPorts = [ 22 5900 5901 ];
+        trustedInterfaces = ["virbr0"];
+        allowedUDPPorts = [5353];
+        allowedTCPPorts = [22 5900 5901];
       };
       bridges = {
         "virbr0" = {
-          interfaces = [ ];
+          interfaces = [];
         };
       };
     };
@@ -126,9 +127,9 @@ in
     # Systemd service to ensure the default network is started
     systemd.services.libvirtd-default-network = {
       description = "libvirt default network autostart";
-      after = [ "libvirtd.service" ];
-      requires = [ "libvirtd.service" ];
-      wantedBy = [ "multi-user.target" ];
+      after = ["libvirtd.service"];
+      requires = ["libvirtd.service"];
+      wantedBy = ["multi-user.target"];
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
