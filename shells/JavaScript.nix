@@ -1,6 +1,7 @@
-{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz") { } }: # Uses Nixpkgs 24.05
+{pkgs ? import (fetchTarball "https://github.com/nixos/nixpkgs/archive/nixos-unstable.tar.gz") {}}:
+# Uses Nixpkgs 24.05
+# { pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz") { } }: # Uses Nixpkgs 24.05
 # { pkgs ? import <nixpkgs> { } }: # Uses the latest Nixpkgs
-
 let
   centralizedStore = "$HOME/.nix-js-environments";
 
@@ -53,45 +54,44 @@ let
   '';
 
   # List of package managers to set up
-  packageManagers = [ "pnpm" "npm" "yarn" "bun" ];
-
+  packageManagers = ["pnpm" "npm" "yarn" "bun"];
 in
-pkgs.mkShell {
-  buildInputs = allPackages;
+  pkgs.mkShell {
+    buildInputs = allPackages;
 
-  shellHook = ''
-    # Set up centralized store for package managers
-    ${builtins.concatStringsSep "\n" (map setupPackageManager packageManagers)}
+    shellHook = ''
+      # Set up centralized store for package managers
+      ${builtins.concatStringsSep "\n" (map setupPackageManager packageManagers)}
 
-    # Configure pnpm to use the centralized store
-    pnpm config set store-dir "${centralizedStore}/pnpm/store" &>/dev/null
+      # Configure pnpm to use the centralized store
+      pnpm config set store-dir "${centralizedStore}/pnpm/store" &>/dev/null
 
-    # Set up Prisma environment variables
-    export PRISMA_QUERY_ENGINE_LIBRARY="${pkgs.prisma-engines}/lib/libquery_engine.node"
-    export PRISMA_QUERY_ENGINE_BINARY="${pkgs.prisma-engines}/bin/query-engine"
-    export PRISMA_SCHEMA_ENGINE_BINARY="${pkgs.prisma-engines}/bin/schema-engine"
+      # Set up Prisma environment variables
+      export PRISMA_QUERY_ENGINE_LIBRARY="${pkgs.prisma-engines}/lib/libquery_engine.node"
+      export PRISMA_QUERY_ENGINE_BINARY="${pkgs.prisma-engines}/bin/query-engine"
+      export PRISMA_SCHEMA_ENGINE_BINARY="${pkgs.prisma-engines}/bin/schema-engine"
 
-    # Set up Puppeteer
-    export PUPPETEER_EXECUTABLE_PATH="$(which chromium)"
+      # Set up Puppeteer
+      export PUPPETEER_EXECUTABLE_PATH="$(which chromium)"
 
-    # Function to run commands only in project directories
-    run_in_project() {
-      if [ -f "package.json" ]; then
-        "$@"
-      else
-        echo "Error: No package.json found. Please run this command in a JavaScript project directory."
-      fi
-    }
+      # Function to run commands only in project directories
+      run_in_project() {
+        if [ -f "package.json" ]; then
+          "$@"
+        else
+          echo "Error: No package.json found. Please run this command in a JavaScript project directory."
+        fi
+      }
 
-    # Set up aliases for package managers
-    ${builtins.concatStringsSep "\n" (map (pm: "alias ${pm}='run_in_project ${pm}'") packageManagers)}
+      # Set up aliases for package managers
+      ${builtins.concatStringsSep "\n" (map (pm: "alias ${pm}='run_in_project ${pm}'") packageManagers)}
 
-    # Print environment information
-    echo "🚀 JavaScript/TypeScript development environment (NixOS 24.05) is ready!"
-    echo "📦 Installed package groups:"
-    ${builtins.concatStringsSep "\n" (map (group: "echo \"  - ${group.name}\"") packageGroups)}
-    echo "🔧 Use 'pnpm', 'npm', 'yarn', or 'bun' to manage your project dependencies."
-    echo "🦕 Deno is now available in your environment."
-    echo "🏗️  NestJS CLI is available. Use 'nest' to create and manage NestJS projects."
-  '';
-}
+      # Print environment information
+      echo "🚀 JavaScript/TypeScript development environment (NixOS 24.05) is ready!"
+      echo "📦 Installed package groups:"
+      ${builtins.concatStringsSep "\n" (map (group: "echo \"  - ${group.name}\"") packageGroups)}
+      echo "🔧 Use 'pnpm', 'npm', 'yarn', or 'bun' to manage your project dependencies."
+      echo "🦕 Deno is now available in your environment."
+      echo "🏗️  NestJS CLI is available. Use 'nest' to create and manage NestJS projects."
+    '';
+  }

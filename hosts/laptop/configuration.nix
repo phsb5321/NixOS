@@ -1,6 +1,10 @@
-{ config, pkgs, lib, inputs, ... }:
-
 {
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}: {
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
@@ -11,7 +15,6 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
-
 
   # Set system options
   networking.hostName = "nixos"; # Define your hostname
@@ -99,7 +102,7 @@
       # Development Tools
       git
       seahorse
-      nixpkgs-fmt
+      alejandra
 
       # API Testing
       insomnia
@@ -163,17 +166,18 @@
   # Gaming and applications
   programs.fish.enable = true;
   users.defaultUserShell = pkgs.fish;
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "steam"
-    "steam-original"
-    "steam-run"
-  ];
+  nixpkgs.config.allowUnfreePredicate = pkg:
+    builtins.elem (lib.getName pkg) [
+      "steam"
+      "steam-original"
+      "steam-run"
+    ];
   nixpkgs.config.allowUnfree = true;
 
   # Home Manager integration
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
-    users = { "notroot" = import ./home.nix; };
+    extraSpecialArgs = {inherit inputs;};
+    users = {"notroot" = import ./home.nix;};
   };
 
   # System-wide packages
@@ -213,9 +217,8 @@
   };
 
   xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  xdg.portal.extraPortals = [pkgs.xdg-desktop-portal-gtk];
 
-  nix.settings.trusted-substituters = [ "https://ai.cachix.org" ];
-  nix.settings.trusted-public-keys = [ "ai.cachix.org-1:N9dzRK+alWwoKXQlnn0H6aUx0lU/mspIoz8hMvGvbbc=" ];
-
+  nix.settings.trusted-substituters = ["https://ai.cachix.org"];
+  nix.settings.trusted-public-keys = ["ai.cachix.org-1:N9dzRK+alWwoKXQlnn0H6aUx0lU/mspIoz8hMvGvbbc="];
 }

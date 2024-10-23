@@ -37,9 +37,9 @@ sudo nix-collect-garbage -d
 echo "Optimizing Nix store..."
 sudo nix-store --optimize
 
-# Clean and format Nix files using "nixpkgs-fmt", suppressing output
+# Clean and format Nix files using "alejandra", suppressing output
 echo "Formatting Nix files..."
-nixpkgs-fmt . &>/dev/null
+alejandra . &>/dev/null
 
 # Show diff for all Nix files
 git diff -U0 *.nix
