@@ -1,6 +1,10 @@
-{ config, pkgs, lib, inputs, ... }:
-
 {
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}: {
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
@@ -19,7 +23,7 @@
   nix = {
     settings = {
       auto-optimise-store = true;
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = ["nix-command" "flakes"];
       timeout = 14400; # for example, set to 4 hours
     };
     gc = {
@@ -29,24 +33,21 @@
     };
   };
 
-  systemd.tmpfiles.rules =
-    let
-      rocmEnv = pkgs.symlinkJoin {
-        name = "rocm-combined";
-        paths = with pkgs.rocmPackages; [
-          rocblas # Required for miopen
-          clr # HIP runtime
-          rocminfo # ROCm device info tool
-          # miopen          # MIOpen for machine learning
-          rocsolver # ROCm linear algebra solver library
-          rocalution # ROCm sparse linear algebra library
-        ];
-      };
-    in
-    [
-      "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
-    ];
-
+  systemd.tmpfiles.rules = let
+    rocmEnv = pkgs.symlinkJoin {
+      name = "rocm-combined";
+      paths = with pkgs.rocmPackages; [
+        rocblas # Required for miopen
+        clr # HIP runtime
+        rocminfo # ROCm device info tool
+        # miopen          # MIOpen for machine learning
+        rocsolver # ROCm linear algebra solver library
+        rocalution # ROCm sparse linear algebra library
+      ];
+    };
+  in [
+    "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
+  ];
 
   # Networking
   networking = {
@@ -87,7 +88,7 @@
         variant = "";
       };
       # Updated GPU configuration
-      videoDrivers = [ "amdgpu" ];
+      videoDrivers = ["amdgpu"];
       deviceSection = ''
         Option "TearFree" "true"
         Option "DRI" "3"
@@ -160,7 +161,6 @@
       python3
     ];
   };
-
 
   # Syncthing service configuration
   services.syncthing = {
@@ -247,9 +247,9 @@
 
   # Home Manager integration
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
+    extraSpecialArgs = {inherit inputs;};
     backupFileExtension = "bkp";
-    users = { "notroot" = import ./home.nix; };
+    users = {"notroot" = import ./home.nix;};
   };
 
   # System-wide packages
@@ -279,7 +279,7 @@
     seahorse
 
     # Nix Tools
-    nixpkgs-fmt # NixOS formatting tool
+    alejandra # NixOS formatting tool
     nixd
 
     # Terminal Enhancements
@@ -307,10 +307,9 @@
     nodejs_22 # Node.js LTS for Copilot
   ];
 
-
   # LACT daemon service
-  systemd.packages = with pkgs; [ lact ];
-  systemd.services.lactd.wantedBy = [ "multi-user.target" ];
+  systemd.packages = with pkgs; [lact];
+  systemd.services.lactd.wantedBy = ["multi-user.target"];
 
   # Security enhancements
   security = {
@@ -364,25 +363,29 @@
       liberation_ttf
       fira-code
       fira-code-symbols
-      (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+      (nerdfonts.override {fonts = ["JetBrainsMono"];})
     ];
     fontconfig = {
       defaultFonts = {
-        serif = [ "Noto Serif" "Liberation Serif" ];
-        sansSerif = [ "Noto Sans" "Liberation Sans" ];
-        monospace = [ "JetBrains Mono" "Fira Code" "Liberation Mono" ];
+        serif = ["Noto Serif" "Liberation Serif"];
+        sansSerif = ["Noto Sans" "Liberation Sans"];
+        monospace = ["JetBrains Mono" "Fira Code" "Liberation Mono"];
       };
     };
   };
 
   # Allow users in the "wheel" group to use CoreCtrl without password
-  security.sudo.extraRules = [{
-    groups = [ "wheel" ];
-    commands = [{
-      command = "${pkgs.corectrl}/bin/corectrl";
-      options = [ "NOPASSWD" ];
-    }];
-  }];
+  security.sudo.extraRules = [
+    {
+      groups = ["wheel"];
+      commands = [
+        {
+          command = "${pkgs.corectrl}/bin/corectrl";
+          options = ["NOPASSWD"];
+        }
+      ];
+    }
+  ];
 
   # ESP 32 Development
   services.udev.packages = [

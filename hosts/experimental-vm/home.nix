@@ -1,6 +1,9 @@
-{ config, pkgs, inputs, ... }:
-
 {
+  config,
+  pkgs,
+  inputs,
+  ...
+}: {
   # Import External Modules
   imports = [
     inputs.nixvim.homeManagerModules.nixvim
@@ -16,7 +19,7 @@
     homeDirectory = "/home/notroot";
     stateVersion = "24.05"; # Ensure compatibility with Home Manager release
     packages = with pkgs; [
-      (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+      (nerdfonts.override {fonts = ["JetBrainsMono"];})
       noto-fonts-emoji
       noto-fonts
       noto-fonts-cjk-sans
@@ -81,8 +84,14 @@
       nix-select-shell = "~/NixOS/user-scripts/nix-shell-selector.sh";
     };
     plugins = [
-      { name = "tide"; src = pkgs.fishPlugins.tide.src; }
-      { name = "grc"; src = pkgs.fishPlugins.grc.src; }
+      {
+        name = "tide";
+        src = pkgs.fishPlugins.tide.src;
+      }
+      {
+        name = "grc";
+        src = pkgs.fishPlugins.grc.src;
+      }
     ];
   };
 
@@ -200,7 +209,7 @@
       web-devicons.enable = true;
       copilot-vim = {
         enable = true;
-        settings = { };
+        settings = {};
       };
     };
     # Additional settings for Obsidian markdown files

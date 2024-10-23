@@ -1,14 +1,15 @@
-{ pkgs ? import <nixpkgs> {
-    overlays = [
-      (final: prev: {
-        go-task = prev.go-task.overrideAttrs (oldAttrs: {
-          patches = [ ]; # Remove problematic patches
-        });
-      })
-    ];
-  }
+{
+  pkgs ?
+    import <nixpkgs> {
+      overlays = [
+        (final: prev: {
+          go-task = prev.go-task.overrideAttrs (oldAttrs: {
+            patches = []; # Remove problematic patches
+          });
+        })
+      ];
+    },
 }:
-
 pkgs.mkShell {
   buildInputs = with pkgs; [
     arduino-ide
