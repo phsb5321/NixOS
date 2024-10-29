@@ -363,6 +363,7 @@
       liberation_ttf
       fira-code
       fira-code-symbols
+      jetbrains-mono
       (nerdfonts.override {fonts = ["JetBrainsMono"];})
     ];
     fontconfig = {
