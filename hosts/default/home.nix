@@ -42,6 +42,7 @@
       zed-editor
       gitbutler
       ngrok
+      calibre
     ];
     sessionVariables = {
       EDITOR = "nvim";
