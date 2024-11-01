@@ -45,6 +45,7 @@
         22000 # Syncthing listening
         21027 # Syncthing discovery
         8384 # Syncthing GUI
+        5353 # mDNS
       ];
       trustedInterfaces = [
         "virbr0" # For virtualization
