@@ -112,26 +112,33 @@ in {
   };
 
   config = mkIf cfg.enable {
+    # Basic networking configuration
     networking = {
       hostName = cfg.hostName;
-      # Use mkForce to resolve the conflict with NetworkManager
-      useDHCP = lib.mkForce (cfg.useDHCP && !cfg.enableNetworkManager);
 
       # NetworkManager Configuration
       networkmanager = {
-        enable = cfg.enableNetworkManager;
-        dns = "systemd-resolved";
+        enable = true;
+        dns = "systemd-resolved"; # Use systemd-resolved for DNS resolution
         wifi = {
-          powersave = false;
-          backend = "wpa_supplicant";
+          powersave = false; # Disable power management for better stability
+          macAddress = "preserve"; # Preserve MAC address
+          scanRandMacAddress = true; # Use random MAC for scanning
         };
+        # Enable all connection types
+        enableStrongSwan = true; # For VPN support
       };
 
-      # Wireless Configuration
-      wireless = {
-        enable = false; # Disable built-in wireless to prevent conflicts
-        userControlled.enable = true;
-      };
+      # Disable conflicting services
+      dhcpcd.enable = false;
+      wireless.enable = false; # Disable wpa_supplicant standalone mode
+
+      # Name resolution configuration
+      nameservers = selectedDNS;
+
+      # Enable IPv4 and IPv6 support
+      enableIPv6 = true;
+      useDHCP = false; # Let NetworkManager handle DHCP
 
       # Firewall Configuration
       firewall = mkIf cfg.firewall.enable {
@@ -140,17 +147,27 @@ in {
         allowedTCPPorts = cfg.firewall.openPorts;
         allowedUDPPorts = cfg.firewall.openPorts;
         trustedInterfaces = cfg.firewall.trustedInterfaces;
+        # Allow NetworkManager and DNS
+        allowedUDPPortRanges = [
+          {
+            from = 5353;
+            to = 5353;
+          } # mDNS
+          {
+            from = 67;
+            to = 68;
+          } # DHCP
+        ];
       };
-
-      # Name resolution configuration
-      nameservers = selectedDNS;
     };
 
-    # systemd-resolved Configuration
+    # Enable WPA supplicant with NetworkManager integration
+    networking.wireless.iwd.enable = false; # Ensure iwd is disabled
     services = {
       resolved = mkIf cfg.dns.enableSystemdResolved {
         enable = true;
         dnssec = "allow-downgrade";
+        domains = ["~."];
         fallbackDns = selectedDNS;
         extraConfig = ''
           DNSOverTLS=${
@@ -165,26 +182,33 @@ in {
       };
     };
 
-    # Network Service Configuration
-    systemd.services = {
-      NetworkManager = mkIf cfg.enableNetworkManager {
-        wantedBy = ["multi-user.target"];
-        after = ["network.target"];
-        serviceConfig = {
-          Restart = "always";
-          RestartSec = "5s";
+    # Ensure NetworkManager starts properly
+    systemd = {
+      services = {
+        NetworkManager = {
+          enable = true;
+          wantedBy = ["multi-user.target"];
+          aliases = ["dbus-org.freedesktop.NetworkManager.service"];
+          bindsTo = ["sys-subsystem-net-devices.device"];
+          after = [
+            "network-pre.target"
+            "sys-subsystem-net-devices.device"
+            "polkit.service"
+            "dbus.service"
+          ];
+          requires = ["dbus.service"];
+          serviceConfig = {
+            Type = "dbus";
+            BusName = "org.freedesktop.NetworkManager";
+            ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
+            Restart = "on-failure";
+            RestartSec = "1s";
+          };
         };
-      };
 
-      network-interfaces-up = {
-        description = "Ensure network interfaces are up";
-        after = ["network.target"];
-        wantedBy = ["multi-user.target"];
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = "${pkgs.coreutils}/bin/true";
-        };
+        # Disable potentially conflicting services
+        dhcpcd.enable = false;
+        wpa_supplicant.enable = false;
       };
     };
 
@@ -216,13 +240,33 @@ in {
       "net.core.optmem_max" = 65536;
     };
 
-    # Required packages
+    # Required packages for networking
     environment.systemPackages = with pkgs; [
       networkmanager
       networkmanagerapplet
       wpa_supplicant
       iw
       wirelesstools
+      mtr
+      iperf3
+      ethtool
+      bind # for dig command
+      ldns # for drill command
+      wavemon # wireless monitor
     ];
+
+    # Ensure NetworkManager users are created
+    users.groups."networkmanager" = {};
+
+    # Polkit rules for NetworkManager
+    security.polkit.enable = true;
+    security.polkit.extraConfig = ''
+      polkit.addRule(function(action, subject) {
+        if (action.id.indexOf("org.freedesktop.NetworkManager.") == 0 &&
+            subject.isInGroup("networkmanager")) {
+          return polkit.Result.YES;
+        }
+      });
+    '';
   };
 }
