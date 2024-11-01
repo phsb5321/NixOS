@@ -8,16 +8,50 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
-    ../modules/virtualization # Import the virtualization module
+    ../modules/virtualization
+    ../modules
   ];
 
   # Set system options
-  networking.hostName = "nixos";
   time.timeZone = "America/Recife";
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "br-abnt2";
   system.stateVersion = "24.05"; # Use the same version as Home Manager
   users.defaultUserShell = pkgs.fish;
+
+  # Network configuration using the new module
+  modules.networking = {
+    enable = true;
+    hostName = "nixos";
+    optimizeTCP = true;
+    enableNetworkManager = true;
+
+    dns = {
+      enableSystemdResolved = true;
+      enableDNSOverTLS = true;
+      primaryProvider = "cloudflare";
+    };
+
+    firewall = {
+      enable = true;
+      allowPing = true;
+      openPorts = [
+        53 # DNS
+        80 # HTTP
+        443 # HTTPS
+        24800 # Synergy
+        27036
+        27037 # Steam Remote Play
+        22000 # Syncthing listening
+        21027 # Syncthing discovery
+        8384 # Syncthing GUI
+      ];
+      trustedInterfaces = [
+        "virbr0" # For virtualization
+        "docker0" # For Docker
+      ];
+    };
+  };
 
   # Nix settings
   nix = {
@@ -48,23 +82,6 @@
   in [
     "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
   ];
-
-  # Networking
-  networking = {
-    networkmanager.enable = true;
-    nameservers = [
-      "8.8.8.8" # Google's public DNS
-      "8.8.4.4" # Google's public DNS
-      "1.1.1.1" # Cloudflare's public DNS
-      "1.0.0.1" # Cloudflare's public DNS
-      "208.67.222.222" # OpenDNS
-      "208.67.220.220" # OpenDNS
-      "9.9.9.9" # Quad9 DNS
-      "149.112.112.112" # Quad9 DNS
-      "64.6.64.6" # Verisign Public DNS
-      "64.6.65.6" # Verisign Public DNS
-    ];
-  };
 
   # Locale settings
   i18n.extraLocaleSettings = {

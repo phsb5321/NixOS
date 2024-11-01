@@ -1,4 +1,4 @@
-# /hosts/modules/networking/default.nix
+# ~/NixOS/hosts/modules/networking/default.nix
 {
   config,
   lib,
@@ -8,19 +8,18 @@
 with lib; let
   cfg = config.modules.networking;
 
-  # DNS provider configurations
   dnsProviders = {
     cloudflare = {
-      primary = "1.1.1.1#one.one.one.one";
-      secondary = "1.0.0.1#one.one.one.one";
+      primary = "1.1.1.1";
+      secondary = "1.0.0.1";
     };
     google = {
-      primary = "8.8.8.8#dns.google";
-      secondary = "8.8.4.4#dns.google";
+      primary = "8.8.8.8";
+      secondary = "8.8.4.4";
     };
     quad9 = {
-      primary = "9.9.9.9#dns.quad9.net";
-      secondary = "149.112.112.112#dns.quad9.net";
+      primary = "9.9.9.9";
+      secondary = "149.112.112.112";
     };
   };
 
@@ -30,27 +29,108 @@ with lib; let
     else [
       dnsProviders.${cfg.dns.primaryProvider}.primary
       dnsProviders.${cfg.dns.primaryProvider}.secondary
-      # Add fallback DNS servers from other providers
-      dnsProviders.cloudflare.primary
-      dnsProviders.google.primary
-      dnsProviders.quad9.primary
     ];
 in {
-  imports = [./options.nix];
+  options.modules.networking = {
+    enable = mkEnableOption "Networking module";
+
+    hostName = mkOption {
+      type = types.str;
+      default = "nixos";
+      description = "System hostname";
+    };
+
+    useDHCP = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Enable DHCP for network configuration";
+    };
+
+    optimizeTCP = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Enable TCP optimization settings";
+    };
+
+    enableNetworkManager = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Enable NetworkManager for network management";
+    };
+
+    dns = {
+      enableSystemdResolved = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable systemd-resolved for DNS resolution";
+      };
+
+      enableDNSOverTLS = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable DNS-over-TLS for secure DNS queries";
+      };
+
+      primaryProvider = mkOption {
+        type = types.enum ["cloudflare" "google" "quad9" "custom"];
+        default = "cloudflare";
+        description = "Primary DNS provider to use";
+      };
+
+      customNameservers = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "List of custom nameservers to use when primaryProvider is set to custom";
+      };
+    };
+
+    firewall = {
+      enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable firewall configuration";
+      };
+
+      allowPing = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Allow ICMP ping requests";
+      };
+
+      openPorts = mkOption {
+        type = types.listOf types.int;
+        default = [];
+        description = "List of ports to open in the firewall";
+      };
+
+      trustedInterfaces = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "List of trusted network interfaces";
+      };
+    };
+  };
 
   config = mkIf cfg.enable {
     networking = {
       hostName = cfg.hostName;
-      useDHCP = cfg.useDHCP;
+      # Use mkForce to resolve the conflict with NetworkManager
+      useDHCP = lib.mkForce (cfg.useDHCP && !cfg.enableNetworkManager);
 
       # NetworkManager Configuration
-      networkmanager = mkIf cfg.enableNetworkManager {
-        enable = true;
-        dns = "systemd-resolved"; # Use systemd-resolved for better DNS handling
+      networkmanager = {
+        enable = cfg.enableNetworkManager;
+        dns = "systemd-resolved";
         wifi = {
-          powersave = false; # Disable power management for better stability
-          backend = "iwd"; # Use iwd backend for better WiFi performance
+          powersave = false;
+          backend = "wpa_supplicant";
         };
+      };
+
+      # Wireless Configuration
+      wireless = {
+        enable = false; # Disable built-in wireless to prevent conflicts
+        userControlled.enable = true;
       };
 
       # Firewall Configuration
@@ -61,21 +141,51 @@ in {
         allowedUDPPorts = cfg.firewall.openPorts;
         trustedInterfaces = cfg.firewall.trustedInterfaces;
       };
+
+      # Name resolution configuration
+      nameservers = selectedDNS;
     };
 
     # systemd-resolved Configuration
-    services.resolved = mkIf cfg.dns.enableSystemdResolved {
-      enable = true;
-      dnssec = "true";
-      domains = ["~."];
-      fallbackDns = selectedDNS;
-      extraConfig = ''
-        DNS=${concatStringsSep " " selectedDNS}
-        ${optionalString cfg.dns.enableDNSOverTLS "DNSOverTLS=yes"}
-        Cache=yes
-        DNSStubListener=yes
-        MulticastDNS=yes
-      '';
+    services = {
+      resolved = mkIf cfg.dns.enableSystemdResolved {
+        enable = true;
+        dnssec = "allow-downgrade";
+        fallbackDns = selectedDNS;
+        extraConfig = ''
+          DNSOverTLS=${
+            if cfg.dns.enableDNSOverTLS
+            then "yes"
+            else "no"
+          }
+          MulticastDNS=yes
+          Cache=yes
+          DNSStubListener=yes
+        '';
+      };
+    };
+
+    # Network Service Configuration
+    systemd.services = {
+      NetworkManager = mkIf cfg.enableNetworkManager {
+        wantedBy = ["multi-user.target"];
+        after = ["network.target"];
+        serviceConfig = {
+          Restart = "always";
+          RestartSec = "5s";
+        };
+      };
+
+      network-interfaces-up = {
+        description = "Ensure network interfaces are up";
+        after = ["network.target"];
+        wantedBy = ["multi-user.target"];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.coreutils}/bin/true";
+        };
+      };
     };
 
     # TCP Optimization
@@ -89,10 +199,12 @@ in {
       "net.ipv4.tcp_keepalive_time" = 120;
       "net.ipv4.tcp_max_syn_backlog" = 4096;
       "net.ipv4.tcp_rfc1337" = 1;
+      "net.ipv4.ip_forward" = 1;
 
       # IPv6 settings
       "net.ipv6.conf.all.accept_ra" = 2;
       "net.ipv6.conf.default.accept_ra" = 2;
+      "net.ipv6.conf.all.forwarding" = 1;
 
       # General network settings
       "net.core.netdev_max_backlog" = 16384;
@@ -104,19 +216,13 @@ in {
       "net.core.optmem_max" = 65536;
     };
 
-    # Additional network optimization services
-    systemd.services.network-optimization = {
-      description = "Network Optimization Service";
-      after = ["network.target"];
-      wantedBy = ["multi-user.target"];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = "${pkgs.bash}/bin/bash -c '\
-          ${pkgs.iproute2}/bin/tc qdisc add dev eth0 root fq_codel || true; \
-          ${pkgs.iproute2}/bin/tc qdisc add dev wlan0 root fq_codel || true; \
-        '";
-      };
-    };
+    # Required packages
+    environment.systemPackages = with pkgs; [
+      networkmanager
+      networkmanagerapplet
+      wpa_supplicant
+      iw
+      wirelesstools
+    ];
   };
 }
