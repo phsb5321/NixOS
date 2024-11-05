@@ -8,41 +8,24 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
-    ../modules
   ];
 
-  # Bootloader configuration for EFI
+  # Enable experimental features
+  nix.settings.experimental-features = ["nix-command" "flakes"];
+
+  # Bootloader configuration
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.efi.efiSysMountPoint = "/boot/efi";
+  boot.loader.efi.efiSysMountPoint = "/boot/efi"; # Ensure this matches the mount point configuration in hardware-configuration.nix
 
-  # Set system options
+  # System settings
   networking.hostName = "nixos"; # Define your hostname
-  time.timeZone = "America/Recife";
-  i18n.defaultLocale = "en_US.UTF-8";
-  console.keyMap = "br-abnt2";
-  nix.settings.experimental-features = "nix-command flakes";
-  system.stateVersion = "24.05"; # Use consistent NixOS release settings
+  time.timeZone = "America/Recife"; # Set your time zone
+  i18n.defaultLocale = "en_US.UTF-8"; # Set default locale
+  programs.fish.enable = true;
+  users.defaultUserShell = pkgs.fish;
 
-  # Networking
-  networking.networkmanager.enable = true;
-  networking.networkmanager.dns = "none";
-  networking.useDHCP = lib.mkDefault false;
-
-  # Specify DNS servers
-  networking.nameservers = [
-    "8.8.8.8" # Google's public DNS
-    "8.8.4.4" # Google's public DNS
-    "1.1.1.1" # Cloudflare's public DNS
-    "1.0.0.1" # Cloudflare's public DNS
-    "208.67.222.222" # OpenDNS
-    "208.67.220.220" # OpenDNS
-    "9.9.9.9" # Quad9 DNS
-    "149.112.112.112" # Quad9 DNS
-    "64.6.64.6" # Verisign Public DNS
-    "64.6.65.6" # Verisign Public DNS
-  ];
-  # Locale settings for different aspects
+  # Extra locale settings
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
     LC_IDENTIFICATION = "pt_BR.UTF-8";
@@ -55,16 +38,47 @@
     LC_TIME = "pt_BR.UTF-8";
   };
 
-  # Desktop Environment and Display Manager
+  console.keyMap = "br-abnt2"; # Configure console keymap
+  system.stateVersion = "24.05"; # Define system state version
+
+  # Networking settings
+  networking.networkmanager.enable = true; # Enable network manager
+
+  # DNS settings (Add only if needed)
+  networking.nameservers = [
+    "8.8.8.8"
+    "8.8.4.4"
+    "1.1.1.1"
+    "1.0.0.1"
+    "208.67.222.222"
+    "208.67.220.220"
+    "9.9.9.9"
+    "149.112.112.112"
+    "64.6.64.6"
+    "64.6.65.6"
+  ];
+
+  # X11 and Plasma 6 settings
   services.xserver.enable = true;
+  services.displayManager.sddm.enable = true;
+  services.desktopManager.plasma6.enable = true;
+  services.displayManager.sddm.wayland.enable = true;
+
   services.xserver.xkb.layout = "br";
   services.xserver.xkb.variant = "";
-  services.displayManager.sddm.enable = true;
-  services.xserver.desktopManager.plasma5.enable = true;
-  services.displayManager.autoLogin.enable = true;
-  services.displayManager.autoLogin.user = "notroot";
 
-  # User configuration
+  # Printing support
+  services.printing.enable = true;
+
+  # PipeWire configuration for sound
+  hardware.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire.enable = true;
+  services.pipewire.alsa.enable = true;
+  services.pipewire.alsa.support32Bit = true;
+  services.pipewire.pulse.enable = true;
+
+  # User settings
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
@@ -79,146 +93,130 @@
       "docker"
     ];
     packages = with pkgs; [
-      # Terminals and Shells
-      kitty
-      fish
-      zellij
-      sshfs
-
-      # Terminal Tools
-      tree
-      eza
-      zoxide
-      ripgrep
+      kdePackages.kate # Add more packages as needed
 
       # Editors and IDEs
       vscode
-      neovim
 
       # Web Browsers
       floorp
       google-chrome
 
-      # Development Tools
-      git
-      seahorse
-      alejandra
-
       # API Testing
       insomnia
+      postman
 
       # File Management
       gparted
       baobab
       syncthing
+      vlc
 
       # System Utilities
       pigz
       mangohud
-
-      # Note-taking and Knowledge Management
-      obsidian
+      unzip
 
       # Music Streaming
       spotify
 
-      # Gaming
-      lutris-unwrapped
-
-      # Nvim Dependencies
-      stow
-      gcc
-      xclip
-
+      # Miscellaneous Tools
+      bruno
+      lsof
+      discord
       corectrl
-      hwinfo
+      inputs.zen-browser.packages."${system}".default
+
+      # Programming Languages
+      python3
     ];
   };
 
-  modules.virtualization = {
-    enable = true;
-    enableLibvirtd = true;
-    enableVirtManager = true;
-  };
+  # Auto login
+  services.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.user = "notroot";
 
-  # Enable hardware and system services
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
-  services.printing.enable = true;
+  # Enable Firefox browser
+  programs.firefox.enable = true;
 
-  # Remove deprecated sound option
-  # sound.enable = true;
-
-  hardware.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire.enable = true;
-  services.pipewire.alsa.enable = true;
-  services.pipewire.alsa.support32Bit = true;
-  services.pipewire.pulse.enable = true;
-
-  # Docker
-  virtualisation.docker.enable = true;
-  virtualisation.docker.rootless = {
-    enable = true;
-    setSocketVariable = true;
-  };
-
-  # Gaming and applications
-  programs.fish.enable = true;
-  users.defaultUserShell = pkgs.fish;
-  nixpkgs.config.allowUnfreePredicate = pkg:
-    builtins.elem (lib.getName pkg) [
-      "steam"
-      "steam-original"
-      "steam-run"
-    ];
+  # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-
-  # Home Manager integration
-  home-manager = {
-    extraSpecialArgs = {inherit inputs;};
-    users = {"notroot" = import ./home.nix;};
-  };
 
   # System-wide packages
   environment.systemPackages = with pkgs; [
+    # System Utilities
     wget
     vim
+
+    # Neovim Dependencies
+    stow
+    gcc
+    xclip
+
+    # System Information Tools
     neofetch
     cmatrix
     htop
+    lact # Added LACT for AMD GPU control
+
+    # Development Tools
+    llvm
+    clang
+    rocmPackages.clr # HIP runtime
+    rocmPackages.rocminfo # ROCm device information tool
+    rocmPackages.rocm-smi # ROCm system management interface tool
+    git
+    seahorse
+
+    # Nix Tools
+    alejandra # NixOS formatting tool
+    nixd
+
+    # Terminal Enhancements
+    gum # For pretty TUIs in the terminal
+    libvirt-glib
+    coreutils
+    fd
+
+    # Speech Services
+    speechd # Speech Dispatcher for Firefox
+
+    # File and Directory Tools
+    tree
+    eza
+    zoxide
+    ripgrep
+
+    # Terminals and Shells
+    kitty
+    fish
+    zellij
+    sshfs
+
+    # Coopilot
+    nodejs_22 # Node.js LTS for Copilot
   ];
 
-  # SSH and security
-  services.openssh.enable = true;
-  services.openssh.settings.PermitRootLogin = "no";
+  # Security and utility programs
+  programs.mtr.enable = true;
+  programs.gnupg.agent.enable = true;
+  programs.gnupg.agent.enableSSHSupport = true;
 
-  hardware.graphics = {
+  # SSH configuration
+  services.openssh = {
     enable = true;
-    enable32Bit = true;
+    settings = {
+      PermitRootLogin = "no";
+      PasswordAuthentication = true;
+      KbdInteractiveAuthentication = false;
+    };
   };
 
-  # nvidia configuration
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = false;
-    powerManagement.finegrained = false;
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  # Enable Home Manager
+  home-manager = {
+    extraSpecialArgs = {inherit inputs;};
+    users = {
+      notroot = import ./home.nix;
+    };
   };
-
-  # Steam
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;
-  };
-
-  xdg.portal.enable = true;
-  xdg.portal.extraPortals = [pkgs.xdg-desktop-portal-gtk];
-
-  nix.settings.trusted-substituters = ["https://ai.cachix.org"];
-  nix.settings.trusted-public-keys = ["ai.cachix.org-1:N9dzRK+alWwoKXQlnn0H6aUx0lU/mspIoz8hMvGvbbc="];
 }
