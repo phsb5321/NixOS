@@ -40,7 +40,6 @@
       obsidian
       inputs.nixvim
       zed-editor
-      gitbutler
       ngrok
       calibre
     ];
