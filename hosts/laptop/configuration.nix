@@ -213,12 +213,11 @@
     };
   };
 
-  # Enable Home Manager
+  # Home Manager integration
   home-manager = {
     extraSpecialArgs = {inherit inputs;};
-    users = {
-      notroot = import ./home.nix;
-    };
+    backupFileExtension = "bkp";
+    users = {"notroot" = import ./home.nix;};
   };
 
   # Fonts
