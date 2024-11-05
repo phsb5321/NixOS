@@ -16,12 +16,14 @@
   # Bootloader configuration
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.efi.efiSysMountPoint = "/boot/efi";  # Ensure this matches the mount point configuration in hardware-configuration.nix
+  boot.loader.efi.efiSysMountPoint = "/boot/efi"; # Ensure this matches the mount point configuration in hardware-configuration.nix
 
   # System settings
   networking.hostName = "nixos"; # Define your hostname
   time.timeZone = "America/Recife"; # Set your time zone
   i18n.defaultLocale = "en_US.UTF-8"; # Set default locale
+  programs.fish.enable = true;
+  users.defaultUserShell = pkgs.fish;
 
   # Extra locale settings
   i18n.extraLocaleSettings = {
@@ -92,6 +94,41 @@
     ];
     packages = with pkgs; [
       kdePackages.kate # Add more packages as needed
+
+      # Editors and IDEs
+      vscode
+
+      # Web Browsers
+      floorp
+      google-chrome
+
+      # API Testing
+      insomnia
+      postman
+
+      # File Management
+      gparted
+      baobab
+      syncthing
+      vlc
+
+      # System Utilities
+      pigz
+      mangohud
+      unzip
+
+      # Music Streaming
+      spotify
+
+      # Miscellaneous Tools
+      bruno
+      lsof
+      discord
+      corectrl
+      inputs.zen-browser.packages."${system}".default
+
+      # Programming Languages
+      python3
     ];
   };
 
@@ -107,7 +144,57 @@
 
   # System-wide packages
   environment.systemPackages = with pkgs; [
-    vim wget neovim gh git zed-editor
+    # System Utilities
+    wget
+    vim
+
+    # Neovim Dependencies
+    stow
+    gcc
+    xclip
+
+    # System Information Tools
+    neofetch
+    cmatrix
+    htop
+    lact # Added LACT for AMD GPU control
+
+    # Development Tools
+    llvm
+    clang
+    rocmPackages.clr # HIP runtime
+    rocmPackages.rocminfo # ROCm device information tool
+    rocmPackages.rocm-smi # ROCm system management interface tool
+    git
+    seahorse
+
+    # Nix Tools
+    alejandra # NixOS formatting tool
+    nixd
+
+    # Terminal Enhancements
+    gum # For pretty TUIs in the terminal
+    libvirt-glib
+    coreutils
+    fd
+
+    # Speech Services
+    speechd # Speech Dispatcher for Firefox
+
+    # File and Directory Tools
+    tree
+    eza
+    zoxide
+    ripgrep
+
+    # Terminals and Shells
+    kitty
+    fish
+    zellij
+    sshfs
+
+    # Coopilot
+    nodejs_22 # Node.js LTS for Copilot
   ];
 
   # Security and utility programs
@@ -115,9 +202,15 @@
   programs.gnupg.agent.enable = true;
   programs.gnupg.agent.enableSSHSupport = true;
 
-  # Enable OpenSSH daemon
-  services.openssh.enable = true;
-  services.openssh.settings.PermitRootLogin = "no";
+  # SSH configuration
+  services.openssh = {
+    enable = true;
+    settings = {
+      PermitRootLogin = "no";
+      PasswordAuthentication = true;
+      KbdInteractiveAuthentication = false;
+    };
+  };
 
   # Enable Home Manager
   home-manager = {
