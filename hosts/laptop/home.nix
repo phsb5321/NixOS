@@ -79,7 +79,7 @@
       fishconfig = "source ~/.config/fish/config.fish";
       textractor = "~/NixOS/user-scripts/textractor.sh";
       ls = "eza -l --icons";
-      nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh laptop"; # Default flake
+      nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh laptop"; # Laptop flake
       nix-select-shell = "~/NixOS/user-scripts/nix-shell-selector.sh";
     };
     plugins = [
