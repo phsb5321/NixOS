@@ -1,3 +1,4 @@
+# ~/NixOS/hosts/modules/desktop/kde/default.nix
 {
   config,
   lib,
@@ -8,26 +9,23 @@ with lib; let
   cfg = config.modules.desktop;
 in {
   config = mkIf (cfg.enable && cfg.environment == "kde") {
-    # Ensure NetworkManager is not disabled here
-    networking.networkmanager.enable = true; # <-- Add this line if missing
-
-    # Existing KDE configuration
-    services.xserver = {
-      enable = true;
+    # Basic X server and KDE configuration
+    services = {
+      xserver.enable = true;
+      desktopManager.plasma6.enable = true;
       displayManager = {
         sddm = {
           enable = true;
-          wayland.enable = true; # Enable Wayland in SDDM
+          wayland.enable = true;
         };
-        defaultSession = "plasma"; # Use Plasma session by default
         autoLogin = mkIf cfg.autoLogin.enable {
           enable = true;
           user = cfg.autoLogin.user;
         };
       };
-      desktopManager.plasma6.enable = true;
     };
 
+    # Session variables for Wayland/KDE
     environment.sessionVariables = {
       NIXOS_OZONE_WL = "1";
       WLR_NO_HARDWARE_CURSORS = "1";
@@ -42,36 +40,28 @@ in {
       MOZ_ENABLE_WAYLAND = "1";
     };
 
+    # Core environment packages
     environment.systemPackages = with pkgs; [
-      # Core KDE packages
-      libsForQt5.plasma-workspace
-      libsForQt5.kdeconnect-kde
-      libsForQt5.kaccounts-integration
-
-      # Wayland support
-      qt6.qtwayland
       wayland
       xwayland
+      qt6.qtwayland
 
-      # Desktop portals
+      # KDE specific packages
+      kdePackages.dolphin
+      kdePackages.konsole
+      kdePackages.kate
+      kdePackages.ark
+      kdePackages.spectacle
+      kdePackages.okular
+      kdePackages.plasma-systemmonitor
+      kdePackages.plasma-nm
+      kdePackages.plasma-vault
+      kdePackages.plasma-workspace
+      kdePackages.kdeconnect-kde
+
+      # XDG portals
       xdg-desktop-portal-kde
       xdg-utils
-
-      # Basic applications
-      libsForQt5.dolphin
-      libsForQt5.konsole
-      firefox
-
-      # KDE utilities
-      libsForQt5.ark
-      libsForQt5.kate
-      libsForQt5.spectacle
-      libsForQt5.okular
-
-      # System tray utilities
-      libsForQt5.plasma-systemmonitor
-      libsForQt5.plasma-nm
-      libsForQt5.plasma-vault
     ];
 
     # XDG portal configuration
@@ -82,12 +72,7 @@ in {
         pkgs.xdg-desktop-portal-gtk
       ];
       config = {
-        common = {
-          default = [
-            "kde"
-            "gtk"
-          ];
-        };
+        common.default = ["kde" "gtk"];
       };
     };
 
@@ -102,71 +87,17 @@ in {
       jack.enable = true;
     };
 
-    hardware.bluetooth = {
-      enable = true;
-      powerOnBoot = true;
+    # Required services
+    services = {
+      power-profiles-daemon.enable = true;
+      udisks2.enable = true;
+      accounts-daemon.enable = true;
+      upower.enable = true;
     };
 
-    # Required services and other configurations
-    services.power-profiles-daemon.enable = true;
-    services.udisks2.enable = true;
-    services.accounts-daemon.enable = true;
-    services.upower.enable = true;
-
-    # KDE Connect and Firewall configuration
-    networking.firewall = {
-      allowedTCPPortRanges = [
-        {
-          from = 1714;
-          to = 1764;
-        } # KDE Connect
-      ];
-      allowedUDPPortRanges = [
-        {
-          from = 1714;
-          to = 1764;
-        } # KDE Connect
-      ];
-    };
-
-    # Home Manager configuration for KDE
-    home-manager.users.${cfg.autoLogin.user} = {pkgs, ...}: {
-      home.packages = with pkgs; [
-        # Additional KDE apps
-        libsForQt5.filelight
-        libsForQt5.kcalc
-        libsForQt5.krita
-        libsForQt5.gwenview
-      ];
-
-      # KDE Connect configuration
-      services.kdeconnect = {
-        enable = true;
-        indicator = true;
-      };
-
-      # Notification service
-      services.dunst = {
-        enable = true;
-        settings = {
-          global = {
-            font = "JetBrainsMono Nerd Font 11";
-            frame_width = 2;
-            frame_color = "#89b4fa";
-          };
-        };
-      };
-
-      # Plasma specific configuration
-      programs.plasma = {
-        enable = true;
-        workspace = {
-          clickItemTo = "select";
-          theme = "breeze-dark";
-          wallpaper = "Next";
-        };
-      };
-    };
+    # Security and system features
+    security.polkit.enable = true;
+    security.rtkit.enable = true;
 
     # System-wide KDE configuration
     qt = {
@@ -175,21 +106,19 @@ in {
       style = "breeze";
     };
 
-    # Enable required features
-    security.rtkit.enable = true;
-    security.polkit.enable = true;
-
-    # Enable Flatpak support
+    # Flatpak support
     services.flatpak.enable = true;
 
+    # Fonts
     fonts.packages = with pkgs; [
       noto-fonts
-      noto-fonts-cjk
+      noto-fonts-cjk-sans
       noto-fonts-emoji
       liberation_ttf
-      fira-code
-      fira-code-symbols
       (nerdfonts.override {fonts = ["JetBrainsMono"];})
     ];
+
+    # Increase download buffer size to fix warning
+    nix.settings.download-buffer-size = 128 * 1024 * 1024; # Set to 128 MiB
   };
 }
