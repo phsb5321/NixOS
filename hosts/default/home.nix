@@ -39,7 +39,6 @@
       remmina
       obsidian
       inputs.nixvim
-      zed-editor
       ngrok
       calibre
     ];

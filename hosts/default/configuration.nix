@@ -3,14 +3,26 @@
   pkgs,
   lib,
   inputs,
+  bleedPkgs,
   ...
 }: {
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
     ../modules/virtualization
+    ../modules/desktop # Add the desktop modules
     ../modules
   ];
+
+  # Enable and configure desktop module
+  modules.desktop = {
+    enable = true;
+    environment = "kde";
+    autoLogin = {
+      enable = true;
+      user = "notroot";
+    };
+  };
 
   # Set system options
   time.timeZone = "America/Recife";
@@ -53,6 +65,17 @@
     };
   };
 
+  # Configure Nixpkgs
+  nixpkgs.config = {
+    allowUnfree = true;
+    allowUnfreePredicate = pkg:
+      builtins.elem (lib.getName pkg) [
+        "steam"
+        "steam-original"
+        "steam-run"
+      ];
+  };
+
   systemd.tmpfiles.rules = let
     rocmEnv = pkgs.symlinkJoin {
       name = "rocm-combined";
@@ -60,7 +83,6 @@
         rocblas # Required for miopen
         clr # HIP runtime
         rocminfo # ROCm device info tool
-        # miopen          # MIOpen for machine learning
         rocsolver # ROCm linear algebra solver library
         rocalution # ROCm sparse linear algebra library
       ];
@@ -80,34 +102,6 @@
     LC_PAPER = "pt_BR.UTF-8";
     LC_TELEPHONE = "pt_BR.UTF-8";
     LC_TIME = "pt_BR.UTF-8";
-  };
-
-  # Desktop Environment and Display Manager
-  services = {
-    xserver = {
-      enable = true;
-      xkb = {
-        layout = "br";
-        variant = "";
-      };
-      # Updated GPU configuration
-      videoDrivers = ["amdgpu"];
-      deviceSection = ''
-        Option "TearFree" "true"
-        Option "DRI" "3"
-      '';
-      desktopManager.plasma5.enable = true;
-    };
-
-    displayManager = {
-      sddm = {
-        enable = true;
-      };
-      autoLogin = {
-        enable = true;
-        user = "notroot";
-      };
-    };
   };
 
   # User configuration
@@ -165,17 +159,7 @@
     ];
   };
 
-  # Syncthing service configuration
-  services.syncthing = {
-    enable = true;
-    user = "notroot";
-    dataDir = "/home/notroot/Sync"; # Adjust this path as needed
-    configDir = "/home/notroot/.config/syncthing";
-    overrideDevices = true; # overrides any devices added or deleted through the WebUI
-    overrideFolders = true; # overrides any folders added or deleted through the WebUI
-  };
-
-  # Updated AMD GPU configuration
+  # Hardware configuration
   hardware = {
     graphics = {
       enable = true;
@@ -188,7 +172,16 @@
     };
     pulseaudio.enable = false;
     cpu.amd.updateMicrocode = true;
-    enableAllFirmware = true;
+  };
+
+  # Syncthing service configuration
+  services.syncthing = {
+    enable = true;
+    user = "notroot";
+    dataDir = "/home/notroot/Sync";
+    configDir = "/home/notroot/.config/syncthing";
+    overrideDevices = true;
+    overrideFolders = true;
   };
 
   services = {
@@ -223,10 +216,7 @@
     username = "notroot";
   };
 
-  # Ensure dconf is enabled for virt-manager
-  programs.dconf.enable = true;
-
-  # Gaming and applications
+  # Gaming configuration
   programs = {
     fish.enable = true;
     steam = {
@@ -234,7 +224,6 @@
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
     };
-    # Updated CoreCtrl configuration
     corectrl = {
       enable = true;
       gpuOverclock = {
@@ -242,10 +231,7 @@
         ppfeaturemask = "0xffffffff";
       };
     };
-  };
-
-  nixpkgs.config = {
-    allowUnfree = true;
+    dconf.enable = true;
   };
 
   # Home Manager integration
@@ -257,9 +243,17 @@
 
   # System-wide packages
   environment.systemPackages = with pkgs; [
+    # Gaming Tools
+    gamemode
+    gamescope
+    mangohud
+    protontricks
+    winetricks
+
     # System Utilities
     wget
     vim
+    bleedPkgs.zed-editor
 
     # Neovim Dependencies
     stow
@@ -270,31 +264,28 @@
     neofetch
     cmatrix
     htop
-    lact # Added LACT for AMD GPU control
+    lact
 
     # Development Tools
     llvm
     clang
-    rocmPackages.clr # HIP runtime
-    rocmPackages.rocminfo # ROCm device information tool
-    rocmPackages.rocm-smi # ROCm system management interface tool
+    rocmPackages.clr
+    rocmPackages.rocminfo
+    rocmPackages.rocm-smi
     git
     gh
-    # gitbutler
     seahorse
 
     # Nix Tools
-    alejandra # NixOS formatting tool
+    alejandra
     nixd
 
     # Terminal Enhancements
-    gum # For pretty TUIs in the terminal
+    gum
     libvirt-glib
     coreutils
     fd
-
-    # Speech Services
-    speechd # Speech Dispatcher for Firefox
+    speechd
 
     # File and Directory Tools
     tree
@@ -308,15 +299,15 @@
     zellij
     sshfs
 
-    # Coopilot
-    nodejs_22 # Node.js LTS for Copilot
+    # Development
+    nodejs_22
   ];
 
   # LACT daemon service
   systemd.packages = with pkgs; [lact];
   systemd.services.lactd.wantedBy = ["multi-user.target"];
 
-  # Security enhancements
+  # Security configuration
   security = {
     sudo.wheelNeedsPassword = true;
     auditd.enable = true;
@@ -337,7 +328,7 @@
     };
   };
 
-  # Performance optimizations and GPU-related kernel parameters
+  # Boot configuration
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
@@ -351,13 +342,13 @@
     tmp.useTmpfs = true;
   };
 
-  # System management improvements
+  # System services
   services = {
     fstrim.enable = true;
     thermald.enable = true;
   };
 
-  # Fonts
+  # Font configuration
   fonts = {
     fontDir.enable = true;
     packages = with pkgs; [
@@ -380,7 +371,7 @@
     };
   };
 
-  # Allow users in the "wheel" group to use CoreCtrl without password
+  # CoreCtrl sudo configuration
   security.sudo.extraRules = [
     {
       groups = ["wheel"];
@@ -393,7 +384,7 @@
     }
   ];
 
-  # ESP 32 Development
+  # ESP32 Development
   services.udev.packages = [
     pkgs.platformio-core
     pkgs.openocd
