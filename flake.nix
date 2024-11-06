@@ -14,13 +14,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Plasma Manager input with dependencies following main nixpkgs and home-manager inputs
-    plasma-manager = {
-      url = "github:pjones/plasma-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
-    };
-
     # Additional inputs for custom projects and tools
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
     nixvim = {

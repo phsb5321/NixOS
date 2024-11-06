@@ -46,6 +46,16 @@ in {
       xwayland
       qt6.qtwayland
 
+      # Screen sharing support
+      pipewire
+      libsForQt5.qt5.qtwebengine
+      xdg-desktop-portal
+      xdg-desktop-portal-kde
+      xdg-desktop-portal-gtk
+      kdePackages.plasma-browser-integration
+      kdePackages.kdeplasma-addons
+      kdePackages.kscreen
+
       # KDE specific packages
       kdePackages.dolphin
       kdePackages.konsole
@@ -58,13 +68,17 @@ in {
       kdePackages.plasma-vault
       kdePackages.plasma-workspace
       kdePackages.kdeconnect-kde
+      kdePackages.plasma-pa # Plasma audio volume
+      kdePackages.breeze
+      kdePackages.breeze-gtk
+      kdePackages.breeze-icons
 
       # XDG portals
       xdg-desktop-portal-kde
       xdg-utils
     ];
 
-    # XDG portal configuration
+    # XDG portal configuration for screen sharing
     xdg.portal = {
       enable = true;
       extraPortals = [
@@ -72,11 +86,20 @@ in {
         pkgs.xdg-desktop-portal-gtk
       ];
       config = {
-        common.default = ["kde" "gtk"];
+        common = {
+          default = ["kde" "gtk"];
+          "org.freedesktop.impl.portal.Secret" = ["gnome-keyring"];
+          "org.freedesktop.impl.portal.ScreenCast" = ["kde"];
+        };
+        kde = {
+          default = ["kde" "gtk"];
+          "org.freedesktop.impl.portal.ScreenCast" = ["kde"];
+        };
       };
+      xdgOpenUsePortal = true;
     };
 
-    # Audio configuration
+    # PipeWire configuration for screen sharing
     services.pipewire = {
       enable = true;
       alsa = {
@@ -85,6 +108,7 @@ in {
       };
       pulse.enable = true;
       jack.enable = true;
+      wireplumber.enable = true;
     };
 
     # Required services
@@ -93,11 +117,15 @@ in {
       udisks2.enable = true;
       accounts-daemon.enable = true;
       upower.enable = true;
+      gnome.gnome-keyring.enable = true;
     };
 
     # Security and system features
-    security.polkit.enable = true;
-    security.rtkit.enable = true;
+    security = {
+      polkit.enable = true;
+      rtkit.enable = true;
+      pam.services.sddm.enableGnomeKeyring = true;
+    };
 
     # System-wide KDE configuration
     qt = {
