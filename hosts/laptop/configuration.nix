@@ -147,6 +147,7 @@
     # System Utilities
     wget
     vim
+    zed-editor
 
     # Neovim Dependencies
     stow
@@ -212,11 +213,33 @@
     };
   };
 
-  # Enable Home Manager
+  # Home Manager integration
   home-manager = {
     extraSpecialArgs = {inherit inputs;};
-    users = {
-      notroot = import ./home.nix;
+    backupFileExtension = "bkp";
+    users = {"notroot" = import ./home.nix;};
+  };
+
+  # Fonts
+  fonts = {
+    fontDir.enable = true;
+    packages = with pkgs; [
+      font-awesome
+      noto-fonts
+      noto-fonts-cjk-sans
+      noto-fonts-emoji
+      liberation_ttf
+      fira-code
+      fira-code-symbols
+      jetbrains-mono
+      (nerdfonts.override {fonts = ["JetBrainsMono"];})
+    ];
+    fontconfig = {
+      defaultFonts = {
+        serif = ["Noto Serif" "Liberation Serif"];
+        sansSerif = ["Noto Sans" "Liberation Sans"];
+        monospace = ["JetBrains Mono" "Fira Code" "Liberation Mono"];
+      };
     };
   };
 }
