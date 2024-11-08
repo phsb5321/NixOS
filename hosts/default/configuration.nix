@@ -275,6 +275,7 @@
     git
     gh
     seahorse
+    # bleedPkgs.gitbutler
 
     # Nix Tools
     alejandra
