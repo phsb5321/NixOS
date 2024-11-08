@@ -97,7 +97,7 @@
   # Kitty Terminal Configuration
   programs.kitty = {
     enable = true;
-    theme = "Tokyo Night";
+    theme = "Gruvbox Material Dark Hard";
     font = {
       name = "JetBrainsMono Nerd Font";
       size = 18;
