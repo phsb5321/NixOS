@@ -30,7 +30,6 @@
     hyprland.url = "github:hyprwm/Hyprland";
   };
 
-  # Outputs block defines configurations and available packages
   outputs = {
     self,
     nixpkgs,
@@ -67,7 +66,6 @@
     nixosConfigurations = {
       # Default configuration, references './hosts/default/configuration.nix'
       default = nixpkgs.lib.nixosSystem {
-        # Pass all inputs, standard packages, and bleeding-edge packages as special arguments
         inherit system;
         specialArgs = {inherit inputs pkgs bleedPkgs;};
         modules =
