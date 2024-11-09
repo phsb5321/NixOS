@@ -33,7 +33,6 @@
       yazi-unwrapped
       texlive.combined.scheme-full
       dbeaver-bin
-      polonium
       amberol
       awscli2
       remmina
