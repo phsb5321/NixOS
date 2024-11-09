@@ -10,7 +10,7 @@
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
     ../modules/virtualization
-    ../modules/desktop # Add the desktop modules
+    ../modules/desktop
     ../modules
   ];
 
@@ -22,7 +22,34 @@
       enable = true;
       user = "notroot";
     };
+    extraPackages = with pkgs; [
+      kdePackages.plasma-nm # KDE Network Management applet
+      kdePackages.plasma-pa # Audio volume applet
+      networkmanagerapplet # Backup network manager applet
+    ];
   };
+
+  # Enable and configure networking module
+  modules.networking = {
+    enable = true;
+    hostName = "nixos";
+    optimizeTCP = true;
+    enableNetworkManager = true;
+    dns = {
+      enableSystemdResolved = true;
+      enableDNSOverTLS = true;
+      primaryProvider = "cloudflare";
+    };
+    firewall = {
+      enable = true;
+      allowPing = true;
+      openPorts = [22];
+      trustedInterfaces = [];
+    };
+  };
+
+  # Additional networking overrides if needed
+  networking.networkmanager.dns = lib.mkForce "default";
 
   # Set system options
   time.timeZone = "America/Recife";
@@ -30,26 +57,6 @@
   console.keyMap = "br-abnt2";
   system.stateVersion = "24.05"; # Use the same version as Home Manager
   users.defaultUserShell = pkgs.fish;
-
-  # Networking
-  networking.hostName = "nixos"; # Define your hostname
-  networking = {
-    networkmanager.enable = true;
-    networkmanager.dns = "none";
-    useDHCP = lib.mkDefault false;
-    nameservers = [
-      "8.8.8.8" # Google's public DNS
-      "8.8.4.4" # Google's public DNS
-      "1.1.1.1" # Cloudflare's public DNS
-      "1.0.0.1" # Cloudflare's public DNS
-      "208.67.222.222" # OpenDNS
-      "208.67.220.220" # OpenDNS
-      "9.9.9.9" # Quad9 DNS
-      "149.112.112.112" # Quad9 DNS
-      "64.6.64.6" # Verisign Public DNS
-      "64.6.65.6" # Verisign Public DNS
-    ];
-  };
 
   # Nix settings
   nix = {
@@ -63,17 +70,6 @@
       dates = "weekly";
       options = "--delete-older-than 30d";
     };
-  };
-
-  # Configure Nixpkgs
-  nixpkgs.config = {
-    allowUnfree = true;
-    allowUnfreePredicate = pkg:
-      builtins.elem (lib.getName pkg) [
-        "steam"
-        "steam-original"
-        "steam-run"
-      ];
   };
 
   systemd.tmpfiles.rules = let
@@ -275,6 +271,7 @@
     git
     gh
     seahorse
+    # bleedPkgs.gitbutler
 
     # Nix Tools
     alejandra

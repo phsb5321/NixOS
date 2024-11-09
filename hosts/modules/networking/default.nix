@@ -119,7 +119,7 @@ in {
       # NetworkManager Configuration
       networkmanager = {
         enable = true;
-        dns = "systemd-resolved"; # Use systemd-resolved for DNS resolution
+        dns = lib.mkDefault "default"; # Changed to allow overriding
         wifi = {
           powersave = false; # Disable power management for better stability
           macAddress = "preserve"; # Preserve MAC address
@@ -138,7 +138,7 @@ in {
 
       # Enable IPv4 and IPv6 support
       enableIPv6 = true;
-      useDHCP = false; # Let NetworkManager handle DHCP
+      useDHCP = cfg.useDHCP; # Use the module's DHCP setting
 
       # Firewall Configuration
       firewall = mkIf cfg.firewall.enable {
@@ -189,10 +189,9 @@ in {
           enable = true;
           wantedBy = ["multi-user.target"];
           aliases = ["dbus-org.freedesktop.NetworkManager.service"];
-          bindsTo = ["sys-subsystem-net-devices.device"];
+          bindsTo = []; # Remove binding that was causing issues
           after = [
             "network-pre.target"
-            "sys-subsystem-net-devices.device"
             "polkit.service"
             "dbus.service"
           ];
