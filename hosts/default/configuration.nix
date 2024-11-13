@@ -228,6 +228,7 @@
       };
     };
     dconf.enable = true;
+    thunderbird.enable = true;
   };
 
   # Home Manager integration
