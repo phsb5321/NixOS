@@ -299,6 +299,7 @@
 
     # Development
     nodejs_22
+    go
   ];
 
   # LACT daemon service
