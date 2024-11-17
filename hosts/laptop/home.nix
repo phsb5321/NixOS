@@ -39,7 +39,6 @@
       obsidian
       inputs.nixvim
       ngrok
-      calibre
     ];
     sessionVariables = {
       EDITOR = "nvim";
