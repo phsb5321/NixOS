@@ -37,10 +37,11 @@
       awscli2
       remmina
       obsidian
+      d2
       inputs.nixvim
       ngrok
-      calibre
     ];
+
     sessionVariables = {
       EDITOR = "nvim";
       SHELL = "${pkgs.fish}/bin/fish"; # Use Fish as default shell

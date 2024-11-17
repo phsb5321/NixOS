@@ -152,7 +152,16 @@
 
       # Programming Languages
       python3
+
+      # ROCm and ML tools
+      ollama-rocm
+      alpaca
     ];
+  };
+
+  services.ollama = {
+    enable = true;
+    acceleration = "rocm";
   };
 
   # Hardware configuration
