@@ -17,7 +17,7 @@
   # Enable and configure desktop module
   modules.desktop = {
     enable = true;
-    environment = "gnome";
+    environment = "kde";
     autoLogin = {
       enable = true;
       user = "notroot";
