@@ -17,7 +17,7 @@
   # Enable and configure desktop module
   modules.desktop = {
     enable = true;
-    environment = "kde";
+    environment = "gnome";
     autoLogin = {
       enable = true;
       user = "notroot";
@@ -263,6 +263,7 @@
     wget
     vim
     bleedPkgs.zed-editor
+    inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
 
     # Neovim Dependencies
     stow
