@@ -38,7 +38,7 @@ in {
     # Desktop Manager configuration
     services.xserver.desktopManager.plasma5.enable = true;
 
-    # Session variables for Plasma (adjusted for X11)
+    # Session variables for Plasma
     environment.sessionVariables = {
       XDG_SESSION_TYPE = "x11";
       XDG_CURRENT_DESKTOP = "KDE";
@@ -49,10 +49,11 @@ in {
     # Core environment packages
     environment.systemPackages = with pkgs; let
       plasma5 = pkgs.plasma5Packages;
+      xorg = pkgs.xorg;
     in [
       # X11 support
       xorg.xorgserver
-      pkgs.xrandr
+      xorg.xrandr
 
       # Core KDE packages
       plasma5.plasma-workspace
@@ -63,26 +64,20 @@ in {
 
       # Power management
       plasma5.powerdevil
-      power-profiles-daemon
-      acpi
-      acpid
-      powertop
+      pkgs.power-profiles-daemon
+      pkgs.acpi
+      pkgs.acpid
+      pkgs.powertop
 
       # Online accounts and integration
-      pkgs.kaccounts-integration
-      pkgs.kaccounts-providers
-      gnome-keyring
-      pkgs.kio
-      pkgs.kio-extras
-      pkgs.kwallet-pam
+      pkgs.gnome-keyring
 
       # System settings and info
       plasma5.plasma-systemmonitor
-      plasma5.kinfocenter
+      pkgs.kinfocenter
       plasma5.ksystemstats
-      plasma5.kgamma5
+      pkgs.kgamma5
       plasma5.sddm-kcm
-      plasma5.kauth
       plasma5.polkit-kde-agent
 
       # Core applications
@@ -92,9 +87,7 @@ in {
       pkgs.ark
       pkgs.spectacle
       pkgs.okular
-      pkgs.kdegraphics-thumbnailers
-      pkgs.ffmpegthumbs
-      pkgs.kimageformats
+      pkgs.ffmpegthumbnailer
 
       # Plasma addons and integration
       plasma5.plasma-browser-integration
@@ -103,16 +96,15 @@ in {
       plasma5.plasma-nm
       plasma5.plasma-vault
       plasma5.plasma-pa
-      pkgs.kdeconnect
+      plasma5.kdeconnect-kde
 
       # Theming
-      plasma5.breeze
-      plasma5.breeze-gtk
-      plasma5.breeze-icons
+      pkgs.plasma5Packages.breeze-gtk
+      pkgs.plasma5Packages.breeze-icons
 
       # Additional utilities
-      xdg-utils
-      shared-mime-info
+      pkgs.xdg-utils
+      pkgs.shared-mime-info
     ];
 
     # Adjust other services accordingly
@@ -179,13 +171,13 @@ in {
 
     # Fonts
     fonts.packages = with pkgs; [
-      noto-fonts
-      noto-fonts-cjk-sans
-      noto-fonts-emoji
-      liberation_ttf
-      fira-code
-      fira-code-symbols
-      (nerdfonts.override {fonts = ["JetBrainsMono"];})
+      pkgs.noto-fonts
+      pkgs.noto-fonts-cjk-sans
+      pkgs.noto-fonts-emoji
+      pkgs.liberation_ttf
+      pkgs.fira-code
+      pkgs.fira-code-symbols
+      (pkgs.nerdfonts.override {fonts = ["JetBrainsMono"];})
     ];
 
     # Enable required features
@@ -197,54 +189,6 @@ in {
     # Ensure dconf is enabled
     programs.dconf.enable = true;
 
-    # Add home-manager configuration for Dolphin service
-    home-manager.users.${cfg.autoLogin.user} = {
-      systemd.user.services.dolphin = {
-        Unit = {
-          Description = "Dolphin File Manager";
-          PartOf = ["plasma-core.target"];
-          After = [
-            "plasma-core.target"
-            "dbus.socket"
-            "graphical-session-pre.target"
-          ];
-          Requires = [
-            "dbus.socket"
-            "plasma-core.target"
-          ];
-        };
-        Service = {
-          Type = "simple";
-          Environment = [
-            "PATH=/run/current-system/sw/bin:$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:/run/current-system/sw/bin"
-            "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus"
-            "KDE_SESSION_VERSION=5"
-            "KDE_FULL_SESSION=true"
-            "DESKTOP_SESSION=plasma"
-            "XDG_CURRENT_DESKTOP=KDE"
-            "XDG_SESSION_DESKTOP=plasma"
-            "XDG_SESSION_TYPE=x11"
-          ];
-          ExecStart = "${pkgs.dolphin}/bin/dolphin --daemon";
-          ExecStop = "${pkgs.util-linux}/bin/kill -TERM $MAINPID";
-          Restart = "always";
-          RestartSec = "1";
-          TimeoutStopSec = "5";
-        };
-        Install = {
-          WantedBy = ["plasma-core.target"];
-        };
-      };
-
-      # Add service target for KDE Plasma
-      systemd.user.targets.plasma-core = {
-        Unit = {
-          Description = "KDE Plasma Core Services";
-          Requires = ["graphical-session-pre.target"];
-          BindsTo = ["graphical-session.target"];
-          Before = ["graphical-session.target"];
-        };
-      };
-    };
+    # Note: User-specific configurations should be placed in the user's Home Manager configuration.
   };
 }
