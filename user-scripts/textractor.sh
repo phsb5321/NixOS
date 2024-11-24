@@ -232,7 +232,7 @@ total_files=0
 while IFS= read -r -d '' file; do
   total_files=$((total_files + 1))
   if $use_gum; then
-    gum spin --spinner dot --title "Processing: $file" -- sleep 0.1
+    gum spin --spinner dot --title "Processing: $file" -- sleep 0
   else
     echo -e "${CYAN}Processing:${NC} ${YELLOW}$file${NC}"
   fi
