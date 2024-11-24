@@ -286,6 +286,7 @@
     gh
     seahorse
     # bleedPkgs.gitbutler
+    bleachbit
 
     # Nix Tools
     alejandra
