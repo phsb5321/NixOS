@@ -162,11 +162,6 @@
     ];
   };
 
-  services.ollama = {
-    enable = true;
-    acceleration = "rocm";
-  };
-
   # Hardware configuration
   hardware = {
     graphics = {
@@ -182,16 +177,6 @@
     cpu.amd.updateMicrocode = true;
   };
 
-  # Syncthing service configuration
-  services.syncthing = {
-    enable = true;
-    user = "notroot";
-    dataDir = "/home/notroot/Sync";
-    configDir = "/home/notroot/.config/syncthing";
-    overrideDevices = true;
-    overrideFolders = true;
-  };
-
   services = {
     printing.enable = true;
     pipewire = {
@@ -202,6 +187,33 @@
       };
       pulse.enable = true;
     };
+
+    # Syncthing service configuration
+    syncthing = {
+      enable = true;
+      user = "notroot";
+      dataDir = "/home/notroot/Sync";
+      configDir = "/home/notroot/.config/syncthing";
+      overrideDevices = true;
+      overrideFolders = true;
+    };
+
+    # Ollama service configuration
+    ollama = {
+      enable = true;
+      acceleration = "rocm";
+    };
+
+    # Flatpack service configuration
+    flatpak.enable = true;
+  };
+
+  systemd.services.flatpak-repo = {
+    wantedBy = ["multi-user.target"];
+    path = [pkgs.flatpak];
+    script = ''
+      flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    '';
   };
 
   security.rtkit.enable = true;
