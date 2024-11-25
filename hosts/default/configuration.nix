@@ -299,6 +299,7 @@
     coreutils
     fd
     speechd
+    parallel
 
     # File and Directory Tools
     tree
