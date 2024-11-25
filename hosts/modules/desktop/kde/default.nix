@@ -62,6 +62,8 @@ in {
       plasma5.kactivities
       plasma5.kactivities-stats
 
+      kdePackages.kio-gdrive
+
       # Power management
       plasma5.powerdevil
       pkgs.power-profiles-daemon
