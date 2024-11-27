@@ -1,6 +1,4 @@
 {pkgs ? import <nixpkgs> {}}: let
-  pythonPackages = pkgs.python3Packages;
-
   # Create a custom OpenCV package with GTK support
   opencvGtk = pkgs.opencv4.override {
     enableGtk3 = true;
