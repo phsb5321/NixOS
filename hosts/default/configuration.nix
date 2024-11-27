@@ -302,6 +302,7 @@
     fd
     speechd
     parallel
+    zip
 
     # File and Directory Tools
     tree
