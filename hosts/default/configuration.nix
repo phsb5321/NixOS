@@ -265,6 +265,8 @@
     vim
     bleedPkgs.zed-editor
     inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
+    guvcview
+    obs-studio
 
     # Neovim Dependencies
     stow

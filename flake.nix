@@ -35,6 +35,7 @@
     nixpkgsConfig = {
       allowUnfree = true;
       allowUnfreePredicate = _: true;
+      allowBroken = true;
     };
 
     # Define standard and bleeding-edge package sets for easy access
