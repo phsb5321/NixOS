@@ -9,159 +9,110 @@ with lib; let
   cfg = config.modules.desktop;
 in {
   config = mkIf (cfg.enable && cfg.environment == "kde") {
-    # Allow broken packages for KDE Plasma 6
-    nixpkgs.config.allowBroken = true;
+    # Enable X server
+    services.xserver.enable = true;
 
-    # Ensure NetworkManager is not disabled here
-    networking.networkmanager.enable = true;
-
-    # Basic X server and KDE configuration
-    services = {
-      xserver.enable = true;
-      # Display manager settings
-      displayManager = {
-        sddm = {
-          enable = true;
-          wayland.enable = true;
-          settings = {
-            Theme = {
-              CursorTheme = "breeze_cursors";
-              Font = "Noto Sans";
-            };
-            General = {
-              InputMethod = "";
-              Numlock = "on";
-            };
-            Wayland = {
-              CompositorCommand = "kwin_wayland --drm --no-lockscreen";
-            };
+    # Display Manager configuration
+    services.displayManager = {
+      enable = true;
+      defaultSession = "plasma";
+      autoLogin = mkIf cfg.autoLogin.enable {
+        enable = true;
+        user = cfg.autoLogin.user;
+      };
+      sddm = {
+        enable = true;
+        settings = {
+          Theme = {
+            CursorTheme = "breeze_cursors";
+            Font = "Noto Sans";
+          };
+          General = {
+            InputMethod = "";
+            Numlock = "on";
           };
         };
-        defaultSession = "plasma"; # Use Plasma session by default
-        autoLogin = mkIf cfg.autoLogin.enable {
-          enable = true;
-          user = cfg.autoLogin.user;
-        };
       };
-      # Desktop manager settings
-      desktopManager.plasma6.enable = true;
     };
 
-    # Session variables for Wayland/KDE
+    # Desktop Manager configuration
+    services.xserver.desktopManager.plasma5.enable = true;
+
+    # Session variables for Plasma
     environment.sessionVariables = {
-      NIXOS_OZONE_WL = "1";
-      WLR_NO_HARDWARE_CURSORS = "1";
-      XDG_SESSION_TYPE = "wayland";
+      XDG_SESSION_TYPE = "x11";
       XDG_CURRENT_DESKTOP = "KDE";
       XDG_SESSION_DESKTOP = "KDE";
-      GDK_BACKEND = "wayland,x11";
-      QT_QPA_PLATFORM = "wayland;xcb";
-      QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
-      SDL_VIDEODRIVER = "wayland";
-      CLUTTER_BACKEND = "wayland";
-      MOZ_ENABLE_WAYLAND = "1";
+      KDE_FULL_SESSION = "true";
     };
 
     # Core environment packages
-    environment.systemPackages = with pkgs; [
-      # Wayland support
-      wayland
-      xwayland
-      qt6.qtwayland
-      kdePackages.kwayland
-
-      # Screen sharing support
-      pipewire
-      libsForQt5.qt5.qtwebengine
-      xdg-desktop-portal
-      xdg-desktop-portal-kde
-      xdg-desktop-portal-gtk
+    environment.systemPackages = with pkgs; let
+      plasma5 = pkgs.plasma5Packages;
+      xorg = pkgs.xorg;
+    in [
+      # X11 support
+      xorg.xorgserver
+      xorg.xrandr
 
       # Core KDE packages
-      kdePackages.plasma-workspace
-      kdePackages.plasma-activities
-      kdePackages.plasma-activities-stats
-      kdePackages.plasma5support
+      plasma5.plasma-workspace
+      plasma5.plasma-desktop
+      plasma5.plasma-framework
+      plasma5.kactivities
+      plasma5.kactivities-stats
+
+      kdePackages.kio-gdrive
 
       # Power management
-      kdePackages.powerdevil
-      power-profiles-daemon
-      acpi
-      acpid
-      powertop
+      plasma5.powerdevil
+      pkgs.power-profiles-daemon
+      pkgs.acpi
+      pkgs.acpid
+      pkgs.powertop
 
       # Online accounts and integration
-      kdePackages.kaccounts-integration
-      kdePackages.kaccounts-providers
-      kdePackages.signon-kwallet-extension
-      gnome-keyring
-      kdePackages.kio
-      kdePackages.kio-extras
-      kdePackages.kio-gdrive
-      kdePackages.kwallet-pam
+      pkgs.gnome-keyring
 
       # System settings and info
-      kdePackages.plasma-systemmonitor
-      kdePackages.kinfocenter
-      kdePackages.ksystemstats
-      kdePackages.kgamma
-      kdePackages.sddm-kcm
-      kdePackages.kauth
-      kdePackages.polkit-kde-agent-1
+      plasma5.plasma-systemmonitor
+      pkgs.kinfocenter
+      plasma5.ksystemstats
+      pkgs.kgamma5
+      plasma5.sddm-kcm
+      plasma5.polkit-kde-agent
 
       # Core applications
-      kdePackages.dolphin
-      kdePackages.konsole
-      kdePackages.kate
-      kdePackages.ark
-      kdePackages.spectacle
-      kdePackages.okular
+      pkgs.dolphin
+      pkgs.konsole
+      pkgs.kate
+      pkgs.ark
+      pkgs.spectacle
+      pkgs.okular
+      pkgs.ffmpegthumbnailer
 
       # Plasma addons and integration
-      kdePackages.plasma-browser-integration
-      kdePackages.kdeplasma-addons
-      kdePackages.kscreen
-      kdePackages.plasma-nm
-      kdePackages.plasma-vault
-      kdePackages.plasma-pa
-      kdePackages.kdeconnect-kde
+      plasma5.plasma-browser-integration
+      plasma5.kdeplasma-addons
+      plasma5.kscreen
+      plasma5.plasma-nm
+      plasma5.plasma-vault
+      plasma5.plasma-pa
+      plasma5.kdeconnect-kde
 
       # Theming
-      kdePackages.breeze
-      kdePackages.breeze-gtk
-      kdePackages.breeze-icons
+      pkgs.plasma5Packages.breeze-gtk
+      pkgs.plasma5Packages.breeze-icons
 
       # Additional utilities
-      xdg-utils
+      pkgs.xdg-utils
+      pkgs.shared-mime-info
     ];
 
-    # XDG portal configuration for screen sharing
-    xdg.portal = {
-      enable = true;
-      extraPortals = [
-        pkgs.xdg-desktop-portal-kde
-        pkgs.xdg-desktop-portal-gtk
-      ];
-      config = {
-        common = {
-          default = [
-            "kde"
-            "gtk"
-          ];
-          "org.freedesktop.impl.portal.Secret" = ["gnome-keyring"];
-          "org.freedesktop.impl.portal.ScreenCast" = ["kde"];
-        };
-      };
-      xdgOpenUsePortal = true;
-    };
-
-    # PipeWire configuration
+    # Adjust other services accordingly
     services.pipewire = {
       enable = true;
-      alsa = {
-        enable = true;
-        support32Bit = true;
-      };
+      alsa.enable = true;
       pulse.enable = true;
       jack.enable = true;
       wireplumber.enable = true;
@@ -169,11 +120,10 @@ in {
 
     # Required services
     services = {
-      power-profiles-daemon = {
-        enable = true;
-      };
+      power-profiles-daemon.enable = true;
       acpid.enable = true;
       udisks2.enable = true;
+      gvfs.enable = true;
       accounts-daemon.enable = true;
       upower = {
         enable = true;
@@ -196,9 +146,7 @@ in {
     };
 
     # Enable GNOME Keyring service
-    services.gnome = {
-      gnome-keyring.enable = true;
-    };
+    services.gnome.gnome-keyring.enable = true;
 
     # KDE Connect firewall rules
     networking.firewall = {
@@ -223,22 +171,16 @@ in {
       style = "breeze";
     };
 
-    # Flatpak support
-    services.flatpak.enable = true;
-
     # Fonts
     fonts.packages = with pkgs; [
-      noto-fonts
-      noto-fonts-cjk-sans
-      noto-fonts-emoji
-      liberation_ttf
-      fira-code
-      fira-code-symbols
-      (nerdfonts.override {fonts = ["JetBrainsMono"];})
+      pkgs.noto-fonts
+      pkgs.noto-fonts-cjk-sans
+      pkgs.noto-fonts-emoji
+      pkgs.liberation_ttf
+      pkgs.fira-code
+      pkgs.fira-code-symbols
+      (pkgs.nerdfonts.override {fonts = ["JetBrainsMono"];})
     ];
-
-    # Increase download buffer size
-    nix.settings.download-buffer-size = 128 * 1024 * 1024; # Set to 128 MiB
 
     # Enable required features
     hardware.bluetooth = {
@@ -248,5 +190,7 @@ in {
 
     # Ensure dconf is enabled
     programs.dconf.enable = true;
+
+    # Note: User-specific configurations should be placed in the user's Home Manager configuration.
   };
 }

@@ -2,20 +2,20 @@
   description = "Nixos config flake";
 
   inputs = {
-    # Main Nixpkgs input, set to the unstable branch for up-to-date packages
+    # Only updating home-manager to match nixpkgs version, rest stays the same
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-
-    # Bleeding-edge Nixpkgs source from the 'nixpkgs-unstable' branch
     bleed.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-    # Home Manager input for managing user environments
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager/master"; # Updated to master to match unstable
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Additional inputs for custom projects and tools
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
+    firefox-nightly = {
+      url = "github:nix-community/flake-firefox-nightly";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixvim = {
       url = "github:nix-community/nixvim";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -35,6 +35,7 @@
     nixpkgsConfig = {
       allowUnfree = true;
       allowUnfreePredicate = _: true;
+      allowBroken = true;
     };
 
     # Define standard and bleeding-edge package sets for easy access
@@ -52,6 +53,7 @@
     commonModules = [
       {
         nixpkgs.config = nixpkgsConfig;
+        home-manager.users.notroot.home.enableNixpkgsReleaseCheck = false; # Added to disable version mismatch warning
       }
     ];
   in {
@@ -79,7 +81,7 @@
           ];
       };
 
-      # Experimental VM configuration, uses bleeding-edge packages when needed
+      # Experimental VM configuration
       experimental-vm = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {inherit inputs pkgs bleedPkgs;};

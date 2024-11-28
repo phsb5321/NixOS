@@ -103,7 +103,6 @@
       vscode
 
       # Web Browsers
-      floorp
       google-chrome
 
       # API Testing
