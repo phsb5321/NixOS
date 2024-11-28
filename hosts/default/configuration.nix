@@ -122,7 +122,6 @@
       vscode
 
       # Web Browsers
-      floorp
       google-chrome
 
       # API Testing
@@ -152,6 +151,13 @@
 
       # Programming Languages
       python3
+
+      # ROCm and ML tools
+      ollama-rocm
+      alpaca
+
+      # Android
+      android-tools
     ];
   };
 
@@ -170,16 +176,6 @@
     cpu.amd.updateMicrocode = true;
   };
 
-  # Syncthing service configuration
-  services.syncthing = {
-    enable = true;
-    user = "notroot";
-    dataDir = "/home/notroot/Sync";
-    configDir = "/home/notroot/.config/syncthing";
-    overrideDevices = true;
-    overrideFolders = true;
-  };
-
   services = {
     printing.enable = true;
     pipewire = {
@@ -189,6 +185,22 @@
         support32Bit = true;
       };
       pulse.enable = true;
+    };
+
+    # Syncthing service configuration
+    syncthing = {
+      enable = true;
+      user = "notroot";
+      dataDir = "/home/notroot/Sync";
+      configDir = "/home/notroot/.config/syncthing";
+      overrideDevices = true;
+      overrideFolders = true;
+    };
+
+    # Ollama service configuration
+    ollama = {
+      enable = true;
+      acceleration = "rocm";
     };
   };
 
@@ -228,6 +240,7 @@
       };
     };
     dconf.enable = true;
+    thunderbird.enable = true;
   };
 
   # Home Manager integration
@@ -250,6 +263,9 @@
     wget
     vim
     bleedPkgs.zed-editor
+    inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
+    guvcview
+    obs-studio
 
     # Neovim Dependencies
     stow
@@ -272,6 +288,7 @@
     gh
     seahorse
     # bleedPkgs.gitbutler
+    bleachbit
 
     # Nix Tools
     alejandra
@@ -283,6 +300,8 @@
     coreutils
     fd
     speechd
+    parallel
+    zip
 
     # File and Directory Tools
     tree
@@ -298,6 +317,7 @@
 
     # Development
     nodejs_22
+    go
   ];
 
   # LACT daemon service
