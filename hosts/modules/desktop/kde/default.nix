@@ -171,17 +171,6 @@ in {
       style = "breeze";
     };
 
-    # Fonts
-    fonts.packages = with pkgs; [
-      pkgs.noto-fonts
-      pkgs.noto-fonts-cjk-sans
-      pkgs.noto-fonts-emoji
-      pkgs.liberation_ttf
-      pkgs.fira-code
-      pkgs.fira-code-symbols
-      (pkgs.nerdfonts.override {fonts = ["JetBrainsMono"];})
-    ];
-
     # Enable required features
     hardware.bluetooth = {
       enable = true;

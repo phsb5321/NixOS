@@ -1,3 +1,4 @@
+# hosts/modules/desktop/default.nix
 {
   config,
   lib,

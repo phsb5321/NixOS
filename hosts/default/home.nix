@@ -19,10 +19,6 @@
     homeDirectory = "/home/notroot";
     stateVersion = "24.05"; # Ensure compatibility with Home Manager release
     packages = with pkgs; [
-      (nerdfonts.override {fonts = ["JetBrainsMono"];})
-      noto-fonts-emoji
-      noto-fonts
-      noto-fonts-cjk-sans
       fish
       kitty
       grc
@@ -100,7 +96,7 @@
     enable = true;
     theme = "Gruvbox Material Dark Hard";
     font = {
-      name = "JetBrainsMono Nerd Font";
+      name = "JetBrainsMono Nerd Font Mono"; # Updated font name
       size = 18;
     };
     shellIntegration.enableFishIntegration = true;
@@ -108,8 +104,7 @@
       copy_on_select = true;
       clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
       enable_ligatures = true;
-      # Add fallback fonts for better emoji support
-      font_family = "JetBrainsMono Nerd Font, Noto Color Emoji, Noto Sans Symbols";
+      font_family = "JetBrainsMono Nerd Font Mono, Noto Color Emoji, Noto Sans Symbols"; # Updated font name
     };
   };
 
