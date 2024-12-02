@@ -94,17 +94,39 @@
   # Kitty Terminal Configuration
   programs.kitty = {
     enable = true;
-    theme = "Gruvbox Material Dark Hard";
+    # Use a built-in theme instead
+    theme = "Gruvbox Dark"; # This is a built-in theme
+    # Or if you want to keep Gruvbox Material Dark Hard, we need to add the theme package:
+    # theme = "Gruvbox Material Dark Hard";
+    # extraConfig = builtins.readFile (pkgs.fetchFromGitHub {
+    #   owner = "kdrag0n";
+    #   repo = "base16-kitty";
+    #   rev = "v1.0.0";
+    #   sha256 = "sha256-xxx"; # Replace with actual hash
+    # } + "/colors/gruvbox-material-dark-hard.conf");
+
     font = {
-      name = "JetBrainsMono Nerd Font Mono"; # Updated font name
+      name = "JetBrainsMono Nerd Font Mono";
       size = 18;
     };
+
     shellIntegration.enableFishIntegration = true;
+
     settings = {
       copy_on_select = true;
       clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
+
       enable_ligatures = true;
-      font_family = "JetBrainsMono Nerd Font Mono, Noto Color Emoji, Noto Sans Symbols"; # Updated font name
+      disable_ligatures = "never";
+
+      font_family = "JetBrainsMono Nerd Font Mono";
+      bold_font = "JetBrainsMono Nerd Font Mono Bold";
+      italic_font = "JetBrainsMono Nerd Font Mono Italic";
+      bold_italic_font = "JetBrainsMono Nerd Font Mono Bold Italic";
+
+      adjust_line_height = "120%";
+      adjust_column_width = "0";
+      box_drawing_scale = "0.001, 1, 1.5, 2";
     };
   };
 
