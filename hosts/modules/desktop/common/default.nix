@@ -1,3 +1,4 @@
+# hosts/modules/desktop/common/default.nix
 {
   config,
   lib,
@@ -7,6 +8,10 @@
 with lib; let
   cfg = config.modules.desktop;
 in {
+  imports = [
+    ./fonts.nix # Import the fonts module
+  ];
+
   config = mkIf cfg.enable {
     services.xserver.xkb = {
       layout = "br";
@@ -14,8 +19,6 @@ in {
     };
 
     environment.systemPackages = cfg.extraPackages;
-
-    fonts.enableDefaultPackages = true;
 
     services.printing.enable = true;
 
@@ -31,7 +34,7 @@ in {
     hardware.bluetooth.enable = true;
     services.blueman.enable = true;
 
-    networking.networkmanager.enable = true; # <-- Ensure NetworkManager is enabled
+    networking.networkmanager.enable = true;
 
     xdg.portal = {
       enable = true;

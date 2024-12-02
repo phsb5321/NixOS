@@ -27,6 +27,15 @@
       kdePackages.plasma-pa # Audio volume applet
       networkmanagerapplet # Backup network manager applet
     ];
+    fonts = {
+      enable = true; # Enabled by default, but can be explicitly set
+      packages = with pkgs; [
+        # Add additional font packages here
+      ];
+      defaultFonts = {
+        monospace = ["FiraCode Nerd Font Mono" "Fira Code"]; # Override defaults
+      };
+    };
   };
 
   # Enable and configure networking module
@@ -363,29 +372,6 @@
   services = {
     fstrim.enable = true;
     thermald.enable = true;
-  };
-
-  # Font configuration
-  fonts = {
-    fontDir.enable = true;
-    packages = with pkgs; [
-      font-awesome
-      noto-fonts
-      noto-fonts-cjk-sans
-      noto-fonts-emoji
-      liberation_ttf
-      fira-code
-      fira-code-symbols
-      jetbrains-mono
-      (nerdfonts.override {fonts = ["JetBrainsMono"];})
-    ];
-    fontconfig = {
-      defaultFonts = {
-        serif = ["Noto Serif" "Liberation Serif"];
-        sansSerif = ["Noto Sans" "Liberation Sans"];
-        monospace = ["JetBrains Mono" "Fira Code" "Liberation Mono"];
-      };
-    };
   };
 
   # CoreCtrl sudo configuration
