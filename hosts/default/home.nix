@@ -123,10 +123,6 @@
       bold_font = "JetBrainsMono Nerd Font Mono Bold";
       italic_font = "JetBrainsMono Nerd Font Mono Italic";
       bold_italic_font = "JetBrainsMono Nerd Font Mono Bold Italic";
-
-      adjust_line_height = "120%";
-      adjust_column_width = "0";
-      box_drawing_scale = "0.001, 1, 1.5, 2";
     };
   };
 
