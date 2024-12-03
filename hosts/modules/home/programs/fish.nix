@@ -1,5 +1,10 @@
 # ~/NixOS/hosts/modules/home/programs/fish.nix
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 with lib; let
   cfg = config.modules.home;
 in {

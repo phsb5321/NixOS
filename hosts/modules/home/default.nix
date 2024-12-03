@@ -39,7 +39,7 @@ in {
       extraSpecialArgs = {inherit inputs;};
       backupFileExtension = "bkp";
 
-      users.${cfg.username} = { pkgs, ... }: {
+      users.${cfg.username} = {pkgs, ...}: {
         imports = [
           inputs.nixvim.homeManagerModules.nixvim
         ];
@@ -54,29 +54,31 @@ in {
           homeDirectory = "/home/${cfg.username}";
           stateVersion = "24.05";
 
-          packages = with pkgs; [
-            (nerdfonts.override {fonts = ["JetBrainsMono"];})
-            noto-fonts-emoji
-            noto-fonts
-            noto-fonts-cjk-sans
-            fish
-            kitty
-            grc
-            eza
-            ffmpeg
-            gh
-            brave
-            yazi-unwrapped
-            texlive.combined.scheme-full
-            dbeaver-bin
-            amberol
-            awscli2
-            remmina
-            obsidian
-            d2
-            inputs.nixvim
-            ngrok
-          ] ++ cfg.extraPackages;
+          packages = with pkgs;
+            [
+              (nerdfonts.override {fonts = ["JetBrainsMono"];})
+              noto-fonts-emoji
+              noto-fonts
+              noto-fonts-cjk-sans
+              fish
+              kitty
+              grc
+              eza
+              ffmpeg
+              gh
+              brave
+              yazi-unwrapped
+              texlive.combined.scheme-full
+              dbeaver-bin
+              amberol
+              awscli2
+              remmina
+              obsidian
+              d2
+              inputs.nixvim
+              ngrok
+            ]
+            ++ cfg.extraPackages;
 
           sessionVariables = {
             EDITOR = "nvim";
