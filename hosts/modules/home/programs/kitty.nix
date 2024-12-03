@@ -1,5 +1,10 @@
 # ~/NixOS/hosts/modules/home/programs/kitty.nix
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 with lib; let
   cfg = config.modules.home;
 in {
