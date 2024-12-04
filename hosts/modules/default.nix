@@ -5,5 +5,6 @@
     ./virtualization
     ./networking
     ./home
+    ./core
   ];
 }
