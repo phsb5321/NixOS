@@ -120,6 +120,7 @@ in {
         ripgrep
         fd
         gum
+        piper-tts
 
         # System Monitoring
         neofetch
@@ -132,6 +133,18 @@ in {
         gcc
         stow
         xclip
+
+        # Terminals and Shells
+        kitty
+        zellij
+        sshfs
+
+        # Development
+        elixir
+        nodejs_22
+        go
+        terraform
+        elixir-ls
 
         # Nix Tools
         alejandra

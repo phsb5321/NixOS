@@ -48,17 +48,6 @@
       bleachbit
       lact
       speechd
-
-      # Terminals and Shells
-      kitty
-      zellij
-      sshfs
-
-      # Development
-      nodejs_22
-      go
-      terraform
-      piper-tts
     ];
   };
 
