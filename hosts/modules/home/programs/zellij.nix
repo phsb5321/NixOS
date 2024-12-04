@@ -13,7 +13,7 @@ in {
       programs.zellij = {
         enable = true;
         settings = {
-          theme = "one-half-dark";
+          theme = "gruvbox-dark";
           default_shell = "fish";
         };
       };
