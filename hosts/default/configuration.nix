@@ -327,6 +327,8 @@
     # Development
     nodejs_22
     go
+    terraform
+    piper-tts
   ];
 
   # LACT daemon service
