@@ -3,6 +3,7 @@
   pkgs,
   lib,
   inputs,
+  systemVersion,
   ...
 }: {
   imports = [
@@ -11,6 +12,9 @@
     ../modules/desktop
     ../modules/virtualization
   ];
+
+  # 👇🏻 System Version for NixOS
+  system.stateVersion = systemVersion;
 
   # Bootloader configuration for UEFI
   boot.loader = {
@@ -54,6 +58,38 @@
     };
   };
 
+  # Home module configuration
+  modules.home = {
+    enable = true;
+    username = "notroot";
+    hostName = "experimental-vm";
+    extraPackages = with pkgs; [
+      git
+      gh
+      zed-editor
+      (nerdfonts.override {fonts = ["JetBrainsMono"];})
+      noto-fonts-emoji
+      noto-fonts
+      noto-fonts-cjk-sans
+      fish
+      kitty
+      grc
+      eza
+      ffmpeg
+      gh
+      brave
+      yazi-unwrapped
+      texlive.combined.scheme-full
+      dbeaver-bin
+      amberol
+      awscli2
+      remmina
+      obsidian
+      inputs.nixvim
+      zoxide
+    ];
+  };
+
   # Virtualization module
   modules.virtualization = {
     enable = true;
@@ -69,11 +105,6 @@
     isNormalUser = true;
     description = "Pedro Balbino";
     extraGroups = ["wheel" "networkmanager"];
-    packages = with pkgs; [
-      git
-      gh
-      zed-editor
-    ];
   };
 
   # Allow unfree packages
@@ -107,12 +138,6 @@
     };
   };
 
-  # Home Manager configuration
-  home-manager = {
-    extraSpecialArgs = {inherit inputs;};
-    users.notroot = import ./home.nix;
-  };
-
   # Nix settings
   nix = {
     settings = {
@@ -138,6 +163,4 @@
     enable = true;
     allowedTCPPorts = [22];
   };
-
-  system.stateVersion = "24.05";
 }
