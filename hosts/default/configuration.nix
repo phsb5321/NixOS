@@ -15,12 +15,54 @@
     ../modules
   ];
 
-  # 👇🏻 System Version for NixOS
-  system.stateVersion = systemVersion;
+  # Enable core module with basic system configuration
+  modules.core = {
+    enable = true;
+
+    # 👇🏻 System Version for NixOS
+    stateVersion = systemVersion;
+    timeZone = "America/Recife";
+    defaultLocale = "en_US.UTF-8";
+    extraSystemPackages = with pkgs; [
+      # Gaming Tools
+      gamemode
+      gamescope
+      mangohud
+      protontricks
+      winetricks
+
+      # System Utilities
+      bleedPkgs.zed-editor
+      guvcview
+      obs-studio
+
+      # Development Tools
+      llvm
+      clang
+      rocmPackages.clr
+      rocmPackages.rocminfo
+      rocmPackages.rocm-smi
+
+      # Additional Tools
+      seahorse
+      bleachbit
+      lact
+      speechd
+
+      # Terminals and Shells
+      kitty
+      zellij
+      sshfs
+
+      # Development
+      nodejs_22
+      go
+      terraform
+      piper-tts
+    ];
+  };
 
   # Set system options
-  time.timeZone = "America/Recife";
-  i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "br-abnt2";
   users.defaultUserShell = pkgs.fish;
 
@@ -118,20 +160,6 @@
 
   # Additional networking overrides if needed
   networking.networkmanager.dns = lib.mkForce "default";
-
-  # Nix settings
-  nix = {
-    settings = {
-      auto-optimise-store = true;
-      experimental-features = ["nix-command" "flakes"];
-      timeout = 14400; # for example, set to 4 hours
-    };
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 30d";
-    };
-  };
 
   systemd.tmpfiles.rules = let
     rocmEnv = pkgs.symlinkJoin {
@@ -261,76 +289,6 @@
     dconf.enable = true;
     thunderbird.enable = true;
   };
-
-  # System-wide packages
-  environment.systemPackages = with pkgs; [
-    # Gaming Tools
-    gamemode
-    gamescope
-    mangohud
-    protontricks
-    winetricks
-
-    # System Utilities
-    wget
-    vim
-    bleedPkgs.zed-editor
-    guvcview
-    obs-studio
-
-    # Neovim Dependencies
-    stow
-    gcc
-    xclip
-
-    # System Information Tools
-    neofetch
-    cmatrix
-    htop
-    lact
-
-    # Development Tools
-    llvm
-    clang
-    rocmPackages.clr
-    rocmPackages.rocminfo
-    rocmPackages.rocm-smi
-    git
-    gh
-    seahorse
-    bleachbit
-
-    # Nix Tools
-    alejandra
-    nixd
-
-    # Terminal Enhancements
-    gum
-    libvirt-glib
-    coreutils
-    fd
-    speechd
-    parallel
-    zip
-
-    # File and Directory Tools
-    tree
-    eza
-    zoxide
-    ripgrep
-
-    # Terminals and Shells
-    kitty
-    fish
-    zellij
-    sshfs
-
-    # Development
-    nodejs_22
-    go
-    terraform
-    piper-tts
-  ];
 
   # LACT daemon service
   systemd.packages = with pkgs; [lact];
