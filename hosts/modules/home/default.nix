@@ -59,10 +59,12 @@ in {
 
           packages = with pkgs;
             [
+              # Fonts
               nerd-fonts.jetbrains-mono
               noto-fonts-emoji
               noto-fonts
               noto-fonts-cjk-sans
+
               fish
               kitty
               grc
@@ -80,6 +82,7 @@ in {
               d2
               inputs.nixvim
               ngrok
+              wakatime-cli
             ]
             ++ cfg.extraPackages;
 
