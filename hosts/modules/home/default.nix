@@ -82,7 +82,6 @@ in {
               d2
               inputs.nixvim
               ngrok
-              wakatime-cli
             ]
             ++ cfg.extraPackages;
 

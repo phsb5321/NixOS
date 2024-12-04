@@ -133,6 +133,7 @@ in {
         gcc
         stow
         xclip
+        # gitbutler
 
         # Terminals and Shells
         kitty
@@ -149,6 +150,7 @@ in {
         # Nix Tools
         alejandra
         nixd
+        nil
       ]
       ++ cfg.extraSystemPackages;
 

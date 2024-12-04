@@ -12,7 +12,9 @@ in {
     home-manager.users.${cfg.username} = {
       programs.nixvim = {
         enable = true;
-        colorschemes.catppuccin.enable = true;
+        colorschemes.gruvbox = {
+          enable = true;
+        };
 
         globals.mapleader = " ";
 
