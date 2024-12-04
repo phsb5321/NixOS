@@ -29,12 +29,8 @@ in {
       type = with types; listOf package;
       default = with pkgs; [
         # Nerd Fonts - Programming fonts with icons
-        (nerdfonts.override {
-          fonts = [
-            "JetBrainsMono"
-            "FiraCode"
-          ];
-        })
+        nerd-fonts.jetbrains-mono
+        nerd-fonts.fira-code
 
         # Standard fonts for good coverage
         font-awesome # Icon font

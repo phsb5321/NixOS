@@ -4,6 +4,7 @@
   lib,
   inputs,
   bleedPkgs,
+  systemVersion,
   ...
 }: {
   imports = [
@@ -13,6 +14,15 @@
     ../modules/desktop
     ../modules
   ];
+
+  # 👇🏻 System Version for NixOS
+  system.stateVersion = systemVersion;
+
+  # Set system options
+  time.timeZone = "America/Recife";
+  i18n.defaultLocale = "en_US.UTF-8";
+  console.keyMap = "br-abnt2";
+  users.defaultUserShell = pkgs.fish;
 
   # Enable and configure desktop module
   modules.desktop = {
@@ -28,12 +38,12 @@
       networkmanagerapplet # Backup network manager applet
     ];
     fonts = {
-      enable = true; # Enabled by default, but can be explicitly set
+      enable = true;
       packages = with pkgs; [
-        # Add additional font packages here
+        nerd-fonts.jetbrains-mono
       ];
       defaultFonts = {
-        monospace = ["FiraCode Nerd Font Mono" "Fira Code"]; # Override defaults
+        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
       };
     };
   };
@@ -57,15 +67,57 @@
     };
   };
 
+  # Enable the home module
+  modules.home = {
+    enable = true;
+    username = "notroot";
+    hostName = "default";
+    extraPackages = with pkgs; [
+      # Editors and IDEs
+      vscode
+
+      # Web Browsers
+      google-chrome
+
+      # API Testing
+      insomnia
+      postman
+
+      # File Management
+      gparted
+      baobab
+      syncthing
+      vlc
+
+      # System Utilities
+      pigz
+      mangohud
+      unzip
+
+      # Music Streaming
+      spotify
+
+      # Miscellaneous Tools
+      bruno
+      lsof
+      discord
+      corectrl
+      inputs.zen-browser.packages.${system}.default
+
+      # Programming Languages
+      python3
+
+      # ROCm and ML tools
+      ollama-rocm
+      alpaca
+
+      # Android
+      android-tools
+    ];
+  };
+
   # Additional networking overrides if needed
   networking.networkmanager.dns = lib.mkForce "default";
-
-  # Set system options
-  time.timeZone = "America/Recife";
-  i18n.defaultLocale = "en_US.UTF-8";
-  console.keyMap = "br-abnt2";
-  system.stateVersion = "24.05"; # Use the same version as Home Manager
-  users.defaultUserShell = pkgs.fish;
 
   # Nix settings
   nix = {
@@ -125,48 +177,6 @@
       "dialout"
       "libvirtd"
       "kvm"
-    ];
-    packages = with pkgs; [
-      # Editors and IDEs
-      vscode
-
-      # Web Browsers
-      google-chrome
-
-      # API Testing
-      insomnia
-      postman
-
-      # File Management
-      gparted
-      baobab
-      syncthing
-      vlc
-
-      # System Utilities
-      pigz
-      mangohud
-      unzip
-
-      # Music Streaming
-      spotify
-
-      # Miscellaneous Tools
-      bruno
-      lsof
-      discord
-      corectrl
-      inputs.zen-browser.packages."${system}".default
-
-      # Programming Languages
-      python3
-
-      # ROCm and ML tools
-      ollama-rocm
-      alpaca
-
-      # Android
-      android-tools
     ];
   };
 
@@ -252,13 +262,6 @@
     thunderbird.enable = true;
   };
 
-  # Home Manager integration
-  home-manager = {
-    extraSpecialArgs = {inherit inputs;};
-    backupFileExtension = "bkp";
-    users = {"notroot" = import ./home.nix;};
-  };
-
   # System-wide packages
   environment.systemPackages = with pkgs; [
     # Gaming Tools
@@ -272,7 +275,6 @@
     wget
     vim
     bleedPkgs.zed-editor
-    inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
     guvcview
     obs-studio
 
@@ -296,7 +298,6 @@
     git
     gh
     seahorse
-    # bleedPkgs.gitbutler
     bleachbit
 
     # Nix Tools
