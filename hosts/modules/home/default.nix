@@ -4,6 +4,7 @@
   lib,
   pkgs,
   inputs,
+  systemVersion,
   ...
 }:
 with lib; let
@@ -52,11 +53,13 @@ in {
         home = {
           username = cfg.username;
           homeDirectory = "/home/${cfg.username}";
-          stateVersion = "24.05";
+
+          # 👇🏻 System Version for Home Manager
+          stateVersion = systemVersion;
 
           packages = with pkgs;
             [
-              (nerdfonts.override {fonts = ["JetBrainsMono"];})
+              nerd-fonts.jetbrains-mono
               noto-fonts-emoji
               noto-fonts
               noto-fonts-cjk-sans

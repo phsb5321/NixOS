@@ -3,12 +3,16 @@
   pkgs,
   lib,
   inputs,
+  systemVersion,
   ...
 }: {
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
   ];
+
+  # 👇🏻 System Version for NixOS
+  system.stateVersion = systemVersion;
 
   # Enable experimental features
   nix.settings.experimental-features = ["nix-command" "flakes"];
@@ -39,7 +43,6 @@
   };
 
   console.keyMap = "br-abnt2"; # Configure console keymap
-  system.stateVersion = "24.05"; # Define system state version
 
   # Networking settings
   networking.networkmanager.enable = true; # Enable network manager

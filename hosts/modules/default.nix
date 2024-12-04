@@ -4,5 +4,6 @@
     ./desktop
     ./virtualization
     ./networking
+    ./home
   ];
 }
