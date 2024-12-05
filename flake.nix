@@ -25,12 +25,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hyprland.url = "github:hyprwm/Hyprland";
+
+    # Add new input for Gitbutler
+    nixpkgs-gitbutler.url = "github:nixos/nixpkgs/6b2bd7588dfb58281f66c8837e5e5ed92d04862f";
   };
 
   outputs = {
     self,
     nixpkgs,
     bleed,
+    nixpkgs-gitbutler,
     ...
   } @ inputs: let
     system = "x86_64-linux";
@@ -56,9 +60,15 @@
       config = nixpkgsConfig;
     };
 
+    # Add gitbutler packages
+    gitbutlerPkgs = import nixpkgs-gitbutler {
+      inherit system;
+      config = nixpkgsConfig;
+    };
+
     # Common special args for all systems
     commonSpecialArgs = {
-      inherit inputs pkgs bleedPkgs systemVersion;
+      inherit inputs pkgs bleedPkgs gitbutlerPkgs systemVersion;
     };
 
     # Define common modules for all configurations
