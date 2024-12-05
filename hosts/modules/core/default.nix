@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  gitbutlerPkgs,
   ...
 }: let
   cfg = config.modules.core;
@@ -151,6 +152,9 @@ in {
         alejandra
         nixd
         nil
+
+        # GitButler
+        gitbutlerPkgs.gitbutler
       ]
       ++ cfg.extraSystemPackages;
 
