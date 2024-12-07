@@ -9,13 +9,6 @@ else
    use_gum=false
 fi
 
-# Check if parallel is installed
-if command -v parallel >/dev/null 2>&1; then
-   use_parallel=true
-else
-   use_parallel=false
-fi
-
 # Color definitions
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -47,7 +40,7 @@ tui=false
 include_all=true
 
 # Parse command-line arguments
-TEMP=$(getopt -o e:i:d:I:ath --long extension:,ignore:,dir:,ignore-dir:,all,tui,help -n 'myscript' -- "$@")
+TEMP=$(getopt -o e:i:d:I:ath --long extension:,ignore:,dir:,ignore-dir:,all,tui,help -n 'textractor' -- "$@")
 if [ $? != 0 ]; then
    echo -e "${RED}Error parsing options${NC}"
    print_usage
@@ -235,38 +228,24 @@ echo
 # Initialize total_files
 total_files=0
 
-# Process files based on available tools
-if $use_parallel; then
-    echo -e "${GREEN}Using parallel processing for faster extraction...${NC}"
-    "${find_cmd[@]}" | parallel -0 --will-cite '
-        {
-            echo "========================================"
-            echo "File: {}"
-            echo "========================================"
-            echo
-            cat "{}"
-            echo -e "\n\n"
-        } >> '"$output_file"
-    total_files=$("${find_cmd[@]}" | tr '\0' '\n' | wc -l)
-else
-   # Process files sequentially if parallel is not available
-   while IFS= read -r -d '' file; do
-       total_files=$((total_files + 1))
-       if $use_gum; then
-           gum spin --spinner dot --title "Processing: $file" -- sleep 0
-       else
-           echo -e "${CYAN}Processing:${NC} ${YELLOW}$file${NC}"
-       fi
-       {
-           echo "========================================"
-           echo "File: $file"
-           echo "========================================"
-           echo
-           cat "$file"
-           echo -e "\n\n"
-       } >> "$output_file"
-   done < <("${find_cmd[@]}")
-fi
+# Process files sequentially for maximum reliability
+echo -e "${GREEN}Processing files sequentially...${NC}"
+while IFS= read -r -d '' file; do
+    total_files=$((total_files + 1))
+    if $use_gum; then
+        gum spin --spinner dot --title "Processing: $file" -- sleep 0
+    else
+        echo -e "${CYAN}Processing:${NC} ${YELLOW}$file${NC}"
+    fi
+    {
+        echo "========================================"
+        echo "File: $file"
+        echo "========================================"
+        echo
+        cat "$file" 2>/dev/null || echo "Failed to read file"
+        echo -e "\n\n"
+    } >> "$output_file"
+done < <("${find_cmd[@]}")
 
 # Print completion message
 echo
