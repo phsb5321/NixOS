@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  gitbutlerPkgs,
   ...
 }: let
   cfg = config.modules.core;
@@ -134,7 +133,6 @@ in {
         gcc
         stow
         xclip
-        # gitbutler
 
         # Terminals and Shells
         kitty
@@ -152,9 +150,6 @@ in {
         alejandra
         nixd
         nil
-
-        # GitButler
-        gitbutlerPkgs.gitbutler
       ]
       ++ cfg.extraSystemPackages;
 
