@@ -133,6 +133,7 @@ in {
         gcc
         stow
         xclip
+        lazygit
 
         # Terminals and Shells
         kitty
