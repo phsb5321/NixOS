@@ -93,7 +93,7 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [22];
+      openPorts = [22 3000];
       trustedInterfaces = [];
     };
   };
