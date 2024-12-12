@@ -121,6 +121,7 @@ in {
         fd
         gum
         piper-tts
+        jq
 
         # System Monitoring
         neofetch
@@ -146,6 +147,7 @@ in {
         go
         terraform
         elixir-ls
+        nosql-workbench
 
         # Nix Tools
         alejandra
