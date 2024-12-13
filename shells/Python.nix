@@ -5,17 +5,15 @@
     enableFfmpeg = true;
   };
 
-  commonPythonEnv = pkgs.python3.withPackages (ps:
+  pythonEnv = pkgs.python3.withPackages (ps:
     with ps; [
+      ipython
+      ipykernel
       jupyter
       notebook
-      ipykernel
-      virtualenv
-      pip-tools
-      flake8
-      black
-      isort
       mypy
+      black
+      ruff
       pytest
       pytest-cov
       sphinx
@@ -28,9 +26,16 @@
 in
   pkgs.mkShell {
     buildInputs = with pkgs; [
-      commonPythonEnv
-      poetry
+      pythonEnv
+
+      # Package Management
+      uv
+
+      # Development Tools
+      ruff
       pre-commit
+
+      # GUI and System Dependencies
       tcl
       tk
       stdenv.cc.cc.lib
@@ -54,45 +59,110 @@ in
     ];
 
     shellHook = ''
-      export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:${pkgs.libGL}/lib:${pkgs.glib}/lib:${pkgs.gtk3}/lib:${opencvGtk}/lib:${pkgs.postgresql}/lib:$LD_LIBRARY_PATH
-      export TCLLIBPATH=${pkgs.tcl}/lib
-      export TK_LIBRARY=${pkgs.tk}/lib
-      export GI_TYPELIB_PATH=${pkgs.gtk3}/lib/girepository-1.0:${pkgs.glib}/lib/girepository-1.0:${pkgs.pango}/lib/girepository-1.0:${pkgs.gdk-pixbuf}/lib/girepository-1.0:${pkgs.cairo}/lib/girepository-1.0
-      export PYTHONPATH=${opencvGtk}/lib/python3.12/site-packages:$PYTHONPATH
-      export PATH=${pkgs.postgresql}/bin:$PATH
+            # Set up library paths
+            export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:${pkgs.libGL}/lib:${pkgs.glib}/lib:${pkgs.gtk3}/lib:${opencvGtk}/lib:${pkgs.postgresql}/lib:$LD_LIBRARY_PATH
+            export TCLLIBPATH=${pkgs.tcl}/lib
+            export TK_LIBRARY=${pkgs.tk}/lib
+            export GI_TYPELIB_PATH=${pkgs.gtk3}/lib/girepository-1.0:${pkgs.glib}/lib/girepository-1.0:${pkgs.pango}/lib/girepository-1.0:${pkgs.gdk-pixbuf}/lib/girepository-1.0:${pkgs.cairo}/lib/girepository-1.0
+            export PYTHONPATH=${opencvGtk}/lib/python3.12/site-packages:$PYTHONPATH
+            export PATH=${pkgs.postgresql}/bin:$PATH
 
-      # Create a virtual environment if it doesn't exist
-      if [ ! -d ".venv" ]; then
-        echo "Creating virtual environment..."
-        ${commonPythonEnv}/bin/python -m venv .venv
-      fi
+            # Create and configure local environment
+            if [ ! -f pyproject.toml ]; then
+              echo "Initializing new Python project..."
+              cat > pyproject.toml << EOF
+      [project]
+      name = "python-project"
+      version = "0.1.0"
+      description = "A Python project"
+      requires-python = ">=3.12"
 
-      # Activate the virtual environment
-      source .venv/bin/activate
+      [tool.ruff]
+      line-length = 88
+      target-version = "py312"
+      select = [
+          "E",   # pycodestyle
+          "F",   # pyflakes
+          "I",   # isort
+          "N",   # pep8-naming
+          "UP",  # pyupgrade
+      ]
 
-      # Upgrade pip, setuptools, and wheel
-      pip install --upgrade pip setuptools wheel
+      [tool.ruff.format]
+      quote-style = "double"
+      indent-style = "space"
+      skip-magic-trailing-comma = false
+      line-ending = "auto"
 
-      # Set up Poetry configuration
-      export POETRY_CONFIG_DIR="$PWD/.poetry"
-      export POETRY_CACHE_DIR="$PWD/.poetry/cache"
-      export POETRY_VIRTUALENVS_IN_PROJECT=true
-      export POETRY_VIRTUALENVS_PATH="$PWD/.venv"
+      [tool.pytest.ini_options]
+      minversion = "6.0"
+      addopts = "-ra -q"
+      testpaths = [
+          "tests",
+      ]
+      EOF
 
-      # Install or update project dependencies using Poetry
-      if [ -f "pyproject.toml" ]; then
-        echo "Installing project dependencies with Poetry..."
-        poetry install
-      else
-        echo "No pyproject.toml found. Skipping dependency installation."
-      fi
+              # Initialize git repository if it doesn't exist
+              if [ ! -d .git ]; then
+                git init
+                echo "__pycache__/" >> .gitignore
+                echo "*.pyc" >> .gitignore
+                echo ".pytest_cache/" >> .gitignore
+                echo ".ruff_cache/" >> .gitignore
+                echo ".coverage" >> .gitignore
+                echo "dist/" >> .gitignore
+                echo "*.egg-info/" >> .gitignore
+              fi
 
-      echo "Python development environment is ready!"
-      echo "Activated virtual environment: $VIRTUAL_ENV"
-      echo "Poetry root: $PWD"
+              # Create initial project structure
+              mkdir -p src/python_project tests docs
+            fi
+
+            # Initialize UV environment
+            if [ ! -d .venv ]; then
+              echo "Creating virtual environment with UV..."
+              uv venv
+            fi
+
+            # Activate virtual environment
+            source .venv/bin/activate
+
+            # Install development dependencies using UV
+            if [ -f requirements.txt ]; then
+              echo "Installing dependencies with UV..."
+              uv pip install -r requirements.txt
+            fi
+
+            # Setup pre-commit hooks if not already configured
+            if [ ! -f .pre-commit-config.yaml ]; then
+              cat > .pre-commit-config.yaml << EOF
+      repos:
+      -   repo: https://github.com/astral-sh/ruff-pre-commit
+          rev: v0.1.6
+          hooks:
+          -   id: ruff
+              args: [ --fix ]
+          -   id: ruff-format
+      EOF
+              pre-commit install
+            fi
+
+            # Display environment information
+            echo "🐍 Python development environment activated!"
+            echo "📦 Package management: UV $(uv --version)"
+            echo "🔍 Linting: Ruff $(ruff --version)"
+            echo "🧪 Testing: pytest $(pytest --version | cut -d' ' -f2)"
+            echo "📝 Virtual environment: .venv"
+            echo
+            echo "Available commands:"
+            echo "- uv pip install <package>  : Install a package"
+            echo "- ruff check .              : Run linter"
+            echo "- ruff format .             : Format code"
+            echo "- pytest                    : Run tests"
+            echo "- pre-commit run --all-files: Run all pre-commit hooks"
     '';
 
-    # Set environment variables for OpenCV
+    # Configure environment variables for OpenCV
     LIBGL_PATH = "${pkgs.libGL}/lib";
     LIBX11_PATH = "${pkgs.xorg.libX11}/lib";
 
