@@ -13,6 +13,7 @@
     ../modules/networking
     ../modules/home
     ../modules/core
+    ../modules/desktop
   ];
 
   # Enable core module with basic system configuration
@@ -34,6 +35,26 @@
       bleachbit
       speechd
     ];
+  };
+
+  # Enable and configure desktop module
+  modules.desktop = {
+    enable = true;
+    environment = "kde";
+    kde.version = "plasma6";
+    autoLogin = {
+      enable = true;
+      user = "notroot";
+    };
+    fonts = {
+      enable = true;
+      packages = with pkgs; [
+        nerd-fonts.jetbrains-mono
+      ];
+      defaultFonts = {
+        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
+      };
+    };
   };
 
   # Enable and configure networking module
@@ -97,19 +118,6 @@
     ];
   };
 
-  # Keep Plasma 6 configuration until desktop module is updated
-  services.xserver.enable = true;
-  services.displayManager.sddm = {
-    enable = true;
-    wayland.enable = true;
-  };
-  services.desktopManager.plasma6.enable = true;
-
-  services.xserver.xkb = {
-    layout = "br";
-    variant = "";
-  };
-
   console.keyMap = "br-abnt2";
 
   # Locale settings that are specific to Brazilian Portuguese
@@ -144,29 +152,8 @@
   # Hardware configuration
   hardware = {
     enableRedistributableFirmware = true;
-    bluetooth = {
-      enable = true;
-      powerOnBoot = true;
-    };
     pulseaudio.enable = false;
     cpu.intel.updateMicrocode = true;
-  };
-
-  # Audio configuration
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa = {
-      enable = true;
-      support32Bit = true;
-    };
-    pulse.enable = true;
-  };
-
-  # Auto login configuration
-  services.displayManager.autoLogin = {
-    enable = true;
-    user = "notroot";
   };
 
   # Package configuration

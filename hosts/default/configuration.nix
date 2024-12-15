@@ -1,3 +1,4 @@
+# ~/NixOS/hosts/default/configuration.nix
 {
   config,
   pkgs,
@@ -18,8 +19,6 @@
   # Enable core module with basic system configuration
   modules.core = {
     enable = true;
-
-    # 👇🏻 System Version for NixOS
     stateVersion = systemVersion;
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
@@ -59,13 +58,14 @@
   modules.desktop = {
     enable = true;
     environment = "kde";
+    kde.version = "plasma5"; # Use Plasma 5
     autoLogin = {
       enable = true;
       user = "notroot";
     };
     extraPackages = with pkgs; [
-      kdePackages.plasma-nm # KDE Network Management applet
-      kdePackages.plasma-pa # Audio volume applet
+      plasma5Packages.plasma-nm # KDE Network Management applet
+      plasma5Packages.plasma-pa # Audio volume applet
       networkmanagerapplet # Backup network manager applet
     ];
     fonts = {
@@ -213,16 +213,6 @@
   };
 
   services = {
-    printing.enable = true;
-    pipewire = {
-      enable = true;
-      alsa = {
-        enable = true;
-        support32Bit = true;
-      };
-      pulse.enable = true;
-    };
-
     # Syncthing service configuration
     syncthing = {
       enable = true;
@@ -239,8 +229,6 @@
       acceleration = "rocm";
     };
   };
-
-  security.rtkit.enable = true;
 
   # Virtualization
   virtualisation = {

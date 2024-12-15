@@ -8,13 +8,23 @@
 with lib; let
   cfg = config.modules.desktop;
 in {
-  config = mkIf (cfg.enable && cfg.environment == "kde") {
-    # Enable X server
-    services.xserver.enable = true;
+  options.modules.desktop = {
+    kde = {
+      version = mkOption {
+        type = types.enum ["plasma5" "plasma6"];
+        default = "plasma6";
+        description = ''
+          The KDE Plasma version to use.
+          plasma5 - KDE Plasma 5.x series
+          plasma6 - KDE Plasma 6.x series
+        '';
+      };
+    };
+  };
 
-    # Display Manager configuration
+  config = mkIf (cfg.enable && cfg.environment == "kde") {
+    # Configure Display Manager directly, removing references to services.xserver.displayManager
     services.displayManager = {
-      enable = true;
       defaultSession = "plasma";
       autoLogin = mkIf cfg.autoLogin.enable {
         enable = true;
@@ -22,6 +32,9 @@ in {
       };
       sddm = {
         enable = true;
+        wayland = mkIf (cfg.kde.version == "plasma6") {
+          enable = true;
+        };
         settings = {
           Theme = {
             CursorTheme = "breeze_cursors";
@@ -35,88 +48,111 @@ in {
       };
     };
 
-    # Desktop Manager configuration
-    services.xserver.desktopManager.plasma5.enable = true;
-
-    # Session variables for Plasma
-    environment.sessionVariables = {
-      XDG_SESSION_TYPE = "x11";
-      XDG_CURRENT_DESKTOP = "KDE";
-      XDG_SESSION_DESKTOP = "KDE";
-      KDE_FULL_SESSION = "true";
-    };
-
-    # Core environment packages
-    environment.systemPackages = with pkgs; let
-      plasma5 = pkgs.plasma5Packages;
-      xorg = pkgs.xorg;
-    in [
-      # X11 support
-      xorg.xorgserver
-      xorg.xrandr
-
-      # Core KDE packages
-      plasma5.plasma-workspace
-      plasma5.plasma-desktop
-      plasma5.plasma-framework
-      plasma5.kactivities
-      plasma5.kactivities-stats
-
-      kdePackages.kio-gdrive
-
-      # Power management
-      plasma5.powerdevil
-      pkgs.power-profiles-daemon
-      pkgs.acpi
-      pkgs.acpid
-      pkgs.powertop
-
-      # Online accounts and integration
-      pkgs.gnome-keyring
-
-      # System settings and info
-      plasma5.plasma-systemmonitor
-      pkgs.kinfocenter
-      plasma5.ksystemstats
-      pkgs.kgamma5
-      plasma5.sddm-kcm
-      plasma5.polkit-kde-agent
-
-      # Core applications
-      pkgs.dolphin
-      pkgs.konsole
-      pkgs.kate
-      pkgs.ark
-      pkgs.spectacle
-      pkgs.okular
-      pkgs.ffmpegthumbnailer
-
-      # Plasma addons and integration
-      plasma5.plasma-browser-integration
-      plasma5.kdeplasma-addons
-      plasma5.kscreen
-      plasma5.plasma-nm
-      plasma5.plasma-vault
-      plasma5.plasma-pa
-      plasma5.kdeconnect-kde
-
-      # Theming
-      pkgs.plasma5Packages.breeze-gtk
-      pkgs.plasma5Packages.breeze-icons
-
-      # Additional utilities
-      pkgs.xdg-utils
-      pkgs.shared-mime-info
+    # Correctly configure desktopManager under services.xserver.desktopManager
+    services.xserver.desktopManager = mkMerge [
+      (mkIf (cfg.kde.version == "plasma5") {
+        plasma5.enable = true;
+      })
+      (mkIf (cfg.kde.version == "plasma6") {
+        plasma6.enable = true;
+      })
     ];
 
-    # Adjust other services accordingly
-    services.pipewire = {
-      enable = true;
-      alsa.enable = true;
-      pulse.enable = true;
-      jack.enable = true;
-      wireplumber.enable = true;
-    };
+    # Session variables for Plasma
+    environment.sessionVariables = mkMerge [
+      (mkIf (cfg.kde.version == "plasma5") {
+        XDG_SESSION_TYPE = "x11";
+        XDG_CURRENT_DESKTOP = "KDE";
+        XDG_SESSION_DESKTOP = "KDE";
+        KDE_FULL_SESSION = "true";
+      })
+      (mkIf (cfg.kde.version == "plasma6") {
+        XDG_SESSION_TYPE = "wayland";
+        XDG_CURRENT_DESKTOP = "KDE";
+        XDG_SESSION_DESKTOP = "plasma";
+      })
+    ];
+
+    # Core environment packages
+    environment.systemPackages = let
+      # Common packages for both Plasma 5 and 6
+      commonPackages = with pkgs; [
+        # Power management
+        power-profiles-daemon
+        acpi
+        acpid
+        powertop
+
+        # Core applications
+        dolphin
+        konsole
+        kate
+        ark
+        spectacle
+        okular
+        ffmpegthumbnailer
+        kdePackages.kio-gdrive
+
+        # Additional utilities
+        xdg-utils
+        shared-mime-info
+      ];
+
+      # Plasma 5 specific packages
+      plasma5Packages = with pkgs; let
+        plasma5 = pkgs.plasma5Packages;
+      in [
+        # Core KDE packages
+        plasma5.plasma-workspace
+        plasma5.plasma-desktop
+        plasma5.plasma-framework
+        plasma5.kactivities
+        plasma5.kactivities-stats
+
+        # System settings and info
+        plasma5.plasma-systemmonitor
+        kinfocenter
+        plasma5.ksystemstats
+        kgamma5
+        plasma5.sddm-kcm
+        plasma5.polkit-kde-agent-1
+
+        # Plasma addons and integration
+        plasma5.plasma-browser-integration
+        plasma5.kdeplasma-addons
+        plasma5.kscreen
+        plasma5.plasma-nm
+        plasma5.plasma-vault
+        plasma5.plasma-pa
+        plasma5.kdeconnect-kde
+
+        # Theming
+        plasma5Packages.breeze-gtk
+        plasma5Packages.breeze-icons
+      ];
+
+      # Plasma 6 specific packages
+      plasma6Packages = with pkgs; [
+        kdePackages.plasma-workspace
+        kdePackages.plasma-desktop
+        kdePackages.plasma-nm
+        kdePackages.plasma-pa
+        kdePackages.powerdevil
+        kdePackages.plasma-browser-integration
+        kdePackages.plasma-systemmonitor
+        kdePackages.kscreen
+        kdePackages.sddm-kcm
+        kdePackages.polkit-kde-agent-1
+        kdePackages.kinfocenter
+        kdePackages.plasma-activities
+      ];
+    in
+      commonPackages
+      ++ (
+        if cfg.kde.version == "plasma5"
+        then plasma5Packages
+        else plasma6Packages
+      );
 
     # Required services
     services = {
@@ -130,6 +166,14 @@ in {
         percentageLow = 15;
         percentageCritical = 5;
         percentageAction = 3;
+      };
+
+      pipewire = {
+        enable = true;
+        alsa.enable = true;
+        pulse.enable = true;
+        jack.enable = true;
+        wireplumber.enable = true;
       };
     };
 
@@ -179,7 +223,5 @@ in {
 
     # Ensure dconf is enabled
     programs.dconf.enable = true;
-
-    # Note: User-specific configurations should be placed in the user's Home Manager configuration.
   };
 }
