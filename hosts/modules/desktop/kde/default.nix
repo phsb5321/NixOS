@@ -23,7 +23,7 @@ in {
   };
 
   config = mkIf (cfg.enable && cfg.environment == "kde") {
-    # Configure Display Manager directly, removing references to services.xserver.displayManager
+    # Configure Display Manager
     services.displayManager = {
       defaultSession = "plasma";
       autoLogin = mkIf cfg.autoLogin.enable {
@@ -48,15 +48,15 @@ in {
       };
     };
 
-    # Correctly configure desktopManager under services.xserver.desktopManager
-    services.xserver.desktopManager = mkMerge [
-      (mkIf (cfg.kde.version == "plasma5") {
-        plasma5.enable = true;
-      })
-      (mkIf (cfg.kde.version == "plasma6") {
-        plasma6.enable = true;
-      })
-    ];
+    # Configure Plasma 5 under services.xserver.desktopManager
+    services.xserver.desktopManager = mkIf (cfg.kde.version == "plasma5") {
+      plasma5.enable = true;
+    };
+
+    # Configure Plasma 6 under services.desktopManager
+    services.desktopManager = mkIf (cfg.kde.version == "plasma6") {
+      plasma6.enable = true;
+    };
 
     # Session variables for Plasma
     environment.sessionVariables = mkMerge [

@@ -330,4 +330,9 @@
     pkgs.platformio-core
     pkgs.openocd
   ];
+
+  # Increase Nix download buffer size
+  nix.settings = {
+    "download-buffer-size" = "200MiB"; # Further increase if needed
+  };
 }
