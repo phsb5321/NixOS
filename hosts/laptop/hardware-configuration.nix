@@ -16,6 +16,11 @@
   boot.kernelModules = ["kvm-intel"];
   boot.extraModulePackages = [];
 
+  # Bootloader configuration
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.efi.efiSysMountPoint = "/boot/efi"; # Ensure this matches the mount point configuration in hardware-configuration.nix
+
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/e9a50f69-ff7d-4e1a-8517-d4703996dc42";
     fsType = "ext4";
