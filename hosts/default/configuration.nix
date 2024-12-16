@@ -333,6 +333,6 @@
 
   # Increase Nix download buffer size
   nix.settings = {
-    "download-buffer-size" = "200MiB"; # Further increase if needed
+    "download-buffer-size" = 209715200; # 200 MiB in bytes
   };
 }
