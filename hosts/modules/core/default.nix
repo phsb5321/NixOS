@@ -122,6 +122,7 @@ in {
         gum
         piper-tts
         jq
+        popsicle
 
         # System Monitoring
         neofetch
