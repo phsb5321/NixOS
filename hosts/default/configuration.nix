@@ -140,7 +140,6 @@
 
       # ROCm and ML tools
       ollama-rocm
-      alpaca
 
       # Android
       android-tools

@@ -31,6 +31,9 @@ in {
         # Nerd Fonts - Programming fonts with icons
         nerd-fonts.jetbrains-mono
         nerd-fonts.fira-code
+        nerd-fonts.roboto-mono
+        nerd-fonts.source-code-pro
+        nerd-fonts.hack
 
         # Standard fonts for good coverage
         font-awesome # Icon font
@@ -38,11 +41,17 @@ in {
         noto-fonts-cjk-sans # CJK support (Chinese, Japanese, Korean)
         noto-fonts-emoji # Emoji support
         liberation_ttf # Microsoft-compatible fonts
+        xorg.font-misc-misc
 
         # Optional but recommended fonts
         ubuntu_font_family # Ubuntu's font family
         dejavu_fonts # DejaVu font family
         source-code-pro # Adobe's monospace font
+        freetype # TrueType rendering engine
+        cantarell-fonts # GNOME default fonts
+        droid-fonts # Android "Droid" fonts
+        ibm-plex # IBM's Plex font family
+        terminus_font # Terminus monospace font
       ];
       description = ''
         List of font packages to install system-wide.
@@ -66,6 +75,8 @@ in {
             "DejaVu Serif"
             "Noto Serif"
             "Liberation Serif"
+            "Cantarell"
+            "IBM Plex Serif"
           ];
         };
 
@@ -76,6 +87,9 @@ in {
             "DejaVu Sans"
             "Noto Sans"
             "Liberation Sans"
+            "Ubuntu"
+            "Cantarell"
+            "IBM Plex Sans"
           ];
         };
 
@@ -85,8 +99,12 @@ in {
           default = [
             "JetBrainsMono Nerd Font Mono" # Primary monospace font with icons
             "FiraCode Nerd Font Mono" # Secondary monospace font with icons
+            "Hack Nerd Font Mono" # Additional monospace font with icons
+            "RobotoMono Nerd Font Mono" # Another monospace font with icons
+            "SourceCodePro Nerd Font Mono" # Yet another monospace font with icons
             "DejaVu Sans Mono" # Fallback monospace
             "Liberation Mono" # Final fallback
+            "Terminus" # Alternative fallback
           ];
         };
 
@@ -197,6 +215,9 @@ in {
               <edit binding="same" mode="prepend" name="family">
                 <string>JetBrainsMono Nerd Font Mono</string>
                 <string>FiraCode Nerd Font Mono</string>
+                <string>Hack Nerd Font Mono</string>
+                <string>RobotoMono Nerd Font Mono</string>
+                <string>SourceCodePro Nerd Font Mono</string>
               </edit>
             </match>
           </fontconfig>
