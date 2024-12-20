@@ -7,6 +7,83 @@
 }:
 with lib; let
   cfg = config.modules.desktop;
+  # Common packages for both Plasma 5 and 6
+  commonPackages = with pkgs; [
+    # Power management
+    power-profiles-daemon
+    acpi
+    acpid
+    powertop
+
+    # Core applications
+    dolphin
+    konsole
+    kate
+    ark
+    spectacle
+    okular
+    ffmpegthumbnailer
+    kdePackages.kio-gdrive
+
+    # Additional utilities
+    xdg-utils
+    shared-mime-info
+  ];
+
+  # Plasma 5 specific packages
+  plasma5Packages = with pkgs; let
+    plasma5 = pkgs.plasma5Packages;
+  in [
+    # Core KDE packages
+    plasma5.plasma-workspace
+    plasma5.plasma-desktop
+    plasma5.plasma-framework
+    plasma5.kactivities
+    plasma5.kactivities-stats
+
+    # System settings and info
+    plasma5.plasma-systemmonitor
+    kinfocenter
+    plasma5.ksystemstats
+    kgamma5
+    plasma5.sddm-kcm
+    plasma5.polkit-kde-agent
+
+    # Plasma addons and integration
+    plasma5.plasma-browser-integration
+    plasma5.kdeplasma-addons
+    plasma5.kscreen
+    plasma5.plasma-nm
+    plasma5.plasma-vault
+    plasma5.plasma-pa
+    plasma5.kdeconnect-kde
+
+    # Theming
+    plasma5.breeze-gtk
+    plasma5.breeze-icons
+  ];
+
+  # Plasma 6 specific packages
+  plasma6Packages = with pkgs; [
+    kdePackages.plasma-workspace
+    kdePackages.plasma-desktop
+    kdePackages.plasma-nm
+    kdePackages.plasma-pa
+    kdePackages.powerdevil
+    kdePackages.plasma-browser-integration
+    kdePackages.plasma-systemmonitor
+    kdePackages.kscreen
+    kdePackages.sddm-kcm
+    kdePackages.polkit-kde-agent-1
+    kdePackages.kinfocenter
+    kdePackages.plasma-activities
+  ];
+
+  # Select the right set of packages based on the KDE version
+  selectedPackages =
+    if cfg.kde.version == "plasma5"
+    then plasma5Packages
+    else plasma6Packages;
 in {
   options.modules.desktop = {
     kde = {
@@ -48,6 +125,9 @@ in {
       };
     };
 
+    # Enable services.xserver for Plasma 5
+    services.xserver.enable = mkIf (cfg.kde.version == "plasma5") true;
+
     # Configure Plasma 5 under services.xserver.desktopManager
     services.xserver.desktopManager = mkIf (cfg.kde.version == "plasma5") {
       plasma5.enable = true;
@@ -74,85 +154,7 @@ in {
     ];
 
     # Core environment packages
-    environment.systemPackages = let
-      # Common packages for both Plasma 5 and 6
-      commonPackages = with pkgs; [
-        # Power management
-        power-profiles-daemon
-        acpi
-        acpid
-        powertop
-
-        # Core applications
-        dolphin
-        konsole
-        kate
-        ark
-        spectacle
-        okular
-        ffmpegthumbnailer
-        kdePackages.kio-gdrive
-
-        # Additional utilities
-        xdg-utils
-        shared-mime-info
-      ];
-
-      # Plasma 5 specific packages
-      plasma5Packages = with pkgs; let
-        plasma5 = pkgs.plasma5Packages;
-      in [
-        # Core KDE packages
-        plasma5.plasma-workspace
-        plasma5.plasma-desktop
-        plasma5.plasma-framework
-        plasma5.kactivities
-        plasma5.kactivities-stats
-
-        # System settings and info
-        plasma5.plasma-systemmonitor
-        kinfocenter
-        plasma5.ksystemstats
-        kgamma5
-        plasma5.sddm-kcm
-        plasma5.polkit-kde-agent-1
-
-        # Plasma addons and integration
-        plasma5.plasma-browser-integration
-        plasma5.kdeplasma-addons
-        plasma5.kscreen
-        plasma5.plasma-nm
-        plasma5.plasma-vault
-        plasma5.plasma-pa
-        plasma5.kdeconnect-kde
-
-        # Theming
-        plasma5Packages.breeze-gtk
-        plasma5Packages.breeze-icons
-      ];
-
-      # Plasma 6 specific packages
-      plasma6Packages = with pkgs; [
-        kdePackages.plasma-workspace
-        kdePackages.plasma-desktop
-        kdePackages.plasma-nm
-        kdePackages.plasma-pa
-        kdePackages.powerdevil
-        kdePackages.plasma-browser-integration
-        kdePackages.plasma-systemmonitor
-        kdePackages.kscreen
-        kdePackages.sddm-kcm
-        kdePackages.polkit-kde-agent-1
-        kdePackages.kinfocenter
-        kdePackages.plasma-activities
-      ];
-    in
-      commonPackages
-      ++ (
-        if cfg.kde.version == "plasma5"
-        then plasma5Packages
-        else plasma6Packages
-      );
+    environment.systemPackages = commonPackages ++ selectedPackages;
 
     # Required services
     services = {
