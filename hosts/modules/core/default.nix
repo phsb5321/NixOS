@@ -8,6 +8,7 @@
 in {
   imports = [
     ./fonts.nix
+    ./gaming.nix # Import the gaming module here
   ];
 
   options.modules.core = with lib; {
@@ -38,7 +39,7 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    # Enable and configure fonts
+    # Enable fonts module
     modules.core.fonts = {
       enable = true;
       packages = with pkgs; [
@@ -49,6 +50,11 @@ in {
         noto-fonts-emoji
         liberation_ttf
       ];
+    };
+
+    # Enable gaming module
+    modules.core.gaming = {
+      enable = true;
     };
 
     # System version

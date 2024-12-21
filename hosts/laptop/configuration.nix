@@ -16,9 +16,6 @@
     ../modules/desktop
   ];
 
-  # Set system options
-  users.defaultUserShell = pkgs.fish;
-
   # Enable core module with basic system configuration
   modules.core = {
     enable = true;
@@ -128,9 +125,10 @@
     ];
   };
 
-  console.keyMap = "br-abnt2";
+  # Set default user shell
+  users.defaultUserShell = pkgs.fish;
 
-  # Locale settings that are specific to Brazilian Portuguese
+  # Locale settings specific to Brazilian Portuguese
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
     LC_IDENTIFICATION = "pt_BR.UTF-8";
@@ -167,10 +165,10 @@
     pulseaudio.enable = false;
     cpu.intel.updateMicrocode = true;
 
-    # OpenGL configuration
-    opengl = {
+    # Graphics configuration
+    graphics = {
       enable = true;
-      driSupport32Bit = true;
+      enable32Bit = true;
       extraPackages = with pkgs; [
         intel-media-driver
         vaapiIntel
@@ -201,7 +199,7 @@
     };
   };
 
-  # Package configuration
+  # Nixpkgs configuration
   nixpkgs.config = {
     allowUnfree = true;
     cudaSupport = true;
@@ -291,7 +289,7 @@
     kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
   };
 
-  # Add this to satisfy the `nvidia-container-toolkit` requirements
+  # Satisfy the `nvidia-container-toolkit` requirements
   services.xserver.videoDrivers = ["nvidia"];
 
   # Virtualization support for CUDA containers
