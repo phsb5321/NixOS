@@ -73,7 +73,7 @@
       {
         nix = {
           settings = {
-            download-buffer-size = "16M";
+            download-buffer-size = "1024M";
           };
         };
       }
