@@ -1,10 +1,10 @@
-# ~/NixOS/hosts/laptop/configuration.nix
 {
   config,
   pkgs,
   lib,
   inputs,
   systemVersion,
+  bleedPkgs,
   ...
 }: {
   imports = [
@@ -16,6 +16,9 @@
     ../modules/desktop
   ];
 
+  # Set system options
+  users.defaultUserShell = pkgs.fish;
+
   # Enable core module with basic system configuration
   modules.core = {
     enable = true;
@@ -26,10 +29,17 @@
       # Development Tools
       llvm
       clang
+      cudaPackages.cuda_nvcc
+      cudaPackages.cuda_cudart
+      cudaPackages.cuda_cccl
+      nvtopPackages.full # Updated from nvtop
       rocmPackages.clr
       rocmPackages.rocminfo
       rocmPackages.rocm-smi
       seahorse
+
+      # System Utilities
+      bleedPkgs.zed-editor
 
       # Additional Tools
       bleachbit
@@ -146,6 +156,8 @@
       "input"
       "bluetooth"
       "docker"
+      "render" # For GPU access
+      "nvidia" # For NVIDIA tools
     ];
   };
 
@@ -154,8 +166,135 @@
     enableRedistributableFirmware = true;
     pulseaudio.enable = false;
     cpu.intel.updateMicrocode = true;
+
+    # OpenGL configuration
+    opengl = {
+      enable = true;
+      driSupport32Bit = true;
+      extraPackages = with pkgs; [
+        intel-media-driver
+        vaapiIntel
+        vaapiVdpau
+        libvdpau-va-gl
+      ];
+    };
+
+    # NVIDIA configuration
+    nvidia = {
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
+      open = false; # Use proprietary (closed-source) NVIDIA drivers
+      modesetting.enable = true;
+      powerManagement = {
+        enable = true;
+        finegrained = true;
+      };
+      prime = {
+        offload = {
+          enable = true;
+          enableOffloadCmd = true;
+        };
+        intelBusId = "PCI:0:2:0";
+        nvidiaBusId = "PCI:1:0:0";
+      };
+      nvidiaSettings = true;
+      forceFullCompositionPipeline = true;
+    };
   };
 
   # Package configuration
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs.config = {
+    allowUnfree = true;
+    cudaSupport = true;
+  };
+
+  # DBus configuration
+  services.dbus = {
+    enable = true;
+    packages = [pkgs.dconf];
+  };
+
+  # Polkit and authentication configuration
+  systemd.user.services = {
+    polkit-gnome-authentication-agent-1 = {
+      description = "polkit-gnome-authentication-agent-1";
+      wantedBy = ["graphical-session.target"];
+      wants = ["graphical-session.target"];
+      after = ["graphical-session.target"];
+      serviceConfig = {
+        Type = "simple";
+        ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+        Restart = "on-failure";
+        RestartSec = 1;
+        TimeoutStopSec = 10;
+      };
+    };
+  };
+
+  # Environment configuration
+  environment = {
+    sessionVariables = {
+      NIXOS_OZONE_WL = "1";
+      XDG_SESSION_TYPE = "wayland";
+      QT_QPA_PLATFORM = "wayland;xcb";
+      SDL_VIDEODRIVER = "wayland";
+      CLUTTER_BACKEND = "wayland";
+      # CUDA related environment variables
+      CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
+      LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
+      __NV_PRIME_RENDER_OFFLOAD = "1";
+      __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      __VK_LAYER_NV_optimus = "NVIDIA_only";
+      LIBVA_DRIVER_NAME = "nvidia";
+      # Additional paths for CUDA development
+      PATH = [
+        "${pkgs.cudaPackages.cuda_cudart}/bin"
+      ];
+    };
+
+    systemPackages = with pkgs; [
+      wayland
+      libsForQt5.qt5.qtwayland
+      qt6.qtwayland
+      xdg-utils
+      xdg-desktop-portal
+      xdg-desktop-portal-kde
+      libsForQt5.polkit-kde-agent
+      # GPU related packages
+      glxinfo
+      vulkan-tools
+      vulkan-loader
+      vulkan-validation-layers
+      nvidia-vaapi-driver
+    ];
+  };
+
+  # Enable fontconfig
+  fonts.fontconfig.enable = true;
+
+  # Enable XDG portal
+  xdg.portal = {
+    enable = true;
+    extraPortals = [
+      pkgs.xdg-desktop-portal-kde
+      pkgs.xdg-desktop-portal-gtk
+    ];
+  };
+
+  # Boot configuration for NVIDIA
+  boot = {
+    extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
+    kernelParams = [
+      "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
+      "nvidia-drm.modeset=1"
+    ];
+    kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
+  };
+
+  # Add this to satisfy the `nvidia-container-toolkit` requirements
+  services.xserver.videoDrivers = ["nvidia"];
+
+  # Virtualization support for CUDA containers
+  virtualisation.docker.enable = true;
+  hardware.nvidia-container-toolkit.enable = true;
 }
