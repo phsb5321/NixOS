@@ -33,19 +33,20 @@
     bleed,
     ...
   } @ inputs: let
+    # Define target architecture
     system = "x86_64-linux";
 
     # Define system version
     systemVersion = "24.11";
 
-    # Define the common nixpkgs configuration
+    # Common nixpkgs configuration (unfree, etc.)
     nixpkgsConfig = {
       allowUnfree = true;
       allowUnfreePredicate = _: true;
       allowBroken = true;
     };
 
-    # Define standard and bleeding-edge package sets for easy access
+    # Define standard (pkgs) and bleeding-edge (bleedPkgs) package sets
     pkgs = import nixpkgs {
       inherit system;
       config = nixpkgsConfig;
@@ -56,22 +57,31 @@
       config = nixpkgsConfig;
     };
 
-    # Common special args for all systems
+    # Common specialArgs to pass into each NixOS system
     commonSpecialArgs = {
       inherit inputs pkgs bleedPkgs systemVersion;
     };
 
     # Define common modules for all configurations
     commonModules = [
+      # Existing module with config overrides
       {
         nixpkgs.config = nixpkgsConfig;
         home-manager.users.notroot.home.enableNixpkgsReleaseCheck = false;
       }
+      # Additional module that sets a global download-buffer-size
+      {
+        nix = {
+          settings = {
+            download-buffer-size = "16M";
+          };
+        };
+      }
     ];
   in {
-    # Define NixOS configurations, with different hosts for specific setups
+    # Declare the various NixOS configurations
     nixosConfigurations = {
-      # Default configuration, references './hosts/default/configuration.nix'
+      # Default configuration
       default = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = commonSpecialArgs;
@@ -93,7 +103,7 @@
           ];
       };
 
-      # Experimental VM configuration, uses bleeding-edge packages when needed
+      # Experimental VM configuration
       experimental-vm = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = commonSpecialArgs;
