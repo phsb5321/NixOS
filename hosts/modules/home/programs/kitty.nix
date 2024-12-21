@@ -10,22 +10,36 @@ with lib; let
 in {
   config = mkIf cfg.enable {
     home-manager.users.${cfg.username} = {
+      # Add the font package to user packages
+      home.packages = with pkgs; [
+        nerd-fonts.jetbrains-mono
+      ];
+
       programs.kitty = {
         enable = true;
         theme = "Gruvbox Dark";
-        font = {
-          name = "JetBrainsMono Nerd Font Mono";
-          size = 18;
-        };
         shellIntegration.enableFishIntegration = true;
         settings = {
+          # Basic settings
+          font_family = "JetBrainsMonoNerdFontMono-Regular";
+          bold_font = "JetBrainsMonoNerdFontMono-Bold";
+          italic_font = "JetBrainsMonoNerdFontMono-Italic";
+          bold_italic_font = "JetBrainsMonoNerdFontMono-BoldItalic";
+          font_size = 18;
+
+          # Disable ligatures to rule out any related issues
+          disable_ligatures = "never";
+
+          # Other settings
+          scrollback_lines = 10000;
+          enable_audio_bell = false;
           copy_on_select = true;
+          selection_foreground = "none";
+          selection_background = "none";
+          window_padding_width = 2;
+
+          # Clipboard control
           clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
-          enable_ligatures = true;
-          font_family = "JetBrainsMono Nerd Font Mono";
-          bold_font = "JetBrainsMono Nerd Font Mono Bold";
-          italic_font = "JetBrainsMono Nerd Font Mono Italic";
-          bold_italic_font = "JetBrainsMono Nerd Font Mono Bold Italic";
         };
       };
     };
