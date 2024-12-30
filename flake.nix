@@ -8,6 +8,9 @@
     # Bleeding-edge Nixpkgs source from the 'nixpkgs-unstable' branch
     bleed.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
+    # Stable Nixpkgs source from the 'nixos-24.11' branch
+    stable.url = "github:nixos/nixpkgs/nixos-24.11";
+
     # Home Manager input for managing user environments
     home-manager = {
       url = "github:nix-community/home-manager/master";
@@ -31,6 +34,7 @@
     self,
     nixpkgs,
     bleed,
+    stable,
     ...
   } @ inputs: let
     # Define target architecture
@@ -57,9 +61,14 @@
       config = nixpkgsConfig;
     };
 
+    stablePkgs = import stable {
+      inherit system;
+      config = nixpkgsConfig;
+    };
+
     # Common specialArgs to pass into each NixOS system
     commonSpecialArgs = {
-      inherit inputs pkgs bleedPkgs systemVersion;
+      inherit inputs pkgs bleedPkgs systemVersion stablePkgs;
     };
 
     # Define common modules for all configurations
