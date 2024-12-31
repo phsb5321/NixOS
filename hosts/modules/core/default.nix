@@ -1,7 +1,9 @@
+# ~/NixOS/hosts/modules/core/default.nix
 {
   config,
   lib,
   pkgs,
+  stablePkgs,
   ...
 }: let
   cfg = config.modules.core;
@@ -129,6 +131,8 @@ in {
         piper-tts
         jq
         popsicle
+        bitwarden-cli
+        stablePkgs.awscli2 # Use bleeding edge version
 
         # System Monitoring
         neofetch
