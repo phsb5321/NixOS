@@ -1,12 +1,20 @@
-{ config, pkgs, lib, inputs, ... }:
-
 {
+  config,
+  pkgs,
+  lib,
+  inputs,
+  systemVersion,
+  ...
+}: {
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.home-manager
     ../modules/desktop
     ../modules/virtualization
   ];
+
+  # 👇🏻 System Version for NixOS
+  system.stateVersion = systemVersion;
 
   # Bootloader configuration for UEFI
   boot.loader = {
@@ -48,6 +56,37 @@
       enable = true;
       user = "notroot";
     };
+  };
+
+  # Home module configuration
+  modules.home = {
+    enable = true;
+    username = "notroot";
+    hostName = "experimental-vm";
+    extraPackages = with pkgs; [
+      git
+      gh
+      zed-editor
+      (nerdfonts.override {fonts = ["JetBrainsMono"];})
+      noto-fonts-emoji
+      noto-fonts
+      noto-fonts-cjk-sans
+      fish
+      kitty
+      grc
+      eza
+      ffmpeg
+      gh
+      brave
+      yazi-unwrapped
+      texlive.combined.scheme-full
+      dbeaver-bin
+      amberol
+      remmina
+      obsidian
+      inputs.nixvim
+      zoxide
+    ];
   };
 
   # Virtualization module
@@ -104,16 +143,10 @@
     };
   };
 
-  # Home Manager configuration
-  home-manager = {
-    extraSpecialArgs = { inherit inputs; };
-    users.notroot = import ./home.nix;
-  };
-
   # Nix settings
   nix = {
     settings = {
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = ["nix-command" "flakes"];
       auto-optimise-store = true;
       download-buffer-size = 100 * 1024 * 1024; # Set to 100 MiB
     };
@@ -133,8 +166,6 @@
   # Firewall configuration
   networking.firewall = {
     enable = true;
-    allowedTCPPorts = [ 22 ];
+    allowedTCPPorts = [22];
   };
-
-  system.stateVersion = "24.05";
 }
