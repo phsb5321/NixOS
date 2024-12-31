@@ -1,17 +1,16 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-  cfg = config.modules.dunst;
-in
 {
-  options.modules.dunst = {
-    enable = mkEnableOption "Dunst configuration";
-  };
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
+  cfg = config.modules.dunst;
+in {
+  options.modules.dunst.enable = mkEnableOption "Dunst configuration";
 
   config = mkIf (cfg.enable && config.modules.desktop.enable) {
-    home-manager.users.${config.modules.desktop.autoLogin.user} = { ... }: {
+    home-manager.users.${config.modules.desktop.autoLogin.user} = {pkgs, ...}: {
       services.dunst = {
         enable = true;
         settings = {
