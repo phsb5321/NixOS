@@ -1,11 +1,17 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-  cfg = config.modules.desktop;
-in
+# hosts/modules/desktop/common/default.nix
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
+  cfg = config.modules.desktop;
+in {
+  imports = [
+    ./fonts.nix # Import the fonts module
+  ];
+
   config = mkIf cfg.enable {
     services.xserver.xkb = {
       layout = "br";
@@ -13,8 +19,6 @@ in
     };
 
     environment.systemPackages = cfg.extraPackages;
-
-    fonts.enableDefaultPackages = true;
 
     services.printing.enable = true;
 
@@ -34,7 +38,7 @@ in
 
     xdg.portal = {
       enable = true;
-      extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+      extraPortals = [pkgs.xdg-desktop-portal-gtk];
     };
 
     services.dbus.enable = true;
