@@ -15,7 +15,7 @@ in {
         enable = true;
         settings = {
           global = {
-            font = "JetBrainsMono Nerd Font 11";
+            font = "JetBrains Mono Nerd Font 11";
             frame_width = 2;
             frame_color = "#89b4fa";
             separator_color = "frame";
@@ -42,6 +42,10 @@ in {
           };
         };
       };
+
+      home.packages = with pkgs; [
+        nerd-fonts.jetbrains-mono
+      ];
     };
   };
 }
