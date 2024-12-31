@@ -10,10 +10,10 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
-    ../modules/networking
-    ../modules/home
-    ../modules/core
-    ../modules/desktop
+    ../../modules/networking
+    ../../modules/home
+    ../../modules/core
+    ../../modules/desktop
   ];
 
   # Enable core module with basic system configuration
