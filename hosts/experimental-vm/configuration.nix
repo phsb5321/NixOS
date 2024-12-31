@@ -53,7 +53,7 @@
       git
       gh
       zed-editor
-      (nerdfonts.override {fonts = ["JetBrainsMono"];})
+      nerd-fonts.jetbrains-mono
       noto-fonts-emoji
       noto-fonts
       noto-fonts-cjk-sans
@@ -140,7 +140,7 @@
     settings = {
       experimental-features = ["nix-command" "flakes"];
       auto-optimise-store = true;
-      download-buffer-size = 100 * 1024 * 1024; # Set to 100 MiB
+      # download-buffer-size = 100 * 1024 * 1024; # Set to 100 MiB
     };
     gc = {
       automatic = true;
