@@ -114,7 +114,6 @@
       spotify
 
       # Miscellaneous Tools
-      bruno
       lsof
       discord
       corectrl
