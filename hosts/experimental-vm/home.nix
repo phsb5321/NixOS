@@ -34,7 +34,6 @@
       texlive.combined.scheme-full
       dbeaver-bin
       amberol
-      awscli2
       remmina
       obsidian
       inputs.nixvim
