@@ -9,37 +9,23 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.home-manager
-    ../modules/desktop
-    ../modules/virtualization
+    ../../modules/desktop
+    ../../modules/virtualization
+    ../../modules/networking
+    ../../modules/home
+    ../../modules/core
   ];
 
-  # 👇🏻 System Version for NixOS
-  system.stateVersion = systemVersion;
-
-  # Bootloader configuration for UEFI
-  boot.loader = {
-    systemd-boot.enable = true;
-    efi.canTouchEfiVariables = true;
-  };
-
-  networking = {
-    hostName = "nixos";
-    networkmanager.enable = true;
-  };
-
-  time.timeZone = "America/Recife";
-  i18n.defaultLocale = "en_US.UTF-8";
-
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pt_BR.UTF-8";
-    LC_IDENTIFICATION = "pt_BR.UTF-8";
-    LC_MEASUREMENT = "pt_BR.UTF-8";
-    LC_MONETARY = "pt_BR.UTF-8";
-    LC_NAME = "pt_BR.UTF-8";
-    LC_NUMERIC = "pt_BR.UTF-8";
-    LC_PAPER = "pt_BR.UTF-8";
-    LC_TELEPHONE = "pt_BR.UTF-8";
-    LC_TIME = "pt_BR.UTF-8";
+  # Enable core module with basic system configuration
+  modules.core = {
+    enable = true;
+    stateVersion = systemVersion;
+    timeZone = "America/Recife";
+    defaultLocale = "en_US.UTF-8";
+    extraSystemPackages = with pkgs; [
+      vim
+      wget
+    ];
   };
 
   # Desktop environment configuration
@@ -89,7 +75,26 @@
     ];
   };
 
-  # Virtualization module
+  # Enable and configure networking module
+  modules.networking = {
+    enable = true;
+    hostName = "nixos";
+    optimizeTCP = true;
+    enableNetworkManager = true;
+    dns = {
+      enableSystemdResolved = true;
+      enableDNSOverTLS = true;
+      primaryProvider = "cloudflare";
+    };
+    firewall = {
+      enable = true;
+      allowPing = true;
+      openPorts = [22];
+      trustedInterfaces = [];
+    };
+  };
+
+  # Virtualization module configuration
   modules.virtualization = {
     enable = true;
     enableLibvirtd = true;
@@ -97,44 +102,31 @@
     username = "notroot";
   };
 
+  # System configuration
   console.keyMap = "br-abnt2";
+  users.defaultUserShell = pkgs.fish;
+
+  # Locale settings
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "pt_BR.UTF-8";
+    LC_IDENTIFICATION = "pt_BR.UTF-8";
+    LC_MEASUREMENT = "pt_BR.UTF-8";
+    LC_MONETARY = "pt_BR.UTF-8";
+    LC_NAME = "pt_BR.UTF-8";
+    LC_NUMERIC = "pt_BR.UTF-8";
+    LC_PAPER = "pt_BR.UTF-8";
+    LC_TELEPHONE = "pt_BR.UTF-8";
+    LC_TIME = "pt_BR.UTF-8";
+  };
 
   # Define user account
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
-    extraGroups = [ "wheel" "networkmanager" ];
-    packages = with pkgs; [
-      git
-      gh
-      zed-editor
-      inputs.zen-browser.packages."${system}".default
-    ];
+    extraGroups = ["wheel" "networkmanager"];
   };
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
-  # System packages
-  environment.systemPackages = with pkgs; [
-    vim
-    wget
-  ];
-
-  # Enable some programs
-  programs = {
-    mtr.enable = true;
-    gnupg.agent = {
-      enable = true;
-      enableSSHSupport = true;
-    };
-    fish.enable = true;
-  };
-
-  # Set default shell to fish
-  users.defaultUserShell = pkgs.fish;
-
-  # Enable OpenSSH daemon
+  # Enable SSH
   services.openssh = {
     enable = true;
     settings = {
@@ -157,15 +149,20 @@
     };
   };
 
-  # System-wide environment variables
-  environment.sessionVariables = {
-    EDITOR = "nvim";
-    VISUAL = "nvim";
+  # GPG and SSH agent
+  programs = {
+    mtr.enable = true;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
   };
 
-  # Firewall configuration
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [22];
+  # Environment configuration
+  environment = {
+    sessionVariables = {
+      EDITOR = "nvim";
+      VISUAL = "nvim";
+    };
   };
 }
