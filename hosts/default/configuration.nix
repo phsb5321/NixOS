@@ -38,9 +38,6 @@
       # Development Tools
       llvm
       clang
-      rocmPackages.clr
-      rocmPackages.rocminfo
-      rocmPackages.rocm-smi
 
       # Additional Tools
       seahorse
@@ -129,7 +126,6 @@
       spotify
 
       # Miscellaneous Tools
-      bruno
       lsof
       discord
       corectrl
@@ -138,9 +134,6 @@
       # Programming Languages
       python3
 
-      # ROCm and ML tools
-      ollama-rocm
-
       # Android
       android-tools
     ];
@@ -148,21 +141,6 @@
 
   # Additional networking overrides if needed
   networking.networkmanager.dns = lib.mkForce "default";
-
-  systemd.tmpfiles.rules = let
-    rocmEnv = pkgs.symlinkJoin {
-      name = "rocm-combined";
-      paths = with pkgs.rocmPackages; [
-        rocblas # Required for miopen
-        clr # HIP runtime
-        rocminfo # ROCm device info tool
-        rocsolver # ROCm linear algebra solver library
-        rocalution # ROCm sparse linear algebra library
-      ];
-    };
-  in [
-    "L+    /opt/rocm   -    -    -     -    ${rocmEnv}"
-  ];
 
   # Locale settings
   i18n.extraLocaleSettings = {
@@ -223,10 +201,7 @@
     };
 
     # Ollama service configuration
-    ollama = {
-      enable = true;
-      acceleration = "rocm";
-    };
+    ollama.enable = false;
   };
 
   # Virtualization
