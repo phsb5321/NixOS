@@ -11,9 +11,9 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
-    ../modules/virtualization
-    ../modules/desktop
-    ../modules
+    ../../modules/virtualization
+    ../../modules/desktop
+    ../../modules
   ];
 
   # Enable core module with basic system configuration
