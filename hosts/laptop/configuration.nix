@@ -30,9 +30,6 @@
       cudaPackages.cuda_cudart
       cudaPackages.cuda_cccl
       nvtopPackages.full # Updated from nvtop
-      rocmPackages.clr
-      rocmPackages.rocminfo
-      rocmPackages.rocm-smi
       seahorse
 
       # System Utilities
