@@ -69,6 +69,7 @@
       git
       gh
       zed-editor
+      inputs.zen-browser.packages."${system}".default
     ];
   };
 
