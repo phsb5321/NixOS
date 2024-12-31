@@ -20,7 +20,7 @@
   # Updated boot loader configuration
   boot.loader.grub = {
     enable = true;
-    device = "/dev/sda";    # Install GRUB to MBR
+    device = "/dev/sda"; # Install GRUB to MBR
     useOSProber = true;
   };
 
