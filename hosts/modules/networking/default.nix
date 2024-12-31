@@ -206,8 +206,8 @@ in {
         };
 
         # Disable potentially conflicting services
-        dhcpcd.enable = false;
-        wpa_supplicant.enable = false;
+        dhcpcd.enable = true;
+        wpa_supplicant.enable = true;
       };
     };
 
