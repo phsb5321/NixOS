@@ -10,7 +10,10 @@ with lib; let
 in {
   config = mkIf cfg.enable {
     home-manager.users.${cfg.username} = {
-      # Add the font package to user packages
+      # Enable fontconfig for the user
+      fonts.fontconfig.enable = true;
+
+      # Install the JetBrains Mono Nerd Font using the new package structure
       home.packages = with pkgs; [
         nerd-fonts.jetbrains-mono
       ];
@@ -19,17 +22,12 @@ in {
         enable = true;
         theme = "Gruvbox Dark";
         shellIntegration.enableFishIntegration = true;
+        font = {
+          name = "JetBrainsMono Nerd Font";
+          size = 18;
+        };
+
         settings = {
-          # Basic settings
-          font_family = "JetBrainsMonoNerdFontMono-Regular";
-          bold_font = "JetBrainsMonoNerdFontMono-Bold";
-          italic_font = "JetBrainsMonoNerdFontMono-Italic";
-          bold_italic_font = "JetBrainsMonoNerdFontMono-BoldItalic";
-          font_size = 18;
-
-          # Disable ligatures to rule out any related issues
-          disable_ligatures = "never";
-
           # Other settings
           scrollback_lines = 10000;
           enable_audio_bell = false;
@@ -38,9 +36,24 @@ in {
           selection_background = "none";
           window_padding_width = 2;
 
+          # Font configuration
+          adjust_line_height = "0";
+          adjust_column_width = "0";
+          disable_ligatures = "never";
+
           # Clipboard control
           clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
         };
+      };
+    };
+
+    # System-level font configuration
+    fonts.fontconfig = {
+      enable = true;
+      antialias = true;
+      hinting = {
+        enable = true;
+        style = "slight";
       };
     };
   };
