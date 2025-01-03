@@ -1,19 +1,17 @@
+# ~/NixOS/hosts/experimental-vm/configuration.nix
 {
   config,
   pkgs,
   lib,
   inputs,
   systemVersion,
+  bleedPkgs,
   ...
 }: {
   imports = [
     ./hardware-configuration.nix
-    inputs.home-manager.nixosModules.home-manager
-    ../../modules/desktop
-    ../../modules/virtualization
-    ../../modules/networking
-    ../../modules/home
-    ../../modules/core
+    inputs.home-manager.nixosModules.default
+    ../../modules
   ];
 
   # Enable core module with basic system configuration
@@ -23,8 +21,17 @@
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
     extraSystemPackages = with pkgs; [
-      vim
-      wget
+      # Development Tools
+      llvm
+      clang
+
+      # System Utilities
+      bleedPkgs.zed-editor
+
+      # Additional Tools
+      seahorse
+      bleachbit
+      speechd
     ];
   };
 
@@ -32,47 +39,24 @@
   modules.desktop = {
     enable = true;
     environment = "hyprland";
-    extraPackages = with pkgs; [
-      firefox
-      kitty
-      neofetch
-      font-awesome
-    ];
     autoLogin = {
       enable = true;
       user = "notroot";
     };
-  };
-
-  # Home module configuration
-  modules.home = {
-    enable = true;
-    username = "notroot";
-    hostName = "experimental-vm";
     extraPackages = with pkgs; [
-      git
-      gh
-      zed-editor
-      nerd-fonts.jetbrains-mono
-      noto-fonts-emoji
-      noto-fonts
-      noto-fonts-cjk-sans
-      fish
+      firefox
       kitty
-      grc
-      eza
-      ffmpeg
-      gh
-      brave
-      yazi-unwrapped
-      texlive.combined.scheme-full
-      dbeaver-bin
-      amberol
-      remmina
-      obsidian
-      inputs.nixvim
-      zoxide
+      networkmanagerapplet
     ];
+    fonts = {
+      enable = true;
+      packages = with pkgs; [
+        nerd-fonts.jetbrains-mono
+      ];
+      defaultFonts = {
+        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
+      };
+    };
   };
 
   # Enable and configure networking module
@@ -90,20 +74,50 @@
       enable = true;
       allowPing = true;
       openPorts = [22];
-      trustedInterfaces = [];
+      trustedInterfaces = ["ens18" "virbr0"];
     };
   };
 
-  # Virtualization module configuration
-  modules.virtualization = {
+  # Enable the home module
+  modules.home = {
     enable = true;
-    enableLibvirtd = true;
-    enableVirtManager = true;
     username = "notroot";
+    hostName = "experimental-vm";
+    extraPackages = with pkgs; [
+      # Editors and IDEs
+      vscode
+
+      # Web Browsers
+      google-chrome
+
+      # API Testing
+      insomnia
+      postman
+
+      # File Management
+      gparted
+      baobab
+      syncthing
+      vlc
+
+      # System Utilities
+      pigz
+      unzip
+
+      # Miscellaneous Tools
+      lsof
+      discord
+      inputs.zen-browser.packages.${system}.default
+
+      # Programming Languages
+      python3
+
+      gum
+      lazygit
+    ];
   };
 
-  # System configuration
-  console.keyMap = "br-abnt2";
+  # Set default user shell
   users.defaultUserShell = pkgs.fish;
 
   # Locale settings
@@ -119,50 +133,45 @@
     LC_TIME = "pt_BR.UTF-8";
   };
 
-  # Define user account
+  # User configuration
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
-    extraGroups = ["wheel" "networkmanager"];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "audio"
+      "video"
+      "disk"
+      "input"
+      "bluetooth"
+      "docker"
+      "dialout"
+      "libvirtd"
+      "kvm"
+    ];
   };
 
-  # Enable SSH
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "no";
-      PasswordAuthentication = true;
-    };
+  # Hardware configuration
+  hardware = {
+    enableRedistributableFirmware = true;
+    pulseaudio.enable = false;
   };
 
-  # Nix settings
-  nix = {
-    settings = {
-      experimental-features = ["nix-command" "flakes"];
-      auto-optimise-store = true;
-      # download-buffer-size = 100 * 1024 * 1024; # Set to 100 MiB
-    };
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 30d";
-    };
-  };
-
-  # GPG and SSH agent
-  programs = {
-    mtr.enable = true;
-    gnupg.agent = {
+  # Security configuration
+  security = {
+    sudo.wheelNeedsPassword = true;
+    auditd.enable = true;
+    apparmor = {
       enable = true;
-      enableSSHSupport = true;
+      killUnconfinedConfinables = true;
     };
+    polkit.enable = true;
   };
 
-  # Environment configuration
-  environment = {
-    sessionVariables = {
-      EDITOR = "nvim";
-      VISUAL = "nvim";
-    };
+  # System services
+  services = {
+    fstrim.enable = true;
+    thermald.enable = true;
   };
 }
