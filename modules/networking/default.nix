@@ -99,7 +99,7 @@ in {
 
       openPorts = mkOption {
         type = types.listOf types.int;
-        default = [];
+        default = [22];
         description = "List of ports to open in the firewall";
       };
 
