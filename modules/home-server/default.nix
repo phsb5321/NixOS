@@ -1,7 +1,6 @@
 # ~/NixOS/modules/home-server/default.nix
 {
   config,
-  pkgs,
   lib,
   ...
 }: {
@@ -13,7 +12,7 @@
     default = false;
     description = ''
       Whether to enable all "home-server" services like
-      LanguageTool, qBittorrent, Plex, etc.
+      LanguageTool, qBittorrent, Custom Plex, etc.
     '';
   };
 
@@ -37,8 +36,8 @@
     # qBittorrent
     services.qbittorrent.enable = lib.mkDefault config.homeServer.enable;
 
-    # Plex
-    services.plex.enable = lib.mkDefault config.homeServer.enable;
+    # Custom Plex (renamed to avoid conflicts)
+    services.customPlex.enable = lib.mkDefault config.homeServer.enable;
 
     # Homepage Dashboard
     services.homepage.enable = lib.mkDefault config.homeServer.enable;

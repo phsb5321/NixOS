@@ -1,7 +1,6 @@
 # ~/NixOS/modules/home-server/homepage.nix
 {
   lib,
-  pkgs,
   config,
   ...
 }: {
@@ -16,61 +15,55 @@
   config = lib.mkIf config.services.homepage.enable {
     services.homepage-dashboard = {
       enable = true;
-      # Use default port 8082
       listenPort = 8082;
 
-      # Basic settings
       settings = {
-        title = "My Home Server";
+        title = "Home Server Dashboard";
         headerStyle = "clean";
+
         layout = {
-          media = {
-            style = "row";
-            columns = 3;
-          };
-          infra = {
+          Resources = {
             style = "row";
             columns = 4;
           };
+          Network = {
+            style = "row";
+            columns = 3;
+          };
         };
-      };
 
-      # Configure services that are running
-      services = [
-        {
-          Media = [
-            {
-              Plex = {
-                icon = "plex";
-                href = "http://${config.networking.hostName}:32400/web";
-                description = "Media Server";
-                widget = {
-                  type = "plex";
-                  url = "http://${config.networking.hostName}:32400";
+        # Configure services that are running
+        services = [
+          {
+            Network = [
+              {
+                qBittorrent = {
+                  icon = "qbittorrent";
+                  href = "http://localhost:8080";
+                  description = "Torrent Client";
                 };
-              };
-            }
-          ];
-        }
-        {
-          Network = [
-            {
-              qBittorrent = {
-                icon = "qbittorrent";
-                href = "http://${config.networking.hostName}:8080";
-                description = "Torrent Client";
-              };
-            }
-            {
-              LanguageTool = {
-                icon = "languagetool";
-                href = "http://${config.networking.hostName}:${toString config.services.myLanguageTool.port}";
-                description = "Grammar Checker";
-              };
-            }
-          ];
-        }
-      ];
+              }
+              {
+                LanguageTool = {
+                  icon = "mdi-language-markdown";
+                  href = "http://localhost:8081";
+                  description = "Grammar Checker";
+                };
+              }
+            ];
+          }
+        ];
+
+        widgets = [
+          {
+            resources = {
+              cpu = true;
+              memory = true;
+              disk = "/";
+            };
+          }
+        ];
+      };
     };
 
     # Open the homepage dashboard port
