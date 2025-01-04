@@ -11,6 +11,7 @@ in {
   imports = [
     ./fonts.nix
     ./gaming.nix # Import the gaming module here
+    ./java.nix
   ];
 
   options.modules.core = with lib; {
