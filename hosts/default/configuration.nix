@@ -1,6 +1,5 @@
 # ~/NixOS/hosts/default/configuration.nix
 {
-  config,
   pkgs,
   lib,
   inputs,
@@ -22,6 +21,10 @@
     stateVersion = systemVersion;
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
+    java = {
+      enable = true;
+      androidTools.enable = true; # Enable if you need ADB
+    };
     extraSystemPackages = with pkgs; [
       # Gaming Tools
       gamemode
