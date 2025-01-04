@@ -1,8 +1,6 @@
 # ~/NixOS/hosts/experimental-vm/configuration.nix
 {
-  config,
   pkgs,
-  lib,
   inputs,
   systemVersion,
   bleedPkgs,
