@@ -1,4 +1,4 @@
-# ~/NixOS/hosts/modules/default.nix
+# ~/NixOS/modules/default.nix
 {
   imports = [
     ./desktop
@@ -6,5 +6,6 @@
     ./networking
     ./home
     ./core
+    ./home-server
   ];
 }
