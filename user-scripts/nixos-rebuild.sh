@@ -83,6 +83,20 @@ verify_host() {
     fi
 }
 
+# New maintenance function for extra cleanup
+maintenance() {
+    log "Performing additional system maintenance..." "${COLORS[info]}"
+
+    # Vacuum systemd journals older than 7 days (adjust as you wish)
+    execute "Vacuum journals" sudo journalctl --vacuum-time=7d
+
+    # Remove old /tmp files
+    execute "Cleaning /tmp" sudo find /tmp -mindepth 1 -delete
+
+    # You can add more cleanup steps here, e.g., removing old log files, etc.
+    # execute "Removing old logs" sudo find /var/log -type f -mtime +7 -delete
+}
+
 # Main rebuild process
 rebuild_system() {
     local host=$1
@@ -120,9 +134,13 @@ rebuild_system() {
     execute "Cleaning boot" sudo /run/current-system/bin/switch-to-configuration boot
 
     if [[ "${DRY_RUN:-false}" != true && "${SKIP_PUSH:-false}" != true ]]; then
+        local gen
         gen=$(nixos-rebuild --flake ".#${host}" list-generations | grep current)
         execute "Git operations" git add . && git commit -m "rebuild(${host}): ${gen}" && git push
     fi
+
+    # Call the maintenance function after rebuild
+    maintenance
 }
 
 # Parse arguments
