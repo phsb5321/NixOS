@@ -57,7 +57,7 @@
         '';
         Restart = "on-failure";
         RestartSec = "5";
-        StartLimitInterval = "500";
+        StartLimitIntervalSec = "500"; # Changed from StartLimitInterval
         StartLimitBurst = "5";
 
         # Hardening options
