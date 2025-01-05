@@ -7,13 +7,8 @@
   ...
 }: {
   imports = [
-    # Hardware config for this VM
     ./hardware-configuration.nix
-
-    # Home Manager integration
     inputs.home-manager.nixosModules.default
-
-    # Main modules directory (includes home-server/default.nix)
     ../../modules
   ];
 
@@ -45,12 +40,26 @@
   # ------------------------------------------------------
   modules.desktop = {
     enable = true;
-    environment = "hyprland";
+    environment = "kde";
+    kde.version = "plasma6"; # Changed from hyprland to Plasma 6
     autoLogin = {
       enable = true;
       user = "notroot";
     };
     extraPackages = with pkgs; [
+      # KDE-specific packages
+      libsForQt5.kio-extras
+      libsForQt5.qt5.qtwayland
+      qt6.qtwayland
+      kdePackages.plasma-nm
+      kdePackages.plasma-pa
+      kdePackages.powerdevil
+      kdePackages.dolphin
+      kdePackages.kate
+      kdePackages.konsole
+      kdePackages.spectacle
+
+      # Additional applications
       firefox
       kitty
       networkmanagerapplet
@@ -135,15 +144,27 @@
   # ------------------------------------------------------
   # Home Server Module
   # ------------------------------------------------------
-  # Toggle this to "true" to enable services like
-  # LanguageTool, Home Page, qBittorrent, Plex, etc.
   homeServer.enable = true;
-
   disabledModules = ["services/misc/plex.nix"];
 
-  # Example overrides if needed:
-  # services.languagetool.server.port = 8082;
-  # services.nginx.virtualHosts."my-homepage".listen = [ { addr = "0.0.0.0"; port = 8080; } ];
+  # ------------------------------------------------------
+  # Environment Configuration
+  # ------------------------------------------------------
+  environment = {
+    sessionVariables = {
+      NIXOS_OZONE_WL = "1";
+      XDG_SESSION_TYPE = "wayland";
+      QT_QPA_PLATFORM = "wayland;xcb";
+      SDL_VIDEODRIVER = "wayland";
+      CLUTTER_BACKEND = "wayland";
+    };
+    systemPackages = with pkgs; [
+      wayland
+      xdg-utils
+      xdg-desktop-portal
+      xdg-desktop-portal-kde
+    ];
+  };
 
   # ------------------------------------------------------
   # User Shell
@@ -191,6 +212,7 @@
   # ------------------------------------------------------
   hardware = {
     enableRedistributableFirmware = true;
+    pulseaudio.enable = false;
   };
 
   # ------------------------------------------------------
@@ -204,6 +226,7 @@
       killUnconfinedConfinables = true;
     };
     polkit.enable = true;
+    rtkit.enable = true; # Required for PipeWire
   };
 
   # ------------------------------------------------------
@@ -212,6 +235,28 @@
   services = {
     fstrim.enable = true;
     thermald.enable = true;
-    pulseaudio.enable = false;
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      jack.enable = true;
+    };
+    # DBus is required for KDE
+    dbus = {
+      enable = true;
+      packages = [pkgs.dconf];
+    };
+  };
+
+  # ------------------------------------------------------
+  # XDG Portal Configuration
+  # ------------------------------------------------------
+  xdg.portal = {
+    enable = true;
+    extraPortals = [
+      pkgs.xdg-desktop-portal-kde
+      pkgs.xdg-desktop-portal-gtk
+    ];
   };
 }
