@@ -191,7 +191,6 @@
   # ------------------------------------------------------
   hardware = {
     enableRedistributableFirmware = true;
-    pulseaudio.enable = false;
   };
 
   # ------------------------------------------------------
@@ -213,5 +212,6 @@
   services = {
     fstrim.enable = true;
     thermald.enable = true;
+    pulseaudio.enable = false;
   };
 }
