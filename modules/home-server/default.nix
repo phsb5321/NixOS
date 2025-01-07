@@ -21,9 +21,9 @@
   ########################################
   imports = [
     ./languagetool.nix
-    ./homepage.nix
     ./qbittorrent.nix
     ./plex.nix
+    # ./dashy.nix
   ];
 
   ###################################################
@@ -39,7 +39,7 @@
     # Custom Plex (renamed to avoid conflicts)
     services.customPlex.enable = lib.mkDefault config.homeServer.enable;
 
-    # Homepage Dashboard
-    services.homepage.enable = lib.mkDefault config.homeServer.enable;
+    # Dashboard (renamed to avoid conflicts)
+    # services.customDashy.enable = lib.mkDefault config.homeServer.enable;
   };
 }
