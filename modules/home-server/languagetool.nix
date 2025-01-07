@@ -5,59 +5,79 @@
   config,
   ...
 }: {
-  options.services.myLanguageTool = {
-    enable = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = ''
-        Whether to enable the custom MyLanguageTool service.
-      '';
-    };
-    port = lib.mkOption {
-      type = lib.types.int;
-      default = 8081;
-      description = ''
-        Port on which the custom MyLanguageTool listens.
-      '';
-    };
-  };
+  config = {
+    services.languagetool = {
+      enable = lib.mkDefault config.homeServer.enable;
+      port = lib.mkDefault 8081;
+      allowOrigin = lib.mkDefault "*";
+      public = lib.mkDefault true;
 
-  config = lib.mkIf config.services.myLanguageTool.enable {
-    # Create system user/group for LanguageTool
-    users.users.languagetool = {
-      isSystemUser = true;
-      group = "languagetool";
-      description = "LanguageTool service user";
-    };
-    users.groups.languagetool = {};
+      package = lib.mkDefault pkgs.languagetool;
+      jrePackage = lib.mkDefault pkgs.openjdk17;
 
-    systemd.services.myLanguageTool = {
-      description = "Custom MyLanguageTool Grammar Checker Service";
-      wantedBy = ["multi-user.target"];
-      after = ["network.target"];
+      jvmOptions = lib.mkDefault [
+        "-Xmx512m"
+        "-XX:+UseG1GC"
+        "-XX:MaxGCPauseMillis=100"
+        "-Dfile.encoding=UTF-8"
+        "-Djava.awt.headless=true"
+      ];
 
-      serviceConfig = {
-        Type = "simple";
-        User = "languagetool";
-        Group = "languagetool";
-        ExecStart = ''
-          ${pkgs.openjdk17}/bin/java -cp ${pkgs.languagetool}/share/languagetool-server.jar org.languagetool.server.HTTPServer \
-            --port ${toString config.services.myLanguageTool.port} \
-            --public \
-            --allow-origin "*"
-        '';
-        Restart = "on-failure";
-        RestartSec = "5";
-
-        # Basic hardening
-        NoNewPrivileges = true;
-        PrivateTmp = true;
-        ProtectHome = true;
-        ProtectSystem = "strict";
+      settings = {
+        # Remove the problematic languageModel setting
+        maxTextLength = 100000;
+        maxCheckTimeMillis = 60000;
+        maxErrors = 500;
+        cacheSize = 1000;
+        warmup = true;
       };
     };
 
-    # Open the port in the firewall
-    networking.firewall.allowedTCPPorts = [config.services.myLanguageTool.port];
+    systemd.services.languagetool = {
+      after = ["network.target"];
+      requires = ["network.target"];
+
+      serviceConfig = {
+        Type = lib.mkForce "exec";
+        Restart = lib.mkForce "always";
+        RestartSec = lib.mkForce "5s";
+
+        RuntimeDirectory = lib.mkForce "languagetool";
+        RuntimeDirectoryMode = lib.mkForce "0750";
+        StateDirectory = lib.mkForce "languagetool";
+        StateDirectoryMode = lib.mkForce "0750";
+
+        # Security settings
+        ProtectSystem = lib.mkForce "strict";
+        ProtectHome = lib.mkForce "yes";
+        PrivateTmp = lib.mkForce true;
+        NoNewPrivileges = lib.mkForce true;
+
+        # Resource limits
+        LimitNOFILE = lib.mkForce 4096;
+        MemoryHigh = lib.mkForce "768M";
+        MemoryMax = lib.mkForce "1G";
+        CPUQuota = lib.mkForce "200%";
+
+        # Environment setup
+        WorkingDirectory = lib.mkForce "/var/lib/languagetool";
+      };
+
+      environment = {
+        LANG = "en_US.UTF-8";
+        LC_ALL = "en_US.UTF-8";
+      };
+    };
+
+    # Create directory structure
+    systemd.tmpfiles.rules = [
+      "d /var/lib/languagetool 0750 languagetool languagetool -"
+      "d /var/log/languagetool 0750 languagetool languagetool -"
+    ];
+
+    # Firewall configuration
+    networking.firewall.allowedTCPPorts = [
+      config.services.languagetool.port
+    ];
   };
 }
