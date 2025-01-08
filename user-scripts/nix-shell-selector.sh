@@ -3,210 +3,85 @@
 set -euo pipefail
 
 # Configuration
-SCRIPT_VERSION="3.1.0"
-FLAKE_DIR="$HOME/NixOS"
-LOG_DIR="$HOME/.local/share/nixos-rebuild/logs"
-STATE_DIR="$HOME/.local/share/nixos-rebuild/state"
-CACHE_DIR="$HOME/.cache/nixos-rebuild"
+CACHE_FILE="${HOME}/.nix-shell-cache"
+SHELLS_DIR="${HOME}/NixOS/shells"
 
-declare -A COLORS=(
-    ["primary"]="212"
-    ["error"]="196"
-    ["warning"]="214"
-    ["success"]="84"
-    ["info"]="39"
-)
-
-# Check required tools
-check_requirements() {
-    local -a required=("gum" "nix" "git" "alejandra")
-    local missing=()
-
-    for cmd in "${required[@]}"; do
-        if ! command -v "$cmd" &> /dev/null; then
-            missing+=("$cmd")
-        fi
-    done
-
-    if [ ${#missing[@]} -ne 0 ]; then
-        gum style --foreground "${COLORS[error]}" "Missing: ${missing[*]}"
-        exit 1
-    fi
+# Function to display styled messages
+display_message() {
+  local message="$1"
+  gum style --foreground 212 "🚀 ${message}"
 }
 
-# Clean logging function
-log() {
-    local msg=$1
-    local color=${2:-${COLORS[info]}}
-    gum style --foreground "$color" "$msg"
+# Function to check if a command exists
+command_exists() {
+  command -v "$1" &>/dev/null
 }
 
-# Execute command with error logging
-execute() {
-    local name=$1
-    shift
-    local cmd=("$@")
-    local temp_log="${CACHE_DIR}/temp_${RANDOM}.log"
-
-    mkdir -p "${CACHE_DIR}"
-
-    if [[ "${DRY_RUN:-false}" == true ]]; then
-        log "Would execute: ${cmd[*]}"
-        return 0
-    fi
-
-    # Run command and show output in real-time
-    local output
-    if output=$(${cmd[@]} 2>&1); then
-        log "✓ $name" "${COLORS[success]}"
-        if [[ -n "$output" ]]; then
-            echo "$output"
-            echo "$output" >> "$LOG_FILE"
-        fi
-    else
-        local exit_code=$?
-        log "✗ $name failed" "${COLORS[error]}"
-        if [[ -n "$output" ]]; then
-            echo "$output"
-            echo "$output" >> "$LOG_FILE"
-        fi
-        return $exit_code
-    fi
+# Animated loading function
+loading_animation() {
+  local message="$1"
+  gum spin --spinner dot --title "${message}" -- sleep 0.5
 }
 
-# Show available hosts
-list_hosts() {
-    local hosts_dir="$FLAKE_DIR/hosts"
-    if [[ -d "$hosts_dir" ]]; then
-        log "Available hosts:"
-        for host in "$hosts_dir"/*/; do
-            if [[ -d "$host" ]]; then
-                log "• $(basename "$host")" "${COLORS[primary]}"
-            fi
-        done
-    fi
-}
+# Ensure required commands are available
+for cmd in gum find nix-shell fish; do
+  if ! command_exists "${cmd}"; then
+    gum style --foreground 9 "⚠️  ${cmd} is required but not installed. Please install it first."
+    exit 1
+  fi
+done
 
-# Verify host exists
-verify_host() {
-    local host=$1
-    if [[ ! -d "$FLAKE_DIR/hosts/$host" ]]; then
-        log "Host '$host' not found." "${COLORS[error]}"
-        list_hosts
-        exit 1
-    fi
-}
+# Find all *.nix files in the SHELLS_DIR
+loading_animation "🔍 Searching for Nix shells"
+mapfile -t shell_files < <(find "${SHELLS_DIR}" -type f -name "*.nix" | sort)
 
-# Main rebuild process
-rebuild_system() {
-    local host=$1
-    cd "$FLAKE_DIR"
+# If no shells found, exit
+if [ ${#shell_files[@]} -eq 0 ]; then
+  gum style --foreground 9 "😕 No Nix shells found in ${SHELLS_DIR}"
+  exit 1
+fi
 
-    # Initialize logging
-    mkdir -p "$LOG_DIR" "$STATE_DIR"
-    LOG_FILE="${LOG_DIR}/nixos-rebuild-${host}-$(date '+%Y%m%d_%H%M%S').log"
+# Create a list of shell names without the directory path and file extension
+shell_options=()
+for shell_file in "${shell_files[@]}"; do
+  shell_name=$(basename "${shell_file}" .nix)
+  shell_options+=("${shell_name}")
+done
 
-    if [[ "${ROLLBACK:-false}" == true ]]; then
-        execute "Rolling back system" sudo nixos-rebuild rollback --flake ".#${host}"
-        return
-    fi
+# Check if a last-used shell is stored in the cache
+last_shell=""
+if [ -f "${CACHE_FILE}" ]; then
+  last_shell=$(<"${CACHE_FILE}")
+fi
 
-    if [[ "${SKIP_UPDATE:-false}" != true ]]; then
-        log "Updating system..."
-        execute "Update channels" sudo nix-channel --update
-        execute "Update flake" nix flake update
-    fi
+# Display a header using gum
+gum style --foreground 212 "🐚 Select your Nix Shell Environment"
 
-    execute "Collecting garbage" sudo nix-collect-garbage --delete-older-than "${KEEP_GENERATIONS:-5}d"
+# Prompt user to select a shell using gum
+if [ -n "${last_shell}" ] && [[ " ${shell_options[*]} " == *" ${last_shell} "* ]]; then
+  choice=$(gum choose --selected="${last_shell}" --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
+else
+  choice=$(gum choose --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
+fi
 
-    if [[ "${SKIP_OPTIMIZE:-false}" != true ]]; then
-        execute "Optimizing store" sudo nix-store --optimize
-    fi
+# Check if the user made a valid choice
+if [ -z "${choice}" ]; then
+  gum style --foreground 9 "😔 No valid selection made. Exiting."
+  exit 1
+fi
 
-    if [[ "${SKIP_FORMAT:-false}" != true ]]; then
-        execute "Formatting files" alejandra .
-    fi
+# Save the chosen shell to the cache
+echo "${choice}" >"${CACHE_FILE}"
 
-    local rebuild_cmd=(sudo nixos-rebuild switch --flake ".#${host}")
-    [[ "${DRY_RUN:-false}" == true ]] && rebuild_cmd+=(--dry-run)
+# Map the choice to the corresponding nix-shell command
+selected_shell="${SHELLS_DIR}/${choice}.nix"
 
-    execute "Rebuilding system" "${rebuild_cmd[@]}"
-    execute "Cleaning boot" sudo /run/current-system/bin/switch-to-configuration boot
-
-    if [[ "${DRY_RUN:-false}" != true && "${SKIP_PUSH:-false}" != true ]]; then
-        gen=$(nixos-rebuild --flake ".#${host}" list-generations | grep current)
-        execute "Git operations" sh -c "git add . && git commit -m 'rebuild(${host}): ${gen}' && git push"
-    fi
-
-    log "Full log available at: $LOG_FILE" "${COLORS[info]}"
-}
-
-# Parse arguments
-main() {
-    local host=""
-    DRY_RUN=false
-    ROLLBACK=false
-    SKIP_UPDATE=false
-    SKIP_OPTIMIZE=false
-    SKIP_FORMAT=false
-    SKIP_PUSH=false
-    KEEP_GENERATIONS=5
-
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -n|--dry-run) DRY_RUN=true ;;
-            --rollback) ROLLBACK=true ;;
-            --no-update) SKIP_UPDATE=true ;;
-            --no-optimize) SKIP_OPTIMIZE=true ;;
-            --no-format) SKIP_FORMAT=true ;;
-            --no-push) SKIP_PUSH=true ;;
-            -k|--keep) shift; KEEP_GENERATIONS=$1 ;;
-            -h|--help)
-                log "Usage: nixos-rebuild [options] <host>"
-                log "Options:"
-                log "  -n, --dry-run      Dry run mode"
-                log "  --rollback         Rollback system"
-                log "  --no-update        Skip updates"
-                log "  --no-optimize      Skip optimization"
-                log "  --no-format        Skip formatting"
-                log "  --no-push          Skip git push"
-                log "  -k, --keep DAYS    Keep generations for DAYS days"
-                list_hosts
-                exit 0
-                ;;
-            *)
-                if [[ -z "$host" ]]; then
-                    host=$1
-                else
-                    log "Unknown option: $1" "${COLORS[error]}"
-                    exit 1
-                fi
-                ;;
-        esac
-        shift
-    done
-
-    if [[ -z "$host" ]]; then
-        log "No host specified" "${COLORS[error]}"
-        list_hosts
-        exit 1
-    fi
-
-    verify_host "$host"
-
-    if [[ $DRY_RUN == true ]]; then
-        log "Dry run mode - no changes will be made" "${COLORS[warning]}"
-    fi
-
-    if [[ $DRY_RUN == false ]]; then
-        if ! gum confirm "Ready to rebuild $host. Continue?"; then
-            log "Operation cancelled"
-            exit 0
-        fi
-    fi
-
-    rebuild_system "$host"
-}
-
-check_requirements
-main "$@"
+# Ensure the file exists (should always exist, but checking for robustness)
+if [ -f "${selected_shell}" ]; then
+  display_message "Launching ${choice} shell... 🚀"
+  loading_animation "🔧 Preparing your development environment"
+  exec nix-shell "${selected_shell}" --command fish
+else
+  gum style --foreground 9 "😱 The shell file '${selected_shell}' does not exist."
+  exit 1
+fi
