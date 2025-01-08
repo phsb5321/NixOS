@@ -2,9 +2,7 @@
 # and may be overwritten by future invocations.  Please make changes
 # to /etc/nixos/configuration.nix instead.
 {
-  config,
   lib,
-  pkgs,
   modulesPath,
   ...
 }: {
@@ -38,6 +36,13 @@
     device = "/dev/disk/by-uuid/5980-E520";
     fsType = "vfat";
     options = ["defaults" "umask=0077" "dmask=0077" "fmask=0077" "utf8" "flush"];
+  };
+
+  # Add this configuration for the 4TB disk
+  fileSystems."/home/notroot/Documents/Storage" = {
+    device = "/dev/disk/by-uuid/4ec3a7a7-5c80-4ff8-977b-080008381b8e";
+    fsType = "ext4";
+    options = ["defaults" "noatime"];
   };
 
   swapDevices = [];
