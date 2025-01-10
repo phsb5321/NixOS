@@ -134,6 +134,7 @@ in {
         popsicle
         bitwarden-cli
         stablePkgs.awscli2 # Use bleeding edge version
+        rbw
 
         # System Monitoring
         neofetch
