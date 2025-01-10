@@ -21,7 +21,13 @@
     dataDir = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/qbittorrent";
-      description = "Directory where qBittorrent stores its data.";
+      description = "Directory where qBittorrent stores its application data.";
+    };
+
+    downloadDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/home/notroot/Documents/Storage/qbittorrent-downloads";
+      description = "Directory where qBittorrent stores downloaded files.";
     };
   };
 
@@ -35,9 +41,10 @@
     };
     users.groups.qbittorrent = {};
 
-    # Ensure the data directory exists with correct permissions
+    # Ensure the data directory and download directory exist with correct permissions
     systemd.tmpfiles.rules = [
       "d '${config.services.qbittorrent.dataDir}' 0755 qbittorrent qbittorrent - -"
+      "d '${config.services.qbittorrent.downloadDir}' 0755 qbittorrent qbittorrent - -"
     ];
 
     systemd.services.qbittorrent = {
@@ -64,7 +71,10 @@
         NoNewPrivileges = true;
         ProtectHome = true;
         ProtectSystem = "strict";
-        ReadWritePaths = [config.services.qbittorrent.dataDir];
+        ReadWritePaths = [
+          config.services.qbittorrent.dataDir
+          config.services.qbittorrent.downloadDir
+        ];
         PrivateTmp = true;
       };
     };
