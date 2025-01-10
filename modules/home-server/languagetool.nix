@@ -1,4 +1,3 @@
-# ~/NixOS/modules/home-server/languagetool.nix
 {
   lib,
   pkgs,
@@ -24,7 +23,6 @@
       ];
 
       settings = {
-        # Remove the problematic languageModel setting
         maxTextLength = 100000;
         maxCheckTimeMillis = 60000;
         maxErrors = 500;
@@ -52,12 +50,6 @@
         ProtectHome = lib.mkForce "yes";
         PrivateTmp = lib.mkForce true;
         NoNewPrivileges = lib.mkForce true;
-
-        # Resource limits
-        LimitNOFILE = lib.mkForce 4096;
-        MemoryHigh = lib.mkForce "768M";
-        MemoryMax = lib.mkForce "1G";
-        CPUQuota = lib.mkForce "200%";
 
         # Environment setup
         WorkingDirectory = lib.mkForce "/var/lib/languagetool";

@@ -1,4 +1,4 @@
-# ~/NixOS/modules/home-server/default.nix
+# Modify services configuration with intranet IP and update languagetool URL
 {
   config,
   lib,
@@ -40,14 +40,14 @@
           Media = [
             {
               Plex = {
-                href = "http://localhost:32400/web";
+                href = "http://192.168.1.87:32400/web"; # Replace with intranet IP
                 icon = "plex.png";
                 description = "Media server";
               };
             }
             {
               qBittorrent = {
-                href = "http://localhost:8080";
+                href = "http://192.168.1.87:8080"; # Replace with intranet IP
                 icon = "qbittorrent.png";
                 description = "Download manager";
               };
@@ -58,7 +58,7 @@
           Tools = [
             {
               LanguageTool = {
-                href = "http://localhost:8081";
+                href = "http://192.168.1.87:8081/check"; # Updated to intranet IP and `/check` route
                 icon = "language.png";
                 description = "Grammar checker API";
               };
