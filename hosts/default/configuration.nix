@@ -45,6 +45,10 @@
       bleachbit
       lact
       speechd
+      waydroid
+
+      # AMD
+      bleedPkgs.amf
     ];
   };
 
