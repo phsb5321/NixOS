@@ -100,7 +100,7 @@ ensure_directories() {
         "$LOG_DIR"
         "$STATE_DIR"
         "$CACHE_DIR"
-        "${LOCK_FILE%/*}" # Lock file directory
+        "${LOCK_FILE%/*}"  # Lock file directory
     )
 
     for dir in "${user_dirs[@]}"; do
@@ -116,7 +116,7 @@ check_requirements() {
     local missing=()
 
     for cmd in "${required[@]}"; do
-        if ! command -v "$cmd" &>/dev/null; then
+        if ! command -v "$cmd" &> /dev/null; then
             missing+=("$cmd")
         fi
     done
@@ -138,7 +138,7 @@ log() {
 
     # Log to file if LOG_FILE is defined
     if [[ -n "${LOG_FILE:-}" ]]; then
-        echo "[$timestamp] $msg" >>"$LOG_FILE"
+        echo "[$timestamp] $msg" >> "$LOG_FILE"
     fi
 
     # Log to console with color using gum
@@ -165,7 +165,7 @@ execute() {
     local temp_error
     temp_error=$(mktemp)
 
-    while ((retry_count < max_retries)); do
+    while (( retry_count < max_retries )); do
         if [[ "${DRY_RUN:-false}" == true ]]; then
             log "Would execute: ${cmd[*]}" "info"
             rm -f "$temp_error"
@@ -175,7 +175,7 @@ execute() {
         log "Executing: $name (attempt $((retry_count + 1))/${max_retries})" "info"
 
         # Execute command and capture both stdout and stderr
-        if { sudo "${cmd[@]}" 2> >(tee "$temp_error" >&2) >>"$LOG_FILE"; }; then
+        if { sudo "${cmd[@]}" 2> >(tee "$temp_error" >&2) >> "$LOG_FILE"; }; then
             log "✓ $name" "success"
             rm -f "$temp_error"
             return 0
@@ -189,9 +189,9 @@ execute() {
             log "Error output:" "error"
             echo "$error_log" | while IFS= read -r line; do
                 log "  $line" "error"
-            done >>"$LOG_FILE"
+            done >> "$LOG_FILE"
 
-            if ((retry_count < max_retries)); then
+            if (( retry_count < max_retries )); then
                 log "Retrying in 5 seconds..." "warning"
                 sleep 5
                 # Refresh sudo timestamp
@@ -247,7 +247,7 @@ rebuild_system() {
     cd "$FLAKE_DIR" || die "Could not change to flake directory"
 
     # Create lock file
-    echo "$$" >"$LOCK_FILE"
+    echo "$$" > "$LOCK_FILE"
 
     if [[ "${ROLLBACK:-false}" == true ]]; then
         execute "Rolling back system" nixos-rebuild rollback --flake ".#${host}"
@@ -348,31 +348,28 @@ main() {
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
-        -n | --dry-run) DRY_RUN=true ;;
-        --rollback) ROLLBACK=true ;;
-        --no-update) SKIP_UPDATE=true ;;
-        --no-optimize) SKIP_OPTIMIZE=true ;;
-        --no-format) SKIP_FORMAT=true ;;
-        --no-push) SKIP_PUSH=true ;;
-        -k | --keep)
-            shift
-            KEEP_GENERATIONS=$1
-            ;;
-        -h | --help)
-            show_help
-            exit 0
-            ;;
-        -l | --list)
-            list_hosts
-            exit 0
-            ;;
-        *)
-            if [[ -z "$host" ]]; then
-                host=$1
-            else
-                die "Unknown option: $1"
-            fi
-            ;;
+            -n|--dry-run) DRY_RUN=true ;;
+            --rollback) ROLLBACK=true ;;
+            --no-update) SKIP_UPDATE=true ;;
+            --no-optimize) SKIP_OPTIMIZE=true ;;
+            --no-format) SKIP_FORMAT=true ;;
+            --no-push) SKIP_PUSH=true ;;
+            -k|--keep) shift; KEEP_GENERATIONS=$1 ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -l|--list)
+                list_hosts
+                exit 0
+                ;;
+            *)
+                if [[ -z "$host" ]]; then
+                    host=$1
+                else
+                    die "Unknown option: $1"
+                fi
+                ;;
         esac
         shift
     done
@@ -420,7 +417,7 @@ main() {
 }
 
 show_help() {
-    cat <<EOF
+    cat << EOF
 NixOS Rebuild Script v${SCRIPT_VERSION}
 
 Usage: $SCRIPT_NAME [options] <host>
