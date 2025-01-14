@@ -21,7 +21,7 @@
     defaultLocale = "en_US.UTF-8";
     java = {
       enable = true;
-      androidTools.enable = true; # Enable if you need ADB
+      androidTools.enable = true;
     };
     extraSystemPackages = with pkgs; [
       # Gaming Tools
@@ -47,8 +47,16 @@
       speechd
       waydroid
 
-      # AMD
-      bleedPkgs.amf
+      # AMD GPU and Video Tools
+      rocmPackages.clr.icd
+      rocmPackages.clr
+      pkgs.vulkan-tools
+      pkgs.vulkan-loader
+      pkgs.vulkan-validation-layers
+      pkgs.libva-utils
+      pkgs.vdpauinfo
+      pkgs.glxinfo
+      pkgs.ffmpeg-full
     ];
   };
 
@@ -60,15 +68,15 @@
   modules.desktop = {
     enable = true;
     environment = "kde";
-    kde.version = "plasma5"; # Use Plasma 5
+    kde.version = "plasma5";
     autoLogin = {
       enable = true;
       user = "notroot";
     };
     extraPackages = with pkgs; [
-      plasma5Packages.plasma-nm # KDE Network Management applet
-      plasma5Packages.plasma-pa # Audio volume applet
-      networkmanagerapplet # Backup network manager applet
+      plasma5Packages.plasma-nm
+      plasma5Packages.plasma-pa
+      networkmanagerapplet
     ];
     fonts = {
       enable = true;
@@ -106,40 +114,23 @@
     username = "notroot";
     hostName = "default";
     extraPackages = with pkgs; [
-      # Editors and IDEs
       vscode
-
-      # Web Browsers
       google-chrome
-
-      # API Testing
       insomnia
       postman
-
-      # File Management
       gparted
       baobab
       syncthing
       vlc
-
-      # System Utilities
       pigz
       mangohud
       unzip
-
-      # Music Streaming
       spotify
-
-      # Miscellaneous Tools
       lsof
       discord
       corectrl
       inputs.zen-browser.packages.${system}.default
-
-      # Programming Languages
       python3
-
-      # Android
       android-tools
     ];
   };
@@ -176,26 +167,44 @@
       "dialout"
       "libvirtd"
       "kvm"
+      "render"
     ];
   };
 
   # Hardware configuration
   hardware = {
-    graphics = {
-      enable = true;
-      enable32Bit = true;
-    };
     enableRedistributableFirmware = true;
     bluetooth = {
       enable = true;
       powerOnBoot = true;
     };
-    pulseaudio.enable = false;
     cpu.amd.updateMicrocode = true;
+
+    # Graphics and AMD GPU Configuration
+    graphics = {
+      enable = true;
+      enable32Bit = true;
+      extraPackages = with pkgs; [
+        rocmPackages.clr.icd
+        rocmPackages.clr
+        amdvlk
+        vaapiVdpau
+        libvdpau-va-gl
+      ];
+    };
   };
 
+  # Environment variables for AMD GPU and hardware acceleration
+  environment.variables = {
+    LIBVA_DRIVER_NAME = "radeonsi";
+    AMD_VULKAN_ICD = "RADV";
+    VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
+    VDPAU_DRIVER = "radeonsi";
+    __GLX_VENDOR_LIBRARY_NAME = "mesa";
+  };
+
+  # Services configuration
   services = {
-    # Syncthing service configuration
     syncthing = {
       enable = true;
       user = "notroot";
@@ -205,7 +214,8 @@
       overrideFolders = true;
     };
 
-    # Ollama service configuration
+    fstrim.enable = true;
+    thermald.enable = true;
     ollama.enable = false;
   };
 
@@ -283,12 +293,6 @@
       "amdgpu.cik_support=1"
     ];
     tmp.useTmpfs = true;
-  };
-
-  # System services
-  services = {
-    fstrim.enable = true;
-    thermald.enable = true;
   };
 
   # CoreCtrl sudo configuration
