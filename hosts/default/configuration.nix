@@ -46,6 +46,7 @@
       lact
       speechd
       waydroid
+      anydesk
 
       # AMD GPU and Video Tools
       rocmPackages.clr.icd
@@ -114,23 +115,40 @@
     username = "notroot";
     hostName = "default";
     extraPackages = with pkgs; [
+      # Editors and IDEs
       vscode
+
+      # Web Browsers
       google-chrome
+
+      # API Testing
       insomnia
       postman
+
+      # File Management
       gparted
       baobab
       syncthing
       vlc
+
+      # System Utilities
       pigz
       mangohud
       unzip
+
+      # Music Streaming
       spotify
+
+      # Miscellaneous Tools
       lsof
       discord
       corectrl
       inputs.zen-browser.packages.${system}.default
+
+      # Programming Languages
       python3
+
+      # Android
       android-tools
     ];
   };
