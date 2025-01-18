@@ -35,6 +35,7 @@
       bleedPkgs.zed-editor
       guvcview
       obs-studio
+      gimp
 
       # Development Tools
       llvm
