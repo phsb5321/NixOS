@@ -43,22 +43,20 @@ die() {
     exit 1
 }
 
-# Enhanced permission checker
+# Enhanced permission checker that ensures sudo access
 check_sudo_access() {
-    if sudo -n true 2>/dev/null; then
-        return 0
+    if ! sudo -v &>/dev/null; then
+        if ! sudo -v; then
+            die "Root privileges are required to run this script."
+        fi
     fi
-
-    local password
-    echo "Sudo access is required for system operations."
-    password=$(gum input --password --prompt "Password for $USER: ")
-
-    if echo "$password" | sudo -S true >/dev/null 2>&1; then
+    # Keep sudo alive in the background
+    (while true; do
         sudo -v
-        return 0
-    else
-        die "Incorrect password or sudo access denied"
-    fi
+        sleep 50
+    done) &
+    SUDO_PID=$!
+    trap 'kill -9 $SUDO_PID' EXIT
 }
 
 ensure_directories() {
@@ -82,7 +80,7 @@ check_requirements() {
     local missing=()
 
     for cmd in "${required[@]}"; do
-        if ! command -v "$cmd" &> /dev/null; then
+        if ! command -v "$cmd" &>/dev/null; then
             missing+=("$cmd")
         fi
     done
@@ -103,7 +101,7 @@ log() {
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 
     # Always log to file
-    echo "[$timestamp] ($level) $msg" >> "$LOG_FILE"
+    echo "[$timestamp] ($level) $msg" >>"$LOG_FILE"
 
     # Only show non-info messages in terminal
     if [[ "$level" != "info" ]]; then
@@ -130,15 +128,44 @@ execute() {
         return 0
     fi
 
-    log "Executing: $name" "info"
-    if output=$(sudo "${cmd[@]}" 2>&1); then
-        log "$output" "info"
+    local temp_out
+    temp_out=$(mktemp)
+
+    if sudo "${cmd[@]}" >"$temp_out" 2>&1; then
+        local output
+        output=$(cat "$temp_out")
+        rm -f "$temp_out"
+
+        # Only log output if it's not empty
+        if [[ -n "$output" ]]; then
+            log "$output" "info"
+        fi
+
         gum style --foreground "${COLORS[success]}" "✓ $name"
         return 0
     else
         local exit_code=$?
-        log "Command failed: $name (exit code: $exit_code)" "error"
-        log "$output" "error"
+        local output
+        output=$(cat "$temp_out")
+        rm -f "$temp_out"
+
+        # Format error output nicely
+        if [[ -n "$output" ]]; then
+            # Display a clean error message
+            echo
+            gum style --foreground "${COLORS[error]}" "Error in $name:"
+            echo "$output" | while IFS= read -r line; do
+                if [[ "$line" =~ ^error: ]]; then
+                    gum style --foreground "${COLORS[error]}" "  $line"
+                elif [[ "$line" =~ ^warning: ]]; then
+                    gum style --foreground "${COLORS[warning]}" "  $line"
+                else
+                    echo "  $line"
+                fi
+            done
+            echo
+        fi
+
         gum style --foreground "${COLORS[error]}" "✗ $name failed"
         return $exit_code
     fi
@@ -181,7 +208,7 @@ rebuild_system() {
     local host=$1
     cd "$FLAKE_DIR" || die "Could not change to flake directory"
 
-    echo "$$" > "$LOCK_FILE"
+    echo "$$" >"$LOCK_FILE"
 
     if [[ "${SKIP_UPDATE:-false}" != true ]]; then
         gum style --foreground "${COLORS[info]}" "Updating system..."
@@ -253,6 +280,9 @@ maintenance() {
 # Main script
 #######################################
 main() {
+    # Check sudo access first
+    check_sudo_access
+
     local host=""
     DRY_RUN=false
     SKIP_UPDATE=false
@@ -263,27 +293,30 @@ main() {
 
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -n|--dry-run) DRY_RUN=true ;;
-            --no-update) SKIP_UPDATE=true ;;
-            --no-optimize) SKIP_OPTIMIZE=true ;;
-            --no-format) SKIP_FORMAT=true ;;
-            --no-push) SKIP_PUSH=true ;;
-            -k|--keep) shift; KEEP_GENERATIONS=$1 ;;
-            -h|--help)
-                show_help
-                exit 0
-                ;;
-            -l|--list)
-                list_hosts
-                exit 0
-                ;;
-            *)
-                if [[ -z "$host" ]]; then
-                    host=$1
-                else
-                    die "Unknown option: $1"
-                fi
-                ;;
+        -n | --dry-run) DRY_RUN=true ;;
+        --no-update) SKIP_UPDATE=true ;;
+        --no-optimize) SKIP_OPTIMIZE=true ;;
+        --no-format) SKIP_FORMAT=true ;;
+        --no-push) SKIP_PUSH=true ;;
+        -k | --keep)
+            shift
+            KEEP_GENERATIONS=$1
+            ;;
+        -h | --help)
+            show_help
+            exit 0
+            ;;
+        -l | --list)
+            list_hosts
+            exit 0
+            ;;
+        *)
+            if [[ -z "$host" ]]; then
+                host=$1
+            else
+                die "Unknown option: $1"
+            fi
+            ;;
         esac
         shift
     done
@@ -305,7 +338,6 @@ main() {
     verify_flake_directory
     verify_host "$host"
     setup_logging
-    check_sudo_access
 
     if [[ $DRY_RUN == true ]]; then
         gum style --foreground "${COLORS[warning]}" "Running in dry-run mode - no changes will be made"
@@ -322,7 +354,7 @@ main() {
 }
 
 show_help() {
-    cat << EOF
+    cat <<EOF
 NixOS Rebuild Script v${SCRIPT_VERSION}
 
 Usage: $SCRIPT_NAME [options] <host>

@@ -50,7 +50,7 @@
       allowBroken = true;
     };
 
-    # Define standard (pkgs) and bleeding-edge (bleedPkgs) package sets
+    # Create package sets for different channels
     pkgs = import nixpkgs {
       inherit system;
       config = nixpkgsConfig;
@@ -68,16 +68,29 @@
 
     # Common specialArgs to pass into each NixOS system
     commonSpecialArgs = {
-      inherit inputs pkgs bleedPkgs systemVersion stablePkgs;
+      inherit inputs systemVersion bleedPkgs stablePkgs;
     };
 
     # Define common modules for all configurations
     commonModules = [
-      # Existing module with config overrides
+      # Configure nixpkgs
       {
-        nixpkgs.config = nixpkgsConfig;
-        home-manager.users.notroot.home.enableNixpkgsReleaseCheck = false;
+        nixpkgs = {
+          config = nixpkgsConfig;
+          overlays = [];
+        };
       }
+
+      # Home-manager configuration
+      {
+        home-manager = {
+          useGlobalPkgs = true;
+          useUserPackages = true;
+          extraSpecialArgs = commonSpecialArgs;
+          users.notroot.home.enableNixpkgsReleaseCheck = false;
+        };
+      }
+
       # Additional module that sets a global download-buffer-size
       {
         nix = {
