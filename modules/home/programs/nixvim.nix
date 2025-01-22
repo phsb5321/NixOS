@@ -83,7 +83,7 @@ in {
           dashboard.enable = true;
           web-devicons.enable = true;
           copilot-vim = {
-            enable = true;
+            enable = false;
             settings = {};
           };
         };
