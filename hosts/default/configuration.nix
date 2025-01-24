@@ -50,8 +50,8 @@
       anydesk
 
       # AMD GPU and Video Tools
-      rocmPackages.clr.icd
-      rocmPackages.clr
+      # rocmPackages.clr.icd
+      # rocmPackages.clr
       pkgs.vulkan-tools
       pkgs.vulkan-loader
       pkgs.vulkan-validation-layers
@@ -204,8 +204,8 @@
       enable = true;
       enable32Bit = true;
       extraPackages = with pkgs; [
-        rocmPackages.clr.icd
-        rocmPackages.clr
+        # rocmPackages.clr.icd
+        # rocmPackages.clr
         amdvlk
         vaapiVdpau
         libvdpau-va-gl
