@@ -1,5 +1,6 @@
 # ~/NixOS/hosts/modules/core/default.nix
 {
+  inputs,
   config,
   lib,
   pkgs,
@@ -135,6 +136,7 @@ in {
         bitwarden-cli
         stablePkgs.awscli2 # Use bleeding edge version
         rbw
+        inputs.firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin
 
         # System Monitoring
         neofetch
