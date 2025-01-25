@@ -14,7 +14,7 @@ in {
         enable = true;
         settings = {
           theme = "gruvbox-dark";
-          default_shell = "fish";
+          default_shell = "zsh";
         };
       };
     };

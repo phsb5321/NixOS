@@ -64,7 +64,7 @@
 
   # Set system options
   console.keyMap = "br-abnt2";
-  users.defaultUserShell = pkgs.fish;
+  users.defaultUserShell = pkgs.zsh;
 
   # Enable and configure desktop module
   modules.desktop = {
@@ -242,6 +242,9 @@
   virtualisation = {
     docker = {
       enable = true;
+      daemon.settings = {
+        dns = ["8.8.8.8" "8.8.4.4"];
+      };
       rootless = {
         enable = true;
         setSocketVariable = true;
@@ -259,6 +262,7 @@
   # Gaming configuration
   programs = {
     fish.enable = true;
+    zsh.enable = true;
     steam = {
       enable = true;
       remotePlay.openFirewall = true;
