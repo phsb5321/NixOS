@@ -65,12 +65,32 @@ in {
               noto-fonts
               noto-fonts-cjk-sans
 
+              # Shell and Terminal
               fish
+              zsh
+              starship # Cross-shell prompt
               kitty
-              grc
-              eza
+              grc # Generic colorizer
+              eza # Modern ls replacement
+              bat # Modern cat replacement
+              vivid # LS_COLORS generator
+              zsh-syntax-highlighting
+              zsh-autosuggestions
+              zsh-you-should-use
+              zsh-fast-syntax-highlighting
+              fishPlugins.tide
+              fishPlugins.grc
+
+              # Development Tools
               ffmpeg
               gh
+              git
+              zoxide # Smart directory jumper
+              fzf # Fuzzy finder
+              ripgrep # Fast grep
+              fd # Fast find
+
+              # Applications
               brave
               yazi-unwrapped
               texlive.combined.scheme-full
