@@ -114,6 +114,34 @@ in {
       printing.enable = true;
     };
 
+    # Virtualization configuration
+    virtualisation = {
+      containers.enable = true;
+
+      docker = {
+        enable = true;
+        daemon.settings = {
+          dns = ["8.8.8.8" "8.8.4.4"];
+        };
+        rootless = {
+          enable = true;
+          setSocketVariable = true;
+        };
+      };
+
+      podman = {
+        enable = true;
+        # Removed dockerCompat since we're running Docker alongside Podman
+        defaultNetwork.settings.dns_enabled = true;
+        enableNvidia = false;
+      };
+
+      oci-containers = {
+        backend = "podman";
+        containers = {};
+      };
+    };
+
     # Common system packages
     environment.systemPackages = with pkgs;
       [
@@ -137,6 +165,7 @@ in {
         stablePkgs.awscli2 # Use bleeding edge version
         rbw
         inputs.firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin
+        vdhcoapp
 
         # System Monitoring
         neofetch
@@ -168,6 +197,11 @@ in {
         alejandra
         nixd
         nil
+
+        # Container Tools
+        podman-compose
+        podman-tui
+        dive
       ]
       ++ cfg.extraSystemPackages;
 
