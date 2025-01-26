@@ -238,27 +238,6 @@
     ollama.enable = false;
   };
 
-  # Virtualization
-  virtualisation = {
-    docker = {
-      enable = true;
-      daemon.settings = {
-        dns = ["8.8.8.8" "8.8.4.4"];
-      };
-      rootless = {
-        enable = true;
-        setSocketVariable = true;
-      };
-    };
-  };
-
-  modules.virtualization = {
-    enable = true;
-    enableLibvirtd = true;
-    enableVirtManager = true;
-    username = "notroot";
-  };
-
   # Gaming configuration
   programs = {
     fish.enable = true;
