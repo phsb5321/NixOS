@@ -2,7 +2,6 @@
 {
   imports = [
     ./desktop
-    ./virtualization
     ./networking
     ./home
     ./core

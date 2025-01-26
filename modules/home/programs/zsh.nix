@@ -86,7 +86,7 @@ in {
             ll = "eza -la --icons --git";
             lt = "eza -T --icons --git-ignore";
             tree = "eza --tree --icons";
-            cat = "bat --style=full";
+            cat = "bat --style=full --paging=never";
             grep = "grep --color=auto";
             diff = "diff --color=auto";
             ip = "ip --color=auto";
