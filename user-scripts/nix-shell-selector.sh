@@ -24,7 +24,7 @@ loading_animation() {
 }
 
 # Ensure required commands are available
-for cmd in gum find nix-shell fish; do
+for cmd in gum find nix-shell zsh; do
   if ! command_exists "${cmd}"; then
     gum style --foreground 9 "⚠️  ${cmd} is required but not installed. Please install it first."
     exit 1
@@ -80,7 +80,7 @@ selected_shell="${SHELLS_DIR}/${choice}.nix"
 if [ -f "${selected_shell}" ]; then
   display_message "Launching ${choice} shell... 🚀"
   loading_animation "🔧 Preparing your development environment"
-  exec nix-shell "${selected_shell}" --command fish
+  exec nix-shell "${selected_shell}" --command zsh
 else
   gum style --foreground 9 "😱 The shell file '${selected_shell}' does not exist."
   exit 1

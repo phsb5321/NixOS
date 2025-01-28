@@ -36,6 +36,7 @@
       guvcview
       obs-studio
       gimp
+      calibre
 
       # Development Tools
       llvm
