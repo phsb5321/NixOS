@@ -5,7 +5,7 @@
     ./zsh.nix
     ./kitty.nix
     ./zellij.nix
-    ./git.nix
+    # ./git.nix
     ./nixvim.nix
   ];
 }
