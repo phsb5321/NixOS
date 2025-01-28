@@ -122,7 +122,8 @@
   };
 
   # Set default user shell
-  users.defaultUserShell = pkgs.fish;
+  users.defaultUserShell = pkgs.zsh;
+  programs.zsh.enable = true;
 
   # Locale settings specific to Brazilian Portuguese
   i18n.extraLocaleSettings = {
