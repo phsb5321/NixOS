@@ -16,14 +16,12 @@
   imports = [
     ./languagetool.nix
     ./qbittorrent.nix
-    ./plex.nix
     ./homepage.nix
   ];
 
   config = {
     services.languagetool.enable = lib.mkDefault config.homeServer.enable;
     services.qbittorrent.enable = lib.mkDefault config.homeServer.enable;
-    services.customPlex.enable = lib.mkDefault config.homeServer.enable;
 
     services.home-dashboard = {
       enable = lib.mkDefault config.homeServer.enable;
