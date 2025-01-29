@@ -218,8 +218,8 @@
           enable = true;
           enableOffloadCmd = true;
         };
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:1:0:0";
+        intelBusId = "PCI:0:2:0"; # Verify with `lspci` output
+        nvidiaBusId = "PCI:1:0:0"; # Verify with `lspci` output
       };
       nvidiaSettings = true;
       forceFullCompositionPipeline = true;
@@ -230,7 +230,7 @@
   services = {
     xserver = {
       enable = true;
-      videoDrivers = ["nvidia"];
+      videoDrivers = ["nvidia" "modesetting"]; # Replaced "intel" with "modesetting"
     };
 
     displayManager = {
@@ -273,7 +273,7 @@
   # Environment configuration
   environment = {
     sessionVariables = {
-      NIXOS_OZONE_WL = "1";
+      # Removed NIXOS_OZONE_WL unless explicitly needed
       CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
       LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
       __NV_PRIME_RENDER_OFFLOAD = "1";
@@ -284,6 +284,9 @@
       GBM_BACKEND = "nvidia-drm";
       WLR_NO_HARDWARE_CURSORS = "1";
       XDG_SESSION_TYPE = "x11";
+      XDG_CURRENT_DESKTOP = "KDE";
+      XDG_SESSION_DESKTOP = "KDE";
+      KDE_FULL_SESSION = "true";
     };
 
     systemPackages = with pkgs; [
