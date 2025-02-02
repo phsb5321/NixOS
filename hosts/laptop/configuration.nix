@@ -20,10 +20,12 @@
     stateVersion = systemVersion;
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
+
     java = {
       enable = true;
       androidTools.enable = true;
     };
+
     extraSystemPackages = with pkgs; [
       # Development Tools
       llvm
@@ -69,23 +71,18 @@
     environment = "kde";
     kde.version = "plasma5";
     autoLogin = {
-      enable = true;
+      enable = false;
       user = "notroot";
     };
     extraPackages = with pkgs; [
-      plasma5Packages.plasma-nm
-      plasma5Packages.plasma-pa
+      # Additional KDE/Qt packages
+      qt5.qtwayland
+      libsForQt5.qt5.qtx11extras
+      libsForQt5.breeze-qt5
+      libsForQt5.breeze-icons
+      libsForQt5.sddm-kcm
       networkmanagerapplet
     ];
-    fonts = {
-      enable = true;
-      packages = with pkgs; [
-        nerd-fonts.jetbrains-mono
-      ];
-      defaultFonts = {
-        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
-      };
-    };
   };
 
   # Enable and configure networking module
@@ -148,9 +145,6 @@
     ];
   };
 
-  # Additional networking overrides if needed
-  networking.networkmanager.dns = lib.mkForce "default";
-
   # Locale settings
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
@@ -194,21 +188,21 @@
     };
     cpu.intel.updateMicrocode = true;
 
-    # Graphics configuration
+    # Graphics and AMD GPU Configuration
     graphics = {
       enable = true;
+      enable32Bit = true;
       extraPackages = with pkgs; [
-        intel-media-driver
-        vaapiIntel
         vaapiVdpau
         libvdpau-va-gl
       ];
     };
 
+    # NVIDIA configuration
     nvidia = {
       package = config.boot.kernelPackages.nvidiaPackages.stable;
       open = false;
-      modesetting.enable = true;
+      modesetting.enable = true; # required for PRIME offload
       powerManagement = {
         enable = true;
         finegrained = true;
@@ -218,34 +212,44 @@
           enable = true;
           enableOffloadCmd = true;
         };
-        intelBusId = "PCI:0:2:0"; # Verify with `lspci` output
-        nvidiaBusId = "PCI:1:0:0"; # Verify with `lspci` output
+        intelBusId = "PCI:0:2:0";
+        nvidiaBusId = "PCI:1:0:0";
       };
       nvidiaSettings = true;
       forceFullCompositionPipeline = true;
     };
   };
 
+  # X Server configuration
+  services.xserver = {
+    enable = true;
+    videoDrivers = ["nvidia" "modesetting"];
+  };
+
+  # Environment configuration
+  environment = {
+    sessionVariables = {
+      # NVIDIA PRIME variables
+      LIBVA_DRIVER_NAME = "nvidia";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      GBM_BACKEND = "nvidia-drm";
+      WLR_NO_HARDWARE_CURSORS = "1";
+      CLUTTER_BACKEND = "x11";
+      XDG_SESSION_TYPE = "x11";
+      QT_QPA_PLATFORM = "xcb";
+
+      # CUDA configuration
+      CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
+      LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
+      __NV_PRIME_RENDER_OFFLOAD = "1";
+      __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
+      __VK_LAYER_NV_optimus = "NVIDIA_only";
+    };
+  };
+
   # Services configuration
   services = {
-    xserver = {
-      enable = true;
-      videoDrivers = ["nvidia" "modesetting"]; # Replaced "intel" with "modesetting"
-    };
-
-    displayManager = {
-      sddm = {
-        enable = true;
-        settings = {
-          Theme = {
-            Current = "breeze";
-            CursorTheme = "breeze_cursors";
-          };
-        };
-      };
-      defaultSession = "plasma";
-    };
-
+    # Audio configuration
     pipewire = {
       enable = true;
       alsa.enable = true;
@@ -254,58 +258,35 @@
       jack.enable = true;
     };
 
+    # Libinput is now under services.libinput
+    libinput = {
+      enable = true;
+      touchpad = {
+        tapping = true;
+        naturalScrolling = true;
+        scrollMethod = "twofinger";
+      };
+    };
+
+    # System services
     power-profiles-daemon.enable = true;
     thermald.enable = true;
     fstrim.enable = true;
     acpid.enable = true;
     upower.enable = true;
 
-    syncthing = {
+    # SSH service
+    openssh = {
       enable = true;
-      user = "notroot";
-      dataDir = "/home/notroot/Sync";
-      configDir = "/home/notroot/.config/syncthing";
-      overrideDevices = true;
-      overrideFolders = true;
+      settings = {
+        PermitRootLogin = "no";
+        PasswordAuthentication = true;
+        KbdInteractiveAuthentication = false;
+      };
     };
   };
 
-  # Environment configuration
-  environment = {
-    sessionVariables = {
-      # Removed NIXOS_OZONE_WL unless explicitly needed
-      CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
-      LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
-      __NV_PRIME_RENDER_OFFLOAD = "1";
-      __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-      __VK_LAYER_NV_optimus = "NVIDIA_only";
-      LIBVA_DRIVER_NAME = "nvidia";
-      GBM_BACKEND = "nvidia-drm";
-      WLR_NO_HARDWARE_CURSORS = "1";
-      XDG_SESSION_TYPE = "x11";
-      XDG_CURRENT_DESKTOP = "KDE";
-      XDG_SESSION_DESKTOP = "KDE";
-      KDE_FULL_SESSION = "true";
-    };
-
-    systemPackages = with pkgs; [
-      # Graphics and Display
-      glxinfo
-      vulkan-tools
-      vulkan-loader
-      vulkan-validation-layers
-      nvidia-vaapi-driver
-      libva
-      libva-utils
-
-      # System Tools
-      xorg.xrandr
-      mesa
-    ];
-  };
-
-  # Gaming configuration
+  # Programs configuration
   programs = {
     fish.enable = true;
     zsh.enable = true;
@@ -352,9 +333,10 @@
     kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
     extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
     tmp.useTmpfs = true;
+    blacklistedKernelModules = ["nouveau"];
   };
 
-  # Enable virtualization support
+  # Virtualization configuration
   virtualisation = {
     docker = {
       enable = true;
@@ -367,19 +349,12 @@
       };
     };
   };
+
+  # The nvidia-container-toolkit needs 'nvidia' in videoDrivers or
+  # datacenter.enable, so we've done the former above.
   hardware.nvidia-container-toolkit.enable = true;
 
-  # SSH configuration
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "no";
-      PasswordAuthentication = true;
-      KbdInteractiveAuthentication = false;
-    };
-  };
-
-  # System maintenance and cleanup
+  # Nix configuration
   nix = {
     settings = {
       auto-optimise-store = true;
