@@ -111,7 +111,9 @@
     supportedLocales = [
       "en_US.UTF-8/UTF-8"
       "pt_BR.UTF-8/UTF-8"
+      "C.UTF-8/UTF-8"
     ];
+    glibcLocales = pkgs.glibcLocales;
     extraLocaleSettings = {
       LC_ADDRESS = "pt_BR.UTF-8";
       LC_IDENTIFICATION = "pt_BR.UTF-8";
@@ -200,12 +202,15 @@
 
   # Services configuration
   services = {
-    # Display Manager Configuration (Updated paths)
+    # Basic X server configuration
+    xserver.enable = true;
+
+    # Display Manager Configuration
     displayManager = {
+      defaultSession = "plasma";
       sddm = {
         enable = true;
         wayland.enable = true;
-        autoNumlock = true;
         settings = {
           Theme = {
             CursorTheme = "breeze_cursors";
@@ -231,7 +236,7 @@
       packages = [pkgs.dconf];
     };
 
-    # Audio Configuration (Updated from pulseaudio)
+    # Audio Configuration
     pipewire = {
       enable = true;
       alsa.enable = true;
@@ -246,6 +251,9 @@
     udisks2.enable = true;
     gvfs.enable = true;
     tumbler.enable = true;
+
+    # GNOME Keyring
+    gnome.gnome-keyring.enable = true;
   };
 
   # Security and authentication
@@ -277,6 +285,8 @@
       LIBVA_DRIVER_NAME = "nvidia";
       PLASMA_USE_QT_SCALING = "1";
       QT_AUTO_SCREEN_SCALE_FACTOR = "1";
+      LANG = "en_US.UTF-8";
+      LC_ALL = "en_US.UTF-8";
     };
 
     systemPackages = with pkgs; [
@@ -341,6 +351,16 @@
     fish.enable = true;
     zsh.enable = true;
     dconf.enable = true;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+  };
+
+  # Enable PAM
+  security.pam.services = {
+    login.enableGnomeKeyring = true;
+    sddm.enableGnomeKeyring = true;
   };
 
   # Docker configuration
