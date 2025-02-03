@@ -4,8 +4,8 @@
   pkgs,
   lib,
   inputs,
-  bleedPkgs,
   systemVersion,
+  bleedPkgs,
   ...
 }: {
   imports = [
@@ -20,12 +20,6 @@
     stateVersion = systemVersion;
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
-
-    java = {
-      enable = true;
-      androidTools.enable = true;
-    };
-
     extraSystemPackages = with pkgs; [
       # Development Tools
       llvm
@@ -34,58 +28,38 @@
       cudaPackages.cuda_cudart
       cudaPackages.cuda_cccl
       nvtopPackages.full
+      seahorse
 
       # System Utilities
       bleedPkgs.zed-editor
-      guvcview
-      obs-studio
-      gimp
 
       # Additional Tools
-      seahorse
       bleachbit
       speechd
-      waydroid
-      anydesk
-
-      # NVIDIA and Graphics Tools
-      vulkan-tools
-      vulkan-loader
-      vulkan-validation-layers
-      libva-utils
-      vdpauinfo
-      glxinfo
-      ffmpeg-full
-      xorg.xrandr
-      mesa
     ];
   };
-
-  # Set system options
-  console.keyMap = "br-abnt2";
-  users.defaultUserShell = pkgs.zsh;
 
   # Enable and configure desktop module
   modules.desktop = {
     enable = true;
     environment = "kde";
-    kde.version = "plasma5";
+    kde.version = "plasma6";
     autoLogin = {
       enable = false;
       user = "notroot";
     };
-    extraPackages = with pkgs; [
-      # Additional KDE/Qt packages
-      qt5.qtwayland
-      libsForQt5.qt5.qtx11extras
-      libsForQt5.breeze-qt5
-      libsForQt5.breeze-icons
-      libsForQt5.sddm-kcm
-      networkmanagerapplet
-    ];
+    fonts = {
+      enable = true;
+      packages = with pkgs; [
+        nerd-fonts.jetbrains-mono
+      ];
+      defaultFonts = {
+        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
+      };
+    };
   };
 
-  # Enable and configure networking module
+  # Network configuration
   modules.networking = {
     enable = true;
     hostName = "nixos";
@@ -99,100 +73,95 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [22 3000];
+      openPorts = [22];
       trustedInterfaces = [];
     };
   };
 
-  # Enable the home module
+  # Home configuration
   modules.home = {
     enable = true;
     username = "notroot";
     hostName = "laptop";
     extraPackages = with pkgs; [
-      # Editors and IDEs
       vscode
-
-      # Web Browsers
       google-chrome
-
-      # API Testing
       insomnia
       postman
-
-      # File Management
       gparted
       baobab
       syncthing
       vlc
-
-      # System Utilities
       pigz
       mangohud
       unzip
-
-      # Music Streaming
       spotify
-
-      # Miscellaneous Tools
       lsof
       discord
       corectrl
       inputs.zen-browser.packages.${system}.default
-
-      # Programming Languages
       python3
+      waydroid
     ];
   };
 
   # Locale settings
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pt_BR.UTF-8";
-    LC_IDENTIFICATION = "pt_BR.UTF-8";
-    LC_MEASUREMENT = "pt_BR.UTF-8";
-    LC_MONETARY = "pt_BR.UTF-8";
-    LC_NAME = "pt_BR.UTF-8";
-    LC_NUMERIC = "pt_BR.UTF-8";
-    LC_PAPER = "pt_BR.UTF-8";
-    LC_TELEPHONE = "pt_BR.UTF-8";
-    LC_TIME = "pt_BR.UTF-8";
+  i18n = {
+    defaultLocale = "en_US.UTF-8";
+    supportedLocales = [
+      "en_US.UTF-8/UTF-8"
+      "pt_BR.UTF-8/UTF-8"
+    ];
+    extraLocaleSettings = {
+      LC_ADDRESS = "pt_BR.UTF-8";
+      LC_IDENTIFICATION = "pt_BR.UTF-8";
+      LC_MEASUREMENT = "pt_BR.UTF-8";
+      LC_MONETARY = "pt_BR.UTF-8";
+      LC_NAME = "pt_BR.UTF-8";
+      LC_NUMERIC = "pt_BR.UTF-8";
+      LC_PAPER = "pt_BR.UTF-8";
+      LC_TELEPHONE = "pt_BR.UTF-8";
+      LC_TIME = "pt_BR.UTF-8";
+    };
   };
 
   # User configuration
-  users.users.notroot = {
-    isNormalUser = true;
-    description = "Pedro Balbino";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "audio"
-      "video"
-      "disk"
-      "input"
-      "bluetooth"
-      "docker"
-      "dialout"
-      "libvirtd"
-      "kvm"
-      "render"
-      "nvidia"
-    ];
+  users = {
+    defaultUserShell = pkgs.zsh;
+    users.notroot = {
+      isNormalUser = true;
+      description = "Pedro Balbino";
+      initialPassword = "changeme";
+      extraGroups = [
+        "networkmanager"
+        "wheel"
+        "audio"
+        "video"
+        "disk"
+        "input"
+        "bluetooth"
+        "docker"
+        "render"
+        "nvidia"
+        "kvm"
+        "sddm"
+        "pipewire"
+      ];
+    };
   };
 
   # Hardware configuration
   hardware = {
     enableRedistributableFirmware = true;
-    bluetooth = {
-      enable = true;
-      powerOnBoot = true;
-    };
     cpu.intel.updateMicrocode = true;
 
-    # Graphics and AMD GPU Configuration
+    # Graphics configuration
     graphics = {
       enable = true;
       enable32Bit = true;
       extraPackages = with pkgs; [
+        intel-media-driver
+        vaapiIntel
         vaapiVdpau
         libvdpau-va-gl
       ];
@@ -202,7 +171,7 @@
     nvidia = {
       package = config.boot.kernelPackages.nvidiaPackages.stable;
       open = false;
-      modesetting.enable = true; # required for PRIME offload
+      modesetting.enable = true;
       powerManagement = {
         enable = true;
         finegrained = true;
@@ -218,38 +187,51 @@
       nvidiaSettings = true;
       forceFullCompositionPipeline = true;
     };
+
+    # Nvidia Container Toolkit
+    nvidia-container-toolkit.enable = true;
   };
 
-  # X Server configuration
-  services.xserver = {
-    enable = true;
-    videoDrivers = ["nvidia" "modesetting"];
-  };
-
-  # Environment configuration
-  environment = {
-    sessionVariables = {
-      # NVIDIA PRIME variables
-      LIBVA_DRIVER_NAME = "nvidia";
-      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-      GBM_BACKEND = "nvidia-drm";
-      WLR_NO_HARDWARE_CURSORS = "1";
-      CLUTTER_BACKEND = "x11";
-      XDG_SESSION_TYPE = "x11";
-      QT_QPA_PLATFORM = "xcb";
-
-      # CUDA configuration
-      CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
-      LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
-      __NV_PRIME_RENDER_OFFLOAD = "1";
-      __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-      __VK_LAYER_NV_optimus = "NVIDIA_only";
-    };
+  # Nixpkgs configuration
+  nixpkgs.config = {
+    allowUnfree = true;
+    cudaSupport = true;
   };
 
   # Services configuration
   services = {
-    # Audio configuration
+    # Display Manager Configuration (Updated paths)
+    displayManager = {
+      sddm = {
+        enable = true;
+        wayland.enable = true;
+        autoNumlock = true;
+        settings = {
+          Theme = {
+            CursorTheme = "breeze_cursors";
+            Font = "Noto Sans";
+          };
+          General = {
+            InputMethod = "";
+            Numlock = "on";
+          };
+          Wayland = {
+            CompositorCommand = "kwin_wayland --drm --no-lockscreen";
+          };
+        };
+      };
+    };
+
+    # Plasma Desktop Configuration
+    desktopManager.plasma6.enable = true;
+
+    # System Services
+    dbus = {
+      enable = true;
+      packages = [pkgs.dconf];
+    };
+
+    # Audio Configuration (Updated from pulseaudio)
     pipewire = {
       enable = true;
       alsa.enable = true;
@@ -258,112 +240,111 @@
       jack.enable = true;
     };
 
-    # Libinput is now under services.libinput
-    libinput = {
-      enable = true;
-      touchpad = {
-        tapping = true;
-        naturalScrolling = true;
-        scrollMethod = "twofinger";
-      };
-    };
-
-    # System services
-    power-profiles-daemon.enable = true;
-    thermald.enable = true;
-    fstrim.enable = true;
-    acpid.enable = true;
+    # Additional Services
+    accounts-daemon.enable = true;
     upower.enable = true;
-
-    # SSH service
-    openssh = {
-      enable = true;
-      settings = {
-        PermitRootLogin = "no";
-        PasswordAuthentication = true;
-        KbdInteractiveAuthentication = false;
-      };
-    };
+    udisks2.enable = true;
+    gvfs.enable = true;
+    tumbler.enable = true;
   };
 
-  # Programs configuration
-  programs = {
-    fish.enable = true;
-    zsh.enable = true;
-    steam = {
-      enable = true;
-      remotePlay.openFirewall = true;
-      dedicatedServer.openFirewall = true;
-    };
-    corectrl = {
-      enable = true;
-      gpuOverclock = {
-        enable = true;
-        ppfeaturemask = "0xffffffff";
-      };
-    };
-    dconf.enable = true;
-  };
-
-  # Security configuration
+  # Security and authentication
   security = {
-    sudo.wheelNeedsPassword = true;
-    auditd.enable = true;
-    apparmor = {
-      enable = true;
-      killUnconfinedConfinables = true;
-    };
-    polkit.enable = true;
-    rtkit.enable = true;
     pam = {
       services = {
-        login.enableGnomeKeyring = true;
-        sddm.enableGnomeKeyring = true;
+        sddm.enableKwallet = true;
+        sddm-greeter.enableKwallet = true;
+        login.enableKwallet = true;
       };
     };
+    rtkit.enable = true;
+    polkit.enable = true;
+  };
+
+  # Environment configuration
+  environment = {
+    sessionVariables = {
+      NIXOS_OZONE_WL = "1";
+      XDG_SESSION_TYPE = "wayland";
+      SDL_VIDEODRIVER = "wayland";
+      CLUTTER_BACKEND = "wayland";
+      CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
+      LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
+      __NV_PRIME_RENDER_OFFLOAD = "1";
+      __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      __VK_LAYER_NV_optimus = "NVIDIA_only";
+      LIBVA_DRIVER_NAME = "nvidia";
+      PLASMA_USE_QT_SCALING = "1";
+      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
+    };
+
+    systemPackages = with pkgs; [
+      # KDE Packages
+      kdePackages.plasma-workspace
+      kdePackages.plasma-desktop
+      kdePackages.kwin
+      kdePackages.kscreen
+      kdePackages.plasma-pa
+      kdePackages.kgamma
+      kdePackages.sddm-kcm
+      kdePackages.breeze
+      kdePackages.breeze-gtk
+      kdePackages.breeze-icons
+      kdePackages.plasma-nm
+      kdePackages.plasma-vault
+      kdePackages.plasma-browser-integration
+      kdePackages.kdeconnect-kde
+
+      # System packages
+      wayland
+      libsForQt5.qt5.qtwayland
+      qt6.qtwayland
+      xdg-utils
+      xdg-desktop-portal
+      xdg-desktop-portal-kde
+      libsForQt5.polkit-kde-agent
+
+      # GPU packages
+      glxinfo
+      vulkan-tools
+      vulkan-loader
+      vulkan-validation-layers
+      nvidia-vaapi-driver
+    ];
+  };
+
+  # XDG Portal configuration
+  xdg.portal = {
+    enable = true;
+    extraPortals = [
+      pkgs.xdg-desktop-portal-kde
+      pkgs.xdg-desktop-portal-gtk
+    ];
   };
 
   # Boot configuration
   boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
+    extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
     kernelParams = [
       "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
       "nvidia-drm.modeset=1"
     ];
     kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
-    extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
-    tmp.useTmpfs = true;
-    blacklistedKernelModules = ["nouveau"];
   };
 
-  # Virtualization configuration
-  virtualisation = {
-    docker = {
-      enable = true;
-      daemon.settings = {
-        dns = ["8.8.8.8" "8.8.4.4"];
-      };
-      rootless = {
-        enable = true;
-        setSocketVariable = true;
-      };
-    };
+  # X server configuration for NVIDIA
+  services.xserver.videoDrivers = ["nvidia"];
+
+  # Enable required programs
+  programs = {
+    fish.enable = true;
+    zsh.enable = true;
+    dconf.enable = true;
   };
 
-  # The nvidia-container-toolkit needs 'nvidia' in videoDrivers or
-  # datacenter.enable, so we've done the former above.
-  hardware.nvidia-container-toolkit.enable = true;
-
-  # Nix configuration
-  nix = {
-    settings = {
-      auto-optimise-store = true;
-      experimental-features = ["nix-command" "flakes"];
-    };
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 30d";
-    };
+  # Docker configuration
+  virtualisation.docker = {
+    enable = true;
   };
 }
