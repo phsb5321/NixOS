@@ -161,8 +161,7 @@ in {
         piper-tts
         jq
         popsicle
-        bitwarden-cli
-        stablePkgs.awscli2 # Use bleeding edge version
+        stablePkgs.awscli2
         rbw
         inputs.firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin
         vdhcoapp
