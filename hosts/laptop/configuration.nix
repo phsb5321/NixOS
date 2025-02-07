@@ -1,3 +1,4 @@
+# ~/NixOS/hosts/laptop/configuration.nix
 {
   config,
   pkgs,
@@ -10,10 +11,7 @@
   imports = [
     ./hardware-configuration.nix
     inputs.home-manager.nixosModules.default
-    ../../modules/networking
-    ../../modules/home
-    ../../modules/core
-    ../../modules/desktop
+    ../../modules
   ];
 
   # Enable core module with basic system configuration
@@ -29,7 +27,7 @@
       cudaPackages.cuda_nvcc
       cudaPackages.cuda_cudart
       cudaPackages.cuda_cccl
-      nvtopPackages.full # Updated from nvtop
+      nvtopPackages.full
       seahorse
 
       # System Utilities
@@ -47,7 +45,7 @@
     environment = "kde";
     kde.version = "plasma6";
     autoLogin = {
-      enable = true;
+      enable = false;
       user = "notroot";
     };
     fonts = {
@@ -61,7 +59,7 @@
     };
   };
 
-  # Enable and configure networking module
+  # Network configuration
   modules.networking = {
     enable = true;
     hostName = "nixos";
@@ -80,86 +78,83 @@
     };
   };
 
-  # Enable the home module
+  # Home configuration
   modules.home = {
     enable = true;
     username = "notroot";
     hostName = "laptop";
     extraPackages = with pkgs; [
-      # Editors and IDEs
       vscode
-
-      # Web Browsers
       google-chrome
-
-      # API Testing
       insomnia
       postman
-
-      # File Management
       gparted
       baobab
       syncthing
       vlc
-
-      # System Utilities
       pigz
       mangohud
       unzip
-
-      # Music Streaming
       spotify
-
-      # Miscellaneous Tools
       lsof
       discord
       corectrl
       inputs.zen-browser.packages.${system}.default
-
-      # Programming Languages
       python3
+      waydroid
     ];
   };
 
-  # Set default user shell
-  users.defaultUserShell = pkgs.zsh;
-  programs.zsh.enable = true;
-
-  # Locale settings specific to Brazilian Portuguese
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pt_BR.UTF-8";
-    LC_IDENTIFICATION = "pt_BR.UTF-8";
-    LC_MEASUREMENT = "pt_BR.UTF-8";
-    LC_MONETARY = "pt_BR.UTF-8";
-    LC_NAME = "pt_BR.UTF-8";
-    LC_NUMERIC = "pt_BR.UTF-8";
-    LC_PAPER = "pt_BR.UTF-8";
-    LC_TELEPHONE = "pt_BR.UTF-8";
-    LC_TIME = "pt_BR.UTF-8";
+  # Locale settings
+  i18n = {
+    defaultLocale = "en_US.UTF-8";
+    supportedLocales = [
+      "en_US.UTF-8/UTF-8"
+      "pt_BR.UTF-8/UTF-8"
+      "C.UTF-8/UTF-8"
+    ];
+    glibcLocales = pkgs.glibcLocales;
+    extraLocaleSettings = {
+      LC_ADDRESS = "pt_BR.UTF-8";
+      LC_IDENTIFICATION = "pt_BR.UTF-8";
+      LC_MEASUREMENT = "pt_BR.UTF-8";
+      LC_MONETARY = "pt_BR.UTF-8";
+      LC_NAME = "pt_BR.UTF-8";
+      LC_NUMERIC = "pt_BR.UTF-8";
+      LC_PAPER = "pt_BR.UTF-8";
+      LC_TELEPHONE = "pt_BR.UTF-8";
+      LC_TIME = "pt_BR.UTF-8";
+    };
   };
 
   # User configuration
-  users.users.notroot = {
-    isNormalUser = true;
-    description = "Pedro Balbino";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "audio"
-      "video"
-      "disk"
-      "input"
-      "bluetooth"
-      "docker"
-      "render" # For GPU access
-      "nvidia" # For NVIDIA tools
-    ];
+  users = {
+    defaultUserShell = pkgs.zsh;
+    users.notroot = {
+      isNormalUser = true;
+      description = "Pedro Balbino";
+      initialPassword = "changeme";
+      extraGroups = [
+        "networkmanager"
+        "wheel"
+        "audio"
+        "video"
+        "disk"
+        "input"
+        "bluetooth"
+        "docker"
+        "render"
+        "nvidia"
+        "kvm"
+        "sddm"
+        "pipewire"
+      ];
+    };
   };
 
   # Hardware configuration
   hardware = {
     enableRedistributableFirmware = true;
-    pulseaudio.enable = false;
     cpu.intel.updateMicrocode = true;
 
     # Graphics configuration
@@ -177,7 +172,7 @@
     # NVIDIA configuration
     nvidia = {
       package = config.boot.kernelPackages.nvidiaPackages.stable;
-      open = false; # Use proprietary (closed-source) NVIDIA drivers
+      open = false;
       modesetting.enable = true;
       powerManagement = {
         enable = true;
@@ -194,6 +189,9 @@
       nvidiaSettings = true;
       forceFullCompositionPipeline = true;
     };
+
+    # Nvidia Container Toolkit
+    nvidia-container-toolkit.enable = true;
   };
 
   # Nixpkgs configuration
@@ -202,27 +200,73 @@
     cudaSupport = true;
   };
 
-  # DBus configuration
-  services.dbus = {
-    enable = true;
-    packages = [pkgs.dconf];
-  };
+  # Services configuration
+  services = {
+    # Basic X server configuration
+    xserver.enable = true;
 
-  # Polkit and authentication configuration
-  systemd.user.services = {
-    polkit-gnome-authentication-agent-1 = {
-      description = "polkit-gnome-authentication-agent-1";
-      wantedBy = ["graphical-session.target"];
-      wants = ["graphical-session.target"];
-      after = ["graphical-session.target"];
-      serviceConfig = {
-        Type = "simple";
-        ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
-        Restart = "on-failure";
-        RestartSec = 1;
-        TimeoutStopSec = 10;
+    # Display Manager Configuration
+    displayManager = {
+      defaultSession = "plasma";
+      sddm = {
+        enable = true;
+        wayland.enable = true;
+        settings = {
+          Theme = {
+            CursorTheme = "breeze_cursors";
+            Font = "Noto Sans";
+          };
+          General = {
+            InputMethod = "";
+            Numlock = "on";
+          };
+          Wayland = {
+            CompositorCommand = "kwin_wayland --drm --no-lockscreen";
+          };
+        };
       };
     };
+
+    # Plasma Desktop Configuration
+    desktopManager.plasma6.enable = true;
+
+    # System Services
+    dbus = {
+      enable = true;
+      packages = [pkgs.dconf];
+    };
+
+    # Audio Configuration
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      jack.enable = true;
+    };
+
+    # Additional Services
+    accounts-daemon.enable = true;
+    upower.enable = true;
+    udisks2.enable = true;
+    gvfs.enable = true;
+    tumbler.enable = true;
+
+    # GNOME Keyring
+    gnome.gnome-keyring.enable = true;
+  };
+
+  # Security and authentication
+  security = {
+    pam = {
+      services = {
+        sddm.enableKwallet = true;
+        sddm-greeter.enableKwallet = true;
+        login.enableKwallet = true;
+      };
+    };
+    rtkit.enable = true;
+    polkit.enable = true;
   };
 
   # Environment configuration
@@ -230,10 +274,8 @@
     sessionVariables = {
       NIXOS_OZONE_WL = "1";
       XDG_SESSION_TYPE = "wayland";
-      QT_QPA_PLATFORM = "wayland;xcb";
       SDL_VIDEODRIVER = "wayland";
       CLUTTER_BACKEND = "wayland";
-      # CUDA related environment variables
       CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
       LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
       __NV_PRIME_RENDER_OFFLOAD = "1";
@@ -241,13 +283,30 @@
       __GLX_VENDOR_LIBRARY_NAME = "nvidia";
       __VK_LAYER_NV_optimus = "NVIDIA_only";
       LIBVA_DRIVER_NAME = "nvidia";
-      # Additional paths for CUDA development
-      PATH = [
-        "${pkgs.cudaPackages.cuda_cudart}/bin"
-      ];
+      PLASMA_USE_QT_SCALING = "1";
+      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
+      LANG = "en_US.UTF-8";
+      LC_ALL = "en_US.UTF-8";
     };
 
     systemPackages = with pkgs; [
+      # KDE Packages
+      kdePackages.plasma-workspace
+      kdePackages.plasma-desktop
+      kdePackages.kwin
+      kdePackages.kscreen
+      kdePackages.plasma-pa
+      kdePackages.kgamma
+      kdePackages.sddm-kcm
+      kdePackages.breeze
+      kdePackages.breeze-gtk
+      kdePackages.breeze-icons
+      kdePackages.plasma-nm
+      kdePackages.plasma-vault
+      kdePackages.plasma-browser-integration
+      kdePackages.kdeconnect-kde
+
+      # System packages
       wayland
       libsForQt5.qt5.qtwayland
       qt6.qtwayland
@@ -255,7 +314,8 @@
       xdg-desktop-portal
       xdg-desktop-portal-kde
       libsForQt5.polkit-kde-agent
-      # GPU related packages
+
+      # GPU packages
       glxinfo
       vulkan-tools
       vulkan-loader
@@ -264,10 +324,7 @@
     ];
   };
 
-  # Enable fontconfig
-  fonts.fontconfig.enable = true;
-
-  # Enable XDG portal
+  # XDG Portal configuration
   xdg.portal = {
     enable = true;
     extraPortals = [
@@ -276,7 +333,7 @@
     ];
   };
 
-  # Boot configuration for NVIDIA
+  # Boot configuration
   boot = {
     extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
     kernelParams = [
@@ -286,10 +343,28 @@
     kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
   };
 
-  # Satisfy the `nvidia-container-toolkit` requirements
+  # X server configuration for NVIDIA
   services.xserver.videoDrivers = ["nvidia"];
 
-  # Virtualization support for CUDA containers
-  virtualisation.docker.enable = true;
-  hardware.nvidia-container-toolkit.enable = true;
+  # Enable required programs
+  programs = {
+    fish.enable = true;
+    zsh.enable = true;
+    dconf.enable = true;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+  };
+
+  # Enable PAM
+  security.pam.services = {
+    login.enableGnomeKeyring = true;
+    sddm.enableGnomeKeyring = true;
+  };
+
+  # Docker configuration
+  virtualisation.docker = {
+    enable = true;
+  };
 }
