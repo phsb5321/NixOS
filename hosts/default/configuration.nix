@@ -198,7 +198,7 @@
       enable = true;
       powerOnBoot = true;
     };
-    cpu.amd.updateMicrocode = true;
+    cpu.intel.updateMicrocode = true;
 
     # Graphics and AMD GPU Configuration
     graphics = {
