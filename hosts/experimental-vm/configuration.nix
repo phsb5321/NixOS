@@ -180,7 +180,8 @@
   # ------------------------------------------------------
   # User Shell
   # ------------------------------------------------------
-  users.defaultUserShell = pkgs.fish;
+  users.defaultUserShell = pkgs.zsh;
+  programs.zsh.enable = true;
 
   # ------------------------------------------------------
   # Locale Settings
