@@ -145,7 +145,6 @@
   # Home Server Module
   # ------------------------------------------------------
   homeServer.enable = true;
-  disabledModules = ["services/misc/plex.nix"];
 
   # ------------------------------------------------------
   # Environment Configuration
