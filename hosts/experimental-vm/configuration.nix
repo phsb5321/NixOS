@@ -94,9 +94,42 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [22];
+      openPorts = [
+        22 # SSH
+        32400 # Plex Media Server
+        32469 # Plex DLNA Server
+        1900 # Plex DLNA Server
+      ];
       trustedInterfaces = ["ens18" "virbr0"];
     };
+  };
+
+  # ------------------------------------------------------
+  # Plex Media Server Configuration
+  # ------------------------------------------------------
+  services.plex = {
+    enable = true;
+    openFirewall = true;
+    user = "notroot";
+    group = "users";
+    dataDir = "/var/lib/plex";
+  };
+
+  # Ensure Plex data directory exists and has correct permissions
+  systemd.tmpfiles.rules = [
+    "d /var/lib/plex 0755 notroot users"
+    "Z /var/lib/plex 0755 notroot users"
+  ];
+
+  # Add systemd service configuration for Plex
+  systemd.services.plex = {
+    serviceConfig = {
+      StandardOutput = "journal";
+      StandardError = "journal";
+      LogLevelMax = 7;
+    };
+    after = ["network.target" "systemd-tmpfiles-setup.service"];
+    requires = ["network.target" "systemd-tmpfiles-setup.service"];
   };
 
   # ------------------------------------------------------
@@ -214,6 +247,7 @@
       "dialout"
       "libvirtd"
       "kvm"
+      "users"
     ];
   };
 
