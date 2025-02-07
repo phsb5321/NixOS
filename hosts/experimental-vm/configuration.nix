@@ -60,7 +60,6 @@
       kdePackages.spectacle
 
       # Additional applications
-      firefox
       kitty
       networkmanagerapplet
     ];
