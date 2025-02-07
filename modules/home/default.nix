@@ -106,7 +106,7 @@ in {
 
           sessionVariables = {
             EDITOR = "nvim";
-            SHELL = "${pkgs.fish}/bin/fish";
+            SHELL = "${pkgs.fish}/bin/zsh";
           };
         };
 
