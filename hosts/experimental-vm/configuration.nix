@@ -1,6 +1,7 @@
 # ~/NixOS/hosts/experimental-vm/configuration.nix
 {
   pkgs,
+  lib,
   inputs,
   systemVersion,
   bleedPkgs,
@@ -41,7 +42,7 @@
   modules.desktop = {
     enable = true;
     environment = "kde";
-    kde.version = "plasma6"; # Changed from hyprland to Plasma 6
+    kde.version = "plasma6";
     autoLogin = {
       enable = true;
       user = "notroot";
@@ -94,43 +95,38 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [
-        22 # SSH
-        32400 # Plex Media Server
-        32469 # Plex DLNA Server
-        1900 # Plex DLNA Server
-      ];
+      openPorts = [22];
       trustedInterfaces = ["ens18" "virbr0"];
     };
   };
 
   # ------------------------------------------------------
-  # Plex Media Server Configuration
+  # Hardware Configuration
   # ------------------------------------------------------
-  services.plex = {
-    enable = true;
-    openFirewall = true;
-    user = "notroot";
-    group = "users";
-    dataDir = "/var/lib/plex";
-  };
-
-  # Ensure Plex data directory exists and has correct permissions
-  systemd.tmpfiles.rules = [
-    "d /var/lib/plex 0755 notroot users"
-    "Z /var/lib/plex 0755 notroot users"
-  ];
-
-  # Add systemd service configuration for Plex
-  systemd.services.plex = {
-    serviceConfig = {
-      StandardOutput = "journal";
-      StandardError = "journal";
-      LogLevelMax = 7;
+  hardware = {
+    enableRedistributableFirmware = true;
+    opengl = {
+      enable = true;
+      extraPackages = with pkgs; [
+        intel-media-driver
+        vaapiIntel
+        vaapiVdpau
+        libvdpau-va-gl
+      ];
     };
-    after = ["network.target" "systemd-tmpfiles-setup.service"];
-    requires = ["network.target" "systemd-tmpfiles-setup.service"];
   };
+
+  # ------------------------------------------------------
+  # Media Support Packages
+  # ------------------------------------------------------
+  environment.systemPackages = with pkgs; [
+    ffmpeg_6-full
+    intel-media-driver
+    libva
+    libva-utils
+    vaapiVdpau
+    libvdpau-va-gl
+  ];
 
   # ------------------------------------------------------
   # Home Module (per-user config)
@@ -197,7 +193,9 @@
     ];
   };
 
+  # ------------------------------------------------------
   # Virtualization
+  # ------------------------------------------------------
   virtualisation = {
     docker = {
       enable = true;
@@ -213,6 +211,7 @@
   # ------------------------------------------------------
   users.defaultUserShell = pkgs.zsh;
   programs.zsh.enable = true;
+  programs.fish.enable = true;
 
   # ------------------------------------------------------
   # Locale Settings
@@ -233,7 +232,7 @@
   # Users Configuration
   # ------------------------------------------------------
   users.users.notroot = {
-    isNormalUser = true;
+    isSystemUser = false;
     description = "Pedro Balbino";
     extraGroups = [
       "networkmanager"
@@ -252,11 +251,14 @@
   };
 
   # ------------------------------------------------------
-  # Hardware Configuration
+  # Audio Configuration
   # ------------------------------------------------------
-  hardware = {
-    enableRedistributableFirmware = true;
-    pulseaudio.enable = false;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    jack.enable = true;
   };
 
   # ------------------------------------------------------
@@ -270,7 +272,7 @@
       killUnconfinedConfinables = true;
     };
     polkit.enable = true;
-    rtkit.enable = true; # Required for PipeWire
+    rtkit.enable = true;
   };
 
   # ------------------------------------------------------
@@ -279,14 +281,6 @@
   services = {
     fstrim.enable = true;
     thermald.enable = true;
-    pipewire = {
-      enable = true;
-      alsa.enable = true;
-      alsa.support32Bit = true;
-      pulse.enable = true;
-      jack.enable = true;
-    };
-    # DBus is required for KDE
     dbus = {
       enable = true;
       packages = [pkgs.dconf];
