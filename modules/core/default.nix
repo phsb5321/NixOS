@@ -191,6 +191,7 @@ in {
         terraform
         elixir-ls
         nosql-workbench
+        deno
 
         # Nix Tools
         alejandra
