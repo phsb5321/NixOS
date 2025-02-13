@@ -207,6 +207,7 @@ in {
 
     # Default system-wide shell
     programs = {
+      nix-ld.enable = true;
       fish.enable = true;
       dconf.enable = true;
     };
