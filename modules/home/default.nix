@@ -101,6 +101,7 @@ in {
               d2
               inputs.nixvim
               ngrok
+              zellij
             ]
             ++ cfg.extraPackages;
 
