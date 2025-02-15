@@ -21,7 +21,7 @@ in {
       programs.kitty = {
         enable = true;
         theme = "Gruvbox Dark";
-        shellIntegration.enableFishIntegration = true;
+        shellIntegration.enableZshIntegration = true;
         font = {
           name = "JetBrainsMono Nerd Font";
           size = 18;
