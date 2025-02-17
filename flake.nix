@@ -35,6 +35,7 @@
     nixpkgs,
     bleed,
     stable,
+    home-manager,
     ...
   } @ inputs: let
     # Define target architecture
@@ -43,7 +44,7 @@
     # Define system version
     systemVersion = "24.11";
 
-    # Common nixpkgs configuration (unfree, etc.)
+    # Common nixpkgs configuration
     nixpkgsConfig = {
       allowUnfree = true;
       allowUnfreePredicate = _: true;
@@ -82,21 +83,12 @@
       }
 
       # Home-manager configuration
+      home-manager.nixosModules.home-manager
       {
         home-manager = {
-          useGlobalPkgs = true;
+          useGlobalPkgs = false; # Changed from true to false
           useUserPackages = true;
           extraSpecialArgs = commonSpecialArgs;
-          users.notroot.home.enableNixpkgsReleaseCheck = false;
-        };
-      }
-
-      # Additional module that sets a global download-buffer-size
-      {
-        nix = {
-          settings = {
-            download-buffer-size = "1024M";
-          };
         };
       }
     ];
