@@ -1,4 +1,4 @@
-# ~/NixOS/hosts/modules/home/default.nix
+# ~/NixOS/modules/home/default.nix
 {
   config,
   lib,
@@ -40,21 +40,17 @@ in {
       extraSpecialArgs = {inherit inputs;};
       backupFileExtension = "bkp";
 
-      users.${cfg.username} = {pkgs, ...}: {
+      users.${cfg.username} = {
         imports = [
           inputs.nixvim.homeManagerModules.nixvim
         ];
 
-        nixpkgs.config = {
-          allowUnfree = true;
-        };
+        # Remove the nixpkgs config since we're using global packages
 
         # User Configuration
         home = {
           username = cfg.username;
           homeDirectory = "/home/${cfg.username}";
-
-          # 👇🏻 System Version for Home Manager
           stateVersion = systemVersion;
 
           packages = with pkgs;
