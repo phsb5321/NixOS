@@ -52,11 +52,6 @@
     };
 
     # Create package sets for different channels
-    pkgs = import nixpkgs {
-      inherit system;
-      config = nixpkgsConfig;
-    };
-
     bleedPkgs = import bleed {
       inherit system;
       config = nixpkgsConfig;
