@@ -1,3 +1,4 @@
+# ~/NixOS/shells/JavaScript.nix
 # {pkgs ? import (fetchTarball "https://github.com/nixos/nixpkgs/archive/nixos-unstable.tar.gz") {}}:
 # Uses Nixpkgs 24.05
 {pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.11.tar.gz") {}}:

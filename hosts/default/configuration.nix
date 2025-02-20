@@ -146,6 +146,7 @@
       discord
       corectrl
       inputs.zen-browser.packages.${system}.default
+      openai-whisper
 
       # Programming Languages
       python3
