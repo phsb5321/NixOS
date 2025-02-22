@@ -170,16 +170,14 @@ in {
         percentageAction = 3;
       };
 
-      pipewire = {
+      # Migrate to PulseAudio (force our configuration)
+      pulseaudio = lib.mkForce {
         enable = true;
-        alsa.enable = true;
-        pulse.enable = true;
-        jack.enable = true;
-        wireplumber.enable = true;
+        package = pkgs.pulseaudioFull;
+        extraConfig = "load-module module-switch-on-connect";
       };
     };
 
-    # Security and system features
     security = {
       polkit.enable = true;
       rtkit.enable = true;
@@ -217,10 +215,18 @@ in {
       style = "breeze";
     };
 
-    # Enable required features
+    # Better Bluetooth integration
     hardware.bluetooth = {
       enable = true;
       powerOnBoot = true;
+      disabledPlugins = ["sap"];
+      settings = {
+        General = {
+          AutoEnable = "true";
+          ControllerMode = "dual";
+          Experimental = "true";
+        };
+      };
     };
 
     # Ensure dconf is enabled

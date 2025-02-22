@@ -23,15 +23,23 @@ in {
     services.printing.enable = true;
 
     security.rtkit.enable = true;
-    services.pipewire = {
+
+    # Explicitly disable PipeWire to avoid conflicts with PulseAudio
+    services.pipewire.enable = false;
+
+    # Use PulseAudio instead of PipeWire for improved codec support
+    hardware.pulseaudio = {
       enable = true;
-      alsa.enable = true;
-      alsa.support32Bit = true;
-      pulse.enable = true;
-      jack.enable = true;
+      package = pkgs.pulseaudioFull;
+      extraConfig = "load-module module-switch-on-connect";
     };
 
-    hardware.bluetooth.enable = true;
+    # Enhanced Bluetooth integration
+    hardware.bluetooth = {
+      enable = true;
+      powerOnBoot = true;
+    };
+
     services.blueman.enable = true;
 
     networking.networkmanager.enable = true;
