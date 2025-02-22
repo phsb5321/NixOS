@@ -22,10 +22,6 @@ in {
             # Load and initialize zoxide
             eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
 
-            # Zellij Settings
-            export ZELLIJ_AUTO_ATTACH=false
-            export ZELLIJ_AUTO_EXIT=false
-
             # ZSH Options
             setopt EXTENDED_HISTORY
             setopt SHARE_HISTORY
