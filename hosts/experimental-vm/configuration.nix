@@ -117,18 +117,6 @@
   };
 
   # ------------------------------------------------------
-  # Media Support Packages
-  # ------------------------------------------------------
-  environment.systemPackages = with pkgs; [
-    ffmpeg_6-full
-    intel-media-driver
-    libva
-    libva-utils
-    vaapiVdpau
-    libvdpau-va-gl
-  ];
-
-  # ------------------------------------------------------
   # Home Module (per-user config)
   # ------------------------------------------------------
   modules.home = {
@@ -186,10 +174,19 @@
       CLUTTER_BACKEND = "wayland";
     };
     systemPackages = with pkgs; [
+      # Wayland Support
       wayland
       xdg-utils
       xdg-desktop-portal
       xdg-desktop-portal-kde
+
+      # Media Support
+      ffmpeg_6-full
+      intel-media-driver
+      libva
+      libva-utils
+      vaapiVdpau
+      libvdpau-va-gl
     ];
   };
 
@@ -234,6 +231,8 @@
   users.users.notroot = {
     isSystemUser = false;
     description = "Pedro Balbino";
+    home = lib.mkForce "/home/notroot";
+    createHome = true;
     extraGroups = [
       "networkmanager"
       "wheel"
