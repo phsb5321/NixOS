@@ -51,8 +51,6 @@
       anydesk
 
       # AMD GPU and Video Tools
-      # rocmPackages.clr.icd
-      # rocmPackages.clr
       pkgs.vulkan-tools
       pkgs.vulkan-loader
       pkgs.vulkan-validation-layers
@@ -60,6 +58,9 @@
       pkgs.vdpauinfo
       pkgs.glxinfo
       pkgs.ffmpeg-full
+
+      # Bluetooth GUI manager
+      blueman
     ];
   };
 
@@ -146,6 +147,7 @@
       discord
       corectrl
       inputs.zen-browser.packages.${system}.default
+      openai-whisper
 
       # Programming Languages
       python3
@@ -194,19 +196,29 @@
   # Hardware configuration
   hardware = {
     enableRedistributableFirmware = true;
+    # Use pulseaudioFull for extended Bluetooth codec support (high fidelity mode)
+    pulseaudio = {
+      enable = true;
+      package = pkgs.pulseaudioFull;
+      extraConfig = "load-module module-switch-on-connect";
+    };
     bluetooth = {
       enable = true;
       powerOnBoot = true;
+      disabledPlugins = ["sap"];
+      settings = {
+        General = {
+          AutoEnable = "true";
+          ControllerMode = "dual";
+          Experimental = "true";
+        };
+      };
     };
     cpu.intel.updateMicrocode = true;
-
-    # Graphics and AMD GPU Configuration
     graphics = {
       enable = true;
       enable32Bit = true;
       extraPackages = with pkgs; [
-        # rocmPackages.clr.icd
-        # rocmPackages.clr
         amdvlk
         vaapiVdpau
         libvdpau-va-gl

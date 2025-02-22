@@ -1,5 +1,14 @@
+# ~/NixOS/shells/Rust.nix
 {pkgs ? import <nixpkgs> {}}:
 pkgs.mkShell {
+  nativeBuildInputs = with pkgs; [
+    pkg-config
+    gobject-introspection
+    cargo
+    cargo-tauri
+    nodejs
+  ];
+
   buildInputs = with pkgs; [
     # Core Rust tools
     rustc
@@ -13,6 +22,19 @@ pkgs.mkShell {
 
     # Version control
     git
+
+    at-spi2-atk
+    atkmm
+    cairo
+    gdk-pixbuf
+    glib
+    gtk3
+    harfbuzz
+    librsvg
+    libsoup_3
+    pango
+    webkitgtk_4_1
+    openssl
   ];
 
   shellHook = ''
