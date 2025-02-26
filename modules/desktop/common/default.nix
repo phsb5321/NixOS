@@ -28,7 +28,8 @@ in {
     services.pipewire.enable = false;
 
     # Use PulseAudio instead of PipeWire for improved codec support
-    hardware.pulseaudio = {
+    # Changed from hardware.pulseaudio to services.pulseaudio
+    services.pulseaudio = {
       enable = true;
       package = pkgs.pulseaudioFull;
       extraConfig = "load-module module-switch-on-connect";
