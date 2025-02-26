@@ -20,6 +20,7 @@ in {
 
       programs.kitty = {
         enable = true;
+        # Fix the theme path - use theme name rather than full path
         theme = "Gruvbox Dark";
         shellIntegration.enableZshIntegration = true;
         font = {
