@@ -72,14 +72,16 @@
   modules.desktop = {
     enable = true;
     environment = "kde";
-    kde.version = "plasma5";
+    # Updated from plasma5 to plasma6
+    kde.version = "plasma6";
     autoLogin = {
       enable = true;
       user = "notroot";
     };
     extraPackages = with pkgs; [
-      plasma5Packages.plasma-nm
-      plasma5Packages.plasma-pa
+      # Updated from plasma5Packages to kdePackages
+      kdePackages.plasma-nm
+      kdePackages.plasma-pa
       networkmanagerapplet
     ];
     fonts = {
@@ -196,12 +198,6 @@
   # Hardware configuration
   hardware = {
     enableRedistributableFirmware = true;
-    # Use pulseaudioFull for extended Bluetooth codec support (high fidelity mode)
-    pulseaudio = {
-      enable = true;
-      package = pkgs.pulseaudioFull;
-      extraConfig = "load-module module-switch-on-connect";
-    };
     bluetooth = {
       enable = true;
       powerOnBoot = true;
@@ -224,6 +220,13 @@
         libvdpau-va-gl
       ];
     };
+  };
+
+  # Moved from hardware.pulseaudio to services.pulseaudio
+  services.pulseaudio = {
+    enable = true;
+    package = pkgs.pulseaudioFull;
+    extraConfig = "load-module module-switch-on-connect";
   };
 
   # Environment variables for AMD GPU and hardware acceleration

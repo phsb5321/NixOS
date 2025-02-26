@@ -15,13 +15,13 @@ with lib; let
     acpid
     powertop
 
-    # Core applications
-    dolphin
-    konsole
-    kate
-    ark
-    spectacle
-    okular
+    # Core applications - all KDE applications updated to use proper namespaces
+    kdePackages.dolphin
+    kdePackages.konsole
+    kdePackages.kate
+    kdePackages.ark
+    kdePackages.spectacle
+    kdePackages.okular
     ffmpegthumbnailer
     kdePackages.kio-gdrive
 
