@@ -105,7 +105,7 @@
   # ------------------------------------------------------
   hardware = {
     enableRedistributableFirmware = true;
-    opengl = {
+    graphics = {
       enable = true;
       extraPackages = with pkgs; [
         intel-media-driver
@@ -117,16 +117,11 @@
   };
 
   # ------------------------------------------------------
-  # Media Support Packages
+  # Audio Configuration
   # ------------------------------------------------------
-  environment.systemPackages = with pkgs; [
-    ffmpeg_6-full
-    intel-media-driver
-    libva
-    libva-utils
-    vaapiVdpau
-    libvdpau-va-gl
-  ];
+  # Override desktop module's PulseAudio settings
+  hardware.pulseaudio.enable = lib.mkForce false;
+  services.pipewire.enable = lib.mkForce false;
 
   # ------------------------------------------------------
   # Home Module (per-user config)
@@ -186,10 +181,23 @@
       CLUTTER_BACKEND = "wayland";
     };
     systemPackages = with pkgs; [
+      # Wayland Support
       wayland
       xdg-utils
       xdg-desktop-portal
       xdg-desktop-portal-kde
+
+      # Media Support
+      ffmpeg_6-full
+      intel-media-driver
+      libva
+      libva-utils
+      vaapiVdpau
+      libvdpau-va-gl
+
+      # Audio utilities
+      pavucontrol
+      pulseaudio-ctl
     ];
   };
 
@@ -207,11 +215,37 @@
   };
 
   # ------------------------------------------------------
-  # User Shell
+  # User Shell and Groups
   # ------------------------------------------------------
   users.defaultUserShell = pkgs.zsh;
   programs.zsh.enable = true;
   programs.fish.enable = true;
+
+  # ------------------------------------------------------
+  # Users Configuration
+  # ------------------------------------------------------
+  users.groups.notroot = {};
+  users.users.notroot = {
+    isNormalUser = true;
+    description = "Pedro Balbino";
+    group = "notroot";
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "audio"
+      "video"
+      "disk"
+      "input"
+      "bluetooth"
+      "docker"
+      "dialout"
+      "libvirtd"
+      "kvm"
+      "users"
+      "pulse"
+      "pulse-access"
+    ];
+  };
 
   # ------------------------------------------------------
   # Locale Settings
@@ -229,28 +263,6 @@
   };
 
   # ------------------------------------------------------
-  # Users Configuration
-  # ------------------------------------------------------
-  users.users.notroot = {
-    isSystemUser = false;
-    description = "Pedro Balbino";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "audio"
-      "video"
-      "disk"
-      "input"
-      "bluetooth"
-      "docker"
-      "dialout"
-      "libvirtd"
-      "kvm"
-      "users"
-    ];
-  };
-
-  # ------------------------------------------------------
   # Security Configuration
   # ------------------------------------------------------
   security = {
@@ -261,6 +273,7 @@
       killUnconfinedConfinables = true;
     };
     polkit.enable = true;
+    # Enable rtkit for better audio performance
     rtkit.enable = true;
   };
 
