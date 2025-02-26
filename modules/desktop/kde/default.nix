@@ -43,9 +43,9 @@ with lib; let
 
     # System settings and info
     plasma5.plasma-systemmonitor
-    kinfocenter
+    kdePackages.kinfocenter
     plasma5.ksystemstats
-    kgamma5
+    plasma5.kgamma5
     plasma5.sddm-kcm
     plasma5.polkit-kde-agent
 

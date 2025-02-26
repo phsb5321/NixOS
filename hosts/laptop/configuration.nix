@@ -308,12 +308,12 @@
 
       # System packages
       wayland
-      libsForQt5.qt5.qtwayland
+      kdePackages.qt5.qtwayland
       qt6.qtwayland
       xdg-utils
       xdg-desktop-portal
       xdg-desktop-portal-kde
-      libsForQt5.polkit-kde-agent
+      kdePackages.polkit-kde-agent
 
       # GPU packages
       glxinfo
