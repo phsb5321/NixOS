@@ -49,8 +49,8 @@
     };
     extraPackages = with pkgs; [
       # KDE-specific packages
-      libsForQt5.kio-extras
-      libsForQt5.qt5.qtwayland
+      kdePackages.kio-extras
+      kdePackages.qt5.qtwayland
       qt6.qtwayland
       kdePackages.plasma-nm
       kdePackages.plasma-pa
