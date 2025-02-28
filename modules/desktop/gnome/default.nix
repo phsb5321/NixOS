@@ -22,7 +22,7 @@ in {
     # Set default session to GNOME
     services.displayManager.defaultSession = "gnome";
 
-    # Enable Wayland support in GDM
+    # Enable Wayland support in GDM (you may choose X11 from the session menu if needed)
     services.xserver.displayManager.gdm.wayland = true;
 
     # Exclude default gnome-shell to allow user themes
@@ -33,14 +33,18 @@ in {
       gnome-shell
       gnome-shell-extensions
       gnome-tweaks
+      networkmanager
+      wpa_supplicant
+      linux-firmware
+
+      # GNOME Extensions
       gnomeExtensions.dash-to-dock
       gnomeExtensions.clipboard-indicator
       gnomeExtensions.sound-output-device-chooser
       gnomeExtensions.gsconnect
       gnomeExtensions.blur-my-shell
-      networkmanager
-      wpa_supplicant
-      linux-firmware
+      gnomeExtensions.caffeine
+      gnomeExtensions.forge
     ];
 
     # Enable GNOME Keyring services

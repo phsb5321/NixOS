@@ -71,19 +71,11 @@
   # Enable and configure desktop module
   modules.desktop = {
     enable = true;
-    environment = "kde";
-    # Updated from plasma5 to plasma6
-    kde.version = "plasma5";
+    environment = "gnome"; # Changed from "kde" to "gnome"
     autoLogin = {
       enable = true;
       user = "notroot";
     };
-    extraPackages = with pkgs; [
-      # Updated from plasma5Packages to kdePackages
-      kdePackages.plasma-nm
-      kdePackages.plasma-pa
-      networkmanagerapplet
-    ];
     fonts = {
       enable = true;
       packages = with pkgs; [
@@ -120,41 +112,24 @@
     username = "notroot";
     hostName = "default";
     extraPackages = with pkgs; [
-      # Editors and IDEs
       vscode
-
-      # Web Browsers
       google-chrome
-
-      # API Testing
       insomnia
       postman
-
-      # File Management
       gparted
       baobab
       syncthing
       vlc
-
-      # System Utilities
       pigz
       mangohud
       unzip
-
-      # Music Streaming
       spotify
-
-      # Miscellaneous Tools
       lsof
       discord
       corectrl
       inputs.zen-browser.packages.${system}.default
       openai-whisper
-
-      # Programming Languages
       python3
-
-      # Android
       android-tools
     ];
   };
@@ -222,21 +197,15 @@
     };
   };
 
-  # Moved from hardware.pulseaudio to services.pulseaudio
-  services.pulseaudio = {
+  # Pulseaudio configuration (using PulseAudio, not PipeWire)
+  services.pulseaudio = lib.mkForce {
     enable = true;
     package = pkgs.pulseaudioFull;
     extraConfig = "load-module module-switch-on-connect";
   };
 
-  # Environment variables for AMD GPU and hardware acceleration
-  environment.variables = {
-    LIBVA_DRIVER_NAME = "radeonsi";
-    AMD_VULKAN_ICD = "RADV";
-    VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
-    VDPAU_DRIVER = "radeonsi";
-    __GLX_VENDOR_LIBRARY_NAME = "mesa";
-  };
+  # Force disable PipeWire to resolve conflicting definitions
+  services.pipewire.enable = lib.mkForce false;
 
   # Services configuration
   services = {
@@ -254,7 +223,7 @@
     ollama.enable = false;
   };
 
-  # Gaming configuration
+  # Gaming configuration and other programs
   programs = {
     fish.enable = true;
     zsh.enable = true;
