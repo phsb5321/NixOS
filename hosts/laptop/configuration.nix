@@ -39,20 +39,17 @@
     ];
   };
 
-  # Enable and configure desktop module
+  # Enable and configure desktop module (using GNOME now)
   modules.desktop = {
     enable = true;
-    environment = "kde";
-    kde.version = "plasma6";
+    environment = "gnome"; # switched from "kde" to "gnome"
     autoLogin = {
-      enable = false;
+      enable = true;
       user = "notroot";
     };
     fonts = {
       enable = true;
-      packages = with pkgs; [
-        nerd-fonts.jetbrains-mono
-      ];
+      packages = with pkgs; [nerd-fonts.jetbrains-mono];
       defaultFonts = {
         monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
       };
@@ -108,11 +105,7 @@
   # Locale settings
   i18n = {
     defaultLocale = "en_US.UTF-8";
-    supportedLocales = [
-      "en_US.UTF-8/UTF-8"
-      "pt_BR.UTF-8/UTF-8"
-      "C.UTF-8/UTF-8"
-    ];
+    supportedLocales = ["en_US.UTF-8/UTF-8" "pt_BR.UTF-8/UTF-8" "C.UTF-8/UTF-8"];
     glibcLocales = pkgs.glibcLocales;
     extraLocaleSettings = {
       LC_ADDRESS = "pt_BR.UTF-8";
@@ -156,20 +149,11 @@
   hardware = {
     enableRedistributableFirmware = true;
     cpu.intel.updateMicrocode = true;
-
-    # Graphics configuration
     graphics = {
       enable = true;
       enable32Bit = true;
-      extraPackages = with pkgs; [
-        intel-media-driver
-        vaapiIntel
-        vaapiVdpau
-        libvdpau-va-gl
-      ];
+      extraPackages = with pkgs; [intel-media-driver vaapiIntel vaapiVdpau libvdpau-va-gl];
     };
-
-    # NVIDIA configuration
     nvidia = {
       package = config.boot.kernelPackages.nvidiaPackages.stable;
       open = false;
@@ -189,8 +173,6 @@
       nvidiaSettings = true;
       forceFullCompositionPipeline = true;
     };
-
-    # Nvidia Container Toolkit
     nvidia-container-toolkit.enable = true;
   };
 
@@ -200,59 +182,33 @@
     cudaSupport = true;
   };
 
-  # Services configuration
+  # Services configuration (updated for GNOME with PulseAudio)
   services = {
-    # Basic X server configuration
     xserver.enable = true;
-
-    # Display Manager Configuration
-    displayManager = {
-      defaultSession = "plasma";
-      sddm = {
+    xserver.displayManager = {
+      defaultSession = "gnome";
+      gdm = {
         enable = true;
-        wayland.enable = true;
-        settings = {
-          Theme = {
-            CursorTheme = "breeze_cursors";
-            Font = "Noto Sans";
-          };
-          General = {
-            InputMethod = "";
-            Numlock = "on";
-          };
-          Wayland = {
-            CompositorCommand = "kwin_wayland --drm --no-lockscreen";
-          };
-        };
+        wayland = true;
+        settings = {};
       };
     };
-
-    # Plasma Desktop Configuration
-    desktopManager.plasma6.enable = true;
-
-    # System Services
+    xserver.desktopManager.gnome.enable = true;
     dbus = {
       enable = true;
       packages = [pkgs.dconf];
     };
-
-    # Audio Configuration
-    pipewire = {
+    pulseaudio = lib.mkForce {
       enable = true;
-      alsa.enable = true;
-      alsa.support32Bit = true;
-      pulse.enable = true;
-      jack.enable = true;
+      package = pkgs.pulseaudioFull;
+      extraConfig = "load-module module-switch-on-connect";
     };
-
-    # Additional Services
+    pipewire.enable = lib.mkForce false;
     accounts-daemon.enable = true;
     upower.enable = true;
     udisks2.enable = true;
     gvfs.enable = true;
     tumbler.enable = true;
-
-    # GNOME Keyring
     gnome.gnome-keyring.enable = true;
   };
 
@@ -262,7 +218,7 @@
       services = {
         sddm.enableKwallet = true;
         sddm-greeter.enableKwallet = true;
-        login.enableKwallet = true;
+        login.enableGnomeKeyring = true;
       };
     };
     rtkit.enable = true;
@@ -288,34 +244,22 @@
       LANG = "en_US.UTF-8";
       LC_ALL = "en_US.UTF-8";
     };
-
     systemPackages = with pkgs; [
-      # KDE Packages
-      kdePackages.plasma-workspace
-      kdePackages.plasma-desktop
-      kdePackages.kwin
-      kdePackages.kscreen
-      kdePackages.plasma-pa
-      kdePackages.kgamma
-      kdePackages.sddm-kcm
-      kdePackages.breeze
-      kdePackages.breeze-gtk
-      kdePackages.breeze-icons
-      kdePackages.plasma-nm
-      kdePackages.plasma-vault
-      kdePackages.plasma-browser-integration
-      kdePackages.kdeconnect-kde
-
-      # System packages
+      gnome-shell
+      gnome-shell-extensions
+      gnome-tweaks
+      gnomeExtensions.dash-to-dock
+      gnomeExtensions.clipboard-indicator
+      gnomeExtensions.sound-output-device-chooser
+      gnomeExtensions.gsconnect
+      gnomeExtensions.blur-my-shell
+      networkmanager
+      wpa_supplicant
+      linux-firmware
       wayland
-      kdePackages.qt5.qtwayland
-      qt6.qtwayland
       xdg-utils
       xdg-desktop-portal
-      xdg-desktop-portal-kde
-      kdePackages.polkit-kde-agent
-
-      # GPU packages
+      xdg-desktop-portal-gtk
       glxinfo
       vulkan-tools
       vulkan-loader
@@ -328,12 +272,12 @@
   xdg.portal = {
     enable = true;
     extraPortals = [
-      pkgs.xdg-desktop-portal-kde
       pkgs.xdg-desktop-portal-gtk
+      pkgs.kdePackages.xdg-desktop-portal-kde
     ];
   };
 
-  # Boot configuration
+  # Boot configuration – ensure EFI mount point is correct
   boot = {
     extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
     kernelParams = [
@@ -341,12 +285,17 @@
       "nvidia-drm.modeset=1"
     ];
     kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
+    loader = {
+      systemd-boot.enable = true;
+      efi = {
+        canTouchEfiVariables = true;
+        efiSysMountPoint = "/boot"; # Adjust as needed
+      };
+    };
   };
 
-  # X server configuration for NVIDIA
   services.xserver.videoDrivers = ["nvidia"];
 
-  # Enable required programs
   programs = {
     fish.enable = true;
     zsh.enable = true;
@@ -357,14 +306,5 @@
     };
   };
 
-  # Enable PAM
-  security.pam.services = {
-    login.enableGnomeKeyring = true;
-    sddm.enableGnomeKeyring = true;
-  };
-
-  # Docker configuration
-  virtualisation.docker = {
-    enable = true;
-  };
+  virtualisation.docker = {enable = true;};
 }
