@@ -4,7 +4,7 @@
     ./fish.nix
     ./zsh.nix
     ./kitty.nix
-    # ./git.nix
+    ./git.nix
     ./nixvim.nix
   ];
 }
