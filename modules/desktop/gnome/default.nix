@@ -45,6 +45,10 @@ in {
       gnomeExtensions.blur-my-shell
       gnomeExtensions.caffeine
       gnomeExtensions.forge
+      gnomeExtensions.user-themes
+
+      # Themes
+      material-cursors
     ];
 
     # Enable GNOME Keyring services
