@@ -307,4 +307,7 @@
   };
 
   virtualisation.docker = {enable = true;};
+
+  # Tailscale
+  services.tailscale.enable = true;
 }
