@@ -301,4 +301,7 @@
     pkgs.platformio-core
     pkgs.openocd
   ];
+
+  # Tailscale
+  services.tailscale.enable = true;
 }
