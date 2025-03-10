@@ -98,7 +98,6 @@
       corectrl
       inputs.zen-browser.packages.${system}.default
       python3
-      waydroid
     ];
   };
 
