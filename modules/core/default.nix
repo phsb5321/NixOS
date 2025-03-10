@@ -140,6 +140,8 @@ in {
         backend = "podman";
         containers = {};
       };
+
+      waydroid.enable = true;
     };
 
     # Common system packages
@@ -192,6 +194,8 @@ in {
         elixir-ls
         nosql-workbench
         deno
+        postgresql
+        supabase-cli
 
         # Nix Tools
         alejandra
