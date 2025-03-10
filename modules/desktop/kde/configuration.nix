@@ -38,7 +38,6 @@
       bleachbit
       lact
       speechd
-      waydroid
       anydesk
       pkgs.vulkan-tools
       pkgs.vulkan-loader

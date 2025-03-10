@@ -47,7 +47,6 @@
       bleachbit
       lact
       speechd
-      waydroid
       anydesk
 
       # AMD GPU and Video Tools
