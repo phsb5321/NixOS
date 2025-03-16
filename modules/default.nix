@@ -5,6 +5,5 @@
     ./networking
     ./home
     ./core
-    ./home-server
   ];
 }

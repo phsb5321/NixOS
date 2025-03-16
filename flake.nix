@@ -111,17 +111,6 @@
             ./hosts/laptop/configuration.nix
           ];
       };
-
-      # Experimental VM configuration
-      experimental-vm = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = commonSpecialArgs;
-        modules =
-          commonModules
-          ++ [
-            ./hosts/experimental-vm/configuration.nix
-          ];
-      };
     };
   };
 }
