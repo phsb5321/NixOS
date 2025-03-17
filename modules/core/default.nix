@@ -1,4 +1,4 @@
-# ~/NixOS/hosts/modules/core/default.nix
+# modules/core/default.nix
 {
   inputs,
   config,
@@ -11,8 +11,9 @@
 in {
   imports = [
     ./fonts.nix
-    ./gaming.nix # Import the gaming module here
+    ./gaming.nix
     ./java.nix
+    ./docker-dns.nix
   ];
 
   options.modules.core = with lib; {
@@ -114,33 +115,24 @@ in {
       printing.enable = true;
     };
 
-    # Virtualization configuration
+    # Basic systemd-resolved configuration (Docker DNS will depend on this)
+    services.resolved = {
+      enable = true;
+      fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
+    };
+
+    # Virtualization configuration - removed Docker settings as they're now in docker-dns.nix
     virtualisation = {
       containers.enable = true;
-
-      docker = {
-        enable = true;
-        daemon.settings = {
-          dns = ["8.8.8.8" "8.8.4.4"];
-        };
-        rootless = {
-          enable = true;
-          setSocketVariable = true;
-        };
-      };
-
       podman = {
         enable = true;
-        # Removed dockerCompat since we're running Docker alongside Podman
         defaultNetwork.settings.dns_enabled = true;
         enableNvidia = false;
       };
-
       oci-containers = {
         backend = "podman";
         containers = {};
       };
-
       waydroid.enable = true;
     };
 
