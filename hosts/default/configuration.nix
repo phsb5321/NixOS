@@ -32,7 +32,7 @@
       winetricks
 
       # System Utilities
-      bleedPkgs.zed-editor
+      zed-editor
       guvcview
       obs-studio
       gimp
