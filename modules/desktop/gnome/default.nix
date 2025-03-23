@@ -10,8 +10,12 @@ in {
   config = mkIf (cfg.enable && cfg.environment == "gnome") {
     # Enable X server and GNOME desktop environment
     services.xserver.enable = true;
-    services.xserver.displayManager.gdm.enable = true;
+    services.xserver.displayManager.gdm = {
+      enable = true;
+      wayland = false; # Force X11 mode for stability
+    };
     services.xserver.desktopManager.gnome.enable = true;
+    services.displayManager.defaultSession = "gnome-xorg"; # Use X11 session
 
     # Auto-login configuration
     services.displayManager.autoLogin = mkIf cfg.autoLogin.enable {
@@ -19,25 +23,54 @@ in {
       user = cfg.autoLogin.user;
     };
 
-    # Set default session to GNOME
-    services.displayManager.defaultSession = "gnome";
+    # GNOME-specific services
+    services.gnome = {
+      gnome-keyring.enable = true;
+      core-shell.enable = true;
+      core-utilities.enable = true;
+      gnome-settings-daemon.enable = true;
+      evolution-data-server.enable = true;
+      glib-networking.enable = true;
+      tinysparql.enable = true; # Renamed from tracker.enable
+      localsearch.enable = true; # Renamed from tracker-miners.enable
+    };
 
-    # Enable Wayland support in GDM (you may choose X11 from the session menu if needed)
-    services.xserver.displayManager.gdm.wayland = true;
+    # Additional services needed by GNOME
+    services.geoclue2.enable = true;
+    services.dbus = {
+      enable = true;
+      packages = with pkgs; [
+        dconf
+        gnome-settings-daemon
+      ];
+    };
 
-    # Exclude default gnome-shell to allow user themes
-    environment.gnome.excludePackages = [pkgs.gnome-shell];
+    # Add udev rules for GNOME
+    services.udev.packages = with pkgs; [
+      gnome-settings-daemon
+    ];
 
-    # Additional GNOME packages and extensions
+    # GNOME-specific packages
     environment.systemPackages = with pkgs; [
-      gnome-shell
-      gnome-shell-extensions
+      # Core GNOME packages - updated with top-level packages
       gnome-tweaks
-      networkmanager
-      wpa_supplicant
-      linux-firmware
+      gnome-shell-extensions
+      adwaita-icon-theme
+      dconf-editor
+      gnome-backgrounds
+      gnome-themes-extra
+      gnome-extension-manager
 
-      # GNOME Extensions
+      # Missing dependencies identified in logs
+      ibus
+      libdbusmenu-gtk3
+      libappindicator
+      libappindicator-gtk3
+      libsoup
+      glib
+      dconf
+
+      # Extensions from the configuration
       gnomeExtensions.dash-to-dock
       gnomeExtensions.clipboard-indicator
       gnomeExtensions.sound-output-device-chooser
@@ -46,26 +79,43 @@ in {
       gnomeExtensions.caffeine
       gnomeExtensions.forge
       gnomeExtensions.user-themes
-
-      # Themes
-      material-cursors
     ];
 
-    # Enable GNOME Keyring services
-    services.gnome.gnome-keyring.enable = true;
-    security.pam.services = {
-      gdm.enableGnomeKeyring = true;
-      login.enableGnomeKeyring = true;
+    # Configure XDG portal specifically for GNOME
+    xdg.portal = {
+      enable = true;
+      extraPortals = [
+        pkgs.xdg-desktop-portal-gtk
+        pkgs.xdg-desktop-portal-gnome
+      ];
+      config = {
+        gnome = {
+          default = ["gtk"];
+          "org.freedesktop.impl.portal.Secret" = ["gnome-keyring"];
+        };
+      };
     };
 
-    # GNOME settings overrides as a string
+    # Fontconfig fix for the error in logs
+    fonts.fontconfig = {
+      enable = true;
+      localConf = ''
+        <?xml version="1.0"?>
+        <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+        <fontconfig>
+          <!-- Your font configurations -->
+        </fontconfig>
+      '';
+    };
+
+    # GNOME settings overrides
     services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
       [org.gnome.desktop.interface]
       gtk-theme='Adwaita-dark'
-      icon-theme='Papirus-Dark'
+      icon-theme='Adwaita'
       cursor-theme='Adwaita'
       font-name='Cantarell 11'
-      monospace-font-name='Fira Code 11'
+      monospace-font-name='JetBrainsMono Nerd Font Mono 11'
 
       [org.gnome.desktop.wm.preferences]
       button-layout='appmenu:minimize,maximize,close'
@@ -94,18 +144,6 @@ in {
       percentageCritical = 5;
       percentageAction = 3;
     };
-
-    # Configure NetworkManager
-    networking.networkmanager = {
-      enable = true;
-      wifi.backend = "wpa_supplicant";
-    };
-
-    # Include firmware
-    hardware.enableAllFirmware = true;
-
-    # Enable Bluetooth support
-    hardware.bluetooth.enable = true;
 
     # Enable DConf settings
     programs.dconf.enable = true;
