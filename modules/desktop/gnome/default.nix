@@ -8,17 +8,23 @@ with lib; let
   cfg = config.modules.desktop;
 in {
   config = mkIf (cfg.enable && cfg.environment == "gnome") {
-    # Enable X server and GNOME desktop environment
-    services.xserver.enable = true;
-    services.xserver.displayManager.gdm = {
+    # Enable X server and GNOME desktop environment with GDM
+    services.xserver = {
       enable = true;
-      wayland = false; # Force X11 mode for stability
+      desktopManager.gnome.enable = true;
+
+      # Configure GDM as the display manager
+      displayManager = {
+        gdm = {
+          enable = true;
+          wayland = true;
+        };
+        defaultSession = "gnome";
+      };
     };
-    services.xserver.desktopManager.gnome.enable = true;
-    services.displayManager.defaultSession = "gnome-xorg"; # Use X11 session
 
     # Auto-login configuration
-    services.displayManager.autoLogin = mkIf cfg.autoLogin.enable {
+    services.xserver.displayManager.autoLogin = mkIf cfg.autoLogin.enable {
       enable = true;
       user = cfg.autoLogin.user;
     };
@@ -69,6 +75,7 @@ in {
       libsoup
       glib
       dconf
+      python3Packages.pygobject3 # Add PyGObject for Remmina plugin
 
       # Extensions from the configuration
       gnomeExtensions.dash-to-dock
@@ -96,14 +103,13 @@ in {
       };
     };
 
-    # Fontconfig fix for the error in logs
+    # Fixed fontconfig configuration without XML errors
     fonts.fontconfig = {
       enable = true;
       localConf = ''
         <?xml version="1.0"?>
         <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
         <fontconfig>
-          <!-- Your font configurations -->
         </fontconfig>
       '';
     };
@@ -123,6 +129,12 @@ in {
       [org.gnome.desktop.peripherals.touchpad]
       tap-to-click=true
       natural-scroll=true
+
+      [org.gnome.desktop.screensaver]
+      lock-enabled=true
+
+      [org.gnome.desktop.lockdown]
+      disable-lock-screen=false
     '';
 
     # Enable Flatpak support
