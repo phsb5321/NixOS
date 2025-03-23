@@ -70,7 +70,7 @@
   # Enable and configure desktop module
   modules.desktop = {
     enable = true;
-    environment = "gnome"; # Changed from "kde" to "gnome"
+    environment = "gnome"; # Using GNOME environment
     autoLogin = {
       enable = true;
       user = "notroot";
@@ -196,17 +196,10 @@
     };
   };
 
-  # Pulseaudio configuration (using PulseAudio, not PipeWire)
-  services.pulseaudio = lib.mkForce {
-    enable = true;
-    package = pkgs.pulseaudioFull;
-    extraConfig = "load-module module-switch-on-connect";
-  };
-
-  # Force disable PipeWire to resolve conflicting definitions
+  # Force PulseAudio configuration - removed hardware.pulseaudio reference
   services.pipewire.enable = lib.mkForce false;
 
-  # Services configuration
+  # General services configuration
   services = {
     syncthing = {
       enable = true;
@@ -256,6 +249,7 @@
       killUnconfinedConfinables = true;
     };
     polkit.enable = true;
+    rtkit.enable = true;
   };
 
   # SSH configuration
