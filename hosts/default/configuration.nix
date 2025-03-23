@@ -32,7 +32,7 @@
       winetricks
 
       # System Utilities
-      bleedPkgs.zed-editor
+      zed-editor
       guvcview
       obs-studio
       gimp
@@ -60,6 +60,10 @@
 
       # Bluetooth GUI manager
       blueman
+
+      # System information tools
+      pciutils
+      usbutils
     ];
   };
 
@@ -149,7 +153,10 @@
     LC_TIME = "pt_BR.UTF-8";
   };
 
-  # User configuration
+  # Create the plugdev group
+  users.groups.plugdev = {};
+
+  # User configuration with all groups in one place
   users.users.notroot = {
     isNormalUser = true;
     description = "Pedro Balbino";
@@ -166,6 +173,7 @@
       "libvirtd"
       "kvm"
       "render"
+      "plugdev"
     ];
   };
 
@@ -196,11 +204,62 @@
     };
   };
 
-  # Force PulseAudio configuration - removed hardware.pulseaudio reference
+  # Force PulseAudio configuration
   services.pipewire.enable = lib.mkForce false;
+  services.pulseaudio = {
+    enable = lib.mkForce true;
+    package = pkgs.pulseaudioFull;
+    extraConfig = "load-module module-switch-on-connect";
+  };
 
-  # General services configuration
+  # Fix AMD GPU Overdrive issue
+  boot.kernelParams = [
+    "mitigations=off"
+    "amdgpu.ppfeaturemask=0xffffffff"
+    "radeon.si_support=0"
+    "amdgpu.si_support=1"
+    "radeon.cik_support=0"
+    "amdgpu.cik_support=1"
+  ];
+
+  # Fix auditd configuration
+  security.auditd.enable = true;
+  security.audit = {
+    enable = true;
+    backlogLimit = 8192;
+    failureMode = "printk";
+    rules = [
+      "-a exit,always -F arch=b64 -S execve"
+    ];
+  };
+
+  # Direct X11 and display manager configuration
   services = {
+    xserver = {
+      enable = true;
+      desktopManager.gnome.enable = true;
+
+      # Use GDM instead of SDDM
+      displayManager = {
+        gdm = {
+          enable = lib.mkForce true;
+          wayland = true;
+        };
+
+        # Explicitly disable SDDM to avoid conflicts
+        sddm.enable = lib.mkForce false;
+
+        # Set default session to GNOME
+        defaultSession = "gnome";
+
+        # Configure auto-login
+        autoLogin = {
+          enable = true;
+          user = "notroot";
+        };
+      };
+    };
+
     syncthing = {
       enable = true;
       user = "notroot";
@@ -213,6 +272,22 @@
     fstrim.enable = true;
     thermald.enable = true;
     ollama.enable = false;
+  };
+
+  # Properly configure the display-manager service
+  systemd.services.display-manager = {
+    wants = ["systemd-user-sessions.service"];
+    after = ["systemd-user-sessions.service"];
+    restartIfChanged = false;
+  };
+
+  # Make sure we have proper libsoup package
+  nixpkgs.config.packageOverrides = pkgs: {
+    gnome =
+      pkgs.gnome
+      // {
+        libsoup = pkgs.libsoup_2_4;
+      };
   };
 
   # Gaming configuration and other programs
@@ -243,7 +318,6 @@
   # Security configuration
   security = {
     sudo.wheelNeedsPassword = true;
-    auditd.enable = true;
     apparmor = {
       enable = true;
       killUnconfinedConfinables = true;
@@ -265,14 +339,6 @@
   # Boot configuration
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
-    kernelParams = [
-      "mitigations=off"
-      "amdgpu.ppfeaturemask=0xffffffff"
-      "radeon.si_support=0"
-      "amdgpu.si_support=1"
-      "radeon.cik_support=0"
-      "amdgpu.cik_support=1"
-    ];
     tmp.useTmpfs = true;
   };
 
