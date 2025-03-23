@@ -159,6 +159,7 @@ in {
         rbw
         inputs.firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin
         vdhcoapp
+        inkscape
 
         # System Monitoring
         neofetch
