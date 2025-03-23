@@ -28,10 +28,10 @@ in {
     services.pipewire.enable = lib.mkForce false;
 
     # Use PulseAudio instead of PipeWire for improved codec support
+    # Define PulseAudio settings but allow overrides from host configuration
     services.pulseaudio = {
-      enable = lib.mkForce true; # Use mkForce to override other definitions
-      package = pkgs.pulseaudioFull;
-      extraConfig = "load-module module-switch-on-connect";
+      enable = lib.mkForce true;
+      # Remove package definition here to avoid conflicts
     };
 
     # Enhanced Bluetooth integration
