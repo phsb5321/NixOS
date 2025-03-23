@@ -27,7 +27,7 @@
       mangohud
       protontricks
       winetricks
-      bleedPkgs.zed-editor
+      zed-editor
       guvcview
       obs-studio
       gimp
