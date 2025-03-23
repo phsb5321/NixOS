@@ -25,12 +25,11 @@ in {
     security.rtkit.enable = true;
 
     # Explicitly disable PipeWire to avoid conflicts with PulseAudio
-    services.pipewire.enable = false;
+    services.pipewire.enable = lib.mkForce false;
 
     # Use PulseAudio instead of PipeWire for improved codec support
-    # Changed from hardware.pulseaudio to services.pulseaudio
     services.pulseaudio = {
-      enable = true;
+      enable = lib.mkForce true; # Use mkForce to override other definitions
       package = pkgs.pulseaudioFull;
       extraConfig = "load-module module-switch-on-connect";
     };
