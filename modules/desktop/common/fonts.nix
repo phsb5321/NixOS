@@ -188,7 +188,7 @@ in {
           style = cfg.rendering.hinting.style;
         };
 
-        # Additional fontconfig configuration
+        # Additional fontconfig configuration - Fix for the XML error
         localConf = ''
           <?xml version="1.0"?>
           <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">

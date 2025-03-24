@@ -32,7 +32,7 @@
       winetricks
 
       # System Utilities
-      zed-editor
+      # zed-editor
       guvcview
       obs-studio
       gimp
@@ -50,13 +50,13 @@
       anydesk
 
       # AMD GPU and Video Tools
-      pkgs.vulkan-tools
-      pkgs.vulkan-loader
-      pkgs.vulkan-validation-layers
-      pkgs.libva-utils
-      pkgs.vdpauinfo
-      pkgs.glxinfo
-      pkgs.ffmpeg-full
+      vulkan-tools
+      vulkan-loader
+      vulkan-validation-layers
+      libva-utils
+      vdpauinfo
+      glxinfo
+      ffmpeg-full
 
       # Bluetooth GUI manager
       blueman
@@ -132,7 +132,16 @@
       corectrl
       inputs.zen-browser.packages.${system}.default
       openai-whisper
-      python3
+
+      # Python packages with GTK support
+      (python3.withPackages (ps:
+        with ps; [
+          pygobject3
+          pycairo
+          dbus-python
+          python-dbusmock
+        ]))
+
       android-tools
     ];
   };
@@ -233,61 +242,30 @@
     ];
   };
 
-  # Direct X11 and display manager configuration
+  # Display manager configuration - ensure only one is enabled
+  services.xserver.displayManager = {
+    gdm = {
+      enable = true; # Use GDM for GNOME
+      wayland = true;
+    };
+    sddm.enable = false; # Disable SDDM explicitly
+  };
+
+  # Configure syncthing service
+  services.syncthing = {
+    enable = true;
+    user = "notroot";
+    dataDir = "/home/notroot/Sync";
+    configDir = "/home/notroot/.config/syncthing";
+    overrideDevices = true;
+    overrideFolders = true;
+  };
+
+  # Enable other system services
   services = {
-    xserver = {
-      enable = true;
-      desktopManager.gnome.enable = true;
-
-      # Use GDM instead of SDDM
-      displayManager = {
-        gdm = {
-          enable = lib.mkForce true;
-          wayland = true;
-        };
-
-        # Explicitly disable SDDM to avoid conflicts
-        sddm.enable = lib.mkForce false;
-
-        # Set default session to GNOME
-        defaultSession = "gnome";
-
-        # Configure auto-login
-        autoLogin = {
-          enable = true;
-          user = "notroot";
-        };
-      };
-    };
-
-    syncthing = {
-      enable = true;
-      user = "notroot";
-      dataDir = "/home/notroot/Sync";
-      configDir = "/home/notroot/.config/syncthing";
-      overrideDevices = true;
-      overrideFolders = true;
-    };
-
     fstrim.enable = true;
     thermald.enable = true;
     ollama.enable = false;
-  };
-
-  # Properly configure the display-manager service
-  systemd.services.display-manager = {
-    wants = ["systemd-user-sessions.service"];
-    after = ["systemd-user-sessions.service"];
-    restartIfChanged = false;
-  };
-
-  # Make sure we have proper libsoup package
-  nixpkgs.config.packageOverrides = pkgs: {
-    gnome =
-      pkgs.gnome
-      // {
-        libsoup = pkgs.libsoup_2_4;
-      };
   };
 
   # Gaming configuration and other programs

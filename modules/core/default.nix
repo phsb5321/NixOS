@@ -5,6 +5,7 @@
   lib,
   pkgs,
   stablePkgs,
+  bleedPkgs,
   ...
 }: let
   cfg = config.modules.core;
