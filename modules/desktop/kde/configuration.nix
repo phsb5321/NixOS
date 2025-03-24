@@ -27,7 +27,6 @@
       mangohud
       protontricks
       winetricks
-      zed-editor
       guvcview
       obs-studio
       gimp

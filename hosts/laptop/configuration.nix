@@ -31,7 +31,7 @@
       seahorse
 
       # System Utilities
-      zed-editor
+      # zed-editor
 
       # Additional Tools
       bleachbit

@@ -8,6 +8,7 @@
   imports = [
     ./options.nix
     ./common
+    ./coordinator.nix
     ./hyprland
     ./gnome
     ./kde
