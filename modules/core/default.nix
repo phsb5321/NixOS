@@ -202,6 +202,8 @@ in {
         deno
         postgresql
         supabase-cli
+        bleedPkgs.zed-editor
+        bleedPkgs.ghostty
 
         # Nix Tools
         alejandra

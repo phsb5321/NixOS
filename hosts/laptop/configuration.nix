@@ -30,9 +30,6 @@
       nvtopPackages.full
       seahorse
 
-      # System Utilities
-      # zed-editor
-
       # Additional Tools
       bleachbit
       speechd

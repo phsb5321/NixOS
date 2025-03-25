@@ -32,7 +32,6 @@
       winetricks
 
       # System Utilities
-      # zed-editor
       guvcview
       obs-studio
       gimp
