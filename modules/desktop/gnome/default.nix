@@ -26,15 +26,17 @@ in {
             enable = true;
             wayland = true;
           };
-          defaultSession = "gnome";
         };
       };
 
       # Auto-login configuration
-      services.xserver.displayManager.autoLogin = mkIf cfg.autoLogin.enable {
+      services.displayManager.autoLogin = mkIf cfg.autoLogin.enable {
         enable = true;
         user = cfg.autoLogin.user;
       };
+
+      # Set default session
+      services.displayManager.defaultSession = "gnome";
 
       # GNOME-specific services
       services.gnome = {
@@ -86,7 +88,7 @@ in {
         libdbusmenu-gtk3
         libappindicator
         libappindicator-gtk3
-        libsoup
+        libsoup_2_4 # Updated from libsoup
         dconf
 
         # Extensions from the configuration
