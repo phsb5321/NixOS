@@ -11,7 +11,7 @@ with lib; let
 in {
   config = mkIf cfg.enable {
     # Configure display managers based on the chosen environment
-    services.xserver.displayManager = {
+    services.displayManager = {
       # Set default session based on the desktop environment
       defaultSession =
         if cfg.environment == "gnome"

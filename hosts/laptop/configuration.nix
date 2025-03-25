@@ -190,16 +190,18 @@
 
   # Services configuration with PipeWire
   services = {
-    xserver.enable = true;
-    xserver.displayManager = {
-      defaultSession = "gnome";
-      gdm = {
-        enable = true;
-        wayland = true;
-        settings = {};
+    xserver = {
+      enable = true;
+      displayManager = {
+        defaultSession = "gnome";
+        gdm = {
+          enable = true;
+          wayland = true;
+          settings = {};
+        };
       };
+      desktopManager.gnome.enable = true; # This is the correct path
     };
-    xserver.desktopManager.gnome.enable = true;
     dbus = {
       enable = true;
       packages = [pkgs.dconf];
@@ -244,8 +246,7 @@
       SDL_VIDEODRIVER = "wayland";
       CLUTTER_BACKEND = "wayland";
       CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
-      # Updated library path for PipeWire instead of specifically including pipewire
-      LD_LIBRARY_PATH = "/run/opengl-driver/lib:/run/opengl-driver-32/lib:";
+      LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
       __NV_PRIME_RENDER_OFFLOAD = "1";
       __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
       __GLX_VENDOR_LIBRARY_NAME = "nvidia";
