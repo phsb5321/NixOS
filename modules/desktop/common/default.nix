@@ -24,17 +24,20 @@ in {
 
     security.rtkit.enable = true;
 
-    # Explicitly disable PipeWire to avoid conflicts with PulseAudio
-    services.pipewire.enable = lib.mkForce false;
-
-    # Use PulseAudio instead of PipeWire for improved codec support
-    # Define PulseAudio settings but allow overrides from host configuration
-    services.pulseaudio = {
-      enable = lib.mkForce true;
-      # Remove package definition here to avoid conflicts
+    # Use PipeWire for audio
+    services.pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true; # PulseAudio compatibility
+      jack.enable = true; # JACK compatibility
+      wireplumber.enable = true;
     };
 
-    # Enhanced Bluetooth integration
+    # Explicitly disable PulseAudio to avoid conflicts
+    services.pulseaudio.enable = lib.mkForce false;
+
+    # Enhanced Bluetooth integration with PipeWire
     hardware.bluetooth = {
       enable = true;
       powerOnBoot = true;
@@ -47,6 +50,8 @@ in {
     xdg.portal = {
       enable = true;
       extraPortals = [pkgs.xdg-desktop-portal-gtk];
+      # Ensure xdg-desktop-portal-wlr is available for screen sharing
+      wlr.enable = mkDefault true;
     };
 
     services.dbus.enable = true;
