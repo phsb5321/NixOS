@@ -102,6 +102,7 @@ in {
             textractor = "~/NixOS/user-scripts/textractor.sh";
             nixswitch = "~/NixOS/user-scripts/nixos-rebuild.sh ${cfg.hostName}";
             nix-select-shell = "~/NixOS/user-scripts/nix-shell-selector.sh";
+            fix-headphones = "~/NixOS/user-scripts/fix-bluetooth-headset.sh";
           };
 
           plugins = [
