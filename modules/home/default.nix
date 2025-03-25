@@ -109,6 +109,15 @@ in {
 
         # Enable Home Manager itself
         programs.home-manager.enable = true;
+
+        # PipeWire user-specific configuration for Bluetooth headphones
+        xdg.configFile."pipewire/pipewire-pulse.conf.d/99-soundcore-fix.conf".text = ''
+          pulse.properties = {
+            bluez5.hw-offload = true
+            bluez5.autoswitch-profile = true
+            bluez5.roles = [hfp_hf hfp_ag hsp_hs hsp_ag a2dp_sink a2dp_source]
+          }
+        '';
       };
     };
   };
