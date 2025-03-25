@@ -64,6 +64,13 @@
       # System information tools
       pciutils
       usbutils
+
+      # PipeWire Tools
+      pipewire
+      wireplumber
+      easyeffects # Audio effects processor for PipeWire
+      pavucontrol # Still needed for compatibility with PulseAudio applications
+      helvum # PipeWire patchbay
     ];
   };
 
@@ -213,13 +220,11 @@
     };
   };
 
-  # Force PulseAudio configuration
-  services.pipewire.enable = lib.mkForce false;
-  services.pulseaudio = {
-    enable = lib.mkForce true;
-    package = pkgs.pulseaudioFull;
-    extraConfig = "load-module module-switch-on-connect";
-  };
+  # Let the module system handle PipeWire configuration
+  services.pipewire.enable = true;
+
+  # Ensure PulseAudio is disabled
+  services.pulseaudio.enable = lib.mkForce false;
 
   # Fix AMD GPU Overdrive issue
   boot.kernelParams = [

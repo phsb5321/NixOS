@@ -15,6 +15,7 @@ in {
     ./gaming.nix
     ./java.nix
     ./docker-dns.nix
+    ./pipewire.nix
   ];
 
   options.modules.core = with lib; {
@@ -61,6 +62,17 @@ in {
     # Enable gaming module
     modules.core.gaming = {
       enable = true;
+    };
+
+    # Enable PipeWire module
+    modules.core.pipewire = {
+      enable = true;
+      highQualityAudio = true;
+      bluetooth = {
+        enable = true;
+        highQualityProfiles = true;
+      };
+      tools.enable = true;
     };
 
     # System version

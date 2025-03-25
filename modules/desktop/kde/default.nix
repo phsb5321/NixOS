@@ -169,14 +169,20 @@ in {
         percentageCritical = 5;
         percentageAction = 3;
       };
-
-      # Migrate to PulseAudio (force our configuration)
-      pulseaudio = lib.mkForce {
-        enable = true;
-        package = pkgs.pulseaudioFull;
-        extraConfig = "load-module module-switch-on-connect";
-      };
     };
+
+    # Enable PipeWire for audio
+    services.pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      jack.enable = true;
+      wireplumber.enable = true;
+    };
+
+    # Ensure PulseAudio is disabled
+    services.pulseaudio.enable = lib.mkForce false;
 
     security = {
       polkit.enable = true;

@@ -36,6 +36,13 @@
       # Additional Tools
       bleachbit
       speechd
+
+      # PipeWire Tools
+      pipewire
+      wireplumber
+      easyeffects
+      helvum
+      pavucontrol
     ];
   };
 
@@ -181,7 +188,7 @@
     cudaSupport = true;
   };
 
-  # Services configuration (updated for GNOME with PulseAudio)
+  # Services configuration with PipeWire
   services = {
     xserver.enable = true;
     xserver.displayManager = {
@@ -197,12 +204,17 @@
       enable = true;
       packages = [pkgs.dconf];
     };
-    pulseaudio = lib.mkForce {
+    # Enable PipeWire with standard settings
+    pipewire = {
       enable = true;
-      package = pkgs.pulseaudioFull;
-      extraConfig = "load-module module-switch-on-connect";
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      jack.enable = true;
+      wireplumber.enable = true;
     };
-    pipewire.enable = lib.mkForce false;
+    # Disable PulseAudio
+    pulseaudio.enable = lib.mkForce false;
     accounts-daemon.enable = true;
     upower.enable = true;
     udisks2.enable = true;
@@ -232,7 +244,8 @@
       SDL_VIDEODRIVER = "wayland";
       CLUTTER_BACKEND = "wayland";
       CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
-      LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
+      # Updated library path for PipeWire instead of specifically including pipewire
+      LD_LIBRARY_PATH = "/run/opengl-driver/lib:/run/opengl-driver-32/lib:";
       __NV_PRIME_RENDER_OFFLOAD = "1";
       __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
       __GLX_VENDOR_LIBRARY_NAME = "nvidia";
@@ -274,6 +287,8 @@
       pkgs.xdg-desktop-portal-gtk
       pkgs.kdePackages.xdg-desktop-portal-kde
     ];
+    # Enable wlr portal for better screen sharing support
+    wlr.enable = true;
   };
 
   # Boot configuration – ensure EFI mount point is correct
