@@ -204,6 +204,8 @@ in {
         supabase-cli
         bleedPkgs.zed-editor
         bleedPkgs.ghostty
+        stockfish
+        chromium
 
         # Nix Tools
         alejandra
