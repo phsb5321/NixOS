@@ -24,10 +24,7 @@
       # Development Tools
       llvm
       clang
-      cudaPackages.cuda_nvcc
-      cudaPackages.cuda_cudart
-      cudaPackages.cuda_cccl
-      nvtopPackages.full
+      nvtopPackages.full # Keep for monitoring
       seahorse
 
       # Additional Tools
@@ -148,7 +145,7 @@
     };
   };
 
-  # Hardware configuration
+  # Hardware configuration - Simplified NVIDIA setup
   hardware = {
     enableRedistributableFirmware = true;
     cpu.intel.updateMicrocode = true;
@@ -179,10 +176,9 @@
     nvidia-container-toolkit.enable = true;
   };
 
-  # Nixpkgs configuration
+  # Nixpkgs configuration - removed CUDA support
   nixpkgs.config = {
     allowUnfree = true;
-    cudaSupport = true;
   };
 
   # Services configuration with PipeWire
@@ -197,7 +193,7 @@
           settings = {};
         };
       };
-      desktopManager.gnome.enable = true; # This is the correct path
+      desktopManager.gnome.enable = true;
     };
     dbus = {
       enable = true;
@@ -235,15 +231,15 @@
     polkit.enable = true;
   };
 
-  # Environment configuration
+  # Environment configuration - removed CUDA environment variables
   environment = {
     sessionVariables = {
       NIXOS_OZONE_WL = "1";
       XDG_SESSION_TYPE = "wayland";
       SDL_VIDEODRIVER = "wayland";
       CLUTTER_BACKEND = "wayland";
-      CUDA_PATH = "${pkgs.cudaPackages.cuda_cudart}";
       LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
+      # NVIDIA Prime variables for GPU offloading
       __NV_PRIME_RENDER_OFFLOAD = "1";
       __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
       __GLX_VENDOR_LIBRARY_NAME = "nvidia";
