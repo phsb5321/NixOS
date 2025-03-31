@@ -100,6 +100,9 @@ in {
         gnomeExtensions.caffeine
         gnomeExtensions.forge
         gnomeExtensions.user-themes
+
+        # Themes
+        material-cursors
       ];
 
       # Configure XDG portal specifically for GNOME
