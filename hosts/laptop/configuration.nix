@@ -1,4 +1,4 @@
-# ~/NixOS/hosts/laptop/configuration.nix
+# /home/notroot/NixOS/hosts/laptop/configuration.nix
 {
   config,
   pkgs,
@@ -181,7 +181,7 @@
     allowUnfree = true;
   };
 
-  # Services configuration with PipeWire
+  # Services configuration with PipeWire enabled (note: the nvidia-persistenced option has been removed)
   services = {
     xserver = {
       enable = true;
@@ -285,7 +285,7 @@
     wlr.enable = true;
   };
 
-  # Boot configuration – ensure EFI mount point is correct
+  # Boot configuration – ensure EFI mount point is correct and proper NVIDIA modules are loaded in both kernel and initrd
   boot = {
     extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
     kernelParams = [
@@ -293,6 +293,7 @@
       "nvidia-drm.modeset=1"
     ];
     kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
+    initrd.kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
     loader = {
       systemd-boot.enable = true;
       efi = {
