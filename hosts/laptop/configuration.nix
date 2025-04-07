@@ -145,7 +145,7 @@
     };
   };
 
-  # Hardware configuration - Simplified NVIDIA setup
+  # Hardware configuration - Fixed NVIDIA setup
   hardware = {
     enableRedistributableFirmware = true;
     cpu.intel.updateMicrocode = true;
@@ -163,10 +163,12 @@
         finegrained = true;
       };
       prime = {
+        # Temporarily using the simpler configuration first to ensure it works
         offload = {
           enable = true;
           enableOffloadCmd = true;
         };
+        # Correct bus IDs as per your hardware
         intelBusId = "PCI:0:2:0";
         nvidiaBusId = "PCI:1:0:0";
       };
@@ -176,20 +178,23 @@
     nvidia-container-toolkit.enable = true;
   };
 
-  # Nixpkgs configuration - removed CUDA support
+  # Nixpkgs configuration
   nixpkgs.config = {
     allowUnfree = true;
   };
 
-  # Services configuration with PipeWire enabled (note: the nvidia-persistenced option has been removed)
+  # Services configuration with PipeWire enabled
   services = {
+    # Fix the renamed option
+    displayManager.defaultSession = "gnome";
+
     xserver = {
       enable = true;
       displayManager = {
-        defaultSession = "gnome";
         gdm = {
           enable = true;
-          wayland = true;
+          # Use mkForce to override any other settings of this option
+          wayland = lib.mkForce false;
           settings = {};
         };
       };
@@ -231,13 +236,15 @@
     polkit.enable = true;
   };
 
-  # Environment configuration - removed CUDA environment variables
+  # Environment configuration - Updated for X11 instead of Wayland
   environment = {
     sessionVariables = {
-      NIXOS_OZONE_WL = "1";
-      XDG_SESSION_TYPE = "wayland";
-      SDL_VIDEODRIVER = "wayland";
-      CLUTTER_BACKEND = "wayland";
+      # Changed to X11 mode for compatibility
+      XDG_SESSION_TYPE = "x11";
+      # Remove Wayland-specific variables
+      # SDL_VIDEODRIVER = "wayland";
+      # CLUTTER_BACKEND = "wayland";
+      # LD path for NVIDIA
       LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
       # NVIDIA Prime variables for GPU offloading
       __NV_PRIME_RENDER_OFFLOAD = "1";
@@ -245,8 +252,6 @@
       __GLX_VENDOR_LIBRARY_NAME = "nvidia";
       __VK_LAYER_NV_optimus = "NVIDIA_only";
       LIBVA_DRIVER_NAME = "nvidia";
-      PLASMA_USE_QT_SCALING = "1";
-      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
       LANG = "en_US.UTF-8";
       LC_ALL = "en_US.UTF-8";
     };
@@ -262,15 +267,16 @@
       networkmanager
       wpa_supplicant
       linux-firmware
-      wayland
-      xdg-utils
-      xdg-desktop-portal
-      xdg-desktop-portal-gtk
+      # X11 packages
+      xorg.xrandr
+      xorg.xinput
       glxinfo
       vulkan-tools
       vulkan-loader
       vulkan-validation-layers
       nvidia-vaapi-driver
+      # Debugging tools
+      pciutils
     ];
   };
 
@@ -279,13 +285,13 @@
     enable = true;
     extraPortals = [
       pkgs.xdg-desktop-portal-gtk
-      pkgs.kdePackages.xdg-desktop-portal-kde
+      pkgs.xdg-desktop-portal-gnome
     ];
-    # Enable wlr portal for better screen sharing support
-    wlr.enable = true;
+    # Disable wlr when not using Wayland
+    wlr.enable = false;
   };
 
-  # Boot configuration – ensure EFI mount point is correct and proper NVIDIA modules are loaded in both kernel and initrd
+  # Boot configuration – ensure EFI mount point is correct and proper NVIDIA modules are loaded
   boot = {
     extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
     kernelParams = [
