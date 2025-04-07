@@ -37,6 +37,10 @@
       easyeffects
       helvum
       pavucontrol
+
+      # Debugging tools
+      pciutils
+      glxinfo
     ];
   };
 
@@ -145,37 +149,19 @@
     };
   };
 
-  # Hardware configuration - Fixed NVIDIA setup
+  # Hardware configuration - Switch to Intel only
   hardware = {
     enableRedistributableFirmware = true;
     cpu.intel.updateMicrocode = true;
     graphics = {
       enable = true;
       enable32Bit = true;
-      extraPackages = with pkgs; [intel-media-driver vaapiIntel vaapiVdpau libvdpau-va-gl];
+      extraPackages = with pkgs; [
+        intel-media-driver
+        vaapiIntel
+        libvdpau-va-gl
+      ];
     };
-    nvidia = {
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
-      open = false;
-      modesetting.enable = true;
-      powerManagement = {
-        enable = true;
-        finegrained = true;
-      };
-      prime = {
-        # Temporarily using the simpler configuration first to ensure it works
-        offload = {
-          enable = true;
-          enableOffloadCmd = true;
-        };
-        # Correct bus IDs as per your hardware
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:1:0:0";
-      };
-      nvidiaSettings = true;
-      forceFullCompositionPipeline = true;
-    };
-    nvidia-container-toolkit.enable = true;
   };
 
   # Nixpkgs configuration
@@ -193,13 +179,22 @@
       displayManager = {
         gdm = {
           enable = true;
-          # Use mkForce to override any other settings of this option
-          wayland = lib.mkForce false;
+          wayland = true;
           settings = {};
         };
       };
+      # Use Intel driver only
+      videoDrivers = ["intel"];
       desktopManager.gnome.enable = true;
+
+      # Use Intel graphics configuration
+      deviceSection = ''
+        Option "TearFree" "true"
+        Option "DRI" "3"
+        Option "AccelMethod" "sna"
+      '';
     };
+
     dbus = {
       enable = true;
       packages = [pkgs.dconf];
@@ -236,25 +231,23 @@
     polkit.enable = true;
   };
 
-  # Environment configuration - Updated for X11 instead of Wayland
+  # Environment configuration - Updated for Intel only graphics
   environment = {
     sessionVariables = {
-      # Changed to X11 mode for compatibility
-      XDG_SESSION_TYPE = "x11";
-      # Remove Wayland-specific variables
-      # SDL_VIDEODRIVER = "wayland";
-      # CLUTTER_BACKEND = "wayland";
-      # LD path for NVIDIA
+      # Use Wayland with GNOME
+      XDG_SESSION_TYPE = "wayland";
+      # Remove NVIDIA variables
       LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
-      # NVIDIA Prime variables for GPU offloading
-      __NV_PRIME_RENDER_OFFLOAD = "1";
-      __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-      __VK_LAYER_NV_optimus = "NVIDIA_only";
-      LIBVA_DRIVER_NAME = "nvidia";
-      LANG = "en_US.UTF-8";
-      LC_ALL = "en_US.UTF-8";
+      LIBVA_DRIVER_NAME = "iHD"; # Intel VAAPI driver
+
+      # Wayland-specific variables
+      SDL_VIDEODRIVER = "wayland";
+      GDK_BACKEND = "wayland";
+      MOZ_ENABLE_WAYLAND = "1";
+      QT_QPA_PLATFORM = "wayland";
+      CLUTTER_BACKEND = "wayland";
     };
+
     systemPackages = with pkgs; [
       gnome-shell
       gnome-shell-extensions
@@ -267,16 +260,21 @@
       networkmanager
       wpa_supplicant
       linux-firmware
-      # X11 packages
-      xorg.xrandr
-      xorg.xinput
+      wayland
+      xdg-utils
+      xdg-desktop-portal
+      xdg-desktop-portal-gtk
+      xdg-desktop-portal-gnome
       glxinfo
       vulkan-tools
       vulkan-loader
       vulkan-validation-layers
-      nvidia-vaapi-driver
-      # Debugging tools
+      mesa-demos
       pciutils
+      usbutils
+      lshw
+      xorg.xrandr
+      xorg.xinput
     ];
   };
 
@@ -287,29 +285,38 @@
       pkgs.xdg-desktop-portal-gtk
       pkgs.xdg-desktop-portal-gnome
     ];
-    # Disable wlr when not using Wayland
-    wlr.enable = false;
+    # Enable Wayland portal
+    wlr.enable = true;
   };
 
-  # Boot configuration – ensure EFI mount point is correct and proper NVIDIA modules are loaded
+  # Boot configuration – use blacklisted kernel modules to disable NVIDIA
   boot = {
-    extraModulePackages = [config.boot.kernelPackages.nvidia_x11];
-    kernelParams = [
-      "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
-      "nvidia-drm.modeset=1"
+    blacklistedKernelModules = [
+      "nouveau"
+      "nvidia"
+      "nvidia_drm"
+      "nvidia_modeset"
+      "nvidia_uvm"
     ];
-    kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
-    initrd.kernelModules = ["nvidia" "nvidia_drm" "nvidia_modeset" "nvidia_uvm"];
+
+    kernelParams = [
+      # Add Intel-specific parameters
+      "i915.enable_fbc=1"
+      "i915.enable_psr=2"
+    ];
+
+    # Focus on Intel modules
+    kernelModules = ["i915"];
+    initrd.kernelModules = ["i915"];
+
     loader = {
       systemd-boot.enable = true;
       efi = {
         canTouchEfiVariables = true;
-        efiSysMountPoint = "/boot"; # Adjust as needed
+        efiSysMountPoint = "/boot";
       };
     };
   };
-
-  services.xserver.videoDrivers = ["nvidia"];
 
   programs = {
     fish.enable = true;
