@@ -174,6 +174,7 @@ in {
         vdhcoapp
         inkscape
         claude-code
+        stablePkgs.wrangler
 
         # System Monitoring
         neofetch
