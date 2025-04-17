@@ -173,6 +173,8 @@ in {
         inputs.firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin
         vdhcoapp
         inkscape
+        claude-code
+        stablePkgs.wrangler
 
         # System Monitoring
         neofetch
