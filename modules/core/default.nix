@@ -164,6 +164,7 @@ in {
         zoxide
         ripgrep
         fd
+        aria2
         gum
         piper-tts
         jq
