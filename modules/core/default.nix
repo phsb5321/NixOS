@@ -165,6 +165,9 @@ in {
         ripgrep
         fd
         aria2
+        parted
+        openssl
+        nmap
         gum
         piper-tts
         jq
