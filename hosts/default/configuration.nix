@@ -233,6 +233,8 @@
     "amdgpu.si_support=1"
     "radeon.cik_support=0"
     "amdgpu.cik_support=1"
+    "radeon.audio=1" # Enable HDMI audio for Radeon
+    "amdgpu.audio=1" # Enable HDMI audio for AMDGPU
   ];
 
   # Fix auditd configuration

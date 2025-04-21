@@ -1,4 +1,4 @@
-# modules/core/default.nix
+# modules/core/default.nix - updated
 {
   inputs,
   config,
@@ -16,6 +16,7 @@ in {
     ./java.nix
     ./docker-dns.nix
     ./pipewire.nix
+    ./monitor-audio.nix # Add this line
   ];
 
   options.modules.core = with lib; {
@@ -73,6 +74,13 @@ in {
         highQualityProfiles = true;
       };
       tools.enable = true;
+    };
+
+    # Enable monitor audio module (new)
+    modules.core.monitorAudio = {
+      enable = true;
+      autoSwitch = true;
+      preferMonitorAudio = false; # Set to true if you want monitors to be the preferred audio output
     };
 
     # System version
@@ -157,6 +165,7 @@ in {
         vim
         coreutils
         parallel
+        cloudflared
         zip
         unzip
         tree
