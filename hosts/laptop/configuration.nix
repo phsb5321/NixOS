@@ -303,6 +303,8 @@
       # Add Intel-specific parameters
       "i915.enable_fbc=1"
       "i915.enable_psr=2"
+      "i915.enable_hd_vgaarb=1" # Enable HDMI audio for Intel
+      "i915.enable_dc=2" # Improved display connection handling
     ];
 
     # Focus on Intel modules
