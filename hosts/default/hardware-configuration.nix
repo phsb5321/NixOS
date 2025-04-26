@@ -29,10 +29,19 @@
 
   swapDevices = [];
 
-  # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
-  # (the default) this is the recommended approach. When using systemd-networkd it's
-  # still possible to use this option, but it's recommended to use it in conjunction
-  # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
+  # zramSwap configuration added by user:
+  # Enables compressed RAM swap using zram-generator under the hood.
+  zramSwap.enable = true;
+  # Limit total uncompressed memory in zram to 25% (≈16 GiB of 64 GiB)
+  zramSwap.memoryPercent = 25;
+  # Use high-ratio, fast ZSTD (kernel ≥5.5)
+  zramSwap.algorithm = "zstd";
+  # Ensure zram is preferred over disk swap
+  zramSwap.priority = 10;
+  # Number of zram devices (default 1)
+  zramSwap.swapDevices = 1;
+
+  # Enables DHCP on each ethernet and wireless interface.
   networking.useDHCP = lib.mkDefault true;
   # networking.interfaces.enp8s0.useDHCP = lib.mkDefault true;
   # networking.interfaces.wlp9s0.useDHCP = lib.mkDefault true;
