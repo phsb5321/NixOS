@@ -9,7 +9,6 @@
 }: {
   imports = [
     ./hardware-configuration.nix
-    inputs.home-manager.nixosModules.default
     ../../modules
   ];
 
@@ -138,6 +137,7 @@
       corectrl
       inputs.zen-browser.packages.${system}.default
       openai-whisper
+      bruno
 
       # Python packages with GTK support
       (python3.withPackages (ps:
