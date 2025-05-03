@@ -1,4 +1,4 @@
-# modules/core/default.nix - updated
+# ~/NixOS/modules/core/default.nix
 {
   inputs,
   config,
@@ -16,7 +16,8 @@ in {
     ./java.nix
     ./docker-dns.nix
     ./pipewire.nix
-    ./monitor-audio.nix # Add this line
+    ./monitor-audio.nix
+    ./document-tools.nix # Add this line to import our new module
   ];
 
   options.modules.core = with lib; {
@@ -76,11 +77,20 @@ in {
       tools.enable = true;
     };
 
-    # Enable monitor audio module (new)
+    # Enable monitor audio module
     modules.core.monitorAudio = {
       enable = true;
       autoSwitch = true;
       preferMonitorAudio = false; # Set to true if you want monitors to be the preferred audio output
+    };
+
+    # Enable document tools module with LaTeX support
+    modules.core.documentTools = {
+      enable = true;
+      latex = {
+        enable = true;
+        minimal = false; # Set to true for minimal installation
+      };
     };
 
     # System version
