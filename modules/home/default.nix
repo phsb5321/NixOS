@@ -68,22 +68,49 @@ in {
 
           packages = with pkgs;
             [
-              # Same packages as before...
+              # Fonts
               nerd-fonts.jetbrains-mono
               noto-fonts-emoji
+              noto-fonts
+              noto-fonts-cjk-sans
+
+              # Shell and Terminal
               fish
               zsh
-              starship
+              starship # Cross-shell prompt
               kitty
-              zellij
-              ghostty
+              grc # Generic colorizer
+              eza # Modern ls replacement
+              bat # Modern cat replacement
+              vivid # LS_COLORS generator
+              zsh-syntax-highlighting
+              zsh-autosuggestions
+              zsh-you-should-use
+              zsh-fast-syntax-highlighting
+              fishPlugins.tide
+              fishPlugins.grc
+
+              # Development Tools
               ffmpeg
               gh
               git
-              zoxide
-              fzf
-              ripgrep
-              fd
+              zoxide # Smart directory jumper
+              fzf # Fuzzy finder
+              ripgrep # Fast grep
+              fd # Fast find
+
+              # Applications
+              brave
+              yazi-unwrapped
+              texlive.combined.scheme-full
+              dbeaver-bin
+              amberol
+              remmina
+              obsidian
+              d2
+              inputs.nixvim
+              ngrok
+              zellij
             ]
             ++ cfg.extraPackages;
 
