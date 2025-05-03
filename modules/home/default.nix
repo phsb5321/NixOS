@@ -11,7 +11,7 @@ with lib; let
   cfg = config.modules.home;
 in {
   imports = [
-    ./programs # We'll organize program-specific configurations in separate files
+    ./programs
   ];
 
   options.modules.home = {
@@ -36,22 +36,35 @@ in {
   };
 
   config = mkIf cfg.enable {
-    home-manager = {
-      extraSpecialArgs = {inherit inputs;};
-      backupFileExtension = "bkp";
+    # First, forcefully disable the home-manager service to avoid conflicts
+    systemd.services."home-manager-${cfg.username}".enable = lib.mkForce false;
 
-      users.${cfg.username} = {
+    # Home Manager core settings
+    home-manager = {
+      backupFileExtension = "bkp";
+      extraSpecialArgs = {
+        inherit inputs;
+        forceActivation = true;
+      };
+
+      # User-specific Home Manager configuration
+      users.${cfg.username} = {pkgs, ...}: {
         imports = [
           inputs.nixvim.homeManagerModules.nixvim
         ];
 
-        # Remove the nixpkgs config since we're using global packages
+        # Explicitly enable this
+        home.enableNixpkgsReleaseCheck = false;
 
-        # User Configuration
         home = {
           username = cfg.username;
           homeDirectory = "/home/${cfg.username}";
           stateVersion = systemVersion;
+
+          # File management options - handles conflicts
+          file = {
+            ".config".enable = false; # Skip managing whole .config directory
+          };
 
           packages = with pkgs;
             [
@@ -107,17 +120,20 @@ in {
           };
         };
 
-        # Enable Home Manager itself
+        # Enable home-manager
         programs.home-manager.enable = true;
 
-        # PipeWire user-specific configuration for Bluetooth headphones
-        xdg.configFile."pipewire/pipewire-pulse.conf.d/99-soundcore-fix.conf".text = ''
+        # PipeWire Bluetooth fix - avoid conflicts by putting this in the user's home directory
+        home.file.".config/pipewire/pipewire-pulse.conf.d/99-soundcore-fix.conf".text = ''
           pulse.properties = {
-            bluez5.hw-offload = true
+            bluez5.hw-offload         = true
             bluez5.autoswitch-profile = true
-            bluez5.roles = [hfp_hf hfp_ag hsp_hs hsp_ag a2dp_sink a2dp_source]
+            bluez5.roles              = [ hfp_hf hfp_ag hsp_hs hsp_ag a2dp_sink a2dp_source ]
           }
         '';
+
+        # Disable any legacy ghostty config to avoid collisions
+        home.file.".config/ghostty/config".enable = false;
       };
     };
   };
