@@ -70,6 +70,21 @@
       pavucontrol # Still needed for compatibility with PulseAudio applications
       helvum # PipeWire patchbay
     ];
+    documentTools = {
+      enable = true;
+      latex = {
+        enable = true;
+        # Set to true if you want a smaller installation
+        minimal = false;
+        # Add any extra packages you might need
+        extraPackages = with pkgs; [
+          # Example: Add biber for bibliography management
+          biber
+          # Additional LaTeX packages you might need
+          texlive.combined.scheme-context
+        ];
+      };
+    };
   };
 
   # Set system options
