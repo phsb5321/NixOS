@@ -81,7 +81,7 @@
       home-manager.nixosModules.home-manager
       {
         home-manager = {
-          useGlobalPkgs = false; # Changed from true to false
+          useGlobalPkgs = true; # Changed from true to false
           useUserPackages = true;
           extraSpecialArgs = commonSpecialArgs;
         };
