@@ -16,8 +16,11 @@ in {
       autocd = true;
       defaultKeymap = "emacs";
 
-      # replaced deprecated initExtra with initContent
+      # Modified initContent to fix path and shell issues
       initContent = ''
+        # Ensure ZSH is in the PATH
+        export PATH="${pkgs.zsh}/bin:$PATH"
+
         # zoxide integration
         eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
 
@@ -37,6 +40,15 @@ in {
         autoload -Uz compinit && compinit
         bindkey '^[^?' backward-kill-word
         bindkey '^X^E' edit-command-line
+
+        # Fix for SSH sessions
+        if [[ -n "$SSH_CONNECTION" ]]; then
+          # Use bash for SSH sessions to ensure stability
+          export SHELL="${pkgs.bash}/bin/bash"
+        else
+          # Set explicit shell path for local sessions
+          export SHELL="${pkgs.zsh}/bin/zsh"
+        fi
 
         # starship prompt
         eval "$(${pkgs.starship}/bin/starship init zsh)"
@@ -84,6 +96,13 @@ in {
         export EDITOR='nvim'
         export VISUAL='nvim'
         export PATH="$HOME/.local/bin:$PATH"
+
+        # Explicitly set SHELL to ensure correct operation
+        if [[ -n "$SSH_CONNECTION" ]]; then
+          export SHELL="${pkgs.bash}/bin/bash"
+        else
+          export SHELL="${pkgs.zsh}/bin/zsh"
+        fi
       '';
     };
   };

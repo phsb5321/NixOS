@@ -24,7 +24,7 @@
       # Development Tools
       llvm
       clang
-      nvtopPackages.full
+      nvtopPackages.full # Keep for monitoring
       seahorse
 
       # Additional Tools
@@ -41,6 +41,9 @@
       # Debugging tools
       pciutils
       glxinfo
+
+      # Make sure bash is in system packages
+      bash
     ];
   };
 
@@ -124,13 +127,15 @@
     };
   };
 
-  # User configuration
+  # User configuration - Use bash for now until ZSH is fixed
   users = {
-    defaultUserShell = pkgs.zsh;
+    defaultUserShell = "${pkgs.bash}/bin/bash";
     users.notroot = {
       isNormalUser = true;
       description = "Pedro Balbino";
       initialPassword = "changeme";
+      # Explicitly set the shell with full path to bash
+      shell = "${pkgs.bash}/bin/bash";
       extraGroups = [
         "networkmanager"
         "wheel"
@@ -146,9 +151,15 @@
         "sddm"
         "pipewire"
       ];
-      shell = pkgs.zsh;
     };
   };
+
+  # Register shells with explicit paths
+  environment.shells = [
+    "${pkgs.bash}/bin/bash"
+    "${pkgs.zsh}/bin/zsh"
+    "${pkgs.fish}/bin/fish"
+  ];
 
   # Hardware configuration - Switch to Intel only
   hardware = {
@@ -217,6 +228,17 @@
     gvfs.enable = true;
     tumbler.enable = true;
     gnome.gnome-keyring.enable = true;
+
+    # OpenSSH with enhanced shell handling
+    openssh = {
+      enable = true;
+      settings = {
+        PermitRootLogin = "no";
+        PasswordAuthentication = true;
+        KbdInteractiveAuthentication = false;
+        UsePAM = true;
+      };
+    };
   };
 
   # Security and authentication
@@ -247,10 +269,10 @@
       MOZ_ENABLE_WAYLAND = "1";
       QT_QPA_PLATFORM = "wayland";
       CLUTTER_BACKEND = "wayland";
-    };
 
-    # ✅ Ensure zsh is in /etc/shells
-    shells = with pkgs; [zsh];
+      # Set explicit shell for better compatibility
+      SHELL = "${pkgs.bash}/bin/bash";
+    };
 
     systemPackages = with pkgs; [
       gnome-shell
