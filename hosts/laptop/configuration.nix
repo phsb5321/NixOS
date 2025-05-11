@@ -24,7 +24,7 @@
       # Development Tools
       llvm
       clang
-      nvtopPackages.full # Keep for monitoring
+      nvtopPackages.full
       seahorse
 
       # Additional Tools
@@ -146,6 +146,7 @@
         "sddm"
         "pipewire"
       ];
+      shell = pkgs.zsh;
     };
   };
 
@@ -247,6 +248,9 @@
       QT_QPA_PLATFORM = "wayland";
       CLUTTER_BACKEND = "wayland";
     };
+
+    # ✅ Ensure zsh is in /etc/shells
+    shells = with pkgs; [zsh];
 
     systemPackages = with pkgs; [
       gnome-shell
