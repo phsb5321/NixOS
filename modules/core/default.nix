@@ -192,6 +192,7 @@ in {
         jq
         popsicle
         stablePkgs.awscli2
+        azure-cli
         rbw
         inputs.firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin
         vdhcoapp
