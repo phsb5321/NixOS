@@ -129,13 +129,13 @@
 
   # User configuration - Use bash for now until ZSH is fixed
   users = {
-    defaultUserShell = "${pkgs.bash}/bin/bash";
+    defaultUserShell = "${pkgs.zsh}/bin/zsh";
     users.notroot = {
       isNormalUser = true;
       description = "Pedro Balbino";
       initialPassword = "changeme";
-      # Explicitly set the shell with full path to bash
-      shell = "${pkgs.bash}/bin/bash";
+      # Explicitly set the shell with full path to zsh
+      shell = "${pkgs.zsh}/bin/zsh";
       extraGroups = [
         "networkmanager"
         "wheel"
@@ -271,7 +271,7 @@
       CLUTTER_BACKEND = "wayland";
 
       # Set explicit shell for better compatibility
-      SHELL = "${pkgs.bash}/bin/bash";
+      SHELL = "${pkgs.zsh}/bin/zsh";
     };
 
     systemPackages = with pkgs; [
