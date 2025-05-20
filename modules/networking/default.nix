@@ -8,6 +8,10 @@
 with lib; let
   cfg = config.modules.networking;
 
+  imports = [
+    ./firewall-fix.nix
+  ];
+
   dnsProviders = {
     cloudflare = {
       primary = "1.1.1.1";
@@ -140,11 +144,22 @@ in {
       enableIPv6 = true;
       useDHCP = cfg.useDHCP; # Use the module's DHCP setting
 
-      # Proxy settings for GitHub Copilot and other services
+      # Proxy settings for AI services and other services
       proxy = {
         default = null; # Set to your proxy if you use one
-        noProxy = "localhost,127.0.0.1,api.github.com,api.individual.githubcopilot.com,github.com,copilot-proxy.githubusercontent.com";
+        noProxy = "localhost,127.0.0.1,api.github.com,api.individual.githubcopilot.com,github.com,copilot-proxy.githubusercontent.com,api.openai.com,openai.com,chat.openai.com,auth0.openai.com,platform.openai.com,oaiusercontent.com";
       };
+
+      # Add host entries to ensure proper DNS resolution for AI services
+      extraHosts = ''
+        # OpenAI services
+        104.16.131.131 chat.openai.com
+        104.18.7.192 api.openai.com
+        104.18.6.192 platform.openai.com
+        104.18.192.86 openai.com
+        104.16.192.91 auth0.openai.com
+        104.18.223.218 oaiusercontent.com
+      '';
 
       # Firewall Configuration
       firewall = mkIf cfg.firewall.enable {
@@ -164,12 +179,24 @@ in {
             to = 68;
           } # DHCP
         ];
-        # Extra commands for GitHub Copilot
+        # Extra commands for GitHub Copilot and OpenAI services
         extraCommands = ''
+          # GitHub Copilot domains
           iptables -A OUTPUT -p tcp -d api.github.com -j ACCEPT
           iptables -A OUTPUT -p tcp -d api.individual.githubcopilot.com -j ACCEPT
           iptables -A OUTPUT -p tcp -d github.com -j ACCEPT
           iptables -A OUTPUT -p tcp -d copilot-proxy.githubusercontent.com -j ACCEPT
+
+          # OpenAI domains
+          iptables -A OUTPUT -p tcp -d api.openai.com -j ACCEPT
+          iptables -A OUTPUT -p tcp -d openai.com -j ACCEPT
+          iptables -A OUTPUT -p tcp -d chat.openai.com -j ACCEPT
+          iptables -A OUTPUT -p tcp -d auth0.openai.com -j ACCEPT
+          iptables -A OUTPUT -p tcp -d platform.openai.com -j ACCEPT
+          iptables -A OUTPUT -p tcp -d oaiusercontent.com -j ACCEPT
+
+          # Allow all HTTPS traffic (port 443)
+          iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
         '';
       };
     };
@@ -252,6 +279,19 @@ in {
       "net.core.optmem_max" = 65536;
     };
 
+    # SSL certificates configuration - FIXED: Removed the conflicting definitions
+    security.pki.certificateFiles = [
+      # Use the existing NixOS-provided certificates
+      "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+    ];
+
+    # Environment variables for SSL
+    environment.variables = {
+      SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
+      GIT_SSL_CAINFO = "/etc/ssl/certs/ca-certificates.crt";
+      CURL_CA_BUNDLE = "/etc/ssl/certs/ca-certificates.crt";
+    };
+
     # Required packages for networking
     environment.systemPackages = with pkgs; [
       networkmanager
@@ -265,6 +305,9 @@ in {
       bind # for dig command
       ldns # for drill command
       wavemon # wireless monitor
+      cacert # Important for SSL connections (FIXED: was ca-certificates)
+      openssl # For SSL troubleshooting
+      curl # For testing API connections
     ];
 
     # Ensure NetworkManager users are created
