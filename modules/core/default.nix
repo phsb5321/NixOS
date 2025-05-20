@@ -17,7 +17,7 @@ in {
     ./docker-dns.nix
     ./pipewire.nix
     ./monitor-audio.nix
-    ./document-tools.nix # Add this line to import our new module
+    ./document-tools.nix
   ];
 
   options.modules.core = with lib; {
@@ -93,6 +93,9 @@ in {
       };
     };
 
+    # Enable proper time synchronization for time-sensitive tokens
+    services.timesyncd.enable = true;
+
     # System version
     system.stateVersion = cfg.stateVersion;
 
@@ -152,7 +155,7 @@ in {
       fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
     };
 
-    # Virtualization configuration - removed Docker settings as they're now in docker-dns.nix
+    # Virtualization configuration
     virtualisation = {
       containers.enable = true;
       podman = {
