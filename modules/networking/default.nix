@@ -140,6 +140,12 @@ in {
       enableIPv6 = true;
       useDHCP = cfg.useDHCP; # Use the module's DHCP setting
 
+      # Proxy settings for GitHub Copilot and other services
+      proxy = {
+        default = null; # Set to your proxy if you use one
+        noProxy = "localhost,127.0.0.1,api.github.com,api.individual.githubcopilot.com,github.com,copilot-proxy.githubusercontent.com";
+      };
+
       # Firewall Configuration
       firewall = mkIf cfg.firewall.enable {
         enable = true;
@@ -158,6 +164,13 @@ in {
             to = 68;
           } # DHCP
         ];
+        # Extra commands for GitHub Copilot
+        extraCommands = ''
+          iptables -A OUTPUT -p tcp -d api.github.com -j ACCEPT
+          iptables -A OUTPUT -p tcp -d api.individual.githubcopilot.com -j ACCEPT
+          iptables -A OUTPUT -p tcp -d github.com -j ACCEPT
+          iptables -A OUTPUT -p tcp -d copilot-proxy.githubusercontent.com -j ACCEPT
+        '';
       };
     };
 
