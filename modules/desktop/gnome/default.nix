@@ -1,3 +1,4 @@
+# ~/NixOS/modules/desktop/gnome/default.nix
 {
   config,
   lib,
@@ -20,29 +21,27 @@ in {
         enable = true;
         desktopManager.gnome.enable = true;
 
-        # Configure GDM as the display manager
+        # Configure GDM as the display manager - kept under xserver
         displayManager = {
           gdm = {
             enable = true;
             wayland = true;
           };
+          # Set auto-login in the xserver path
+          autoLogin = mkIf cfg.autoLogin.enable {
+            enable = true;
+            user = cfg.autoLogin.user;
+          };
+          # Set default session in the xserver path
+          defaultSession = "gnome";
         };
       };
-
-      # Auto-login configuration
-      services.displayManager.autoLogin = mkIf cfg.autoLogin.enable {
-        enable = true;
-        user = cfg.autoLogin.user;
-      };
-
-      # Set default session
-      services.displayManager.defaultSession = "gnome";
 
       # GNOME-specific services
       services.gnome = {
         gnome-keyring.enable = true;
         core-shell.enable = true;
-        core-utilities.enable = true;
+        core-apps.enable = true; # FIXED: was core-utilities.enable
         gnome-settings-daemon.enable = true;
         evolution-data-server.enable = true;
         glib-networking.enable = true;

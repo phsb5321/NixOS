@@ -263,13 +263,22 @@
     ];
   };
 
-  # Display manager configuration - ensure only one is enabled
-  services.xserver.displayManager = {
-    gdm = {
-      enable = true; # Use GDM for GNOME
-      wayland = true;
+  # Display manager configuration - FIXED: Using the old path structure
+  services.xserver = {
+    enable = true;
+    displayManager = {
+      gdm = {
+        enable = true;
+        wayland = true;
+      };
+      autoLogin = {
+        enable = true;
+        user = "notroot";
+      };
+      defaultSession = "gnome";
     };
-    sddm.enable = false; # Disable SDDM explicitly
+    # Enable GNOME desktop
+    desktopManager.gnome.enable = true;
   };
 
   # Configure syncthing service
