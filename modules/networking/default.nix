@@ -8,10 +8,6 @@
 with lib; let
   cfg = config.modules.networking;
 
-  imports = [
-    ./firewall-fix.nix
-  ];
-
   dnsProviders = {
     cloudflare = {
       primary = "1.1.1.1";
