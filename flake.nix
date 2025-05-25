@@ -8,8 +8,8 @@
     # Bleeding-edge Nixpkgs source from the 'nixpkgs-unstable' branch
     bleed.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-    # Stable Nixpkgs source from the 'nixos-24.11' branch
-    stable.url = "github:nixos/nixpkgs/nixos-24.11";
+    # Stable Nixpkgs source from the 'nixos-25.05' branch
+    stable.url = "github:nixos/nixpkgs/nixos-25.05";
 
     # Home Manager input for managing user environments
     home-manager = {
@@ -42,7 +42,7 @@
     system = "x86_64-linux";
 
     # Define system version
-    systemVersion = "24.11";
+    systemVersion = "25.05";
 
     # Common nixpkgs configuration
     nixpkgsConfig = {

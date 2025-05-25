@@ -154,6 +154,7 @@
       openai-whisper
       bruno
       brave
+      librewolf
 
       # Python packages with GTK support
       (python3.withPackages (ps:
