@@ -201,7 +201,7 @@ in {
         vdhcoapp
         inkscape
         claude-code
-        stablePkgs.wrangler
+        wrangler
 
         # System Monitoring
         neofetch
