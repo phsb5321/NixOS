@@ -153,6 +153,7 @@
       inputs.zen-browser.packages.${system}.default
       openai-whisper
       bruno
+      brave
 
       # Python packages with GTK support
       (python3.withPackages (ps:

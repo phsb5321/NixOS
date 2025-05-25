@@ -31,8 +31,11 @@ with lib; let
       dnsProviders.${cfg.dns.primaryProvider}.secondary
     ];
 in {
+  ##############################################################################
+  # 1) Declare the `modules.networking` option namespace and all its settings
+  ##############################################################################
   options.modules.networking = {
-    enable = mkEnableOption "Networking module";
+    enable = mkEnableOption "Enable the custom networking module";
 
     hostName = mkOption {
       type = types.str;
@@ -40,47 +43,41 @@ in {
       description = "System hostname";
     };
 
-    useDHCP = mkOption {
+    enableNetworkManager = mkOption {
       type = types.bool;
       default = true;
-      description = "Enable DHCP for network configuration";
+      description = "Use NetworkManager for all interface configuration";
     };
 
     optimizeTCP = mkOption {
       type = types.bool;
       default = true;
-      description = "Enable TCP optimization settings";
-    };
-
-    enableNetworkManager = mkOption {
-      type = types.bool;
-      default = true;
-      description = "Enable NetworkManager for network management";
+      description = "Enable TCP tuning sysctls";
     };
 
     dns = {
       enableSystemdResolved = mkOption {
         type = types.bool;
         default = true;
-        description = "Enable systemd-resolved for DNS resolution";
+        description = "Run systemd-resolved stub on 127.0.0.53";
       };
 
       enableDNSOverTLS = mkOption {
         type = types.bool;
         default = true;
-        description = "Enable DNS-over-TLS for secure DNS queries";
+        description = "Have systemd-resolved use DNS-over-TLS";
       };
 
       primaryProvider = mkOption {
         type = types.enum ["cloudflare" "google" "quad9" "custom"];
         default = "cloudflare";
-        description = "Primary DNS provider to use";
+        description = "Which upstream DNS provider to use";
       };
 
       customNameservers = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = "List of custom nameservers to use when primaryProvider is set to custom";
+        description = "List of nameservers if primaryProvider = custom";
       };
     };
 
@@ -88,236 +85,104 @@ in {
       enable = mkOption {
         type = types.bool;
         default = true;
-        description = "Enable firewall configuration";
+        description = "Enable basic stateful firewall";
       };
 
       allowPing = mkOption {
         type = types.bool;
         default = true;
-        description = "Allow ICMP ping requests";
+        description = "Allow ICMP echo requests";
       };
 
       openPorts = mkOption {
         type = types.listOf types.int;
         default = [22];
-        description = "List of ports to open in the firewall";
+        description = "TCP ports to open (e.g. SSH)";
       };
 
       trustedInterfaces = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = "List of trusted network interfaces";
+        description = "Interfaces on which all traffic is allowed";
       };
     };
   };
 
+  ########################################################
+  # 2) Apply everything when modules.networking.enable = true
+  ########################################################
   config = mkIf cfg.enable {
-    # Basic networking configuration
-    networking = {
-      hostName = cfg.hostName;
+    # Hostname
+    networking.hostName = cfg.hostName;
 
-      # NetworkManager Configuration
-      networkmanager = {
-        enable = true;
-        dns = lib.mkDefault "default"; # Changed to allow overriding
-        wifi = {
-          powersave = false; # Disable power management for better stability
-          macAddress = "preserve"; # Preserve MAC address
-          scanRandMacAddress = true; # Use random MAC for scanning
-        };
-        # Enable all connection types
-        enableStrongSwan = true; # For VPN support
-      };
+    # ———————————————————————————————————————
+    # NetworkManager configuration
+    # ———————————————————————————————————————
+    networking.networkmanager = {
+      enable = cfg.enableNetworkManager;
+      dns = "none"; # let systemd-resolved handle DNS
+      insertNameservers = selectedDNS; # prepend our static DNS
+    };
 
-      # Disable conflicting services
-      dhcpcd.enable = false;
-      wireless.enable = false; # Disable wpa_supplicant standalone mode
+    # Disable legacy DHCP clients and conflicting services
+    networking.useDHCP = false;
+    networking.dhcpcd.enable = false;
+    networking.wireless.enable = false;
 
-      # Name resolution configuration
-      nameservers = selectedDNS;
-
-      # Enable IPv4 and IPv6 support
-      enableIPv6 = true;
-      useDHCP = cfg.useDHCP; # Use the module's DHCP setting
-
-      # Proxy settings for AI services and other services
-      proxy = {
-        default = null; # Set to your proxy if you use one
-        noProxy = "localhost,127.0.0.1,api.github.com,api.individual.githubcopilot.com,github.com,copilot-proxy.githubusercontent.com,api.openai.com,openai.com,chat.openai.com,auth0.openai.com,platform.openai.com,oaiusercontent.com";
-      };
-
-      # Add host entries to ensure proper DNS resolution for AI services
-      extraHosts = ''
-        # OpenAI services
-        104.16.131.131 chat.openai.com
-        104.18.7.192 api.openai.com
-        104.18.6.192 platform.openai.com
-        104.18.192.86 openai.com
-        104.16.192.91 auth0.openai.com
-        104.18.223.218 oaiusercontent.com
+    # ———————————————————————————————————————
+    # systemd-resolved stub resolver
+    # ———————————————————————————————————————
+    services.resolved = {
+      enable = cfg.dns.enableSystemdResolved;
+      dnssec = "allow-downgrade";
+      fallbackDns = selectedDNS;
+      extraConfig = ''
+        DNSOverTLS=${
+          if cfg.dns.enableDNSOverTLS
+          then "yes"
+          else "no"
+        }
+        Cache=yes
+        DNSStubListener=yes
       '';
-
-      # Firewall Configuration
-      firewall = mkIf cfg.firewall.enable {
-        enable = true;
-        allowPing = cfg.firewall.allowPing;
-        allowedTCPPorts = cfg.firewall.openPorts;
-        allowedUDPPorts = cfg.firewall.openPorts;
-        trustedInterfaces = cfg.firewall.trustedInterfaces;
-        # Allow NetworkManager and DNS
-        allowedUDPPortRanges = [
-          {
-            from = 5353;
-            to = 5353;
-          } # mDNS
-          {
-            from = 67;
-            to = 68;
-          } # DHCP
-        ];
-        # Extra commands for GitHub Copilot and OpenAI services
-        extraCommands = ''
-          # GitHub Copilot domains
-          iptables -A OUTPUT -p tcp -d api.github.com -j ACCEPT
-          iptables -A OUTPUT -p tcp -d api.individual.githubcopilot.com -j ACCEPT
-          iptables -A OUTPUT -p tcp -d github.com -j ACCEPT
-          iptables -A OUTPUT -p tcp -d copilot-proxy.githubusercontent.com -j ACCEPT
-
-          # OpenAI domains
-          iptables -A OUTPUT -p tcp -d api.openai.com -j ACCEPT
-          iptables -A OUTPUT -p tcp -d openai.com -j ACCEPT
-          iptables -A OUTPUT -p tcp -d chat.openai.com -j ACCEPT
-          iptables -A OUTPUT -p tcp -d auth0.openai.com -j ACCEPT
-          iptables -A OUTPUT -p tcp -d platform.openai.com -j ACCEPT
-          iptables -A OUTPUT -p tcp -d oaiusercontent.com -j ACCEPT
-
-          # Allow all HTTPS traffic (port 443)
-          iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
-        '';
-      };
     };
 
-    # Enable WPA supplicant with NetworkManager integration
-    networking.wireless.iwd.enable = false; # Ensure iwd is disabled
-    services = {
-      resolved = mkIf cfg.dns.enableSystemdResolved {
-        enable = true;
-        dnssec = "allow-downgrade";
-        domains = ["~."];
-        fallbackDns = selectedDNS;
-        extraConfig = ''
-          DNSOverTLS=${
-            if cfg.dns.enableDNSOverTLS
-            then "yes"
-            else "no"
-          }
-          MulticastDNS=yes
-          Cache=yes
-          DNSStubListener=yes
-        '';
-      };
+    # ———————————————————————————————————————
+    # Firewall
+    # ———————————————————————————————————————
+    networking.firewall = mkIf cfg.firewall.enable {
+      enable = true;
+      allowedTCPPorts = cfg.firewall.openPorts;
+      allowPing = cfg.firewall.allowPing;
+      trustedInterfaces = cfg.firewall.trustedInterfaces;
     };
 
-    # Ensure NetworkManager starts properly
-    systemd = {
-      services = {
-        NetworkManager = {
-          enable = true;
-          wantedBy = ["multi-user.target"];
-          aliases = ["dbus-org.freedesktop.NetworkManager.service"];
-          bindsTo = []; # Remove binding that was causing issues
-          after = [
-            "network-pre.target"
-            "polkit.service"
-            "dbus.service"
-          ];
-          requires = ["dbus.service"];
-          serviceConfig = {
-            Type = "dbus";
-            BusName = "org.freedesktop.NetworkManager";
-            ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
-            Restart = "on-failure";
-            RestartSec = "1s";
-          };
-        };
-
-        # Disable potentially conflicting services
-        dhcpcd.enable = true;
-        wpa_supplicant.enable = true;
-      };
-    };
-
-    # TCP Optimization
+    # ———————————————————————————————————————
+    # TCP kernel tuning
+    # ———————————————————————————————————————
     boot.kernel.sysctl = mkIf cfg.optimizeTCP {
-      # IPv4 settings
-      "net.ipv4.tcp_fastopen" = 3;
       "net.ipv4.tcp_congestion_control" = "bbr";
+      "net.ipv4.tcp_fastopen" = 3;
       "net.ipv4.tcp_slow_start_after_idle" = 0;
       "net.ipv4.tcp_mtu_probing" = 1;
-      "net.ipv4.tcp_fin_timeout" = 30;
-      "net.ipv4.tcp_keepalive_time" = 120;
-      "net.ipv4.tcp_max_syn_backlog" = 4096;
-      "net.ipv4.tcp_rfc1337" = 1;
-      "net.ipv4.ip_forward" = 1;
-
-      # IPv6 settings
-      "net.ipv6.conf.all.accept_ra" = 2;
-      "net.ipv6.conf.default.accept_ra" = 2;
-      "net.ipv6.conf.all.forwarding" = 1;
-
-      # General network settings
       "net.core.netdev_max_backlog" = 16384;
       "net.core.somaxconn" = 8192;
-      "net.core.rmem_default" = 1048576;
-      "net.core.wmem_default" = 1048576;
       "net.core.rmem_max" = 16777216;
       "net.core.wmem_max" = 16777216;
-      "net.core.optmem_max" = 65536;
     };
 
-    # SSL certificates configuration - FIXED: Removed the conflicting definitions
-    security.pki.certificateFiles = [
-      # Use the existing NixOS-provided certificates
-      "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-    ];
-
-    # Environment variables for SSL
-    environment.variables = {
-      SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
-      GIT_SSL_CAINFO = "/etc/ssl/certs/ca-certificates.crt";
-      CURL_CA_BUNDLE = "/etc/ssl/certs/ca-certificates.crt";
-    };
-
-    # Required packages for networking
+    # ———————————————————————————————————————
+    # Useful CLI tools for debugging
+    # ———————————————————————————————————————
     environment.systemPackages = with pkgs; [
       networkmanager
-      networkmanagerapplet
-      wpa_supplicant
-      iw
-      wirelesstools
-      mtr
-      iperf3
-      ethtool
-      bind # for dig command
-      ldns # for drill command
-      wavemon # wireless monitor
-      cacert # Important for SSL connections (FIXED: was ca-certificates)
-      openssl # For SSL troubleshooting
-      curl # For testing API connections
+      networkmanagerapplet # correct attribute name for the GNOME applet :contentReference[oaicite:0]{index=0}
+      bind
+      openssl
+      curl
     ];
 
-    # Ensure NetworkManager users are created
-    users.groups."networkmanager" = {};
-
-    # Polkit rules for NetworkManager
-    security.polkit.enable = true;
-    security.polkit.extraConfig = ''
-      polkit.addRule(function(action, subject) {
-        if (action.id.indexOf("org.freedesktop.NetworkManager.") == 0 &&
-            subject.isInGroup("networkmanager")) {
-          return polkit.Result.YES;
-        }
-      });
-    '';
+    # Ensure NetworkManager service is enabled
+    systemd.services.NetworkManager.enable = true;
   };
 }

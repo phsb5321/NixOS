@@ -100,7 +100,6 @@ in {
               fd # Fast find
 
               # Applications
-              brave
               yazi-unwrapped
               texlive.combined.scheme-full
               dbeaver-bin
