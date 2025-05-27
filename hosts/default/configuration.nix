@@ -265,7 +265,7 @@
     ];
   };
 
-  # Display manager configuration - FIXED: Using the old path structure
+  # Display manager configuration - FIXED: Using the new path structure
   services.xserver = {
     enable = true;
     displayManager = {
@@ -273,14 +273,18 @@
         enable = true;
         wayland = true;
       };
-      autoLogin = {
-        enable = true;
-        user = "notroot";
-      };
-      defaultSession = "gnome";
     };
     # Enable GNOME desktop
     desktopManager.gnome.enable = true;
+  };
+
+  # Modern display manager configuration (new location)
+  services.displayManager = {
+    autoLogin = {
+      enable = true;
+      user = "notroot";
+    };
+    defaultSession = "gnome";
   };
 
   # Configure syncthing service

@@ -27,14 +27,16 @@ in {
             enable = true;
             wayland = true;
           };
-          # Set auto-login in the xserver path
-          autoLogin = mkIf cfg.autoLogin.enable {
-            enable = true;
-            user = cfg.autoLogin.user;
-          };
-          # Set default session in the xserver path
-          defaultSession = "gnome";
         };
+      };
+
+      # Modern display manager configuration (new location)
+      services.displayManager = {
+        autoLogin = mkIf cfg.autoLogin.enable {
+          enable = true;
+          user = cfg.autoLogin.user;
+        };
+        defaultSession = "gnome";
       };
 
       # GNOME-specific services

@@ -44,11 +44,14 @@
     # Define system version
     systemVersion = "25.05";
 
-    # Common nixpkgs configuration
+    # Common nixpkgs configuration with performance optimizations
     nixpkgsConfig = {
       allowUnfree = true;
       allowUnfreePredicate = _: true;
       allowBroken = true;
+      # Performance optimizations
+      config.allowParallelBuilding = true;
+      config.contentAddressedByDefault = false;
     };
 
     # Create package sets for different channels
