@@ -55,33 +55,83 @@ if [ -f "${CACHE_FILE}" ]; then
 fi
 
 # Display a header using gum
-gum style --foreground 212 "🐚 Select your Nix Shell Environment"
+gum style --foreground 212 "🐚 Select your Nix Shell Environment(s) - Use Space to select, Enter to confirm"
 
-# Prompt user to select a shell using gum
+# Prompt user to select shells using gum with multi-select
 if [ -n "${last_shell}" ] && [[ " ${shell_options[*]} " == *" ${last_shell} "* ]]; then
-  choice=$(gum choose --selected="${last_shell}" --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
+  choices=$(gum choose --no-limit --selected="${last_shell}" --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
 else
-  choice=$(gum choose --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
+  choices=$(gum choose --no-limit --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
 fi
 
-# Check if the user made a valid choice
-if [ -z "${choice}" ]; then
+# Check if the user made any valid choices
+if [ -z "${choices}" ]; then
   gum style --foreground 9 "😔 No valid selection made. Exiting."
   exit 1
 fi
 
-# Save the chosen shell to the cache
-echo "${choice}" >"${CACHE_FILE}"
+# Convert choices to array
+mapfile -t selected_shells <<<"${choices}"
 
-# Map the choice to the corresponding nix-shell command
-selected_shell="${SHELLS_DIR}/${choice}.nix"
+# Save the first chosen shell to the cache for future default selection
+echo "${selected_shells[0]}" >"${CACHE_FILE}"
 
-# Ensure the file exists (should always exist, but checking for robustness)
-if [ -f "${selected_shell}" ]; then
-  display_message "Launching ${choice} shell... 🚀"
+# Build the combined shell paths and display selected shells
+shell_paths=()
+display_message "Selected shells:"
+for shell_name in "${selected_shells[@]}"; do
+  shell_path="${SHELLS_DIR}/${shell_name}.nix"
+  if [ -f "${shell_path}" ]; then
+    shell_paths+=("${shell_path}")
+    gum style --foreground 2 "  ✓ ${shell_name}"
+  else
+    gum style --foreground 9 "😱 The shell file '${shell_path}' does not exist."
+    exit 1
+  fi
+done
+
+# Launch the combined shell environment
+if [ ${#shell_paths[@]} -eq 1 ]; then
+  # Single shell - use direct exec
+  display_message "Launching ${selected_shells[0]} shell... 🚀"
   loading_animation "🔧 Preparing your development environment"
-  exec nix-shell "${selected_shell}" --command zsh
+  exec nix-shell "${shell_paths[0]}" --command zsh
 else
-  gum style --foreground 9 "😱 The shell file '${selected_shell}' does not exist."
-  exit 1
+  # Multiple shells - create a temporary combined shell
+  display_message "Launching combined shell environment... 🚀"
+  loading_animation "🔧 Preparing your combined development environment"
+
+  # Create temporary combined shell file
+  temp_shell=$(mktemp --suffix=.nix)
+  trap "rm -f ${temp_shell}" EXIT
+
+  # Generate the combined shell content
+  cat >"${temp_shell}" <<EOF
+{ pkgs ? import <nixpkgs> {} }:
+
+pkgs.mkShell {
+  # Import all selected shells and combine their inputs
+  inputsFrom = [
+EOF
+
+  # Add each shell as an input
+  for shell_path in "${shell_paths[@]}"; do
+    echo "    (import ${shell_path} { inherit pkgs; })" >>"${temp_shell}"
+  done
+
+  cat >>"${temp_shell}" <<EOF
+  ];
+
+  # Combined shell hook that shows which environments are active
+  shellHook = ''
+    echo "🚀 Combined Nix Shell Environment Active!"
+    echo "📦 Loaded environments: ${selected_shells[*]}"
+    echo "🎯 All tools from selected shells are now available"
+    echo ""
+  '';
+}
+EOF
+
+  # Launch the temporary combined shell
+  exec nix-shell "${temp_shell}" --command zsh
 fi
