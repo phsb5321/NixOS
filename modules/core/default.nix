@@ -252,6 +252,8 @@ in {
         inkscape
         claude-code
         wrangler
+        just
+        infisical
 
         # System Monitoring
         neofetch

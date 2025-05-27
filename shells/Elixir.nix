@@ -52,38 +52,38 @@ in
 
       # Set up IEx configuration
       if [ ! -f ~/.iex.exs ]; then
-        echo '''
-        IEx.configure(
-          colors: [
-            syntax_colors: [
-              number: :yellow,
-              atom: :cyan,
-              string: :green,
-              boolean: :red,
-              nil: :red,
-            ],
-            ls_directory: :cyan,
-            ls_device: :yellow,
-            doc_code: :green,
-            doc_inline_code: :magenta,
-            doc_headings: [:cyan, :underline],
-            doc_title: [:cyan, :bright, :underline],
-          ],
-          default_prompt: [
-            "\e[G", # cursor ⇒ column 1
-            :cyan,
-            "%prefix",
-            :yellow,
-            "|#{Mix.env}|",
-            :cyan,
-            "%counter",
-            " ",
-            :yellow,
-            "▶",  # triangle
-            :reset
-          ] |> IO.ANSI.format |> IO.chardata_to_string
-        )
-        ''' > ~/.iex.exs
+        cat > ~/.iex.exs << 'IEXEOF'
+IEx.configure(
+  colors: [
+    syntax_colors: [
+      number: :yellow,
+      atom: :cyan,
+      string: :green,
+      boolean: :red,
+      nil: :red,
+    ],
+    ls_directory: :cyan,
+    ls_device: :yellow,
+    doc_code: :green,
+    doc_inline_code: :magenta,
+    doc_headings: [:cyan, :underline],
+    doc_title: [:cyan, :bright, :underline],
+  ],
+  default_prompt: [
+    "\e[G", # cursor ⇒ column 1
+    :cyan,
+    "%prefix",
+    :yellow,
+    "|#{Mix.env}|",
+    :cyan,
+    "%counter",
+    " ",
+    :yellow,
+    "▶",  # triangle
+    :reset
+  ] |> IO.ANSI.format |> IO.chardata_to_string
+)
+IEXEOF
       fi
 
       # Function to create a new Phoenix project with defaults
