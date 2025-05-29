@@ -17,7 +17,7 @@ in {
     ./docker-dns.nix
     ./pipewire.nix
     ./monitor-audio.nix
-    ./document-tools.nix # Add this line to import our new module
+    ./document-tools.nix
   ];
 
   options.modules.core = with lib; {
@@ -93,6 +93,9 @@ in {
       };
     };
 
+    # Enable proper time synchronization for time-sensitive tokens
+    services.timesyncd.enable = true;
+
     # System version
     system.stateVersion = cfg.stateVersion;
 
@@ -100,18 +103,37 @@ in {
     time.timeZone = cfg.timeZone;
     i18n.defaultLocale = cfg.defaultLocale;
 
-    # Nix configuration
+    # Nix configuration with performance optimizations
     nix = {
       settings = {
         auto-optimise-store = true;
         experimental-features = ["nix-command" "flakes"];
         timeout = 14400; # 4 hours
+        # Performance optimizations
+        cores = 0; # Use all available cores
+        max-jobs = "auto"; # Auto-detect optimal parallel jobs
+        # Reliability improvements
+        require-sigs = true;
+        trusted-users = ["root" "@wheel"];
+        # Optimize builds
+        builders-use-substitutes = true;
+        # Cache configuration
+        substituters = [
+          "https://cache.nixos.org/"
+          "https://nix-community.cachix.org"
+        ];
+        trusted-public-keys = [
+          "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+          "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        ];
       };
       gc = {
         automatic = true;
         dates = "weekly";
         options = "--delete-older-than 30d";
       };
+      # Enable distributed builds for better performance
+      distributedBuilds = true;
     };
 
     # Security configuration
@@ -136,8 +158,39 @@ in {
       };
     };
 
-    # Boot configuration
-    boot.tmp.useTmpfs = lib.mkDefault true;
+    # Boot configuration with performance optimizations
+    boot = {
+      tmp.useTmpfs = lib.mkDefault true;
+      # Performance kernel parameters
+      kernel.sysctl = {
+        # VM optimizations
+        "vm.swappiness" = 10;
+        "vm.dirty_ratio" = 15;
+        "vm.dirty_background_ratio" = 5;
+        "vm.vfs_cache_pressure" = 50;
+        # Network performance
+        "net.core.rmem_max" = 268435456;
+        "net.core.wmem_max" = 268435456;
+        "net.core.netdev_max_backlog" = 5000;
+        # Security hardening
+        "kernel.dmesg_restrict" = 1;
+        "kernel.kptr_restrict" = 2;
+        "net.ipv4.conf.all.log_martians" = 1;
+        "net.ipv4.conf.default.log_martians" = 1;
+        "net.ipv4.icmp_echo_ignore_broadcasts" = 1;
+        "net.ipv4.conf.all.send_redirects" = 0;
+        "net.ipv4.conf.default.send_redirects" = 0;
+      };
+      # Enable ZRAM for better memory management
+      kernelModules = ["zram"];
+    };
+
+    # ZRAM configuration for improved performance
+    zramSwap = {
+      enable = true;
+      algorithm = "zstd";
+      memoryPercent = 25;
+    };
 
     # Core system services
     services = {
@@ -152,7 +205,7 @@ in {
       fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
     };
 
-    # Virtualization configuration - removed Docker settings as they're now in docker-dns.nix
+    # Virtualization configuration
     virtualisation = {
       containers.enable = true;
       podman = {
@@ -198,7 +251,9 @@ in {
         vdhcoapp
         inkscape
         claude-code
-        stablePkgs.wrangler
+        wrangler
+        just
+        infisical
 
         # System Monitoring
         neofetch

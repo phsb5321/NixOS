@@ -1,7 +1,7 @@
 # ~/NixOS/shells/JavaScript.nix
 # {pkgs ? import (fetchTarball "https://github.com/nixos/nixpkgs/archive/nixos-unstable.tar.gz") {}}:
 # Uses Nixpkgs 24.05
-{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.11.tar.gz") {}}:
+{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {}}:
 # Uses Nixpkgs Default (Latest)
 # {pkgs ? import <nixpkgs> {}}:
 # Uses the latest Nixpkgs
@@ -68,6 +68,9 @@ in
 
       # Configure pnpm to use the centralized store
       pnpm config set store-dir "${centralizedStore}/pnpm/store" &>/dev/null
+
+      # Update pnpm to latest version
+      pnpm self-update &>/dev/null || true
 
       # Set up Prisma environment variables
       export PRISMA_QUERY_ENGINE_LIBRARY="${pkgs.prisma-engines}/lib/libquery_engine.node"
