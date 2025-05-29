@@ -153,6 +153,8 @@
       inputs.zen-browser.packages.${system}.default
       openai-whisper
       bruno
+      brave
+      librewolf
 
       # Python packages with GTK support
       (python3.withPackages (ps:
@@ -263,13 +265,26 @@
     ];
   };
 
-  # Display manager configuration - ensure only one is enabled
-  services.xserver.displayManager = {
-    gdm = {
-      enable = true; # Use GDM for GNOME
-      wayland = true;
+  # Display manager configuration - FIXED: Using the new path structure
+  services.xserver = {
+    enable = true;
+    displayManager = {
+      gdm = {
+        enable = true;
+        wayland = true;
+      };
     };
-    sddm.enable = false; # Disable SDDM explicitly
+    # Enable GNOME desktop
+    desktopManager.gnome.enable = true;
+  };
+
+  # Modern display manager configuration (new location)
+  services.displayManager = {
+    autoLogin = {
+      enable = true;
+      user = "notroot";
+    };
+    defaultSession = "gnome";
   };
 
   # Configure syncthing service
@@ -361,5 +376,5 @@
   ];
 
   # Tailscale
-  services.tailscale.enable = true;
+  services.tailscale.enable = false;
 }
