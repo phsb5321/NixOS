@@ -226,6 +226,5 @@ in {
       openssl
       curl
     ];
-
   };
 }

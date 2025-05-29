@@ -5,5 +5,6 @@
     ./networking
     ./home
     ./core
+    ./packages
   ];
 }
