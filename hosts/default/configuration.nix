@@ -10,251 +10,94 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../shared/common.nix
   ];
 
-  # Enable core module with basic system configuration
-  modules.core = {
+  # Desktop-specific configuration
+  # Enable gaming packages for desktop
+  modules.packages.gaming.enable = true;
+
+  # Desktop-specific core module additions
+  modules.core.java = {
     enable = true;
-    stateVersion = systemVersion;
-    timeZone = "America/Recife";
-    defaultLocale = "en_US.UTF-8";
-    java = {
-      enable = true;
-      androidTools.enable = true;
-    };
-    extraSystemPackages = with pkgs; [
-      # Gaming Tools
-      gamemode
-      gamescope
-      mangohud
-      protontricks
-      winetricks
-
-      # System Utilities
-      guvcview
-      obs-studio
-      gimp
-      calibre
-
-      # Development Tools
-      llvm
-      clang
-
-      # Additional Tools
-      seahorse
-      bleachbit
-      lact
-      speechd
-      anydesk
-
-      # AMD GPU and Video Tools
-      vulkan-tools
-      vulkan-loader
-      vulkan-validation-layers
-      libva-utils
-      vdpauinfo
-      glxinfo
-      ffmpeg-full
-
-      # Bluetooth GUI manager
-      blueman
-
-      # System information tools
-      pciutils
-      usbutils
-
-      # PipeWire Tools
-      pipewire
-      wireplumber
-      easyeffects # Audio effects processor for PipeWire
-      pavucontrol # Still needed for compatibility with PulseAudio applications
-      helvum # PipeWire patchbay
-    ];
-    documentTools = {
-      enable = true;
-      latex = {
-        enable = true;
-        # Set to true if you want a smaller installation
-        minimal = false;
-        # Add any extra packages you might need
-        extraPackages = with pkgs; [
-          # Example: Add biber for bibliography management
-          biber
-          # Additional LaTeX packages you might need
-          texlive.combined.scheme-context
-        ];
-      };
-    };
+    androidTools.enable = true;
   };
 
-  # Set system options
-  console.keyMap = "br-abnt2";
-  users.defaultUserShell = pkgs.zsh;
-
-  # Enable and configure desktop module
-  modules.desktop = {
+  modules.core.documentTools = {
     enable = true;
-    environment = "gnome"; # Using GNOME environment
-    autoLogin = {
+    latex = {
       enable = true;
-      user = "notroot";
-    };
-    fonts = {
-      enable = true;
-      packages = with pkgs; [
-        nerd-fonts.jetbrains-mono
+      minimal = false;
+      extraPackages = with pkgs; [
+        biber
+        texlive.combined.scheme-context
       ];
-      defaultFonts = {
-        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
-      };
     };
   };
 
-  # Enable and configure networking module
-  modules.networking = {
-    enable = true;
-    hostName = "nixos";
-    optimizeTCP = true;
-    enableNetworkManager = true;
-    dns = {
-      enableSystemdResolved = true;
-      enableDNSOverTLS = true;
-      primaryProvider = "cloudflare";
-    };
-    firewall = {
-      enable = true;
-      allowPing = true;
-      openPorts = [22 3000];
-      trustedInterfaces = [];
-    };
-  };
+  # Desktop-specific extra packages
+  modules.packages.extraPackages = with pkgs; [
+    # AMD GPU and Video Tools
+    vulkan-tools
+    vulkan-loader
+    vulkan-validation-layers
+    libva-utils
+    vdpauinfo
+    glxinfo
+    ffmpeg-full
 
-  # Enable the home module
-  modules.home = {
-    enable = true;
-    username = "notroot";
-    hostName = "default";
-    extraPackages = with pkgs; [
-      vscode
-      google-chrome
-      insomnia
-      postman
-      gparted
-      baobab
-      syncthing
-      vlc
-      pigz
-      mangohud
-      unzip
-      spotify
-      lsof
-      discord
-      corectrl
-      inputs.zen-browser.packages.${system}.default
-      openai-whisper
-      bruno
-      brave
-      librewolf
+    # Development tools specific to desktop
+    calibre
+    anydesk
 
-      # Python packages with GTK support
-      (python3.withPackages (ps:
-        with ps; [
-          pygobject3
-          pycairo
-          dbus-python
-          python-dbusmock
-        ]))
+    # LACT for AMD GPU control
+    lact
+  ];
 
-      android-tools
-    ];
-  };
+  # Desktop-specific networking ports
+  modules.networking.firewall.openPorts = [22 3000];
+
+  # AMD-specific hardware configuration
+  hardware.cpu.intel.updateMicrocode = true;
+  hardware.graphics.extraPackages = with pkgs; [
+    amdvlk
+    vaapiVdpau
+    libvdpau-va-gl
+  ];
+
+  # Desktop-specific home module additions
+  modules.home.extraPackages = with pkgs; [
+    openai-whisper
+  ];
 
   # Additional networking overrides if needed
   networking.networkmanager.dns = lib.mkForce "default";
 
-  # Locale settings
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pt_BR.UTF-8";
-    LC_IDENTIFICATION = "pt_BR.UTF-8";
-    LC_MEASUREMENT = "pt_BR.UTF-8";
-    LC_MONETARY = "pt_BR.UTF-8";
-    LC_NAME = "pt_BR.UTF-8";
-    LC_NUMERIC = "pt_BR.UTF-8";
-    LC_PAPER = "pt_BR.UTF-8";
-    LC_TELEPHONE = "pt_BR.UTF-8";
-    LC_TIME = "pt_BR.UTF-8";
-  };
-
-  # Create the plugdev group
+  # Desktop-specific user groups
   users.groups.plugdev = {};
+  users.users.notroot.extraGroups = [
+    "dialout"
+    "libvirtd"
+    "plugdev"
+  ];
 
-  # User configuration with all groups in one place
-  users.users.notroot = {
-    isNormalUser = true;
-    description = "Pedro Balbino";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "audio"
-      "video"
-      "disk"
-      "input"
-      "bluetooth"
-      "docker"
-      "dialout"
-      "libvirtd"
-      "kvm"
-      "render"
-      "plugdev"
+  # Desktop-specific AMD boot configuration
+  boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
+    tmp.useTmpfs = true;
+    kernelParams = [
+      "mitigations=off"
+      "amdgpu.ppfeaturemask=0xffffffff"
+      "radeon.si_support=0"
+      "amdgpu.si_support=1"
+      "radeon.cik_support=0"
+      "amdgpu.cik_support=1"
+      "radeon.audio=1"
+      "amdgpu.audio=1"
     ];
   };
 
-  # Hardware configuration
-  hardware = {
-    enableRedistributableFirmware = true;
-    bluetooth = {
-      enable = true;
-      powerOnBoot = true;
-      disabledPlugins = ["sap"];
-      settings = {
-        General = {
-          AutoEnable = "true";
-          ControllerMode = "dual";
-          Experimental = "true";
-        };
-      };
-    };
-    cpu.intel.updateMicrocode = true;
-    graphics = {
-      enable = true;
-      enable32Bit = true;
-      extraPackages = with pkgs; [
-        amdvlk
-        vaapiVdpau
-        libvdpau-va-gl
-      ];
-    };
-  };
-
-  # Let the module system handle PipeWire configuration
-  services.pipewire.enable = true;
-
-  # Ensure PulseAudio is disabled
-  services.pulseaudio.enable = lib.mkForce false;
-
-  # Fix AMD GPU Overdrive issue
-  boot.kernelParams = [
-    "mitigations=off"
-    "amdgpu.ppfeaturemask=0xffffffff"
-    "radeon.si_support=0"
-    "amdgpu.si_support=1"
-    "radeon.cik_support=0"
-    "amdgpu.cik_support=1"
-    "radeon.audio=1" # Enable HDMI audio for Radeon
-    "amdgpu.audio=1" # Enable HDMI audio for AMDGPU
-  ];
-
-  # Fix auditd configuration
+  # Desktop-specific security configuration
   security.auditd.enable = true;
   security.audit = {
     enable = true;
@@ -265,96 +108,29 @@
     ];
   };
 
-  # Display manager configuration - FIXED: Using the new path structure
-  services.xserver = {
+  security.apparmor = {
     enable = true;
-    displayManager = {
-      gdm = {
-        enable = true;
-        wayland = true;
-      };
-    };
-    # Enable GNOME desktop
-    desktopManager.gnome.enable = true;
+    killUnconfinedConfinables = true;
   };
 
-  # Modern display manager configuration (new location)
-  services.displayManager = {
-    autoLogin = {
-      enable = true;
-      user = "notroot";
-    };
-    defaultSession = "gnome";
-  };
-
-  # Configure syncthing service
-  services.syncthing = {
+  # Desktop-specific gaming programs
+  programs.steam = {
     enable = true;
-    user = "notroot";
-    dataDir = "/home/notroot/Sync";
-    configDir = "/home/notroot/.config/syncthing";
-    overrideDevices = true;
-    overrideFolders = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
   };
 
-  # Enable other system services
-  services = {
-    fstrim.enable = true;
-    thermald.enable = true;
-    ollama.enable = false;
-  };
-
-  # Gaming configuration and other programs
-  programs = {
-    fish.enable = true;
-    zsh.enable = true;
-    nix-ld.enable = true;
-    steam = {
+  programs.corectrl = {
+    enable = true;
+    gpuOverclock = {
       enable = true;
-      remotePlay.openFirewall = true;
-      dedicatedServer.openFirewall = true;
+      ppfeaturemask = "0xffffffff";
     };
-    corectrl = {
-      enable = true;
-      gpuOverclock = {
-        enable = true;
-        ppfeaturemask = "0xffffffff";
-      };
-    };
-    dconf.enable = true;
-    thunderbird.enable = true;
   };
 
-  # LACT daemon service
+  # LACT daemon service for AMD GPU control
   systemd.packages = with pkgs; [lact];
   systemd.services.lactd.wantedBy = ["multi-user.target"];
-
-  # Security configuration
-  security = {
-    sudo.wheelNeedsPassword = true;
-    apparmor = {
-      enable = true;
-      killUnconfinedConfinables = true;
-    };
-    polkit.enable = true;
-    rtkit.enable = true;
-  };
-
-  # SSH configuration
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "no";
-      PasswordAuthentication = true;
-      KbdInteractiveAuthentication = false;
-    };
-  };
-
-  # Boot configuration
-  boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
-    tmp.useTmpfs = true;
-  };
 
   # CoreCtrl sudo configuration
   security.sudo.extraRules = [
@@ -375,6 +151,7 @@
     pkgs.openocd
   ];
 
-  # Tailscale
+  # Desktop-specific services
+  services.ollama.enable = false;
   services.tailscale.enable = false;
 }
