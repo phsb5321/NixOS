@@ -27,6 +27,9 @@ let
       pkgs.nodePackages.vercel
       pkgs.nodePackages."@nestjs/cli"
     ])
+    (mkPackageGroup "Testing Tools" [
+      pkgs.playwright-driver.browsers
+    ])
     (mkPackageGroup "Database Tools" [
       pkgs.nodePackages.prisma
       pkgs.postgresql_16
@@ -80,6 +83,10 @@ in
       # Set up Puppeteer
       export PUPPETEER_EXECUTABLE_PATH="$(which chromium)"
 
+      # Set up Playwright
+      export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
+      export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+
       # Function to run commands only in project directories
       run_in_project() {
         if [ -f "package.json" ]; then
@@ -99,5 +106,7 @@ in
       echo "🔧 Use 'pnpm', 'npm', 'yarn', or 'bun' to manage your project dependencies."
       echo "🦕 Deno is now available in your environment."
       echo "🏗️  NestJS CLI is available. Use 'nest' to create and manage NestJS projects."
+      echo "🎭 Playwright is configured for testing. Install @playwright/test in your project."
+      echo "   Note: Make sure your npm playwright version matches the nix version for compatibility."
     '';
   }
