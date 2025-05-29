@@ -35,6 +35,9 @@
   # Laptop doesn't need gaming packages
   modules.packages.gaming.enable = false;
 
+  # Laptop-specific Python without GTK (to match original config)
+  modules.packages.python.withGTK = lib.mkForce false;
+
   # Laptop-specific locale settings (override if needed)
   i18n = {
     defaultLocale = "en_US.UTF-8";

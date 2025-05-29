@@ -75,8 +75,6 @@ in {
           lsof
           seahorse
           bleachbit
-          pciutils
-          usbutils
         ];
         description = "List of utility packages to install";
       };
@@ -110,7 +108,6 @@ in {
           easyeffects
           pavucontrol
           helvum
-          ffmpeg-full
           guvcview
         ];
         description = "List of audio/video packages to install";
