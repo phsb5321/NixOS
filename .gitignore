@@ -1,3 +1,61 @@
-# Logs
+# Logs and outputs
 nixos-switch.log
 output.txt
+
+# Editor settings
+.vscode/
+.idea/
+*.swp
+*~
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Nix build artifacts
+/result
+/result-
+*.drv
+*.out
+*.tmp
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Shell history
+.bash_history
+.zsh_history
+
+# Ignore user-specific files
+*.bak
+*.old
+
+# Ignore backup files
+*~
+
+# Ignore environment files
+.env
+.envrc
+
+# Ignore local shell wrappers
+shell.nix
+
+# Ignore any local test or debug files
+*.log
+*.test
+*.debug
+
+# Allow flake files and configuration
+!flake.nix
+!flake.lock
+
+# Allow all Nix configuration and scripts
+!hosts/
+!modules/
+!shells/
+!user-scripts/
+
+# Ignore any local override or secret files
+secrets.nix
+*.secrets.nix
