@@ -51,6 +51,9 @@
     (mkPackageGroup "Version Control" [
       pkgs.git
     ])
+    (mkPackageGroup "MQTT Tools" [
+      pkgs.mosquitto
+    ])
   ];
 
   # Flatten package groups into a single list
