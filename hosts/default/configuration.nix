@@ -120,12 +120,10 @@
     dedicatedServer.openFirewall = true;
   };
 
-  programs.corectrl = {
+  # AMD GPU Overdrive configuration (updated option path)
+  hardware.amdgpu.overdrive = {
     enable = true;
-    gpuOverclock = {
-      enable = true;
-      ppfeaturemask = "0xffffffff";
-    };
+    ppfeaturemask = "0xffffffff";
   };
 
   # LACT daemon service for AMD GPU control
