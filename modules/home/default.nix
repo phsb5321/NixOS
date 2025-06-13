@@ -115,7 +115,7 @@ in {
 
           sessionVariables = {
             EDITOR = "nvim";
-            SHELL = "zsh";
+            SHELL = "${pkgs.zsh}/bin/zsh";
           };
         };
 
