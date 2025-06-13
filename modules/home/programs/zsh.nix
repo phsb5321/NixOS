@@ -21,6 +21,9 @@ in {
         # Ensure ZSH is in the PATH
         export PATH="${pkgs.zsh}/bin:$PATH"
 
+        # Fix SHELL environment variable to use full path
+        export SHELL="${pkgs.zsh}/bin/zsh"
+
         # zoxide integration
         eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
 
