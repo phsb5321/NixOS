@@ -19,6 +19,9 @@ Thumbs.db
 *.out
 *.tmp
 
+# Nix flake lock file
+flake.lock
+
 # Python cache
 __pycache__/
 *.pyc
