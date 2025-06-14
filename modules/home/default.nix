@@ -115,7 +115,7 @@ in {
 
           sessionVariables = {
             EDITOR = "nvim";
-            SHELL = "${pkgs.zsh}/bin/zsh";
+            SHELL = "/etc/profiles/per-user/notroot/bin/zsh";
           };
         };
 
