@@ -21,6 +21,9 @@ in {
         # Ensure ZSH is in the PATH
         export PATH="${pkgs.zsh}/bin:$PATH"
 
+        # Fix SHELL environment variable to use full path - use the actual installed path
+        export SHELL="/etc/profiles/per-user/notroot/bin/zsh"
+
         # zoxide integration
         eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
 
@@ -47,7 +50,7 @@ in {
           export SHELL="${pkgs.bash}/bin/bash"
         else
           # Set explicit shell path for local sessions
-          export SHELL="${pkgs.zsh}/bin/zsh"
+          export SHELL="/etc/profiles/per-user/notroot/bin/zsh"
         fi
 
         # starship prompt
@@ -101,7 +104,7 @@ in {
         if [[ -n "$SSH_CONNECTION" ]]; then
           export SHELL="${pkgs.bash}/bin/bash"
         else
-          export SHELL="${pkgs.zsh}/bin/zsh"
+          export SHELL="/etc/profiles/per-user/notroot/bin/zsh"
         fi
       '';
     };

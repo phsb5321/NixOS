@@ -6,7 +6,7 @@ IFS=$'\n\t'
 #######################################
 # Configuration
 #######################################
-readonly SCRIPT_VERSION="4.1.0"
+readonly SCRIPT_VERSION="4.2.0"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly FLAKE_DIR="$HOME/NixOS"
 readonly LOG_DIR="$HOME/.local/share/nixos-rebuild/logs"
@@ -14,6 +14,7 @@ readonly STATE_DIR="$HOME/.local/share/nixos-rebuild/state"
 readonly CACHE_DIR="$HOME/.cache/nixos-rebuild"
 readonly LOCK_FILE="$HOME/.local/share/nixos-rebuild/rebuild.lock"
 readonly DEFAULT_KEEP_GENERATIONS=7
+readonly DEFAULT_OPERATION="switch"
 
 # Color definitions for gum
 declare -A COLORS=(
@@ -204,11 +205,57 @@ verify_host() {
     fi
 }
 
+validate_configuration() {
+    local host=$1
+    gum style --foreground "${COLORS[info]}" "Validating configuration..."
+
+    # Just check the flake itself, not a specific configuration
+    if ! execute "Check flake" nix flake check --no-build; then
+        log "Configuration validation failed" "error"
+        return 1
+    fi
+
+    # Verify the specific host configuration exists by trying to build it
+    if ! execute "Validate host config" nix build ".#nixosConfigurations.$host.config.system.build.toplevel" --dry-run; then
+        log "Host configuration validation failed" "error"
+        return 1
+    fi
+
+    gum style --foreground "${COLORS[success]}" "✓ Configuration is valid"
+    return 0
+}
+
+show_generations() {
+    gum style --foreground "${COLORS[info]}" "System generations:"
+    sudo nixos-rebuild list-generations | head -20
+}
+
+rollback_generation() {
+    show_generations
+    echo
+    local gen
+    gen=$(gum input --placeholder "Enter generation number to rollback to")
+
+    if [[ ! "$gen" =~ ^[0-9]+$ ]]; then
+        die "Invalid generation number: $gen"
+    fi
+
+    if gum confirm "Rollback to generation $gen?"; then
+        execute "Rollback to generation $gen" nixos-rebuild switch --rollback --switch-generation "$gen"
+    fi
+}
+
 rebuild_system() {
     local host=$1
+    local operation=${2:-$DEFAULT_OPERATION}
     cd "$FLAKE_DIR" || die "Could not change to flake directory"
 
     echo "$$" >"$LOCK_FILE"
+
+    # Validate configuration first
+    if [[ "${SKIP_VALIDATION:-false}" != true ]]; then
+        validate_configuration "$host" || die "Configuration validation failed"
+    fi
 
     if [[ "${SKIP_UPDATE:-false}" != true ]]; then
         gum style --foreground "${COLORS[info]}" "Updating system..."
@@ -226,12 +273,13 @@ rebuild_system() {
         execute "Formatting files" alejandra .
     fi
 
-    local rebuild_cmd=(nixos-rebuild switch --flake ".#${host}")
+    local rebuild_cmd=(nixos-rebuild "$operation" --flake ".#${host}")
     [[ "${DRY_RUN:-false}" == true ]] && rebuild_cmd+=(--dry-run)
+    [[ "${VERBOSE:-false}" == true ]] && rebuild_cmd+=(--verbose)
 
-    execute "Rebuilding system" "${rebuild_cmd[@]}"
+    execute "Rebuilding system ($operation)" "${rebuild_cmd[@]}"
 
-    if [[ "${DRY_RUN:-false}" != true && "${SKIP_PUSH:-false}" != true ]]; then
+    if [[ "${DRY_RUN:-false}" != true && "${SKIP_PUSH:-false}" != true && "$operation" == "switch" ]]; then
         local gen
         gen=$(nixos-rebuild --flake ".#${host}" list-generations | grep current)
 
@@ -261,7 +309,9 @@ rebuild_system() {
         fi
     fi
 
-    maintenance
+    if [[ "$operation" == "switch" ]]; then
+        maintenance
+    fi
 }
 
 maintenance() {
@@ -284,11 +334,14 @@ main() {
     check_sudo_access
 
     local host=""
+    local operation="$DEFAULT_OPERATION"
     DRY_RUN=false
     SKIP_UPDATE=false
     SKIP_OPTIMIZE=false
     SKIP_FORMAT=false
     SKIP_PUSH=false
+    SKIP_VALIDATION=false
+    VERBOSE=false
     KEEP_GENERATIONS=$DEFAULT_KEEP_GENERATIONS
 
     while [[ $# -gt 0 ]]; do
@@ -298,6 +351,15 @@ main() {
         --no-optimize) SKIP_OPTIMIZE=true ;;
         --no-format) SKIP_FORMAT=true ;;
         --no-push) SKIP_PUSH=true ;;
+        --no-validation) SKIP_VALIDATION=true ;;
+        -v | --verbose) VERBOSE=true ;;
+        -o | --operation)
+            shift
+            operation=$1
+            if [[ ! "$operation" =~ ^(switch|boot|test|build)$ ]]; then
+                die "Invalid operation: $operation. Must be one of: switch, boot, test, build"
+            fi
+            ;;
         -k | --keep)
             shift
             KEEP_GENERATIONS=$1
@@ -308,6 +370,14 @@ main() {
             ;;
         -l | --list)
             list_hosts
+            exit 0
+            ;;
+        -g | --generations)
+            show_generations
+            exit 0
+            ;;
+        -r | --rollback)
+            rollback_generation
             exit 0
             ;;
         *)
@@ -344,13 +414,13 @@ main() {
     fi
 
     if [[ $DRY_RUN == false ]]; then
-        if ! gum confirm "Ready to rebuild $host. Continue?"; then
+        if ! gum confirm "Ready to $operation $host. Continue?"; then
             gum style --foreground "${COLORS[info]}" "Operation cancelled"
             exit 0
         fi
     fi
 
-    rebuild_system "$host"
+    rebuild_system "$host" "$operation"
 }
 
 show_help() {
@@ -360,14 +430,25 @@ NixOS Rebuild Script v${SCRIPT_VERSION}
 Usage: $SCRIPT_NAME [options] <host>
 
 Options:
-  -n, --dry-run       Dry run mode
-  --no-update         Skip system updates
-  --no-optimize       Skip store optimization
-  --no-format         Skip file formatting
-  --no-push           Skip git push
-  -k, --keep DAYS     Keep generations for specified days (default: $DEFAULT_KEEP_GENERATIONS)
-  -l, --list          List available hosts
-  -h, --help          Show this help message
+  -n, --dry-run         Dry run mode
+  -o, --operation OP    Operation to perform (switch|boot|test|build) [default: switch]
+  --no-update           Skip system updates
+  --no-optimize         Skip store optimization
+  --no-format           Skip file formatting
+  --no-push             Skip git push
+  --no-validation       Skip configuration validation
+  -v, --verbose         Enable verbose output
+  -k, --keep DAYS       Keep generations for specified days (default: $DEFAULT_KEEP_GENERATIONS)
+  -l, --list            List available hosts
+  -g, --generations     Show system generations
+  -r, --rollback        Rollback to a previous generation
+  -h, --help            Show this help message
+
+Operations:
+  switch    Apply configuration and make it the boot default
+  boot      Apply configuration on next boot only
+  test      Apply configuration temporarily (reverts on reboot)
+  build     Build configuration without applying
 
 Available hosts:
 $(for h in "$FLAKE_DIR"/hosts/*/; do echo "  $(basename "$h")"; done)
