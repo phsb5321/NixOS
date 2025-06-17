@@ -115,7 +115,7 @@ in {
 
           sessionVariables = {
             EDITOR = "nvim";
-            SHELL = "zsh";
+            SHELL = "/etc/profiles/per-user/notroot/bin/zsh";
           };
         };
 
