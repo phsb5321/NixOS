@@ -148,25 +148,6 @@
     pipewire.enable = true;
     pulseaudio.enable = lib.mkForce false;
 
-    xserver = {
-      enable = true;
-      displayManager = {
-        gdm = {
-          enable = true;
-          wayland = true;
-        };
-      };
-      desktopManager.gnome.enable = true;
-    };
-
-    displayManager = {
-      autoLogin = {
-        enable = true;
-        user = "notroot";
-      };
-      defaultSession = "gnome";
-    };
-
     syncthing = {
       enable = true;
       user = "notroot";
