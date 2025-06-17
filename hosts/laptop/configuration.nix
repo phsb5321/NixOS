@@ -109,13 +109,7 @@
     };
 
     systemPackages = with pkgs; [
-      gnome-shell-extensions
-      gnome-tweaks
-      gnomeExtensions.dash-to-dock
-      gnomeExtensions.clipboard-indicator
-      gnomeExtensions.sound-output-device-chooser
-      gnomeExtensions.gsconnect
-      gnomeExtensions.blur-my-shell
+      # Laptop-specific packages only
       linux-firmware
       wayland
       xdg-utils
