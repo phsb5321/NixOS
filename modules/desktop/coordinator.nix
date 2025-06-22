@@ -26,6 +26,8 @@ in {
         enable = true;
         wayland = cfg.displayManager.wayland;
         autoSuspend = cfg.displayManager.autoSuspend;
+        # Add debug settings to help with session registration
+        debug = true;
       };
 
       # SDDM configuration for KDE
