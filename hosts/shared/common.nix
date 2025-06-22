@@ -45,6 +45,27 @@
   modules.desktop = {
     enable = true;
     environment = "gnome";
+    
+    # Enable Wayland by default for better performance and security
+    displayManager = {
+      wayland = true;
+      autoSuspend = true;
+    };
+    
+    # Enhanced theming
+    theming = {
+      preferDark = true;
+      accentColor = "blue";
+    };
+    
+    # Hardware integration
+    hardware = {
+      enableTouchpad = true;
+      enableBluetooth = true;
+      enablePrinting = true;
+      enableScanning = false; # Keep disabled for now
+    };
+    
     autoLogin = {
       enable = true;
       user = "notroot";
@@ -59,6 +80,9 @@
       };
     };
   };
+
+  # Use the GNOME Wayland session by default
+  services.displayManager.defaultSession = lib.mkForce "gnome";
 
   # Common networking configuration
   modules.networking = {
