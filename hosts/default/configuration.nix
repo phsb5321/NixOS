@@ -97,13 +97,8 @@
   # Explicitly disable conflicting display managers
   services.displayManager.sddm.enable = lib.mkForce false;
   
-  # Fix GDM session registration issues
+  # Fix GDM session registration issues - remove conflicting environment vars
   systemd.services.display-manager = {
-    environment = {
-      GDK_BACKEND = "wayland,x11";
-      MOZ_ENABLE_WAYLAND = "1";
-      XDG_SESSION_TYPE = "wayland";
-    };
     serviceConfig = {
       Restart = lib.mkForce "always";
       RestartSec = lib.mkForce "1";

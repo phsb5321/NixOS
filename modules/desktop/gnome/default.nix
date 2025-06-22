@@ -55,10 +55,6 @@ in {
         wantedBy = [ "graphical-session.target" ];
         wants = [ "graphical-session.target" ];
         after = [ "graphical-session-pre.target" ];
-        environment = {
-          GDK_BACKEND = "wayland,x11";
-          XDG_SESSION_TYPE = "wayland";
-        };
       };
 
       # Add udev rules for GNOME
