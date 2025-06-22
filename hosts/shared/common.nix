@@ -15,7 +15,7 @@
         postInstall = (oldAttrs.postInstall or "") + ''
           # Fix the Wayland session wrapper to properly handle the -l flag
           substitute $out/bin/gnome-session $out/bin/gnome-session.tmp \
-            --replace 'exec $0 -l $*' 'exec $0 $*'
+            --replace "'exec \$0 -l \$*'" "'exec \$0 \$*'"
           mv $out/bin/gnome-session.tmp $out/bin/gnome-session
           chmod +x $out/bin/gnome-session
         '';
