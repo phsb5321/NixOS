@@ -8,6 +8,21 @@
 }: {
   # Common configuration shared between all hosts
 
+  # Override gnome-session to fix Wayland wrapper bug
+  nixpkgs.overlays = [
+    (final: prev: {
+      gnome-session = prev.gnome-session.overrideAttrs (oldAttrs: {
+        postInstall = (oldAttrs.postInstall or "") + ''
+          # Fix the Wayland session wrapper to properly handle the -l flag
+          substitute $out/bin/gnome-session $out/bin/gnome-session.tmp \
+            --replace 'exec $0 -l $*' 'exec $0 $*'
+          mv $out/bin/gnome-session.tmp $out/bin/gnome-session
+          chmod +x $out/bin/gnome-session
+        '';
+      });
+    })
+  ];
+
   # Enable shared packages module with common categories
   modules.packages = {
     enable = true;
@@ -41,12 +56,12 @@
     ];
   };
 
-  # Common desktop configuration
+  # Desktop environment configuration with GDM and GNOME
   modules.desktop = {
     enable = true;
     environment = "gnome";
     
-    # Enable Wayland by default for better performance and security
+    # Re-enable Wayland with custom gnome-session wrapper fix
     displayManager = {
       wayland = true;
       autoSuspend = true;
@@ -81,7 +96,7 @@
     };
   };
 
-  # Use the GNOME Wayland session by default
+  # Use the GNOME Wayland session with fixed wrapper
   services.displayManager.defaultSession = lib.mkForce "gnome";
 
   # Common networking configuration
