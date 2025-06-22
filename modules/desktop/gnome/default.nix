@@ -56,6 +56,7 @@ in {
         packages = with pkgs; [
           dconf
           gnome-settings-daemon
+          gsettings-desktop-schemas
         ];
       };
 
@@ -79,6 +80,9 @@ in {
         python3Packages.pycairo
         gobject-introspection
         glib
+        glib.dev # Contains glib-compile-schemas
+        glib.bin # Ensures glib-compile-schemas is available in PATH
+        gsettings-desktop-schemas # GNOME schema files
         gtk3
         gtk4
 
@@ -212,22 +216,8 @@ in {
       # Enable DConf settings and ensure proper database setup
       programs.dconf.enable = true;
 
-      # System activation script to ensure theme cache is generated
-      system.activationScripts.gnome-theme-cache = ''
-        echo "Setting up GNOME theme cache..."
-        ${pkgs.glib}/bin/glib-compile-schemas ${pkgs.gsettings-desktop-schemas}/share/glib-2.0/schemas
-
-        # Ensure user-level theme directories exist
-        mkdir -p /home/${cfg.autoLogin.user}/.local/share/themes
-        mkdir -p /home/${cfg.autoLogin.user}/.local/share/icons
-        mkdir -p /home/${cfg.autoLogin.user}/.config/gtk-3.0
-        mkdir -p /home/${cfg.autoLogin.user}/.config/gtk-4.0
-
-        chown -R ${cfg.autoLogin.user}:users /home/${cfg.autoLogin.user}/.local/share/themes || true
-        chown -R ${cfg.autoLogin.user}:users /home/${cfg.autoLogin.user}/.local/share/icons || true
-        chown -R ${cfg.autoLogin.user}:users /home/${cfg.autoLogin.user}/.config/gtk-3.0 || true
-        chown -R ${cfg.autoLogin.user}:users /home/${cfg.autoLogin.user}/.config/gtk-4.0 || true
-      '';
+      # GNOME automatically handles schema compilation and theme cache
+      # User directories will be created by GNOME on first login
 
       # Home Manager configuration for persistent GNOME settings
       home-manager.users.${cfg.autoLogin.user} = {

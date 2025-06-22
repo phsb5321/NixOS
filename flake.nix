@@ -20,7 +20,7 @@
     # Additional inputs for custom projects and tools
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
     firefox-nightly = {
-      url = "github:nix-community/flake-firefox-nightly";
+      url = "github:andersk/flake-firefox-nightly/612c986d422af5a58acf3bfc5c18be8e7b97afd5";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixvim = {
@@ -67,7 +67,7 @@
 
     # Common specialArgs to pass into each NixOS system
     commonSpecialArgs = {
-      inherit inputs systemVersion bleedPkgs stablePkgs;
+      inherit inputs systemVersion bleedPkgs stablePkgs system;
     };
 
     # Define common modules for all configurations

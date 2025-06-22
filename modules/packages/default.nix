@@ -40,6 +40,7 @@ in {
           android-tools
           llvm
           clang
+          code-cursor
         ];
         description = "List of development packages to install";
       };
