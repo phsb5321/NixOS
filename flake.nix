@@ -81,16 +81,17 @@
               # Bleeding edge packages overlay
               bleeding = bleedPkgs;
 
-              # Triple buffering for GNOME performance
-              mutter = prev.mutter.overrideAttrs (old: {
-                src = final.fetchFromGitLab {
-                  domain = "gitlab.gnome.org";
-                  owner = "vanvugt";
-                  repo = "mutter";
-                  rev = "triple-buffering-v4-48";
-                  hash = "sha256-C2VfW3ThPEZ37YkX7ejlyumLnWa9oij333d5c4yfZxc=";
-                };
-              });
+              # Triple buffering for GNOME performance - temporarily disabled
+              # TODO: Re-enable with working version
+              # mutter = prev.mutter.overrideAttrs (old: {
+              #   src = final.fetchFromGitLab {
+              #     domain = "gitlab.gnome.org";
+              #     owner = "vanvugt";
+              #     repo = "mutter";
+              #     rev = "triple-buffering-v4-47";
+              #     hash = "sha256-fkPjB/5DPBX06t7yj0Rb3UEuu5b9mu3aS5EnM32jOJ4=";
+              #   };
+              # });
             })
           ];
         };
