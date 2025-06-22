@@ -97,14 +97,8 @@
   # Laptop-specific environment configuration for Intel/Wayland
   environment = {
     sessionVariables = {
-      XDG_SESSION_TYPE = "wayland";
       LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
       LIBVA_DRIVER_NAME = "iHD"; # Intel VAAPI driver
-      SDL_VIDEODRIVER = "wayland";
-      GDK_BACKEND = "wayland";
-      MOZ_ENABLE_WAYLAND = "1";
-      QT_QPA_PLATFORM = "wayland";
-      CLUTTER_BACKEND = "wayland";
       SHELL = "${pkgs.zsh}/bin/zsh";
     };
 
