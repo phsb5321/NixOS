@@ -96,37 +96,6 @@
 
   # Explicitly disable conflicting display managers
   services.displayManager.sddm.enable = lib.mkForce false;
-  
-  # Fix GDM session registration issues - remove conflicting environment vars
-  systemd.services.display-manager = {
-    serviceConfig = {
-      Restart = lib.mkForce "always";
-      RestartSec = lib.mkForce "1";
-    };
-  };
-
-  # Ensure proper dbus and session management
-  services.dbus = {
-    enable = true;
-    packages = with pkgs; [
-      dconf
-      gnome-settings-daemon
-      gsettings-desktop-schemas
-    ];
-  };
-  
-  # Add essential session packages
-  environment.systemPackages = with pkgs; [
-    gnome-session
-    gnome-shell
-    glib
-    dconf
-  ];
-
-  # Desktop-specific home module additions
-  modules.home.extraPackages = with pkgs; [
-    openai-whisper
-  ];
 
   # Additional networking overrides if needed
   networking.networkmanager.dns = lib.mkForce "default";
