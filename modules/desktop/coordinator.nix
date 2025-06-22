@@ -27,8 +27,8 @@ in {
     assertions = [
       {
         assertion =
-          (cfg.environment == "gnome" -> !config.services.xserver.desktopManager.plasma5.enable)
-          && (cfg.environment == "kde" -> !config.services.xserver.desktopManager.gnome.enable);
+          (cfg.environment == "gnome" -> !config.services.desktopManager.plasma5.enable)
+          && (cfg.environment == "kde" -> !config.services.desktopManager.gnome.enable);
         message = "You cannot enable multiple desktop environments simultaneously.";
       }
     ];
