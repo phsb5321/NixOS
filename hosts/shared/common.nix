@@ -67,7 +67,7 @@
     };
     
     autoLogin = {
-      enable = true;
+      enable = false;
       user = "notroot";
     };
     fonts = {
