@@ -14,13 +14,26 @@ in {
       # Common configuration needed for all desktop environments
     })
 
-    # GNOME-specific configuration
+    # GNOME-specific configuration for NixOS 25.05
     (mkIf (cfg.enable && cfg.environment == "gnome") {
-      # Modern desktop manager configuration
-      services.desktopManager.gnome.enable = true;
+      # Essential GNOME Wayland configuration for NixOS 25.05
+      services.xserver = {
+        enable = true; # Enables XWayland support
+        displayManager.gdm = {
+          enable = true; # GNOME Display Manager
+          wayland = true; # Explicitly enable Wayland
+        };
+        desktopManager.gnome.enable = true; # Uses Wayland by default
+      };
 
-      # The coordinator handles the display manager configuration
-      # This ensures no conflicts between different DE configurations
+      # Pipewire audio system (optimal for Wayland)
+      security.rtkit.enable = true;
+      services.pipewire = {
+        enable = true;
+        alsa.enable = true;
+        alsa.support32Bit = true;
+        pulse.enable = true;
+      };
 
       # GNOME-specific services
       services.gnome = {
@@ -52,9 +65,9 @@ in {
       # Essential system services for session management
       systemd.services.gnome-session-manager = {
         description = "GNOME Session Manager";
-        wantedBy = [ "graphical-session.target" ];
-        wants = [ "graphical-session.target" ];
-        after = [ "graphical-session-pre.target" ];
+        wantedBy = ["graphical-session.target"];
+        wants = ["graphical-session.target"];
+        after = ["graphical-session-pre.target"];
       };
 
       # Add udev rules for GNOME
@@ -135,14 +148,14 @@ in {
         ];
         config = {
           gnome = {
-            default = ["gtk"];
-            "org.freedesktop.impl.portal.Secret" = ["gnome-keyring"];
+            default = mkDefault ["gtk"];
+            "org.freedesktop.impl.portal.Secret" = mkDefault ["gnome-keyring"];
           };
         };
       };
 
       # GNOME settings overrides for system-wide defaults
-      services.desktopManager.gnome.extraGSettingsOverrides = ''
+      services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
         [org.gnome.desktop.interface]
         gtk-theme='adw-gtk3-dark'
         icon-theme='Papirus-Dark'
@@ -216,7 +229,7 @@ in {
       # GNOME automatically handles schema compilation and theme cache
       # User directories will be created by GNOME on first login
 
-      # Home Manager configuration for persistent GNOME settings  
+      # Home Manager configuration for persistent GNOME settings
       home-manager.users.notroot = {
         # Required imports for proper functioning
         imports = [
@@ -343,9 +356,14 @@ in {
           };
         };
 
-        # Environment variables for consistent theming
+        # Environment variables for consistent theming and Wayland compatibility
         home.sessionVariables = {
           GTK_THEME = "adw-gtk3-dark";
+          NIXOS_OZONE_WL = "1"; # Chromium/Electron Wayland support
+          GDK_BACKEND = "wayland,x11"; # GTK applications prefer Wayland
+          MOZ_ENABLE_WAYLAND = "1"; # Firefox Wayland support
+          QT_QPA_PLATFORM = "wayland;xcb"; # Qt applications
+          WAYLAND_DISPLAY = "wayland-0";
         };
 
         # Add systemd service to ensure theme settings are applied

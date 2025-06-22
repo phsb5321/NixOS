@@ -27,7 +27,7 @@ with lib; {
     # Accessibility options
     accessibility = {
       enable = mkEnableOption "Accessibility features";
-      
+
       screenReader = mkOption {
         type = types.bool;
         default = false;
