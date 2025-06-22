@@ -6,6 +6,7 @@
   pkgs,
   stablePkgs,
   bleedPkgs,
+  system,
   ...
 }: let
   cfg = config.modules.core;
@@ -217,7 +218,7 @@ in {
         backend = "podman";
         containers = {};
       };
-      waydroid.enable = true;
+      waydroid.enable = false;
     };
 
     # Common system packages
@@ -247,7 +248,7 @@ in {
         stablePkgs.awscli2
         azure-cli
         rbw
-        inputs.firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin
+        inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
         vdhcoapp
         inkscape
         claude-code
