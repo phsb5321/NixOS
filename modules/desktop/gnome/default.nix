@@ -16,27 +16,11 @@ in {
 
     # GNOME-specific configuration
     (mkIf (cfg.enable && cfg.environment == "gnome") {
-      # Enable X server and GNOME desktop environment with GDM
-      services.xserver = {
-        enable = true;
-      };
-
       # Modern desktop manager configuration
       services.desktopManager.gnome.enable = true;
 
-      # Configure GDM as the display manager and auto-login
-      services.displayManager.gdm = {
-        enable = true;
-        wayland = true;
-      };
-      
-      services.displayManager = {
-        autoLogin = mkIf cfg.autoLogin.enable {
-          enable = true;
-          user = cfg.autoLogin.user;
-        };
-        defaultSession = "gnome";
-      };
+      # The coordinator handles the display manager configuration
+      # This ensures no conflicts between different DE configurations
 
       # GNOME-specific services
       services.gnome = {
@@ -146,7 +130,7 @@ in {
       };
 
       # GNOME settings overrides for system-wide defaults
-      services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
+      services.desktopManager.gnome.extraGSettingsOverrides = ''
         [org.gnome.desktop.interface]
         gtk-theme='adw-gtk3-dark'
         icon-theme='Papirus-Dark'
