@@ -24,12 +24,13 @@ in {
       # Modern desktop manager configuration
       services.desktopManager.gnome.enable = true;
 
-      # Configure GDM as the display manager
+      # Configure GDM as the display manager and auto-login
+      services.displayManager.gdm = {
+        enable = true;
+        wayland = true;
+      };
+      
       services.displayManager = {
-        gdm = {
-          enable = true;
-          wayland = true;
-        };
         autoLogin = mkIf cfg.autoLogin.enable {
           enable = true;
           user = cfg.autoLogin.user;
@@ -41,12 +42,12 @@ in {
       services.gnome = {
         gnome-keyring.enable = true;
         core-shell.enable = true;
-        core-apps.enable = true; # FIXED: was core-utilities.enable
+        core-os-services.enable = true;
         gnome-settings-daemon.enable = true;
         evolution-data-server.enable = true;
         glib-networking.enable = true;
-        tinysparql.enable = true; # Renamed from tracker.enable
-        localsearch.enable = true; # Renamed from tracker-miners.enable
+        tinysparql.enable = true;
+        localsearch.enable = true;
       };
 
       # Additional services needed by GNOME
@@ -91,7 +92,7 @@ in {
         libdbusmenu-gtk3
         libappindicator
         libappindicator-gtk3
-        libsoup_2_4 # Updated from libsoup
+        libsoup_2_4
         dconf
 
         # Extensions from the configuration
@@ -145,7 +146,7 @@ in {
       };
 
       # GNOME settings overrides for system-wide defaults
-      services.desktopManager.gnome.extraGSettingsOverrides = ''
+      services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
         [org.gnome.desktop.interface]
         gtk-theme='adw-gtk3-dark'
         icon-theme='Papirus-Dark'
