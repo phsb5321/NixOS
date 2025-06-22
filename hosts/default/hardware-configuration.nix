@@ -18,7 +18,7 @@
   boot.loader.grub.useOSProber = false;
 
   boot.initrd.availableKernelModules = ["xhci_pci" "ehci_pci" "nvme" "usbhid" "usb_storage" "sd_mod"];
-  boot.initrd.kernelModules = [];
+  boot.initrd.kernelModules = ["amdgpu"];
   boot.kernelModules = ["kvm-intel"];
   boot.extraModulePackages = [];
 

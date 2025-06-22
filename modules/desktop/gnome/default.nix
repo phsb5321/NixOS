@@ -36,13 +36,29 @@ in {
 
       # Additional services needed by GNOME
       services.geoclue2.enable = true;
+
+      # Enhanced dbus configuration for GNOME
       services.dbus = {
         enable = true;
         packages = with pkgs; [
           dconf
           gnome-settings-daemon
           gsettings-desktop-schemas
+          gnome-session
+          gnome-shell
         ];
+      };
+
+      # Essential system services for session management
+      systemd.services.gnome-session-manager = {
+        description = "GNOME Session Manager";
+        wantedBy = [ "graphical-session.target" ];
+        wants = [ "graphical-session.target" ];
+        after = [ "graphical-session-pre.target" ];
+        environment = {
+          GDK_BACKEND = "wayland,x11";
+          XDG_SESSION_TYPE = "wayland";
+        };
       };
 
       # Add udev rules for GNOME
@@ -204,8 +220,8 @@ in {
       # GNOME automatically handles schema compilation and theme cache
       # User directories will be created by GNOME on first login
 
-      # Home Manager configuration for persistent GNOME settings
-      home-manager.users.${cfg.autoLogin.user} = {
+      # Home Manager configuration for persistent GNOME settings  
+      home-manager.users.notroot = {
         # Required imports for proper functioning
         imports = [
         ];
