@@ -10,22 +10,22 @@ with lib; let
   cfg = config.modules.desktop;
 in {
   config = mkIf cfg.enable {
-    # X server and display manager configuration (NixOS 25.05)
+    # Display manager configuration
+    services.displayManager.defaultSession = mkDefault (
+      if cfg.environment == "gnome"
+      then "gnome"
+      else if cfg.environment == "kde"
+      then "plasma"
+      else "gnome"
+    );
+
+    # X server configuration (NixOS 25.05)
     services.xserver = {
       enable = true;
       xkb = {
         layout = "br";
         variant = "";
       };
-
-      # Set default session based on the desktop environment
-      displayManager.defaultSession = mkDefault (
-        if cfg.environment == "gnome"
-        then "gnome"
-        else if cfg.environment == "kde"
-        then "plasma"
-        else "gnome"
-      );
 
       # GDM configuration for GNOME
       displayManager.gdm = mkIf (cfg.environment == "gnome") {

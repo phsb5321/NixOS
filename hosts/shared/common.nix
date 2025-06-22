@@ -111,7 +111,7 @@
   };
 
   # Use explicit GNOME Wayland session
-  services.xserver.displayManager.defaultSession = lib.mkForce "gnome";
+  services.displayManager.defaultSession = lib.mkForce "gnome";
 
   # Essential Wayland environment variables for NixOS 25.05
   environment.sessionVariables = {
