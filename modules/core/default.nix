@@ -19,6 +19,7 @@ in {
     ./pipewire.nix
     ./monitor-audio.nix
     ./document-tools.nix
+    ./version-sync.nix
   ];
 
   options.modules.core = with lib; {
