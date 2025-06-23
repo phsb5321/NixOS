@@ -20,6 +20,27 @@
   modules.networking.hostName = "nixos-laptop";
   modules.home.hostName = "laptop";
 
+  # Ensure WiFi firmware is available
+  hardware.enableRedistributableFirmware = true;
+  hardware.firmware = with pkgs; [
+    linux-firmware
+  ];
+
+  # Additional WiFi-related services
+  systemd.services.wifi-unblock = {
+    description = "Attempt to unblock WiFi on startup";
+    after = ["network-pre.target"];
+    wants = ["network-pre.target"];
+    before = ["network.target"];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.util-linux}/bin/rfkill unblock wifi";
+      ExecStartPost = "${pkgs.util-linux}/bin/rfkill unblock all";
+      RemainAfterExit = true;
+    };
+    wantedBy = ["multi-user.target"];
+  };
+
   # Laptop-specific core module additions
   modules.core.extraSystemPackages = with pkgs; [
     nvtopPackages.full # Keep for monitoring
@@ -168,6 +189,11 @@
       "i915.enable_dc=2"
       # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
       # "i915.force_probe=46a8"
+      # WiFi-specific parameters to handle hard block issues
+      "rfkill.default_state=1"
+      "iwlwifi.power_save=0"
+      "iwlwifi.disable_11n=0"
+      "rfkill.master_switch_mode=0"
     ];
 
     kernelModules = ["i915"];
