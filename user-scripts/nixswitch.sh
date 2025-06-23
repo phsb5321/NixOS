@@ -8,27 +8,7 @@ IFS=$'\n\t'
 #######################################
 readonly SCRIPT_VERSION="5.0.0"
 readonly SCRIPT_NAME=$(basename "$0")
-
-log() {
-    local msg="$1"
-    local level="${2:-info}"
-    local color="${COLORS[$level]:-39}"
-    local timestamp
-    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-
-    # Truncate very long messages to prevent "Argument list too long" errors
-    if [[ ${#msg} -gt 1000 ]]; then
-        msg="${msg:0:1000}... (truncated)"
-    fi
-
-    # Always log to file
-    echo "[$timestamp] ($level) $msg" >>"$LOG_FILE"
-
-    # Show in terminal based on verbosity
-    if [[ "${VERBOSE:-false}" == true || "$level" != "info" ]]; then
-        gum style --foreground "$color" "[$timestamp] $msg"
-    fi
-}E_DIR="$HOME/NixOS"
+readonly FLAKE_DIR="$HOME/NixOS"
 readonly LOG_DIR="$HOME/.local/share/nixos-rebuild/logs"
 readonly STATE_DIR="$HOME/.local/share/nixos-rebuild/state"
 readonly CACHE_DIR="$HOME/.cache/nixos-rebuild"
@@ -65,17 +45,17 @@ cleanup() {
             kill -TERM "$pid" 2>/dev/null || true
         fi
     done
-    
+
     # Kill sudo keep-alive
     if [[ -n "$SUDO_PID" ]] && kill -0 "$SUDO_PID" 2>/dev/null; then
         kill -TERM "$SUDO_PID" 2>/dev/null || true
     fi
-    
+
     # Remove lock file
     if [[ -f "$LOCK_FILE" ]]; then
         rm -f "$LOCK_FILE"
     fi
-    
+
     # Wait for background jobs to finish
     wait 2>/dev/null || true
 }
@@ -107,7 +87,7 @@ check_sudo_access() {
             die "Root privileges are required to run this script."
         fi
     fi
-    
+
     # Keep sudo alive in the background with better error handling
     (
         while true; do
@@ -122,7 +102,7 @@ check_sudo_access() {
 check_disk_space() {
     local available_gb
     available_gb=$(df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ')
-    
+
     if [[ "$available_gb" -lt "$MIN_FREE_SPACE_GB" ]]; then
         warn "Low disk space: ${available_gb}GB available (recommended: ${MIN_FREE_SPACE_GB}GB+)"
         if gum confirm "Continue anyway?"; then
@@ -131,7 +111,7 @@ check_disk_space() {
             die "Aborted due to low disk space"
         fi
     fi
-    
+
     info "Disk space check: ${available_gb}GB available"
 }
 
@@ -173,16 +153,16 @@ run_parallel() {
     local max_jobs="${1:-$PARALLEL_JOBS}"
     shift
     local tasks=("$@")
-    
+
     if [[ ${#tasks[@]} -eq 0 ]]; then
         return 0
     fi
-    
+
     info "Running ${#tasks[@]} tasks in parallel (max jobs: $max_jobs)"
-    
-    printf '%s\n' "${tasks[@]}" | \
+
+    printf '%s\n' "${tasks[@]}" |
         parallel --jobs "$max_jobs" --halt soon,fail=1 --line-buffer \
-        'eval "$@"' -- || return 1
+            'eval "$@"' -- || return 1
 }
 
 # Background task execution with progress tracking
@@ -191,13 +171,13 @@ execute_background() {
     local log_file="$2"
     shift 2
     local cmd=("$@")
-    
+
     {
         if [[ "${DRY_RUN:-false}" == true ]]; then
             echo "Would execute: ${cmd[*]}"
             return 0
         fi
-        
+
         if "${cmd[@]}" &>>"$log_file"; then
             echo "SUCCESS: $name"
         else
@@ -205,7 +185,7 @@ execute_background() {
             return 1
         fi
     } &
-    
+
     local pid=$!
     CLEANUP_PIDS+=("$pid")
     return 0
@@ -214,20 +194,20 @@ execute_background() {
 # Wait for all background tasks
 wait_for_background_tasks() {
     local failed=0
-    
+
     for pid in "${CLEANUP_PIDS[@]}"; do
         if ! wait "$pid"; then
             ((failed++))
         fi
     done
-    
+
     CLEANUP_PIDS=()
-    
+
     if [[ $failed -gt 0 ]]; then
         warn "$failed background tasks failed"
         return 1
     fi
-    
+
     return 0
 }
 
@@ -254,7 +234,7 @@ setup_logging() {
     ensure_directories
     LOG_FILE="${LOG_DIR}/nixos-rebuild-${host:-system}-$(date '+%Y%m%d_%H%M%S').log"
     touch "$LOG_FILE"
-    
+
     # Clean old logs in background
     {
         find "$LOG_DIR" -type f -name "*.log" -mtime +30 -delete 2>/dev/null || true
@@ -285,12 +265,12 @@ execute() {
     if "${cmd[@]}" >"$temp_out" 2>"$temp_err"; then
         end_time=$(date +%s)
         duration=$((end_time - start_time))
-        
+
         local output
         output=$(cat "$temp_out")
         local errors
         errors=$(cat "$temp_err")
-        
+
         rm -f "$temp_out" "$temp_err"
 
         # Log output and errors
@@ -307,7 +287,7 @@ execute() {
         local exit_code=$?
         end_time=$(date +%s)
         duration=$((end_time - start_time))
-        
+
         local output errors
         output=$(cat "$temp_out")
         errors=$(cat "$temp_err")
@@ -317,7 +297,7 @@ execute() {
         if [[ -n "$output" || -n "$errors" ]]; then
             echo
             gum style --foreground "${COLORS[error]}" "Error in $name (${duration}s):"
-            
+
             if [[ -n "$errors" ]]; then
                 echo "$errors" | while IFS= read -r line; do
                     if [[ "$line" =~ ^error: ]]; then
@@ -329,7 +309,7 @@ execute() {
                     fi
                 done
             fi
-            
+
             if [[ -n "$output" ]]; then
                 echo "$output" | while IFS= read -r line; do
                     echo "  $line"
@@ -349,38 +329,38 @@ execute() {
 smart_garbage_collection() {
     local keep_days="${KEEP_GENERATIONS:-$DEFAULT_KEEP_GENERATIONS}"
     local aggressive="${AGGRESSIVE_GC:-false}"
-    
+
     info "Starting intelligent garbage collection..."
-    
+
     # Run core GC operations sequentially for safety
     collect_old_generations "$keep_days"
     clean_nix_store
-    
+
     # Run maintenance tasks in parallel
     local maintenance_tasks=()
-    
+
     # Add tasks that can run in parallel
     if command -v journalctl &>/dev/null; then
         maintenance_tasks+=("sudo journalctl --vacuum-time=7d --quiet")
         maintenance_tasks+=("sudo journalctl --vacuum-size=500M --quiet")
     fi
-    
+
     # Clean user caches
     if [[ -d "$HOME/.cache/nix" ]]; then
         maintenance_tasks+=("find $HOME/.cache/nix -type f -mtime +7 -delete 2>/dev/null || true")
     fi
-    
+
     if [[ -d "$CACHE_DIR" ]]; then
         maintenance_tasks+=("find $CACHE_DIR -type f -mtime +7 -delete 2>/dev/null || true")
     fi
-    
+
     # Run maintenance tasks in parallel if any exist
     if [[ ${#maintenance_tasks[@]} -gt 0 ]]; then
         info "Running ${#maintenance_tasks[@]} maintenance tasks in parallel"
-        printf '%s\n' "${maintenance_tasks[@]}" | \
+        printf '%s\n' "${maintenance_tasks[@]}" |
             parallel --jobs 3 --line-buffer 'bash -c "{}"' 2>/dev/null || true
     fi
-    
+
     if [[ "$aggressive" == true ]]; then
         aggressive_store_cleanup
     fi
@@ -388,15 +368,15 @@ smart_garbage_collection() {
 
 collect_old_generations() {
     local keep_days=$1
-    
+
     # System generations
     execute "Clean old system generations" \
         sudo nix-collect-garbage --delete-older-than "${keep_days}d"
-    
+
     # User generations
     execute "Clean old user generations" \
         nix-collect-garbage --delete-older-than "${keep_days}d"
-    
+
     # Profile generations
     if [[ -d "/nix/var/nix/profiles" ]]; then
         execute "Clean old profile generations" \
@@ -407,28 +387,28 @@ collect_old_generations() {
 clean_nix_store() {
     # Check store consistency first
     execute "Verify store integrity" nix-store --verify --check-contents
-    
+
     # Optimize store (deduplicate)
     if [[ "${SKIP_OPTIMIZE:-false}" != true ]]; then
         execute "Optimize nix store" nix-store --optimize
     fi
-    
+
     # Clean up unused paths
     execute "Clean unused store paths" nix-store --gc
 }
 
 aggressive_store_cleanup() {
     warn "Running aggressive cleanup - this may take longer"
-    
+
     # More aggressive garbage collection
     execute "Aggressive GC (all unreachable)" nix-collect-garbage -d
-    
+
     # Clean temporary build directories
     if [[ -d "/tmp" ]]; then
         execute "Clean build temps" \
             sudo find /tmp -name "nix-build-*" -type d -mtime +1 -exec rm -rf {} + 2>/dev/null || true
     fi
-    
+
     # Clean Nix build cache
     if [[ -d "$HOME/.cache/nix" ]]; then
         execute "Clean nix build cache" rm -rf "$HOME/.cache/nix"/*
@@ -456,7 +436,7 @@ list_hosts() {
                 local host_name
                 host_name=$(basename "$host")
                 gum style --foreground "${COLORS[primary]}" "• $host_name"
-                
+
                 # Show last build info if available
                 local last_build="$STATE_DIR/last_build_$host_name"
                 if [[ -f "$last_build" ]]; then
@@ -482,40 +462,22 @@ validate_configuration() {
     local host=$1
     info "Validating configuration..."
 
-    # Check git status to inform user about dirty working tree
-    if [[ -d "$FLAKE_DIR/.git" ]]; then
-        if ! git -C "$FLAKE_DIR" diff-index --quiet HEAD --; then
-            warn "Git working tree is dirty - flake check may report warnings"
-            info "Run 'git add .' and 'git commit' to clean the working tree if needed"
-        fi
+    # Run validation tasks sequentially since they need the script environment
+    if ! execute "Check flake syntax" nix flake check --no-build; then
+        die "Flake syntax validation failed"
     fi
 
-    # Check basic flake syntax first
-    if ! execute "Check flake metadata" nix flake metadata; then
-        die "Flake metadata check failed - basic flake structure is broken"
-    fi
-
-    # Try a more comprehensive flake check, but don't fail if it has transient issues
-    if ! execute "Check flake syntax (no-build)" nix flake check --no-build; then
-        warn "Flake check with --no-build failed, trying without --no-build flag..."
-        if ! execute "Check flake syntax (full)" nix flake check; then
-            warn "Flake check reported issues, but continuing anyway (this may be due to transient network issues)"
-            warn "You may want to run 'nix flake check' manually to investigate"
-        fi
-    fi
-    
-    # The most important validation - check if the host configuration builds
     if ! execute "Validate host config" nix build ".#nixosConfigurations.$host.config.system.build.toplevel" --dry-run; then
-        die "Host configuration validation failed - cannot build the system configuration"
+        die "Host configuration validation failed"
     fi
-    
+
     # Check for common security issues
     if [[ -f "$FLAKE_DIR/flake.nix" ]]; then
         if grep -q "allowBroken.*true" "$FLAKE_DIR/flake.nix"; then
             warn "allowBroken is enabled - this may introduce security risks"
         fi
     fi
-    
+
     success "Configuration validation passed"
     return 0
 }
@@ -523,7 +485,7 @@ validate_configuration() {
 show_generations() {
     info "System generations:"
     sudo nixos-rebuild list-generations | head -20
-    
+
     echo
     info "User generations:"
     nix-env --list-generations | head -10
@@ -547,7 +509,7 @@ rollback_generation() {
 
 pre_build_optimizations() {
     info "Running pre-build optimizations..."
-    
+
     # Set optimal build settings
     export NIX_BUILD_CORES="$PARALLEL_JOBS"
     export NIX_CONFIG="
@@ -558,7 +520,7 @@ pre_build_optimizations() {
         keep-outputs = false
         keep-derivations = false
     "
-    
+
     # Warm up the evaluation cache
     execute "Warm evaluation cache" \
         nix eval ".#nixosConfigurations.$1.config.system.build.toplevel.drvPath" --raw
@@ -574,7 +536,7 @@ rebuild_system() {
 
     # Pre-build checks
     check_disk_space
-    
+
     # Pre-build optimizations
     pre_build_optimizations "$host"
 
@@ -604,7 +566,7 @@ rebuild_system() {
     [[ "${DRY_RUN:-false}" == true ]] && rebuild_cmd+=(--dry-run)
     [[ "${VERBOSE:-false}" == true ]] && rebuild_cmd+=(--verbose)
     [[ "${FAST_BUILD:-false}" == true ]] && rebuild_cmd+=(--fast)
-    
+
     # Add parallel build flags
     rebuild_cmd+=(--option max-jobs auto --option cores "$PARALLEL_JOBS")
 
@@ -618,26 +580,26 @@ rebuild_system() {
 
 post_build_tasks() {
     local host=$1
-    
+
     info "Running post-build tasks..."
-    
+
     # Git operations
     if [[ "${SKIP_PUSH:-false}" != true ]]; then
         handle_git_operations "$host"
     fi
-    
+
     # System maintenance
     if [[ "${SKIP_MAINTENANCE:-false}" != true ]]; then
         maintenance
     fi
-    
+
     # Update build timestamp
     echo "$(date)" >"$STATE_DIR/last_build_$host"
 }
 
 handle_git_operations() {
     local host=$1
-    
+
     if ! git status &>/dev/null; then
         warn "Not a git repository or git command failed"
         return 1
@@ -646,10 +608,10 @@ handle_git_operations() {
     if ! git diff-index --quiet HEAD --; then
         local gen
         gen=$(sudo nixos-rebuild --flake ".#${host}" list-generations | grep current | head -1)
-        
+
         execute "Stage changes" git add .
         execute "Commit changes" git commit -m "rebuild(${host}): ${gen}"
-        
+
         if gum confirm "Push changes to remote?"; then
             execute "Push changes" git push
         fi
@@ -663,11 +625,11 @@ maintenance() {
 
     # Run maintenance tasks sequentially for reliability
     execute "Clean systemd logs" sudo journalctl --vacuum-time=7d
-    
+
     if command -v updatedb &>/dev/null; then
         execute "Update locate database" sudo updatedb
     fi
-    
+
     # Clean package caches
     if [[ -d "$HOME/.cache" ]]; then
         execute "Clean package caches" \
@@ -803,7 +765,7 @@ main() {
     if [[ $DRY_RUN == true ]]; then
         warn "Running in dry-run mode - no changes will be made"
     fi
-    
+
     if [[ $FAST_BUILD == true ]]; then
         info "Fast build mode enabled - skipping some optimizations"
     fi
@@ -816,7 +778,7 @@ main() {
     fi
 
     rebuild_system "$host" "$operation"
-    
+
     success "System rebuild completed successfully!"
 }
 
