@@ -28,8 +28,8 @@
 
   # WiFi-specific kernel modules options for Intel AX201
   boot.extraModprobeConfig = ''
-    # Intel WiFi AX201 optimizations
-    options iwlwifi swcrypto=1 11n_disable=0 power_save=0 uapsd_disable=1 lar_disable=1
+    # Intel WiFi AX201 optimizations with correct parameter names
+    options iwlwifi 11n_disable=0 power_save=0 uapsd_disable=3 fw_restart=1
     options iwlmvm power_scheme=1
   '';
 
@@ -44,35 +44,50 @@
       ExecStartPre = [
         "${pkgs.kmod}/bin/modprobe -r iwlmvm || true"
         "${pkgs.kmod}/bin/modprobe -r iwlwifi || true"
+        "${pkgs.coreutils}/bin/sleep 1"
       ];
       ExecStart = [
         "${pkgs.util-linux}/bin/rfkill unblock all"
         "${pkgs.kmod}/bin/modprobe iwlwifi"
+        "${pkgs.coreutils}/bin/sleep 2"
         "${pkgs.kmod}/bin/modprobe iwlmvm"
+        "${pkgs.coreutils}/bin/sleep 2"
       ];
       ExecStartPost = [
-        "${pkgs.coreutils}/bin/sleep 2"
-        "${pkgs.util-linux}/bin/rfkill unblock wifi"
-        "${pkgs.util-linux}/bin/rfkill unblock all"
+        "${pkgs.util-linux}/bin/rfkill unblock wifi || true"
+        "${pkgs.util-linux}/bin/rfkill unblock all || true"
       ];
       RemainAfterExit = true;
-      Restart = "on-failure";
-      RestartSec = "5s";
     };
     wantedBy = ["multi-user.target"];
   };
 
-  # Additional service to handle NetworkManager WiFi scanning
+  # Dynamic WiFi enablement service that detects the interface name
   systemd.services.wifi-enable = {
     description = "Enable WiFi in NetworkManager";
     after = ["NetworkManager.service" "wifi-unblock.service"];
     requires = ["NetworkManager.service"];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = [
-        "${pkgs.networkmanager}/bin/nmcli radio wifi on"
-        "${pkgs.networkmanager}/bin/nmcli device set wlo1 managed yes"
-      ];
+      ExecStart = pkgs.writeShellScript "wifi-enable" ''
+        # Wait for NetworkManager to be ready
+        ${pkgs.coreutils}/bin/sleep 3
+        
+        # Enable WiFi radio
+        ${pkgs.networkmanager}/bin/nmcli radio wifi on || true
+        
+        # Find WiFi device name dynamically
+        WIFI_DEV=$(${pkgs.iproute2}/bin/ip link show | ${pkgs.gnugrep}/bin/grep -E "wl[a-z0-9]+:" | ${pkgs.coreutils}/bin/cut -d: -f2 | ${pkgs.coreutils}/bin/tr -d ' ' | ${pkgs.coreutils}/bin/head -n1)
+        
+        if [ -n "$WIFI_DEV" ]; then
+          echo "Found WiFi device: $WIFI_DEV"
+          ${pkgs.networkmanager}/bin/nmcli device set "$WIFI_DEV" managed yes || true
+          ${pkgs.iproute2}/bin/ip link set "$WIFI_DEV" up || true
+        else
+          echo "No WiFi device found"
+          exit 1
+        fi
+      '';
       RemainAfterExit = true;
     };
     wantedBy = ["multi-user.target"];
@@ -227,12 +242,8 @@
       # WiFi-specific parameters to handle hard block issues
       "rfkill.default_state=1"
       "iwlwifi.power_save=0"
-      "iwlwifi.disable_11n=0"
-      "rfkill.master_switch_mode=0"
-      # Additional WiFi parameters to resolve hard block
-      "iwlwifi.swcrypto=1"
-      "iwlwifi.uapsd_disable=1"
-      "iwlwifi.lar_disable=1"
+      "iwlwifi.11n_disable=0"
+      "iwlwifi.uapsd_disable=3"
       "acpi_osi=\"Windows 2020\""
       # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
       # "i915.force_probe=46a8"
