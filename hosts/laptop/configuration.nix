@@ -46,7 +46,7 @@
         ${pkgs.kmod}/bin/modprobe -r iwlmvm || true
         ${pkgs.kmod}/bin/modprobe -r iwlwifi || true
         ${pkgs.coreutils}/bin/sleep 2
-        
+
         # Try to reset PCI device
         echo "0000:00:14.3" > /sys/bus/pci/drivers/iwlwifi/unbind 2>/dev/null || true
         ${pkgs.coreutils}/bin/sleep 1
@@ -57,22 +57,22 @@
         # Unblock all rfkill devices
         ${pkgs.util-linux}/bin/rfkill unblock all
         ${pkgs.coreutils}/bin/sleep 1
-        
+
         # Load iwlwifi with new parameters
         ${pkgs.kmod}/bin/modprobe iwlwifi
         ${pkgs.coreutils}/bin/sleep 3
-        
+
         # Load iwlmvm
         ${pkgs.kmod}/bin/modprobe iwlmvm
         ${pkgs.coreutils}/bin/sleep 3
-        
+
         # Try to unblock again after driver loading
         ${pkgs.util-linux}/bin/rfkill unblock all
       '';
       ExecStartPost = pkgs.writeShellScript "wifi-unblock-post" ''
         ${pkgs.util-linux}/bin/rfkill unblock wifi || true
         ${pkgs.util-linux}/bin/rfkill unblock all || true
-        
+
         # Force-enable the interface if it exists
         if ${pkgs.iproute2}/bin/ip link show wlo1 >/dev/null 2>&1; then
           ${pkgs.iproute2}/bin/ip link set wlo1 up || true
@@ -93,13 +93,13 @@
       ExecStart = pkgs.writeShellScript "wifi-enable" ''
         # Wait for NetworkManager to be ready
         ${pkgs.coreutils}/bin/sleep 3
-        
+
         # Enable WiFi radio
         ${pkgs.networkmanager}/bin/nmcli radio wifi on || true
-        
+
         # Find WiFi device name dynamically
         WIFI_DEV=$(${pkgs.iproute2}/bin/ip link show | ${pkgs.gnugrep}/bin/grep -E "wl[a-z0-9]+:" | ${pkgs.coreutils}/bin/cut -d: -f2 | ${pkgs.coreutils}/bin/tr -d ' ' | ${pkgs.coreutils}/bin/head -n1)
-        
+
         if [ -n "$WIFI_DEV" ]; then
           echo "Found WiFi device: $WIFI_DEV"
           ${pkgs.networkmanager}/bin/nmcli device set "$WIFI_DEV" managed yes || true
@@ -212,7 +212,7 @@
       QT_QPA_PLATFORM = "wayland;xcb";
       GDK_BACKEND = "wayland,x11";
       VDPAU_DRIVER = "va_gl";
-      
+
       # Electron/VS Code Wayland configuration to fix warnings
       # ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Handled by VS Code overlay
       # ELECTRON_ENABLE_WAYLAND = "1"; # Handled by VS Code overlay
@@ -311,17 +311,19 @@
     (final: prev: {
       vscode = prev.vscode.overrideAttrs (oldAttrs: {
         # Replace the default wrapper to avoid problematic flags
-        postFixup = (oldAttrs.postFixup or "") + ''
-          # Create a new wrapper that ignores NIXOS_OZONE_WL and uses proper flags
-          rm $out/bin/code
-          cat > $out/bin/code << EOF
-#!${final.bash}/bin/bash
-exec -a "\$0" "$out/bin/.code-wrapped" \\
-  --ozone-platform=wayland \\
-  "\$@"
-EOF
-          chmod +x $out/bin/code
-        '';
+        postFixup =
+          (oldAttrs.postFixup or "")
+          + ''
+                      # Create a new wrapper that ignores NIXOS_OZONE_WL and uses proper flags
+                      rm $out/bin/code
+                      cat > $out/bin/code << EOF
+            #!${final.bash}/bin/bash
+            exec -a "\$0" "$out/bin/.code-wrapped" \\
+              --ozone-platform=wayland \\
+              "\$@"
+            EOF
+                      chmod +x $out/bin/code
+          '';
       });
     })
   ];
