@@ -148,7 +148,7 @@ in {
         ];
         config = {
           gnome = {
-            default = mkDefault ["gtk"];
+            default = mkForce ["gnome" "gtk"];
             "org.freedesktop.impl.portal.Secret" = mkDefault ["gnome-keyring"];
           };
         };
