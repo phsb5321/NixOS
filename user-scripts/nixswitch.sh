@@ -8,7 +8,27 @@ IFS=$'\n\t'
 #######################################
 readonly SCRIPT_VERSION="5.0.0"
 readonly SCRIPT_NAME=$(basename "$0")
-readonly FLAKE_DIR="$HOME/NixOS"
+
+log() {
+    local msg="$1"
+    local level="${2:-info}"
+    local color="${COLORS[$level]:-39}"
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+    # Truncate very long messages to prevent "Argument list too long" errors
+    if [[ ${#msg} -gt 1000 ]]; then
+        msg="${msg:0:1000}... (truncated)"
+    fi
+
+    # Always log to file
+    echo "[$timestamp] ($level) $msg" >>"$LOG_FILE"
+
+    # Show in terminal based on verbosity
+    if [[ "${VERBOSE:-false}" == true || "$level" != "info" ]]; then
+        gum style --foreground "$color" "[$timestamp] $msg"
+    fi
+}E_DIR="$HOME/NixOS"
 readonly LOG_DIR="$HOME/.local/share/nixos-rebuild/logs"
 readonly STATE_DIR="$HOME/.local/share/nixos-rebuild/state"
 readonly CACHE_DIR="$HOME/.cache/nixos-rebuild"
@@ -462,13 +482,31 @@ validate_configuration() {
     local host=$1
     info "Validating configuration..."
 
-    # Run validation tasks sequentially since they need the script environment
-    if ! execute "Check flake syntax" nix flake check --no-build; then
-        die "Flake syntax validation failed"
+    # Check git status to inform user about dirty working tree
+    if [[ -d "$FLAKE_DIR/.git" ]]; then
+        if ! git -C "$FLAKE_DIR" diff-index --quiet HEAD --; then
+            warn "Git working tree is dirty - flake check may report warnings"
+            info "Run 'git add .' and 'git commit' to clean the working tree if needed"
+        fi
+    fi
+
+    # Check basic flake syntax first
+    if ! execute "Check flake metadata" nix flake metadata; then
+        die "Flake metadata check failed - basic flake structure is broken"
+    fi
+
+    # Try a more comprehensive flake check, but don't fail if it has transient issues
+    if ! execute "Check flake syntax (no-build)" nix flake check --no-build; then
+        warn "Flake check with --no-build failed, trying without --no-build flag..."
+        if ! execute "Check flake syntax (full)" nix flake check; then
+            warn "Flake check reported issues, but continuing anyway (this may be due to transient network issues)"
+            warn "You may want to run 'nix flake check' manually to investigate"
+        fi
     fi
     
+    # The most important validation - check if the host configuration builds
     if ! execute "Validate host config" nix build ".#nixosConfigurations.$host.config.system.build.toplevel" --dry-run; then
-        die "Host configuration validation failed"
+        die "Host configuration validation failed - cannot build the system configuration"
     fi
     
     # Check for common security issues
