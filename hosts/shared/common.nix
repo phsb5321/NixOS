@@ -16,8 +16,11 @@
         postInstall =
           (oldAttrs.postInstall or "")
           + ''
-            # Remove problematic -l flag from session wrapper
+            # Fix the problematic -l flag in the wrapper script
             if [ -f $out/bin/gnome-session ]; then
+              # Replace the exec line that causes "Unknown option -l" error
+              sed -i "s/exec -l '\$SHELL' -c 'exec \$0 -l \$\*/exec -l '\$SHELL' -c 'exec \$0 \$*/" $out/bin/gnome-session
+              # Also fix any other -l occurrences in the wrapper
               sed -i 's/exec "$0" -l "$@"/exec "$0" "$@"/' $out/bin/gnome-session
             fi
 
