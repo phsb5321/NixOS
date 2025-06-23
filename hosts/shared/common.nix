@@ -8,37 +8,18 @@
 }: {
   # Common configuration shared between all hosts
 
-  # Override gnome-session to fix Wayland wrapper bug and update session files
+  # Override gnome-session to fix Wayland wrapper bug
   nixpkgs.overlays = [
     (final: prev: {
       gnome-session = prev.gnome-session.overrideAttrs (oldAttrs: {
-        postInstall =
-          (oldAttrs.postInstall or "")
-          + ''
-            # Fix the Wayland session wrapper to properly handle the -l flag
-            substitute $out/bin/gnome-session $out/bin/gnome-session.tmp \
-              --replace "'exec \$0 -l \$*'" "'exec \$0 \$*'"
-            mv $out/bin/gnome-session.tmp $out/bin/gnome-session
-            chmod +x $out/bin/gnome-session
-          '';
-      });
-
-      # Also override the session files to use our fixed gnome-session
-      gnome-session-sessions =
-        prev.runCommand "gnome-session-sessions-fixed" {
-          inherit (final.gnome-session) version;
-        } ''
-          mkdir -p $out/share/wayland-sessions $out/share/xsessions
-
-          # Copy session files from gnome-session and update paths
-          cp -r ${final.gnome-session}/share/wayland-sessions/* $out/share/wayland-sessions/ || true
-          cp -r ${final.gnome-session}/share/xsessions/* $out/share/xsessions/ || true
-
-          # Update all desktop files to use our fixed gnome-session
-          find $out -name "*.desktop" -type f -exec chmod +w {} \;
-          find $out -name "*.desktop" -type f -exec sed -i "s|Exec=.*/gnome-session|Exec=${final.gnome-session}/bin/gnome-session|g" {} \;
-          find $out -name "*.desktop" -type f -exec sed -i "s|TryExec=.*/gnome-session|TryExec=${final.gnome-session}/bin/gnome-session|g" {} \;
+        postInstall = (oldAttrs.postInstall or "") + ''
+          # Fix the Wayland session wrapper to properly handle the -l flag
+          substitute $out/bin/gnome-session $out/bin/gnome-session.tmp \
+            --replace "'exec \$0 -l \$*'" "'exec \$0 \$*'"
+          mv $out/bin/gnome-session.tmp $out/bin/gnome-session
+          chmod +x $out/bin/gnome-session
         '';
+      });
     })
   ];
 
@@ -117,11 +98,6 @@
 
   # Use the GNOME Wayland session with fixed wrapper
   services.displayManager.defaultSession = lib.mkForce "gnome";
-
-  # Ensure the fixed session files are available
-  environment.systemPackages = with pkgs; [
-    gnome-session-sessions
-  ];
 
   # Common networking configuration
   modules.networking = {
