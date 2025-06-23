@@ -207,11 +207,16 @@
       SHELL = "${pkgs.zsh}/bin/zsh";
 
       # Wayland support for Intel graphics
-      NIXOS_OZONE_WL = "1";
+      # NIXOS_OZONE_WL = "1"; # Disabled in favor of VS Code overlay
       MOZ_ENABLE_WAYLAND = "1";
       QT_QPA_PLATFORM = "wayland;xcb";
       GDK_BACKEND = "wayland,x11";
       VDPAU_DRIVER = "va_gl";
+      
+      # Electron/VS Code Wayland configuration to fix warnings
+      # ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Handled by VS Code overlay
+      # ELECTRON_ENABLE_WAYLAND = "1"; # Handled by VS Code overlay
+      # ELECTRON_DISABLE_SANDBOX = "0"; # Handled by VS Code overlay
     };
 
     systemPackages = with pkgs; [
@@ -300,4 +305,24 @@
 
   # Enable Tailscale for laptop
   services.tailscale.enable = true;
+
+  # Custom VS Code configuration to fix Electron warnings
+  nixpkgs.overlays = [
+    (final: prev: {
+      vscode = prev.vscode.overrideAttrs (oldAttrs: {
+        # Replace the default wrapper to avoid problematic flags
+        postFixup = (oldAttrs.postFixup or "") + ''
+          # Create a new wrapper that ignores NIXOS_OZONE_WL and uses proper flags
+          rm $out/bin/code
+          cat > $out/bin/code << EOF
+#!${final.bash}/bin/bash
+exec -a "\$0" "$out/bin/.code-wrapped" \\
+  --ozone-platform=wayland \\
+  "\$@"
+EOF
+          chmod +x $out/bin/code
+        '';
+      });
+    })
+  ];
 }
