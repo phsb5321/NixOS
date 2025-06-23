@@ -7,7 +7,9 @@ IFS=$'\n\t'
 # Configuration
 #######################################
 readonly SCRIPT_VERSION="5.0.0"
-readonly SCRIPT_NAME=$(basename "$0"log() {
+readonly SCRIPT_NAME=$(basename "$0")
+
+log() {
     local msg="$1"
     local level="${2:-info}"
     local color="${COLORS[$level]:-39}"

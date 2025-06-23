@@ -27,7 +27,7 @@ in {
       };
 
       # Ensure proper session packages are available for GDM
-      services.displayManager.sessionPackages = [ pkgs.gnome-session.sessions ];
+      services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
 
       # Pipewire audio system (optimal for Wayland)
       security.rtkit.enable = true;
@@ -132,14 +132,14 @@ in {
         # Centralized Theme and Cursor Configuration
         # Material Design cursor theme (dark variant for consistency)
         material-cursors
-        
+
         # Papirus icon theme (comprehensive icon set)
         papirus-icon-theme
-        
+
         # Adwaita GTK theme (modern GNOME design)
         adw-gtk3
         libadwaita # Essential for GNOME theming
-        
+
         # Remove conflicting cursor/theme packages
         # vanilla-dmz removed to avoid conflicts
         # adwaita-icon-theme removed to prefer Papirus
@@ -190,31 +190,31 @@ in {
         clock-show-weekday=true
         show-battery-percentage=true
         enable-animations=true
-        
+
         [org.gnome.desktop.wm.preferences]
         theme='adw-gtk3-dark'
         button-layout='appmenu:minimize,maximize,close'
         titlebar-font='Cantarell Bold 11'
-        
+
         [org.gnome.desktop.peripherals.mouse]
         accel-profile='adaptive'
-        
+
         [org.gnome.desktop.peripherals.touchpad]
         tap-to-click=true
         natural-scroll=true
         two-finger-scrolling-enabled=true
-        
+
         [org.gnome.desktop.screensaver]
         lock-enabled=true
         lock-delay=uint32 300
-        
+
         [org.gnome.desktop.lockdown]
         disable-lock-screen=false
-        
+
         [org.gnome.shell]
         enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'clipboard-indicator@tudmotu.com', 'sound-output-device-chooser@kgshank.net', 'gsconnect@andyholmes.github.io', 'caffeine@patapon.info', 'forge@jmmaranan.com']
         favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Console.desktop', 'firefox.desktop', 'code.desktop', 'discord.desktop']
-        
+
         [org.gnome.shell.extensions.user-theme]
         name='adw-gtk3-dark'
 
