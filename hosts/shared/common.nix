@@ -8,23 +8,34 @@
 }: {
   # Common configuration shared between all hosts
 
-  # Override gnome-session to fix Wayland wrapper bug - Updated for NixOS 25.05
+  # Override gnome-session to fix Wayland wrapper bug and update session files
   nixpkgs.overlays = [
     (final: prev: {
-      # Fix gnome-session wrapper "-l" flag error
       gnome-session = prev.gnome-session.overrideAttrs (oldAttrs: {
-        postInstall =
-          (oldAttrs.postInstall or "")
-          + ''
-            # Remove problematic -l flag from session wrapper
-            if [ -f $out/bin/gnome-session ]; then
-              sed -i 's/exec "$0" -l "$@"/exec "$0" "$@"/' $out/bin/gnome-session
-            fi
-
-            # Ensure gnome-session has proper executable permissions
-            chmod +x $out/bin/gnome-session
-          '';
+        postInstall = (oldAttrs.postInstall or "") + ''
+          # Fix the Wayland session wrapper to properly handle the -l flag
+          substitute $out/bin/gnome-session $out/bin/gnome-session.tmp \
+            --replace "'exec \$0 -l \$*'" "'exec \$0 \$*'"
+          mv $out/bin/gnome-session.tmp $out/bin/gnome-session
+          chmod +x $out/bin/gnome-session
+        '';
       });
+      
+      # Also override the session files to use our fixed gnome-session
+      gnome-session-sessions = prev.runCommand "gnome-session-sessions-fixed" {
+        inherit (final.gnome-session) version;
+      } ''
+        mkdir -p $out/share/wayland-sessions $out/share/xsessions
+        
+        # Copy session files from gnome-session and update paths
+        cp -r ${final.gnome-session}/share/wayland-sessions/* $out/share/wayland-sessions/ || true
+        cp -r ${final.gnome-session}/share/xsessions/* $out/share/xsessions/ || true
+        
+        # Update all desktop files to use our fixed gnome-session
+        find $out -name "*.desktop" -type f -exec chmod +w {} \;
+        find $out -name "*.desktop" -type f -exec sed -i "s|Exec=.*/gnome-session|Exec=${final.gnome-session}/bin/gnome-session|g" {} \;
+        find $out -name "*.desktop" -type f -exec sed -i "s|TryExec=.*/gnome-session|TryExec=${final.gnome-session}/bin/gnome-session|g" {} \;
+      '';
     })
   ];
 
@@ -48,15 +59,6 @@
     stateVersion = systemVersion;
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
-
-    # Enable version synchronization
-    versionSync = {
-      enable = true;
-      systemChannel = "stable"; # Use stable NixOS 25.05 for system
-      packageChannel = "bleeding"; # Use bleeding edge for packages
-      forceSystemStable = true; # Force system components to stable
-    };
-
     extraSystemPackages = with pkgs; [
       # Bluetooth GUI manager
       blueman
@@ -74,19 +76,19 @@
   modules.desktop = {
     enable = true;
     environment = "gnome";
-
-    # Enhanced Wayland configuration for NixOS 25.05
+    
+    # Re-enable Wayland with custom gnome-session wrapper fix
     displayManager = {
       wayland = true;
       autoSuspend = true;
     };
-
+    
     # Enhanced theming
     theming = {
       preferDark = true;
       accentColor = "blue";
     };
-
+    
     # Hardware integration
     hardware = {
       enableTouchpad = true;
@@ -94,7 +96,7 @@
       enablePrinting = true;
       enableScanning = false; # Keep disabled for now
     };
-
+    
     autoLogin = {
       enable = false;
       user = "notroot";
@@ -110,30 +112,13 @@
     };
   };
 
-  # Use explicit GNOME Wayland session
+  # Use the GNOME Wayland session with fixed wrapper
   services.displayManager.defaultSession = lib.mkForce "gnome";
 
-  # Essential Wayland environment variables for NixOS 25.05
-  environment.sessionVariables = {
-    # Chromium/Electron Wayland support
-    NIXOS_OZONE_WL = "1";
-
-    # GTK applications prefer Wayland with X11 fallback
-    GDK_BACKEND = "wayland,x11";
-
-    # Qt applications Wayland support
-    QT_QPA_PLATFORM = "wayland;xcb";
-
-    # Mozilla applications Wayland support
-    MOZ_ENABLE_WAYLAND = "1";
-
-    # SDL applications Wayland support
-    SDL_VIDEODRIVER = "wayland";
-
-    # Additional Wayland variables
-    XDG_SESSION_TYPE = "wayland";
-    CLUTTER_BACKEND = "wayland";
-  };
+  # Ensure the fixed session files are available
+  environment.systemPackages = with pkgs; [
+    gnome-session-sessions
+  ];
 
   # Common networking configuration
   modules.networking = {
@@ -243,26 +228,6 @@
 
     fstrim.enable = true;
     thermald.enable = true;
-  };
-
-  # Enhanced XDG portal configuration for Wayland screen sharing
-  xdg.portal = {
-    enable = true;
-    extraPortals = with pkgs; [
-      xdg-desktop-portal-gnome
-      xdg-desktop-portal-gtk
-    ];
-    config = {
-      common = {
-        default = ["gtk"];
-      };
-      gnome = {
-        default = ["gnome" "gtk"];
-        "org.freedesktop.impl.portal.Secret" = ["gnome-keyring"];
-        "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
-        "org.freedesktop.impl.portal.RemoteDesktop" = ["gnome"];
-      };
-    };
   };
 
   # Common programs
