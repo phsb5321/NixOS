@@ -20,22 +20,59 @@
   modules.networking.hostName = "nixos-laptop";
   modules.home.hostName = "laptop";
 
-  # Ensure WiFi firmware is available
+  # WiFi Hardware and Firmware Configuration
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = with pkgs; [
     linux-firmware
   ];
 
-  # Additional WiFi-related services
+  # WiFi-specific kernel modules options for Intel AX201
+  boot.extraModprobeConfig = ''
+    # Intel WiFi AX201 optimizations
+    options iwlwifi swcrypto=1 11n_disable=0 power_save=0 uapsd_disable=1 lar_disable=1
+    options iwlmvm power_scheme=1
+  '';
+
+  # Enhanced WiFi unblock service with more aggressive approach
   systemd.services.wifi-unblock = {
-    description = "Attempt to unblock WiFi on startup";
+    description = "Unblock WiFi and reset hardware";
     after = ["network-pre.target"];
     wants = ["network-pre.target"];
     before = ["network.target"];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = "${pkgs.util-linux}/bin/rfkill unblock wifi";
-      ExecStartPost = "${pkgs.util-linux}/bin/rfkill unblock all";
+      ExecStartPre = [
+        "${pkgs.kmod}/bin/modprobe -r iwlmvm || true"
+        "${pkgs.kmod}/bin/modprobe -r iwlwifi || true"
+      ];
+      ExecStart = [
+        "${pkgs.util-linux}/bin/rfkill unblock all"
+        "${pkgs.kmod}/bin/modprobe iwlwifi"
+        "${pkgs.kmod}/bin/modprobe iwlmvm"
+      ];
+      ExecStartPost = [
+        "${pkgs.coreutils}/bin/sleep 2"
+        "${pkgs.util-linux}/bin/rfkill unblock wifi"
+        "${pkgs.util-linux}/bin/rfkill unblock all"
+      ];
+      RemainAfterExit = true;
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
+    wantedBy = ["multi-user.target"];
+  };
+
+  # Additional service to handle NetworkManager WiFi scanning
+  systemd.services.wifi-enable = {
+    description = "Enable WiFi in NetworkManager";
+    after = ["NetworkManager.service" "wifi-unblock.service"];
+    requires = ["NetworkManager.service"];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = [
+        "${pkgs.networkmanager}/bin/nmcli radio wifi on"
+        "${pkgs.networkmanager}/bin/nmcli device set wlo1 managed yes"
+      ];
       RemainAfterExit = true;
     };
     wantedBy = ["multi-user.target"];
@@ -187,16 +224,21 @@
       "i915.enable_psr=2"
       "i915.enable_hd_vgaarb=1"
       "i915.enable_dc=2"
-      # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
-      # "i915.force_probe=46a8"
       # WiFi-specific parameters to handle hard block issues
       "rfkill.default_state=1"
       "iwlwifi.power_save=0"
       "iwlwifi.disable_11n=0"
       "rfkill.master_switch_mode=0"
+      # Additional WiFi parameters to resolve hard block
+      "iwlwifi.swcrypto=1"
+      "iwlwifi.uapsd_disable=1"
+      "iwlwifi.lar_disable=1"
+      "acpi_osi=\"Windows 2020\""
+      # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
+      # "i915.force_probe=46a8"
     ];
 
-    kernelModules = ["i915"];
+    kernelModules = ["i915" "iwlwifi"];
     initrd.kernelModules = ["i915"];
 
     loader = {
