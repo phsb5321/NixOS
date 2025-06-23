@@ -49,8 +49,21 @@
       allowUnfreePredicate = _: true;
       allowBroken = true;
       # Performance optimizations
-      config.allowParallelBuilding = true;
-      config.contentAddressedByDefault = false;
+      allowParallelBuilding = true;
+      contentAddressedByDefault = false;
+      # Build optimizations
+      maxJobs = "auto";
+      buildCores = 0; # Use all available cores
+      # Sandbox settings for security and reproducibility
+      sandbox = true;
+      # Store optimizations
+      autoOptimiseStore = true;
+      # Build settings
+      keepOutputs = false;
+      keepDerivations = false;
+      # Parallel downloading
+      downloadAttempts = 3;
+      connectTimeout = 5;
     };
 
     # Create package sets for different channels
@@ -94,6 +107,58 @@
               # });
             })
           ];
+        };
+
+        # Performance and build optimizations
+        nix = {
+          settings = {
+            # Build performance
+            max-jobs = "auto";
+            cores = 0; # Use all available cores
+
+            # Store optimizations
+            auto-optimise-store = true;
+            keep-outputs = false;
+            keep-derivations = false;
+
+            # Download optimizations
+            download-attempts = 3;
+            connect-timeout = 5;
+
+            # Garbage collection settings
+            min-free = 1073741824; # 1GB
+            max-free = 5368709120; # 5GB
+
+            # Cache settings
+            substituters = [
+              "https://cache.nixos.org"
+              "https://nix-community.cachix.org"
+            ];
+            trusted-public-keys = [
+              "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+              "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+            ];
+
+            # Experimental features for performance
+            experimental-features = [
+              "nix-command"
+              "flakes"
+              "ca-derivations"
+              "auto-allocate-uids"
+            ];
+          };
+
+          # Garbage collection automation
+          gc = {
+            automatic = true;
+            dates = "weekly";
+            options = nixpkgs.lib.mkDefault "--delete-older-than 7d";
+          };
+
+          # Nix daemon optimizations
+          daemonCPUSchedPolicy = "batch";
+          daemonIOSchedClass = "best-effort";
+          daemonIOSchedPriority = 7;
         };
       }
 
