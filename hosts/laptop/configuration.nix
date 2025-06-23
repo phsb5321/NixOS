@@ -29,8 +29,10 @@
   # WiFi-specific kernel modules options for Intel AX201
   boot.extraModprobeConfig = ''
     # Intel WiFi AX201 optimizations with correct parameter names
-    options iwlwifi 11n_disable=0 power_save=0 uapsd_disable=3 fw_restart=1
+    options iwlwifi 11n_disable=0 power_save=0 uapsd_disable=3 fw_restart=1 d3_disable=1 disable_msix=1
     options iwlmvm power_scheme=1
+    # ASUS WMI module parameters to help with rfkill control
+    options asus_wmi wapf=4
   '';
 
   # Enhanced WiFi unblock service with more aggressive approach
@@ -41,22 +43,43 @@
     before = ["network.target"];
     serviceConfig = {
       Type = "oneshot";
-      ExecStartPre = [
-        "${pkgs.kmod}/bin/modprobe -r iwlmvm || true"
-        "${pkgs.kmod}/bin/modprobe -r iwlwifi || true"
-        "${pkgs.coreutils}/bin/sleep 1"
-      ];
-      ExecStart = [
-        "${pkgs.util-linux}/bin/rfkill unblock all"
-        "${pkgs.kmod}/bin/modprobe iwlwifi"
-        "${pkgs.coreutils}/bin/sleep 2"
-        "${pkgs.kmod}/bin/modprobe iwlmvm"
-        "${pkgs.coreutils}/bin/sleep 2"
-      ];
-      ExecStartPost = [
-        "${pkgs.util-linux}/bin/rfkill unblock wifi || true"
-        "${pkgs.util-linux}/bin/rfkill unblock all || true"
-      ];
+      ExecStartPre = pkgs.writeShellScript "wifi-unblock-pre" ''
+        # More aggressive module unloading
+        ${pkgs.kmod}/bin/modprobe -r iwlmvm || true
+        ${pkgs.kmod}/bin/modprobe -r iwlwifi || true
+        ${pkgs.coreutils}/bin/sleep 2
+        
+        # Try to reset PCI device
+        echo "0000:00:14.3" > /sys/bus/pci/drivers/iwlwifi/unbind 2>/dev/null || true
+        ${pkgs.coreutils}/bin/sleep 1
+        echo "0000:00:14.3" > /sys/bus/pci/drivers/iwlwifi/bind 2>/dev/null || true
+        ${pkgs.coreutils}/bin/sleep 1
+      '';
+      ExecStart = pkgs.writeShellScript "wifi-unblock-start" ''
+        # Unblock all rfkill devices
+        ${pkgs.util-linux}/bin/rfkill unblock all
+        ${pkgs.coreutils}/bin/sleep 1
+        
+        # Load iwlwifi with new parameters
+        ${pkgs.kmod}/bin/modprobe iwlwifi
+        ${pkgs.coreutils}/bin/sleep 3
+        
+        # Load iwlmvm
+        ${pkgs.kmod}/bin/modprobe iwlmvm
+        ${pkgs.coreutils}/bin/sleep 3
+        
+        # Try to unblock again after driver loading
+        ${pkgs.util-linux}/bin/rfkill unblock all
+      '';
+      ExecStartPost = pkgs.writeShellScript "wifi-unblock-post" ''
+        ${pkgs.util-linux}/bin/rfkill unblock wifi || true
+        ${pkgs.util-linux}/bin/rfkill unblock all || true
+        
+        # Force-enable the interface if it exists
+        if ${pkgs.iproute2}/bin/ip link show wlo1 >/dev/null 2>&1; then
+          ${pkgs.iproute2}/bin/ip link set wlo1 up || true
+        fi
+      '';
       RemainAfterExit = true;
     };
     wantedBy = ["multi-user.target"];
@@ -244,7 +267,10 @@
       "iwlwifi.power_save=0"
       "iwlwifi.11n_disable=0"
       "iwlwifi.uapsd_disable=3"
+      # ASUS WMI and ACPI parameters to help with rfkill issues
+      "asus_wmi.wmi_backlight_power=1"
       "acpi_osi=\"Windows 2020\""
+      "pci=noaer"
       # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
       # "i915.force_probe=46a8"
     ];
