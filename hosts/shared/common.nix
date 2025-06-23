@@ -12,30 +12,33 @@
   nixpkgs.overlays = [
     (final: prev: {
       gnome-session = prev.gnome-session.overrideAttrs (oldAttrs: {
-        postInstall = (oldAttrs.postInstall or "") + ''
-          # Fix the Wayland session wrapper to properly handle the -l flag
-          substitute $out/bin/gnome-session $out/bin/gnome-session.tmp \
-            --replace "'exec \$0 -l \$*'" "'exec \$0 \$*'"
-          mv $out/bin/gnome-session.tmp $out/bin/gnome-session
-          chmod +x $out/bin/gnome-session
-        '';
+        postInstall =
+          (oldAttrs.postInstall or "")
+          + ''
+            # Fix the Wayland session wrapper to properly handle the -l flag
+            substitute $out/bin/gnome-session $out/bin/gnome-session.tmp \
+              --replace "'exec \$0 -l \$*'" "'exec \$0 \$*'"
+            mv $out/bin/gnome-session.tmp $out/bin/gnome-session
+            chmod +x $out/bin/gnome-session
+          '';
       });
-      
+
       # Also override the session files to use our fixed gnome-session
-      gnome-session-sessions = prev.runCommand "gnome-session-sessions-fixed" {
-        inherit (final.gnome-session) version;
-      } ''
-        mkdir -p $out/share/wayland-sessions $out/share/xsessions
-        
-        # Copy session files from gnome-session and update paths
-        cp -r ${final.gnome-session}/share/wayland-sessions/* $out/share/wayland-sessions/ || true
-        cp -r ${final.gnome-session}/share/xsessions/* $out/share/xsessions/ || true
-        
-        # Update all desktop files to use our fixed gnome-session
-        find $out -name "*.desktop" -type f -exec chmod +w {} \;
-        find $out -name "*.desktop" -type f -exec sed -i "s|Exec=.*/gnome-session|Exec=${final.gnome-session}/bin/gnome-session|g" {} \;
-        find $out -name "*.desktop" -type f -exec sed -i "s|TryExec=.*/gnome-session|TryExec=${final.gnome-session}/bin/gnome-session|g" {} \;
-      '';
+      gnome-session-sessions =
+        prev.runCommand "gnome-session-sessions-fixed" {
+          inherit (final.gnome-session) version;
+        } ''
+          mkdir -p $out/share/wayland-sessions $out/share/xsessions
+
+          # Copy session files from gnome-session and update paths
+          cp -r ${final.gnome-session}/share/wayland-sessions/* $out/share/wayland-sessions/ || true
+          cp -r ${final.gnome-session}/share/xsessions/* $out/share/xsessions/ || true
+
+          # Update all desktop files to use our fixed gnome-session
+          find $out -name "*.desktop" -type f -exec chmod +w {} \;
+          find $out -name "*.desktop" -type f -exec sed -i "s|Exec=.*/gnome-session|Exec=${final.gnome-session}/bin/gnome-session|g" {} \;
+          find $out -name "*.desktop" -type f -exec sed -i "s|TryExec=.*/gnome-session|TryExec=${final.gnome-session}/bin/gnome-session|g" {} \;
+        '';
     })
   ];
 
@@ -76,19 +79,19 @@
   modules.desktop = {
     enable = true;
     environment = "gnome";
-    
+
     # Re-enable Wayland with custom gnome-session wrapper fix
     displayManager = {
       wayland = true;
       autoSuspend = true;
     };
-    
+
     # Enhanced theming
     theming = {
       preferDark = true;
       accentColor = "blue";
     };
-    
+
     # Hardware integration
     hardware = {
       enableTouchpad = true;
@@ -96,7 +99,7 @@
       enablePrinting = true;
       enableScanning = false; # Keep disabled for now
     };
-    
+
     autoLogin = {
       enable = false;
       user = "notroot";
