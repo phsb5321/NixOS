@@ -29,10 +29,8 @@
   # WiFi-specific kernel modules options for Intel AX201
   boot.extraModprobeConfig = ''
     # Intel WiFi AX201 optimizations with correct parameter names
-    options iwlwifi 11n_disable=0 power_save=0 uapsd_disable=3 fw_restart=1 d3_disable=1 disable_msix=1
+    options iwlwifi 11n_disable=0 power_save=0 uapsd_disable=3 fw_restart=1
     options iwlmvm power_scheme=1
-    # ASUS WMI module parameters to help with rfkill control
-    options asus_wmi wapf=4
   '';
 
   # Enhanced WiFi unblock service with more aggressive approach
@@ -267,10 +265,14 @@
       "iwlwifi.power_save=0"
       "iwlwifi.11n_disable=0"
       "iwlwifi.uapsd_disable=3"
-      # ASUS WMI and ACPI parameters to help with rfkill issues
-      "asus_wmi.wmi_backlight_power=1"
+      # ACPI and hardware parameters for Clevo/Avell laptops
       "acpi_osi=\"Windows 2020\""
       "pci=noaer"
+      # More aggressive rfkill workarounds
+      "rfkill.master_switch_mode=2"
+      "acpi_enforce_resources=lax"
+      # Try to prevent ACPI from managing WiFi rfkill
+      "acpi_backlight=vendor"
       # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
       # "i915.force_probe=46a8"
     ];
