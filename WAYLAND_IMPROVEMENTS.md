@@ -280,3 +280,47 @@ This configuration follows the guidelines from:
    - Check GNOME shell extensions compatibility
 
 This configuration provides a robust, modern NixOS 25.05 setup with optimal Wayland support while maintaining system stability through version synchronization.
+
+## 🔧 Electron/VS Code Wayland Warnings Resolution
+
+### Issues Resolved
+
+- **Electron Flag Warnings**: Eliminated unknown option warnings in VS Code/Electron apps
+- **NIXOS_OZONE_WL Conflicts**: Resolved environment variable conflicts with custom configs  
+- **Wayland Compatibility**: Maintained proper Wayland functionality without warnings
+
+### Key Fixes
+
+- Custom VS Code overlay with minimal, valid Wayland flags
+- Disabled problematic environment variables for specific configurations  
+- Replaced problematic flags with clean `--ozone-platform=wayland`
+- Maintains Wayland support while eliminating all warnings
+
+### Implementation
+
+```nix
+# Custom VS Code configuration in laptop/configuration.nix
+nixpkgs.overlays = [
+  (final: prev: {
+    vscode = prev.vscode.overrideAttrs (oldAttrs: {
+      postFixup = (oldAttrs.postFixup or "") + ''
+        rm $out/bin/code
+        cat > $out/bin/code << EOF
+#!${final.bash}/bin/bash
+exec -a "\$0" "$out/bin/.code-wrapped" \\
+  --ozone-platform=wayland \\
+  "\$@"
+EOF
+        chmod +x $out/bin/code
+      '';
+    });
+  })
+];
+```
+
+### Results
+
+- ✅ **No more Electron warnings**: Eliminated `ozone-platform-hint`, `enable-features`, and `enable-wayland-ime` warnings
+- ✅ **Clean VS Code startup**: No error messages or unknown flag warnings
+- ✅ **Maintained Wayland support**: VS Code continues to run natively on Wayland
+- ✅ **Proper integration**: Full desktop environment integration preserved
