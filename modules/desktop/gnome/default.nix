@@ -26,6 +26,9 @@ in {
         desktopManager.gnome.enable = true; # Uses Wayland by default
       };
 
+      # Ensure proper session packages are available for GDM
+      services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
+
       # Pipewire audio system (optimal for Wayland)
       security.rtkit.enable = true;
       services.pipewire = {
@@ -75,6 +78,13 @@ in {
         gnome-settings-daemon
       ];
 
+      # System-wide environment variables for consistent theming
+      environment.sessionVariables = {
+        XCURSOR_THEME = "material_dark_cursors";
+        XCURSOR_SIZE = "24";
+        GTK_THEME = "adw-gtk3-dark";
+      };
+
       # GNOME-specific packages
       environment.systemPackages = with pkgs; [
         # Core GNOME packages
@@ -84,6 +94,11 @@ in {
         gnome-backgrounds
         gnome-themes-extra
         gnome-extension-manager
+
+        # Essential session packages - Fix for GDM Wayland session registration
+        gnome-session
+        gnome-session.sessions
+        gnome-shell
 
         # Python GTK bindings - fix for "No module named 'gi'" errors
         python3Packages.pygobject3
@@ -114,26 +129,33 @@ in {
         gnomeExtensions.forge
         gnomeExtensions.user-themes
 
-        # Enhanced Theme Packages
-        adwaita-icon-theme
-        papirus-icon-theme
+        # Centralized Theme and Cursor Configuration
+        # Material Design cursor theme (dark variant for consistency)
         material-cursors
-        vanilla-dmz
-        yaru-theme
-        adw-gtk3
 
-        # GTK theme engines and additional themes
-        gnome-themes-extra
-        materia-theme
-        arc-theme
+        # Papirus icon theme (comprehensive icon set)
+        papirus-icon-theme
+
+        # Adwaita GTK theme (modern GNOME design)
+        adw-gtk3
         libadwaita # Essential for GNOME theming
 
-        # Font packages for better rendering
+        # Remove conflicting cursor/theme packages
+        # vanilla-dmz removed to avoid conflicts
+        # adwaita-icon-theme removed to prefer Papirus
+
+        # Essential theme engines and schemas
+        gnome-themes-extra
+        gtk3
+        gtk4
+        gsettings-desktop-schemas
+
+        # Font packages for consistent typography
         noto-fonts
         noto-fonts-emoji
         cantarell-fonts
 
-        # Theme utilities and GNOME customization tools
+        # Theme utilities for user customization
         themechanger
         gnome-tweaks
         dconf-editor
@@ -154,23 +176,28 @@ in {
         };
       };
 
-      # GNOME settings overrides for system-wide defaults
+      # GNOME settings overrides for system-wide defaults - Centralized Theme Configuration
       services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
         [org.gnome.desktop.interface]
         gtk-theme='adw-gtk3-dark'
         icon-theme='Papirus-Dark'
-        cursor-theme='Adwaita'
+        cursor-theme='material_dark_cursors'
+        cursor-size=24
         font-name='Cantarell 11'
         document-font-name='Cantarell 11'
         monospace-font-name='JetBrainsMono Nerd Font Mono 11'
         color-scheme='prefer-dark'
         clock-show-weekday=true
         show-battery-percentage=true
+        enable-animations=true
 
         [org.gnome.desktop.wm.preferences]
         theme='adw-gtk3-dark'
         button-layout='appmenu:minimize,maximize,close'
         titlebar-font='Cantarell Bold 11'
+
+        [org.gnome.desktop.peripherals.mouse]
+        accel-profile='adaptive'
 
         [org.gnome.desktop.peripherals.touchpad]
         tap-to-click=true
@@ -235,7 +262,7 @@ in {
         imports = [
         ];
 
-        # GTK configuration
+        # GTK configuration - Centralized theme setup
         gtk = {
           enable = true;
           theme = {
@@ -247,8 +274,9 @@ in {
             package = pkgs.papirus-icon-theme;
           };
           cursorTheme = {
-            name = "Adwaita";
-            package = pkgs.adwaita-icon-theme;
+            name = "material_dark_cursors";
+            package = pkgs.material-cursors;
+            size = 24;
           };
           font = {
             name = "Cantarell";
@@ -262,12 +290,13 @@ in {
           };
         };
 
-        # DConf settings for GNOME
+        # DConf settings for GNOME - Centralized theme configuration
         dconf.settings = {
           "org/gnome/desktop/interface" = {
             gtk-theme = "adw-gtk3-dark";
             icon-theme = "Papirus-Dark";
-            cursor-theme = "Adwaita";
+            cursor-theme = "material_dark_cursors";
+            cursor-size = 24;
             font-name = "Cantarell 11";
             document-font-name = "Cantarell 11";
             monospace-font-name = "JetBrainsMono Nerd Font Mono 11";
@@ -275,6 +304,7 @@ in {
             clock-show-weekday = true;
             clock-show-seconds = false;
             show-battery-percentage = true;
+            enable-animations = true;
           };
 
           "org/gnome/desktop/wm/preferences" = {
@@ -359,6 +389,8 @@ in {
         # Environment variables for consistent theming and Wayland compatibility
         home.sessionVariables = {
           GTK_THEME = "adw-gtk3-dark";
+          XCURSOR_THEME = "material_dark_cursors";
+          XCURSOR_SIZE = "24";
           NIXOS_OZONE_WL = "1"; # Chromium/Electron Wayland support
           GDK_BACKEND = "wayland,x11"; # GTK applications prefer Wayland
           MOZ_ENABLE_WAYLAND = "1"; # Firefox Wayland support
@@ -380,10 +412,11 @@ in {
               # Wait for GNOME Shell to be ready
               sleep 3
 
-              # Apply interface settings
+              # Apply interface settings with Material cursors
               ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
               ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
-              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-theme 'Adwaita'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-theme 'material_dark_cursors'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-size 24
               ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 
               # Apply window manager settings
