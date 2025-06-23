@@ -33,6 +33,7 @@ The script now includes several garbage collection strategies:
 ## Usage Examples
 
 ### Basic Usage
+
 ```bash
 # Standard rebuild with all optimizations
 ./user-scripts/nixswitch.sh default
@@ -45,6 +46,7 @@ The script now includes several garbage collection strategies:
 ```
 
 ### Advanced Usage
+
 ```bash
 # Aggressive cleanup with verbose output
 ./user-scripts/nixswitch.sh --aggressive-gc --verbose default
@@ -57,6 +59,7 @@ The script now includes several garbage collection strategies:
 ```
 
 ### Maintenance Operations
+
 ```bash
 # List available hosts
 ./user-scripts/nixswitch.sh --list
@@ -76,17 +79,20 @@ The script now includes several garbage collection strategies:
 The `flake.nix` has been enhanced with:
 
 ### Build Performance
+
 - Automatic core detection and utilization
 - Optimized cache settings
 - Parallel downloading
 - Store auto-optimization
 
 ### Garbage Collection
+
 - Automatic weekly cleanup
 - Configurable retention policies
 - Size-based cleanup triggers
 
 ### Security
+
 - Sandbox builds enabled
 - Trusted cache sources
 - Experimental feature flags for performance
@@ -94,10 +100,12 @@ The `flake.nix` has been enhanced with:
 ## Configuration Options
 
 ### Environment Variables
+
 - `NIX_BUILD_CORES`: Override CPU core usage
 - `NIX_CONFIG`: Custom Nix configuration
 
 ### Script Options
+
 ```bash
 # Keep generations for 14 days instead of 7
 ./user-scripts/nixswitch.sh --keep 14 default
@@ -112,6 +120,7 @@ The `flake.nix` has been enhanced with:
 ## Performance Monitoring
 
 The script tracks:
+
 - Build times for each operation
 - Disk space usage
 - Memory consumption
