@@ -128,7 +128,7 @@ in {
         gnomeExtensions.caffeine
         gnomeExtensions.forge
         gnomeExtensions.user-themes
-        
+
         # Additional modern extensions for better visual experience
         gnomeExtensions.just-perfection
         gnomeExtensions.rounded-window-corners-reborn
@@ -164,7 +164,7 @@ in {
         themechanger
         gnome-tweaks
         dconf-editor
-        
+
         # Additional visual enhancement tools
         gnome-backgrounds
         vanilla-dmz # Fallback cursor theme
@@ -202,7 +202,7 @@ in {
         show-battery-percentage=true
         enable-animations=true
         enable-hot-corners=false
-        
+
         [org.gnome.desktop.wm.preferences]
         theme='Orchis-Dark-Compact'
         button-layout='appmenu:minimize,maximize,close'
@@ -242,11 +242,11 @@ in {
         max-alpha=0.85
         dash-max-icon-size=48
         apply-custom-theme=true
-        
+
         [org.gnome.shell.extensions.blur-my-shell]
         brightness=0.85
         sigma=15
-        
+
         [org.gnome.desktop.background]
         color-shading-type='solid'
         picture-options='zoom'
