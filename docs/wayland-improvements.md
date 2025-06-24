@@ -281,37 +281,23 @@ This configuration follows the guidelines from:
 
 This configuration provides a robust, modern NixOS 25.05 setup with optimal Wayland support while maintaining system stability through version synchronization.
 
-# Wayland Configuration and Improvements
+## 🔧 Electron/VS Code Wayland Warnings Resolution
 
-This document outlines the Wayland configuration and improvements implemented across the NixOS system.
+### Issues Resolved
 
-## WiFi and Hardware Resolution
-
-### Issues Resolved:
-- **WiFi Hardware Block**: Fixed persistent hardware rfkill issue on Intel AX201
-- **WiFi Device Recognition**: Resolved WiFi device not appearing in NetworkManager
-- **Hardware Detection**: Identified laptop as Avell (Clevo-based), not ASUS
-
-### Key Fixes:
-- Removed invalid kernel/module parameters for iwlwifi and asus_wmi
-- Added proper kernel parameters for Intel WiFi and ACPI compatibility
-- Created robust systemd services for WiFi initialization
-- Dynamic WiFi device detection and management
-
-## Electron/VS Code Wayland Warnings Resolution
-
-### Issues Resolved:
 - **Electron Flag Warnings**: Eliminated unknown option warnings in VS Code/Electron apps
 - **NIXOS_OZONE_WL Conflicts**: Resolved environment variable conflicts with custom configs
 - **Wayland Compatibility**: Maintained proper Wayland functionality without warnings
 
-### Key Fixes:
+### Key Fixes
+
 - Custom VS Code overlay with minimal, valid Wayland flags
-- Disabled problematic environment variables for specific configurations  
+- Disabled problematic environment variables for specific configurations
 - Replaced problematic flags with clean `--ozone-platform=wayland`
 - Maintains Wayland support while eliminating all warnings
 
-### Implementation:
+### Implementation
+
 ```nix
 # Custom VS Code configuration in laptop/configuration.nix
 nixpkgs.overlays = [
