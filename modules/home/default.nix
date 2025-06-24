@@ -75,7 +75,6 @@ in {
               noto-fonts-cjk-sans
 
               # Shell and Terminal
-              fish
               zsh
               starship # Cross-shell prompt
               kitty
@@ -87,8 +86,6 @@ in {
               zsh-autosuggestions
               zsh-you-should-use
               zsh-fast-syntax-highlighting
-              fishPlugins.tide
-              fishPlugins.grc
 
               # Development Tools
               ffmpeg

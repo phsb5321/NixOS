@@ -40,6 +40,8 @@ in {
         mesa-demos # Replaces mesa-utils
         corectrl # GPU overclocking and monitoring
         gwe # Alternative GPU control for NVIDIA/Intel
+        nvtopPackages.full # NVIDIA GPU monitoring (replaces nvtop)
+        nvidia-system-monitor-qt # NVIDIA system monitor GUI
         protontricks
         winetricks
         wine-staging
@@ -55,9 +57,7 @@ in {
         protonup-ng
         gamescope
       ]
-      ++ cfg.extraGamingPackages;
-
-    # Set environment variables for gaming applications
+      ++ cfg.extraGamingPackages; # Set environment variables for gaming applications
     environment.variables = {
       STEAM_RUNTIME_HEAVY = lib.mkDefault "1"; # Use full runtime for compatibility
       ENABLE_VK_LAYER_MANGOHUD = lib.mkDefault "1"; # Enable MangoHud by default
@@ -67,6 +67,10 @@ in {
       __GL_THREADED_OPTIMIZATIONS = lib.mkDefault "1";
       __GL_SHADER_DISK_CACHE = lib.mkDefault "1";
       __GL_SHADER_DISK_CACHE_PATH = lib.mkDefault "/tmp/gl_cache";
+
+      # NVIDIA Optimus optimizations
+      __NV_PRIME_RENDER_OFFLOAD = lib.mkDefault "1";
+      __GLX_VENDOR_LIBRARY_NAME = lib.mkDefault "nvidia";
 
       # Steam/Proton optimizations
       STEAM_FRAME_FORCE_CLOSE = lib.mkDefault "1";
