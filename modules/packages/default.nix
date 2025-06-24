@@ -93,6 +93,12 @@ in {
           protontricks
           winetricks
           corectrl
+          btop # System monitoring
+          heroic # Epic Games launcher
+          lutris # Gaming platform
+          steam-run # Run non-Steam games with Steam runtime
+          wine-staging # Latest Wine with staging patches
+          dxvk # DirectX to Vulkan
         ];
         description = "List of gaming packages to install";
       };

@@ -25,15 +25,13 @@ The following management scripts are available in `/user-scripts/`:
 ### System Management
 
 - `nixswitch.sh` - Enhanced NixOS rebuild script with parallel processing
-- `nix-shell-selector.sh` - Development environment selector
+- `nixswitch` - Simple alias wrapper for nixswitch.sh
+- `nix-shell-selector.sh` - Interactive development environment selector
 
 ### System Utilities
 
-- `wayland-diagnostic.sh` - Wayland troubleshooting and diagnostics
-- `fix-bluetooth-headset.sh` - Bluetooth audio fixes
-- `gnome-session-cleanup.sh` - GNOME session management
-- `kill_port.sh` - Port management utility
-- `textractor.sh` - Text extraction tool
+- `wayland-diagnostic.sh` - Comprehensive Wayland troubleshooting and diagnostics
+- `textractor.sh` - Text extraction and processing utility
 
 ## Getting Help
 
@@ -45,16 +43,43 @@ Each script includes built-in help accessible with the `--help` or `-h` flag:
 
 ## Configuration Layout
 
-```
+```text
 NixOS/
 ├── docs/                    # Documentation (this directory)
 ├── hosts/                   # Host-specific configurations
+│   ├── default/            # Desktop configuration
+│   └── laptop/             # Laptop configuration
 ├── modules/                 # Reusable NixOS modules
-├── shells/                  # Development environments
-├── user-scripts/           # Management and utility scripts
-├── flake.nix              # Main Nix flake configuration
-└── README.md              # Project overview and quick start
+│   ├── core/               # Core system modules
+│   ├── desktop/            # Desktop environment modules
+│   ├── home/               # Home Manager modules
+│   ├── networking/         # Network configuration
+│   └── packages/           # Package collections
+├── shells/                  # Development shell environments
+├── user-scripts/           # System management scripts
+├── flake.nix              # Main flake configuration
+└── README.md              # Main project documentation
 ```
+
+## Features
+
+### Multi-Host Support
+
+- **Desktop**: AMD-based desktop with GNOME
+- **Laptop**: Intel-based laptop with optimized power management
+
+### Modern Technology Stack
+
+- **NixOS 25.05**: Latest stable release
+- **Wayland**: Full Wayland support with fallback
+- **GNOME**: Modern desktop environment with theming
+- **Home Manager**: Declarative user configuration
+
+### Development Environment
+
+- **Multiple Language Support**: Nix shells for various programming languages
+- **Interactive Shell Selector**: Easy development environment switching
+- **Enhanced Rebuild Script**: Parallel processing and optimizations
 
 ## Contributing
 
