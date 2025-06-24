@@ -126,8 +126,8 @@
     glxinfo
   ];
 
-  # Laptop doesn't need gaming packages
-  modules.packages.gaming.enable = false;
+  # Enable gaming packages for laptop
+  modules.packages.gaming.enable = true;
 
   # Laptop-specific Python without GTK (to match original config)
   modules.packages.python.withGTK = lib.mkForce false;
@@ -159,6 +159,7 @@
   # Laptop-specific Intel hardware configuration for NixOS 25.05
   hardware.cpu.intel.updateMicrocode = true;
 
+  # Laptop-specific gaming optimizations for Intel graphics
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
@@ -167,11 +168,21 @@
       intel-vaapi-driver # Legacy driver (i965) - better browser support
       vpl-gpu-rt # Intel Quick Sync Video
       libvdpau-va-gl # VDPAU support
+      # Gaming-specific Intel packages
+      intel-compute-runtime # OpenCL support for Intel GPUs
+      mesa # Mesa drivers with Intel support
+      vulkan-loader
+      vulkan-validation-layers
+      vulkan-extension-layer
     ];
     extraPackages32 = with pkgs.pkgsi686Linux; [
       intel-vaapi-driver
+      mesa
+      vulkan-loader
     ];
   };
+
+  # Gaming-specific Intel GPU optimizations
 
   # Laptop-specific X server configuration for Intel graphics with Wayland
   services.xserver = {
@@ -213,6 +224,23 @@
       GDK_BACKEND = "wayland,x11";
       VDPAU_DRIVER = "va_gl";
 
+      # Gaming-specific optimizations
+      __GL_THREADED_OPTIMIZATIONS = "1";
+      __GL_SHADER_DISK_CACHE = "1";
+      __GL_SHADER_DISK_CACHE_PATH = "/tmp/gl_cache";
+      MESA_GLTHREAD = "true"; # Enable Mesa threaded context
+      INTEL_DEBUG = "noccs"; # Disable command streamer for better performance
+
+      # Steam optimizations
+      STEAM_RUNTIME_HEAVY = "1";
+      STEAM_FRAME_FORCE_CLOSE = "1";
+
+      # Vulkan optimizations for Intel
+      VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json";
+      DXVK_HUD = "fps,memory,gpuload";
+      DXVK_ASYNC = "1";
+      VKD3D_CONFIG = "dxr11";
+
       # Electron/VS Code Wayland configuration to fix warnings
       # ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Handled by VS Code overlay
       # ELECTRON_ENABLE_WAYLAND = "1"; # Handled by VS Code overlay
@@ -236,6 +264,12 @@
       libva-utils # vainfo command
       vulkan-tools # vulkaninfo
       glxinfo
+
+      # Gaming-specific tools for laptop
+      corectrl # GPU monitoring and control
+      btop # System monitoring
+      intel-gpu-tools # Intel GPU debugging and monitoring
+      mesa-demos # Mesa utilities (glxinfo, glxgears, etc.)
     ];
   };
 
@@ -259,12 +293,18 @@
       "nvidia_uvm"
     ];
 
-    # Intel graphics optimizations for NixOS 25.05
+    # Intel graphics optimizations for NixOS 25.05 with gaming enhancements
     kernelParams = [
       "i915.enable_fbc=1"
       "i915.enable_psr=2"
       "i915.enable_hd_vgaarb=1"
       "i915.enable_dc=2"
+      "i915.enable_guc=3" # Enable GuC and HuC firmware loading
+      "i915.enable_huc=1"
+      "i915.fastboot=1" # Enable fastboot
+      "i915.semaphores=1" # Enable semaphores for better performance
+      "mitigations=off" # Disable CPU mitigations for better gaming performance
+      "split_lock_detect=off" # Disable split lock detection for gaming
       # WiFi-specific parameters to handle hard block issues
       "rfkill.default_state=1"
       "iwlwifi.power_save=0"
@@ -278,6 +318,9 @@
       "acpi_enforce_resources=lax"
       # Try to prevent ACPI from managing WiFi rfkill
       "acpi_backlight=vendor"
+      # Gaming performance optimizations
+      "processor.max_cstate=1" # Reduce CPU sleep states for lower latency
+      "intel_idle.max_cstate=0" # Disable deeper C-states for gaming
       # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
       # "i915.force_probe=46a8"
     ];
