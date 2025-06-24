@@ -229,6 +229,15 @@
       Option "TearFree" "true"
       Option "DRI" "3"
     '';
+    # Fix for GDM with NVIDIA - let it handle display detection
+    config = ''
+      Section "Device"
+        Identifier "nvidia"
+        Driver "nvidia"
+        BusID "PCI:1:0:0"
+        Option "AllowEmptyInitialConfiguration"
+      EndSection
+    '';
     xkb = {
       layout = "br";
       variant = "";
