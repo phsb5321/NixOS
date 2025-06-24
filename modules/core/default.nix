@@ -213,7 +213,6 @@ in {
       podman = {
         enable = true;
         defaultNetwork.settings.dns_enabled = true;
-        enableNvidia = false;
       };
       oci-containers = {
         backend = "podman";
@@ -305,7 +304,7 @@ in {
     # Default system-wide shell
     programs = {
       nix-ld.enable = true;
-      fish.enable = true;
+      zsh.enable = true;
       dconf.enable = true;
     };
   };

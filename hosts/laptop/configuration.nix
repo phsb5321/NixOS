@@ -144,7 +144,7 @@
     initialPassword = "changeme";
     shell = "${pkgs.zsh}/bin/zsh";
     extraGroups = [
-      "nvidia" # Intel laptop might not need this, but keeping for compatibility
+      "nvidia" # NVIDIA GPU access
       "sddm"
     ];
   };
@@ -153,23 +153,23 @@
   environment.shells = [
     "${pkgs.bash}/bin/bash"
     "${pkgs.zsh}/bin/zsh"
-    "${pkgs.fish}/bin/fish"
   ];
 
   # Laptop-specific Intel hardware configuration for NixOS 25.05
   hardware.cpu.intel.updateMicrocode = true;
 
-  # Laptop-specific gaming optimizations for Intel graphics
+  # Laptop-specific gaming optimizations for NVIDIA Optimus (hybrid graphics)
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
     extraPackages = with pkgs; [
+      # Intel graphics (for power saving and basic tasks)
       intel-media-driver # Modern driver (iHD) for Broadwell+
       intel-vaapi-driver # Legacy driver (i965) - better browser support
       vpl-gpu-rt # Intel Quick Sync Video
       libvdpau-va-gl # VDPAU support
-      # Gaming-specific Intel packages
       intel-compute-runtime # OpenCL support for Intel GPUs
+      # Mesa and Vulkan (works with both Intel and NVIDIA)
       mesa # Mesa drivers with Intel support
       vulkan-loader
       vulkan-validation-layers
@@ -182,16 +182,52 @@
     ];
   };
 
-  # Gaming-specific Intel GPU optimizations
+  # NVIDIA Optimus configuration for gaming laptops
+  hardware.nvidia = {
+    # Enable the NVIDIA driver
+    modesetting.enable = true;
 
-  # Laptop-specific X server configuration for Intel graphics with Wayland
+    # Enable power management (important for laptops)
+    powerManagement.enable = true;
+
+    # Fine-grained power management (experimental, but helps with battery)
+    powerManagement.finegrained = false;
+
+    # Use open source kernel module (newer, better for gaming)
+    open = false; # Set to true if you want to try the open-source driver
+
+    # Enable NVIDIA settings menu
+    nvidiaSettings = true;
+
+    # NVIDIA driver package (stable is recommended for gaming)
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+
+    # Enable PRIME for hybrid graphics (Optimus)
+    prime = {
+      # Enable offload mode - apps can request NVIDIA GPU when needed
+      offload = {
+        enable = true;
+        enableOffloadCmd = true;
+      };
+
+      # Specify the Intel and NVIDIA GPU BUS IDs
+      # You may need to adjust these based on your specific laptop
+      # Run `sudo lshw -c display` to find your actual BUS IDs
+      intelBusId = "PCI:0:2:0"; # Common Intel integrated graphics BUS ID
+      nvidiaBusId = "PCI:1:0:0"; # Common NVIDIA discrete graphics BUS ID
+    };
+  };
+
+  # NVIDIA container toolkit for containerized applications
+  hardware.nvidia-container-toolkit.enable = true;
+
+  # Laptop-specific X server configuration for NVIDIA Optimus (hybrid) setup
   services.xserver = {
     enable = true;
-    videoDrivers = ["intel"];
+    videoDrivers = ["nvidia"];
     deviceSection = ''
       Option "TearFree" "true"
       Option "DRI" "3"
-      Option "AccelMethod" "sna"
     '';
     xkb = {
       layout = "br";
@@ -224,19 +260,20 @@
       GDK_BACKEND = "wayland,x11";
       VDPAU_DRIVER = "va_gl";
 
-      # Gaming-specific optimizations
+      # Gaming-specific optimizations for NVIDIA Optimus
       __GL_THREADED_OPTIMIZATIONS = "1";
       __GL_SHADER_DISK_CACHE = "1";
       __GL_SHADER_DISK_CACHE_PATH = "/tmp/gl_cache";
-      MESA_GLTHREAD = "true"; # Enable Mesa threaded context
-      INTEL_DEBUG = "noccs"; # Disable command streamer for better performance
+
+      # NVIDIA Optimus offloading
+      __NV_PRIME_RENDER_OFFLOAD = "1";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
 
       # Steam optimizations
       STEAM_RUNTIME_HEAVY = "1";
       STEAM_FRAME_FORCE_CLOSE = "1";
 
-      # Vulkan optimizations for Intel
-      VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json";
+      # Vulkan optimizations (auto-detected for NVIDIA/Intel hybrid)
       DXVK_HUD = "fps,memory,gpuload";
       DXVK_ASYNC = "1";
       VKD3D_CONFIG = "dxr11";
@@ -265,11 +302,14 @@
       vulkan-tools # vulkaninfo
       glxinfo
 
-      # Gaming-specific tools for laptop
+      # Gaming-specific tools for laptop with NVIDIA Optimus
       corectrl # GPU monitoring and control
       btop # System monitoring
-      intel-gpu-tools # Intel GPU debugging and monitoring
+      intel-gpu-tools # Intel GPU debugging and monitoring (integrated GPU)
       mesa-demos # Mesa utilities (glxinfo, glxgears, etc.)
+
+      # NVIDIA-specific tools
+      # Note: nvidia-offload script is provided by hardware.nvidia.prime.offload
     ];
   };
 
@@ -283,18 +323,16 @@
     wlr.enable = true;
   };
 
-  # Laptop-specific boot configuration for Intel graphics and Wayland
+  # Laptop-specific boot configuration for NVIDIA Optimus
   boot = {
+    # Remove NVIDIA modules from blacklist to enable NVIDIA GPU
     blacklistedKernelModules = [
-      "nouveau"
-      "nvidia"
-      "nvidia_drm"
-      "nvidia_modeset"
-      "nvidia_uvm"
+      "nouveau" # Keep nouveau blacklisted (conflicts with proprietary driver)
     ];
 
-    # Intel graphics optimizations for NixOS 25.05 with gaming enhancements
+    # Hybrid graphics optimizations for NixOS 25.05 with gaming enhancements
     kernelParams = [
+      # Intel graphics optimizations (still used for power saving)
       "i915.enable_fbc=1"
       "i915.enable_psr=2"
       "i915.enable_hd_vgaarb=1"
