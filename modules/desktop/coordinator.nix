@@ -10,18 +10,14 @@ with lib; let
   cfg = config.modules.desktop;
 in {
   config = mkIf cfg.enable {
-    # Display manager configuration
-    services.displayManager.defaultSession = mkDefault (
-      if cfg.environment == "gnome"
-      then "gnome"
-      else if cfg.environment == "kde"
-      then "plasma"
-      else "gnome"
-    );
-
-    # X server configuration (NixOS 25.05)
+    # X server and display manager configuration for NixOS 25.05
     services.xserver = {
       enable = true;
+
+      # Video drivers - set by specific hosts if needed
+      videoDrivers = mkDefault [];
+
+      # Keyboard layout
       xkb = {
         layout = "br";
         variant = "";
@@ -55,6 +51,17 @@ in {
         enable = true;
         user = cfg.autoLogin.user;
       };
+    };
+
+    # New display manager service configuration for NixOS 25.05
+    services.displayManager = {
+      defaultSession = mkDefault (
+        if cfg.environment == "gnome"
+        then "gnome"
+        else if cfg.environment == "kde"
+        then "plasma"
+        else "gnome"
+      );
     };
 
     # Wayland-specific environment variables for NixOS 25.05

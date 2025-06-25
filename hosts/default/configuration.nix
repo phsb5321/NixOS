@@ -110,7 +110,7 @@
   };
 
   # Explicitly disable conflicting display managers
-  services.displayManager.sddm.enable = lib.mkForce false;
+  services.xserver.displayManager.sddm.enable = lib.mkForce false;
 
   # Additional networking overrides if needed
   networking.networkmanager.dns = lib.mkForce "default";

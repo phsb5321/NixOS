@@ -126,8 +126,8 @@
     glxinfo
   ];
 
-  # Laptop doesn't need gaming packages
-  modules.packages.gaming.enable = false;
+  # Enable gaming packages for laptop
+  modules.packages.gaming.enable = true;
 
   # Laptop-specific Python without GTK (to match original config)
   modules.packages.python.withGTK = lib.mkForce false;
@@ -144,7 +144,7 @@
     initialPassword = "changeme";
     shell = "${pkgs.zsh}/bin/zsh";
     extraGroups = [
-      "nvidia" # Intel laptop might not need this, but keeping for compatibility
+      "nvidia" # NVIDIA GPU access
       "sddm"
     ];
   };
@@ -153,40 +153,80 @@
   environment.shells = [
     "${pkgs.bash}/bin/bash"
     "${pkgs.zsh}/bin/zsh"
-    "${pkgs.fish}/bin/fish"
   ];
 
   # Laptop-specific Intel hardware configuration for NixOS 25.05
   hardware.cpu.intel.updateMicrocode = true;
 
+  # Laptop-specific gaming optimizations for NVIDIA Optimus (hybrid graphics)
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
     extraPackages = with pkgs; [
+      # Intel graphics (for power saving and basic tasks)
       intel-media-driver # Modern driver (iHD) for Broadwell+
       intel-vaapi-driver # Legacy driver (i965) - better browser support
       vpl-gpu-rt # Intel Quick Sync Video
       libvdpau-va-gl # VDPAU support
+      intel-compute-runtime # OpenCL support for Intel GPUs
+      # Mesa and Vulkan (works with both Intel and NVIDIA)
+      mesa # Mesa drivers with Intel support
+      vulkan-loader
+      vulkan-validation-layers
+      vulkan-extension-layer
     ];
     extraPackages32 = with pkgs.pkgsi686Linux; [
       intel-vaapi-driver
+      mesa
+      vulkan-loader
     ];
   };
 
-  # Laptop-specific X server configuration for Intel graphics with Wayland
-  services.xserver = {
-    enable = true;
-    videoDrivers = ["intel"];
-    deviceSection = ''
-      Option "TearFree" "true"
-      Option "DRI" "3"
-      Option "AccelMethod" "sna"
-    '';
-    xkb = {
-      layout = "br";
-      variant = "";
+  # NVIDIA Optimus configuration for gaming laptops
+  hardware.nvidia = {
+    # Enable the NVIDIA driver
+    modesetting.enable = true;
+
+    # Enable power management (important for laptops)
+    powerManagement.enable = true;
+
+    # Fine-grained power management (experimental, but helps with battery)
+    powerManagement.finegrained = false;
+
+    # Use open source kernel module (newer, better for gaming)
+    open = false; # Set to true if you want to try the open-source driver
+
+    # Enable NVIDIA settings menu
+    nvidiaSettings = true;
+
+    # NVIDIA driver package (use production version)
+    package = config.boot.kernelPackages.nvidiaPackages.production;
+
+    # Enable PRIME for hybrid graphics (Optimus)
+    prime = {
+      # Enable offload mode - apps can request NVIDIA GPU when needed
+      offload = {
+        enable = true;
+        enableOffloadCmd = true;
+      };
+
+      # Specify the Intel and NVIDIA GPU BUS IDs
+      # You may need to adjust these based on your specific laptop
+      # Run `sudo lshw -c display` to find your actual BUS IDs
+      intelBusId = "PCI:0:2:0"; # Common Intel integrated graphics BUS ID
+      nvidiaBusId = "PCI:1:0:0"; # Common NVIDIA discrete graphics BUS ID
     };
   };
+
+  # NVIDIA container toolkit for containerized applications
+  hardware.nvidia-container-toolkit.enable = true;
+
+  # Configure X server video drivers for NVIDIA support
+  services.xserver.videoDrivers = ["nvidia"];
+
+  # Wayland-first configuration with X server for compatibility
+  # X server enables XWayland automatically
+  # GDM and GNOME will prefer Wayland but support X11 apps through XWayland
 
   services.dbus = {
     enable = true;
@@ -206,12 +246,44 @@
       LIBVA_DRIVER_NAME = "iHD"; # Intel VAAPI driver (modern)
       SHELL = "${pkgs.zsh}/bin/zsh";
 
+      # Force Wayland for all applications
+      WAYLAND_DISPLAY = "wayland-0";
+      XDG_SESSION_TYPE = "wayland";
+
       # Wayland support for Intel graphics
       # NIXOS_OZONE_WL = "1"; # Disabled in favor of VS Code overlay
       MOZ_ENABLE_WAYLAND = "1";
-      QT_QPA_PLATFORM = "wayland;xcb";
-      GDK_BACKEND = "wayland,x11";
+
+      # Override desktop coordinator settings for pure Wayland
+      QT_QPA_PLATFORM = lib.mkForce "wayland"; # No X11 fallback
+      GDK_BACKEND = lib.mkForce "wayland"; # No X11 fallback
       VDPAU_DRIVER = "va_gl";
+
+      # Force applications to use Wayland
+      SDL_VIDEODRIVER = "wayland";
+      CLUTTER_BACKEND = "wayland";
+
+      # Scaling settings
+      GDK_SCALE = "1";
+      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
+
+      # Gaming-specific optimizations for NVIDIA Optimus
+      __GL_THREADED_OPTIMIZATIONS = "1";
+      __GL_SHADER_DISK_CACHE = "1";
+      __GL_SHADER_DISK_CACHE_PATH = "/tmp/gl_cache";
+
+      # NVIDIA Optimus offloading
+      __NV_PRIME_RENDER_OFFLOAD = "1";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+
+      # Steam optimizations
+      STEAM_RUNTIME_HEAVY = "1";
+      STEAM_FRAME_FORCE_CLOSE = "1";
+
+      # Vulkan optimizations (auto-detected for NVIDIA/Intel hybrid)
+      DXVK_HUD = "fps,memory,gpuload";
+      DXVK_ASYNC = "1";
+      VKD3D_CONFIG = "dxr11";
 
       # Electron/VS Code Wayland configuration to fix warnings
       # ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Handled by VS Code overlay
@@ -236,6 +308,15 @@
       libva-utils # vainfo command
       vulkan-tools # vulkaninfo
       glxinfo
+
+      # Gaming-specific tools for laptop with NVIDIA Optimus
+      corectrl # GPU monitoring and control
+      btop # System monitoring
+      intel-gpu-tools # Intel GPU debugging and monitoring (integrated GPU)
+      mesa-demos # Mesa utilities (glxinfo, glxgears, etc.)
+
+      # NVIDIA-specific tools
+      # Note: nvidia-offload script is provided by hardware.nvidia.prime.offload
     ];
   };
 
@@ -249,22 +330,26 @@
     wlr.enable = true;
   };
 
-  # Laptop-specific boot configuration for Intel graphics and Wayland
+  # Laptop-specific boot configuration for NVIDIA Optimus
   boot = {
+    # Remove NVIDIA modules from blacklist to enable NVIDIA GPU
     blacklistedKernelModules = [
-      "nouveau"
-      "nvidia"
-      "nvidia_drm"
-      "nvidia_modeset"
-      "nvidia_uvm"
+      "nouveau" # Keep nouveau blacklisted (conflicts with proprietary driver)
     ];
 
-    # Intel graphics optimizations for NixOS 25.05
+    # Hybrid graphics optimizations for NixOS 25.05 with gaming enhancements
     kernelParams = [
+      # Intel graphics optimizations (still used for power saving)
       "i915.enable_fbc=1"
       "i915.enable_psr=2"
       "i915.enable_hd_vgaarb=1"
       "i915.enable_dc=2"
+      "i915.enable_guc=3" # Enable GuC and HuC firmware loading
+      "i915.enable_huc=1"
+      "i915.fastboot=1" # Enable fastboot
+      "i915.semaphores=1" # Enable semaphores for better performance
+      "mitigations=off" # Disable CPU mitigations for better gaming performance
+      "split_lock_detect=off" # Disable split lock detection for gaming
       # WiFi-specific parameters to handle hard block issues
       "rfkill.default_state=1"
       "iwlwifi.power_save=0"
@@ -278,6 +363,9 @@
       "acpi_enforce_resources=lax"
       # Try to prevent ACPI from managing WiFi rfkill
       "acpi_backlight=vendor"
+      # Gaming performance optimizations
+      "processor.max_cstate=1" # Reduce CPU sleep states for lower latency
+      "intel_idle.max_cstate=0" # Disable deeper C-states for gaming
       # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
       # "i915.force_probe=46a8"
     ];

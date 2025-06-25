@@ -1,7 +1,6 @@
 # ~/NixOS/modules/home/programs/default.nix
 {
   imports = [
-    ./fish.nix
     ./zsh.nix
     ./starship.nix
     ./kitty.nix

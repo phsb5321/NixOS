@@ -16,14 +16,11 @@ in {
 
     # GNOME-specific configuration for NixOS 25.05
     (mkIf (cfg.enable && cfg.environment == "gnome") {
-      # Essential GNOME Wayland configuration for NixOS 25.05
+      # GNOME Wayland configuration with minimal X server for XWayland
       services.xserver = {
-        enable = true; # Enables XWayland support
-        displayManager.gdm = {
-          enable = true; # GNOME Display Manager
-          wayland = true; # Explicitly enable Wayland
-        };
-        desktopManager.gnome.enable = true; # Uses Wayland by default
+        enable = true; # Required for XWayland and GNOME packages
+        # No display manager configuration here - handled by coordinator
+        desktopManager.gnome.enable = true; # GNOME desktop environment
       };
 
       # Ensure proper session packages are available for GDM
@@ -80,9 +77,9 @@ in {
 
       # System-wide environment variables for consistent theming
       environment.sessionVariables = {
-        XCURSOR_THEME = "material_dark_cursors";
+        XCURSOR_THEME = "Bibata-Modern-Classic";
         XCURSOR_SIZE = "24";
-        GTK_THEME = "adw-gtk3-dark";
+        GTK_THEME = "Orchis-Dark-Compact";
       };
 
       # Enable desktop fonts configuration
@@ -132,22 +129,24 @@ in {
         gnomeExtensions.forge
         gnomeExtensions.user-themes
 
+        # Additional modern extensions for better visual experience
+        gnomeExtensions.just-perfection
+        gnomeExtensions.rounded-window-corners-reborn
+        gnomeExtensions.compiz-windows-effect
+
         # Centralized Theme and Cursor Configuration
-        # Material Design cursor theme (dark variant for consistency)
-        material-cursors
+        # Modern Orchis GTK theme (elegant dark theme with rounded corners)
+        orchis-theme
 
-        # Papirus icon theme (comprehensive icon set)
-        papirus-icon-theme
+        # Tela icon theme (modern, colorful, consistent design)
+        tela-icon-theme
 
-        # Adwaita GTK theme (modern GNOME design)
-        adw-gtk3
+        # Bibata cursor theme (modern, smooth animations)
+        bibata-cursors
+
+        # Essential theme dependencies
+        adw-gtk3 # Keep as fallback
         libadwaita # Essential for GNOME theming
-
-        # Remove conflicting cursor/theme packages
-        # vanilla-dmz removed to avoid conflicts
-        # adwaita-icon-theme removed to prefer Papirus
-
-        # Essential theme engines and schemas
         gnome-themes-extra
         gtk3
         gtk4
@@ -157,11 +156,19 @@ in {
         noto-fonts
         noto-fonts-emoji
         cantarell-fonts
+        # Additional modern fonts for better visual experience
+        inter
+        lexend
 
         # Theme utilities for user customization
         themechanger
         gnome-tweaks
         dconf-editor
+
+        # Additional visual enhancement tools
+        gnome-backgrounds
+        vanilla-dmz # Fallback cursor theme
+        adwaita-icon-theme # Fallback icon theme
       ];
 
       # Configure XDG portal specifically for GNOME
@@ -179,23 +186,25 @@ in {
         };
       };
 
-      # GNOME settings overrides for system-wide defaults - Centralized Theme Configuration
+      # GNOME settings overrides for system-wide defaults - Modern Theme Configuration
       services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
         [org.gnome.desktop.interface]
-        gtk-theme='adw-gtk3-dark'
-        icon-theme='Papirus-Dark'
-        cursor-theme='material_dark_cursors'
+        gtk-theme='Orchis-Dark-Compact'
+        icon-theme='Tela-dark'
+        cursor-theme='Bibata-Modern-Classic'
         cursor-size=24
         font-name='Cantarell 11'
         document-font-name='Cantarell 11'
         monospace-font-name='JetBrainsMono Nerd Font Mono 11'
         color-scheme='prefer-dark'
+        accent-color='blue'
         clock-show-weekday=true
         show-battery-percentage=true
         enable-animations=true
+        enable-hot-corners=false
 
         [org.gnome.desktop.wm.preferences]
-        theme='adw-gtk3-dark'
+        theme='Orchis-Dark-Compact'
         button-layout='appmenu:minimize,maximize,close'
         titlebar-font='Cantarell Bold 11'
 
@@ -215,11 +224,11 @@ in {
         disable-lock-screen=false
 
         [org.gnome.shell]
-        enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'clipboard-indicator@tudmotu.com', 'sound-output-device-chooser@kgshank.net', 'gsconnect@andyholmes.github.io', 'caffeine@patapon.info', 'forge@jmmaranan.com']
+        enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'clipboard-indicator@tudmotu.com', 'sound-output-device-chooser@kgshank.net', 'gsconnect@andyholmes.github.io', 'caffeine@patapon.info', 'forge@jmmaranan.com', 'just-perfection-desktop@just-perfection', 'rounded-window-corners@fxgn', 'compiz-windows-effect@hermes83.github.com']
         favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Console.desktop', 'firefox.desktop', 'code.desktop', 'discord.desktop']
 
         [org.gnome.shell.extensions.user-theme]
-        name='adw-gtk3-dark'
+        name='Orchis-Dark-Compact'
 
         [org.gnome.shell.extensions.dash-to-dock]
         dock-fixed=false
@@ -229,8 +238,20 @@ in {
         transparency-mode='DYNAMIC'
         running-indicator-style='DOTS'
         customize-alphas=true
-        min-alpha=0.2
-        max-alpha=0.8
+        min-alpha=0.15
+        max-alpha=0.85
+        dash-max-icon-size=48
+        apply-custom-theme=true
+
+        [org.gnome.shell.extensions.blur-my-shell]
+        brightness=0.85
+        sigma=15
+
+        [org.gnome.desktop.background]
+        color-shading-type='solid'
+        picture-options='zoom'
+        primary-color='#1e1e2e'
+        secondary-color='#181825'
       '';
 
       # Enable Flatpak support
@@ -265,20 +286,20 @@ in {
         imports = [
         ];
 
-        # GTK configuration - Centralized theme setup
+        # GTK configuration - Modern theme setup with Orchis and Tela
         gtk = {
           enable = true;
           theme = {
-            name = "adw-gtk3-dark";
-            package = pkgs.adw-gtk3;
+            name = "Orchis-Dark-Compact";
+            package = pkgs.orchis-theme;
           };
           iconTheme = {
-            name = "Papirus-Dark";
-            package = pkgs.papirus-icon-theme;
+            name = "Tela-dark";
+            package = pkgs.tela-icon-theme;
           };
           cursorTheme = {
-            name = "material_dark_cursors";
-            package = pkgs.material-cursors;
+            name = "Bibata-Modern-Classic";
+            package = pkgs.bibata-cursors;
             size = 24;
           };
           font = {
@@ -287,31 +308,35 @@ in {
           };
           gtk3.extraConfig = {
             gtk-application-prefer-dark-theme = 1;
+            gtk-decoration-layout = "appmenu:minimize,maximize,close";
           };
           gtk4.extraConfig = {
             gtk-application-prefer-dark-theme = 1;
+            gtk-decoration-layout = "appmenu:minimize,maximize,close";
           };
         };
 
-        # DConf settings for GNOME - Centralized theme configuration
+        # DConf settings for GNOME - Modern theme configuration
         dconf.settings = {
           "org/gnome/desktop/interface" = {
-            gtk-theme = "adw-gtk3-dark";
-            icon-theme = "Papirus-Dark";
-            cursor-theme = "material_dark_cursors";
+            gtk-theme = "Orchis-Dark-Compact";
+            icon-theme = "Tela-dark";
+            cursor-theme = "Bibata-Modern-Classic";
             cursor-size = 24;
             font-name = "Cantarell 11";
             document-font-name = "Cantarell 11";
             monospace-font-name = "JetBrainsMono Nerd Font Mono 11";
             color-scheme = "prefer-dark";
+            accent-color = "blue";
             clock-show-weekday = true;
             clock-show-seconds = false;
             show-battery-percentage = true;
             enable-animations = true;
+            enable-hot-corners = false;
           };
 
           "org/gnome/desktop/wm/preferences" = {
-            theme = "adw-gtk3-dark";
+            theme = "Orchis-Dark-Compact";
             button-layout = "appmenu:minimize,maximize,close";
             titlebar-font = "Cantarell Bold 11";
           };
@@ -333,11 +358,14 @@ in {
               "gsconnect@andyholmes.github.io"
               "caffeine@patapon.info"
               "forge@jmmaranan.com"
+              "just-perfection-desktop@just-perfection"
+              "rounded-window-corners@fxgn"
+              "compiz-windows-effect@hermes83.github.com"
             ];
           };
 
           "org/gnome/shell/extensions/user-theme" = {
-            name = "adw-gtk3-dark";
+            name = "Orchis-Dark-Compact";
           };
 
           "org/gnome/shell/extensions/dash-to-dock" = {
@@ -348,8 +376,22 @@ in {
             transparency-mode = "DYNAMIC";
             running-indicator-style = "DOTS";
             customize-alphas = true;
-            min-alpha = 0.2;
-            max-alpha = 0.8;
+            min-alpha = 0.15;
+            max-alpha = 0.85;
+            dash-max-icon-size = 48;
+            apply-custom-theme = true;
+          };
+
+          "org/gnome/shell/extensions/blur-my-shell" = {
+            brightness = 0.85;
+            sigma = 15;
+          };
+
+          "org/gnome/desktop/background" = {
+            color-shading-type = "solid";
+            picture-options = "zoom";
+            primary-color = "#1e1e2e";
+            secondary-color = "#181825";
           };
 
           "org/gnome/desktop/peripherals/touchpad" = {
@@ -391,8 +433,8 @@ in {
 
         # Environment variables for consistent theming and Wayland compatibility
         home.sessionVariables = {
-          GTK_THEME = "adw-gtk3-dark";
-          XCURSOR_THEME = "material_dark_cursors";
+          GTK_THEME = "Orchis-Dark-Compact";
+          XCURSOR_THEME = "Bibata-Modern-Classic";
           XCURSOR_SIZE = "24";
           NIXOS_OZONE_WL = "1"; # Chromium/Electron Wayland support
           GDK_BACKEND = "wayland,x11"; # GTK applications prefer Wayland
@@ -401,10 +443,10 @@ in {
           WAYLAND_DISPLAY = "wayland-0";
         };
 
-        # Add systemd service to ensure theme settings are applied
+        # Add systemd service to ensure modern theme settings are applied
         systemd.user.services.gnome-theme-fix = {
           Unit = {
-            Description = "Apply GNOME theme settings";
+            Description = "Apply modern GNOME theme settings";
             After = ["graphical-session.target"];
             PartOf = ["graphical-session.target"];
           };
@@ -415,23 +457,39 @@ in {
               # Wait for GNOME Shell to be ready
               sleep 3
 
-              # Apply interface settings with Material cursors
-              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
-              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
-              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-theme 'material_dark_cursors'
+              # Apply modern interface settings with Orchis theme and Bibata cursors
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme 'Orchis-Dark-Compact'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface icon-theme 'Tela-dark'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Classic'
               ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-size 24
               ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface accent-color 'blue'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface enable-hot-corners false
 
               # Apply window manager settings
-              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.wm.preferences theme 'adw-gtk3-dark'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.wm.preferences theme 'Orchis-Dark-Compact'
 
               # Apply shell theme
-              ${pkgs.glib}/bin/gsettings set org.gnome.shell.extensions.user-theme name 'adw-gtk3-dark'
+              ${pkgs.glib}/bin/gsettings set org.gnome.shell.extensions.user-theme name 'Orchis-Dark-Compact'
 
-              # Force refresh GNOME Shell
+              # Configure dash-to-dock for better appearance
+              ${pkgs.glib}/bin/gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 48
+              ${pkgs.glib}/bin/gsettings set org.gnome.shell.extensions.dash-to-dock apply-custom-theme true
+              ${pkgs.glib}/bin/gsettings set org.gnome.shell.extensions.dash-to-dock min-alpha 0.15
+              ${pkgs.glib}/bin/gsettings set org.gnome.shell.extensions.dash-to-dock max-alpha 0.85
+
+              # Configure blur-my-shell for modern effects
+              ${pkgs.glib}/bin/gsettings set org.gnome.shell.extensions.blur-my-shell brightness 0.85
+              ${pkgs.glib}/bin/gsettings set org.gnome.shell.extensions.blur-my-shell sigma 15
+
+              # Set elegant background colors
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.background primary-color '#1e1e2e'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.background secondary-color '#181825'
+
+              # Force refresh GNOME Shell to apply changes
               ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita'
               sleep 1
-              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+              ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme 'Orchis-Dark-Compact'
             '');
           };
           Install = {
