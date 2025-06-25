@@ -12,18 +12,19 @@ in {
     enable = mkEnableOption "Flatpak support";
 
     remotes = mkOption {
-      type = with types; listOf (submodule {
-        options = {
-          name = mkOption {
-            type = types.str;
-            description = "Name of the Flatpak remote";
+      type = with types;
+        listOf (submodule {
+          options = {
+            name = mkOption {
+              type = types.str;
+              description = "Name of the Flatpak remote";
+            };
+            location = mkOption {
+              type = types.str;
+              description = "URL of the Flatpak remote";
+            };
           };
-          location = mkOption {
-            type = types.str;
-            description = "URL of the Flatpak remote";
-          };
-        };
-      });
+        });
       default = [
         {
           name = "flathub";
@@ -109,7 +110,7 @@ in {
     system.activationScripts.flatpak = mkIf (cfg.remotes != [] || cfg.packages != []) {
       text = ''
         echo "Setting up Flatpak..."
-        
+
         # Wait for Flatpak service to be ready
         while ! ${pkgs.flatpak}/bin/flatpak --version >/dev/null 2>&1; do
           echo "Waiting for Flatpak service..."
@@ -118,23 +119,25 @@ in {
 
         # Add remotes
         ${concatMapStringsSep "\n" (remote: ''
-          if ! ${pkgs.flatpak}/bin/flatpak remote-list | grep -q "^${remote.name}"; then
-            echo "Adding Flatpak remote: ${remote.name}"
-            ${pkgs.flatpak}/bin/flatpak remote-add --if-not-exists --system ${remote.name} ${remote.location} || true
-          fi
-        '') cfg.remotes}
+            if ! ${pkgs.flatpak}/bin/flatpak remote-list | grep -q "^${remote.name}"; then
+              echo "Adding Flatpak remote: ${remote.name}"
+              ${pkgs.flatpak}/bin/flatpak remote-add --if-not-exists --system ${remote.name} ${remote.location} || true
+            fi
+          '')
+          cfg.remotes}
 
         # Install packages
         ${concatMapStringsSep "\n" (pkg: ''
-          if ! ${pkgs.flatpak}/bin/flatpak list --system | grep -q "${pkg}"; then
-            echo "Installing Flatpak package: ${pkg}"
-            ${pkgs.flatpak}/bin/flatpak install --system --noninteractive --assumeyes ${pkg} || true
-          fi
-        '') cfg.packages}
+            if ! ${pkgs.flatpak}/bin/flatpak list --system | grep -q "${pkg}"; then
+              echo "Installing Flatpak package: ${pkg}"
+              ${pkgs.flatpak}/bin/flatpak install --system --noninteractive --assumeyes ${pkg} || true
+            fi
+          '')
+          cfg.packages}
 
         echo "Flatpak setup complete"
       '';
-      deps = [ "users" ];
+      deps = ["users"];
     };
 
     # User-level Flatpak setup (requires users to run manually)
@@ -143,15 +146,16 @@ in {
         #!/bin/bash
         # User Flatpak Setup Script
         echo "Setting up user-level Flatpak..."
-        
+
         # Add remotes for user
         ${concatMapStringsSep "\n" (remote: ''
-          if ! flatpak remote-list --user | grep -q "^${remote.name}"; then
-            echo "Adding user Flatpak remote: ${remote.name}"
-            flatpak remote-add --if-not-exists --user ${remote.name} ${remote.location}
-          fi
-        '') cfg.remotes}
-        
+            if ! flatpak remote-list --user | grep -q "^${remote.name}"; then
+              echo "Adding user Flatpak remote: ${remote.name}"
+              flatpak remote-add --if-not-exists --user ${remote.name} ${remote.location}
+            fi
+          '')
+          cfg.remotes}
+
         echo "User Flatpak setup complete"
         echo "To install packages for your user, run:"
         echo "  flatpak install --user <package-name>"
