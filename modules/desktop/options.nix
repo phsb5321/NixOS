@@ -56,9 +56,9 @@ with lib; {
       };
 
       accentColor = mkOption {
-        type = types.enum ["blue" "purple" "pink" "red" "orange" "yellow" "green" "gray"];
+        type = types.enum ["blue" "purple" "pink" "red" "orange" "yellow" "green" "gray" "teal" "indigo"];
         default = "blue";
-        description = "System accent color";
+        description = "System accent color for modern GNOME themes";
       };
     };
 

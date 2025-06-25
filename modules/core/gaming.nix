@@ -27,9 +27,6 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # Enable Steam if `enableSteam` is true
-    programs.steam.enable = cfg.enableSteam;
-
     # Append gaming-related packages to `environment.systemPackages`
     environment.systemPackages = with pkgs;
       [
@@ -41,14 +38,49 @@ in {
         vulkan-loader # Replaces libvulkan
         vulkan-validation-layers
         mesa-demos # Replaces mesa-utils
+        corectrl # GPU overclocking and monitoring
+        gwe # Alternative GPU control for NVIDIA/Intel
+        nvtopPackages.full # NVIDIA GPU monitoring (replaces nvtop)
+        nvidia-system-monitor-qt # NVIDIA system monitor GUI
+        protontricks
+        winetricks
+        wine-staging
+        bottles
+        heroic
+        legendary-gl
+        goverlay # MangoHud configurator
+        dxvk
+        vkd3d
+        steam-run
+        protonup-qt
+        steamtinkerlaunch
+        protonup-ng
+        gamescope
       ]
-      ++ cfg.extraGamingPackages;
-
-    # Set environment variables for gaming applications
+      ++ cfg.extraGamingPackages; # Set environment variables for gaming applications
     environment.variables = {
-      STEAM_RUNTIME_HEAVY = "1"; # Use full runtime for compatibility
-      ENABLE_VK_LAYER_MANGOHUD = "1"; # Enable MangoHud by default
-      GAMEMODE_AUTO = "1"; # Enable GameMode automatically
+      STEAM_RUNTIME_HEAVY = lib.mkDefault "1"; # Use full runtime for compatibility
+      ENABLE_VK_LAYER_MANGOHUD = lib.mkDefault "1"; # Enable MangoHud by default
+      GAMEMODE_AUTO = lib.mkDefault "1"; # Enable GameMode automatically
+
+      # Performance optimizations
+      __GL_THREADED_OPTIMIZATIONS = lib.mkDefault "1";
+      __GL_SHADER_DISK_CACHE = lib.mkDefault "1";
+      __GL_SHADER_DISK_CACHE_PATH = lib.mkDefault "/tmp/gl_cache";
+
+      # NVIDIA Optimus optimizations
+      __NV_PRIME_RENDER_OFFLOAD = lib.mkDefault "1";
+      __GLX_VENDOR_LIBRARY_NAME = lib.mkDefault "nvidia";
+
+      # Steam/Proton optimizations
+      STEAM_FRAME_FORCE_CLOSE = lib.mkDefault "1";
+      DXVK_HUD = lib.mkDefault "fps";
+      DXVK_ASYNC = lib.mkDefault "1";
+
+      # Wine optimizations
+      WINEPREFIX = lib.mkDefault "$HOME/.wine";
+      WINEARCH = "win64";
+      WINE_CPU_TOPOLOGY = "4:2";
     };
 
     # Start GameMode as a systemd service
@@ -56,7 +88,68 @@ in {
       enable = true;
       description = "GameMode Daemon";
       after = ["network.target"];
-      serviceConfig.ExecStart = "${pkgs.gamemode}/bin/gamemoded";
+      serviceConfig = {
+        ExecStart = "${pkgs.gamemode}/bin/gamemoded";
+        Restart = "always";
+        RestartSec = "10";
+      };
     };
+
+    # Enable Steam with better integration
+    programs.steam = mkIf cfg.enableSteam {
+      enable = true;
+      remotePlay.openFirewall = true;
+      dedicatedServer.openFirewall = true;
+      package = pkgs.steam.override {
+        extraPkgs = pkgs:
+          with pkgs; [
+            xorg.libXcursor
+            xorg.libXi
+            xorg.libXinerama
+            xorg.libXScrnSaver
+            libpng
+            libpulseaudio
+            libvorbis
+            stdenv.cc.cc.lib
+            libkrb5
+            keyutils
+            mangohud
+            gamemode
+          ];
+      };
+    };
+
+    # Gaming-specific kernel parameters and optimizations
+    boot.kernel.sysctl = {
+      "kernel.yama.ptrace_scope" = 0; # Allow ptrace for game debugging
+      "vm.max_map_count" = 262144; # Required for some games
+      "fs.file-max" = 2097152; # Increase file descriptor limit
+      "kernel.pid_max" = 4194304; # Increase process limit
+    };
+
+    # Gaming-optimized user limits
+    security.pam.loginLimits = [
+      {
+        domain = "@wheel";
+        type = "soft";
+        item = "nofile";
+        value = "524288";
+      }
+      {
+        domain = "@wheel";
+        type = "hard";
+        item = "nofile";
+        value = "1048576";
+      }
+    ];
+
+    # Enable udev rules for gaming devices
+    services.udev.packages = with pkgs; [
+      game-devices-udev-rules
+    ];
+
+    # Hardware optimizations for gaming
+    hardware.enableRedistributableFirmware = true;
+    hardware.graphics.enable32Bit = true;
   };
 }

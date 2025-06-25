@@ -94,7 +94,13 @@ log() {
     # Show in terminal based on verbosity
     if [[ "${VERBOSE:-false}" == true || "$level" != "info" ]]; then
         local color="${COLORS[$level]:-39}"
-        gum style --foreground "$color" "[$timestamp] $msg"
+        # Handle very long messages that could exceed argument limits
+        if [[ ${#msg} -gt 8000 ]]; then
+            # For very long messages, use echo instead of gum to avoid "Argument list too long"
+            echo -e "\033[38;5;${color}m[$timestamp] ${msg:0:1000}... [truncated]\033[0m"
+        else
+            gum style --foreground "$color" "[$timestamp] $msg"
+        fi
     fi
 }
 
@@ -206,12 +212,34 @@ execute() {
         errors=$(cat "$temp_err")
         rm -f "$temp_out" "$temp_err"
 
-        # Log output and errors
+        # Log output and errors - handle large outputs safely
         if [[ -n "$output" ]]; then
-            log "$output" "info"
+            # For very large outputs, log only a summary to avoid "Argument list too long"
+            local line_count=$(echo "$output" | wc -l)
+            if [[ $line_count -gt 100 ]]; then
+                local first_lines=$(echo "$output" | head -20)
+                local last_lines=$(echo "$output" | tail -20)
+                log "Build output ($line_count lines):\n$first_lines\n... [$((line_count - 40)) lines omitted] ...\n$last_lines" "info"
+            elif [[ ${#output} -gt 5000 ]]; then
+                # If single line is very long, truncate it
+                log "Build output (truncated): ${output:0:2000}... [truncated]" "info"
+            else
+                log "$output" "info"
+            fi
         fi
         if [[ -n "$errors" ]]; then
-            log "$errors" "warning"
+            # Handle large error outputs similarly
+            local line_count=$(echo "$errors" | wc -l)
+            if [[ $line_count -gt 50 ]]; then
+                local first_lines=$(echo "$errors" | head -15)
+                local last_lines=$(echo "$errors" | tail -15)
+                log "Error output ($line_count lines):\n$first_lines\n... [$((line_count - 30)) lines omitted] ...\n$last_lines" "warning"
+            elif [[ ${#errors} -gt 5000 ]]; then
+                # If single line is very long, truncate it
+                log "Error output (truncated): ${errors:0:2000}... [truncated]" "warning"
+            else
+                log "$errors" "warning"
+            fi
         fi
 
         success "$name (${duration}s)"
