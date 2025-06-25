@@ -101,7 +101,7 @@ in {
 
   config = mkIf (cfg.enable && cfg.environment == "kde") {
     # Configure Display Manager
-    services.displayManager = {
+    services.xserver.displayManager = {
       defaultSession = "plasma";
       autoLogin = mkIf cfg.autoLogin.enable {
         enable = true;
