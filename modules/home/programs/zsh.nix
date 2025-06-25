@@ -145,8 +145,8 @@ in {
         top = "btop";
 
         # NixOS system management aliases
-        nixswitch = "$HOME/NixOS/user-scripts/nixswitch";
-        nixs = "$HOME/NixOS/user-scripts/nixswitch"; # Short alias
+        nixswitch = "$HOME/NixOS/user-scripts/nixswitch.sh";
+        nixs = "$HOME/NixOS/user-scripts/nixswitch.sh"; # Short alias
         nix-shell-select = "$HOME/NixOS/user-scripts/nix-shell-selector.sh";
         textractor = "$HOME/NixOS/user-scripts/textractor.sh";
         wayland-diag = "$HOME/NixOS/user-scripts/wayland-diagnostic.sh";
