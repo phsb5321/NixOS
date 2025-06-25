@@ -16,14 +16,11 @@ in {
 
     # GNOME-specific configuration for NixOS 25.05
     (mkIf (cfg.enable && cfg.environment == "gnome") {
-      # Essential GNOME Wayland configuration for NixOS 25.05
+      # GNOME Wayland configuration with minimal X server for XWayland
       services.xserver = {
-        enable = true; # Enables XWayland support
-        displayManager.gdm = {
-          enable = true; # GNOME Display Manager
-          wayland = true; # Explicitly enable Wayland
-        };
-        desktopManager.gnome.enable = true; # Uses Wayland by default
+        enable = true; # Required for XWayland and GNOME packages
+        # No display manager configuration here - handled by coordinator
+        desktopManager.gnome.enable = true; # GNOME desktop environment
       };
 
       # Ensure proper session packages are available for GDM
