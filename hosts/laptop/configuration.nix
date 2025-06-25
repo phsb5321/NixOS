@@ -199,8 +199,8 @@
     # Enable NVIDIA settings menu
     nvidiaSettings = true;
 
-    # NVIDIA driver package (stable is recommended for gaming)
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    # NVIDIA driver package (use production version)
+    package = config.boot.kernelPackages.nvidiaPackages.production;
 
     # Enable PRIME for hybrid graphics (Optimus)
     prime = {
@@ -221,28 +221,12 @@
   # NVIDIA container toolkit for containerized applications
   hardware.nvidia-container-toolkit.enable = true;
 
-  # Laptop-specific X server configuration for NVIDIA Optimus (hybrid) setup
-  services.xserver = {
-    enable = true;
-    videoDrivers = ["nvidia"];
-    deviceSection = ''
-      Option "TearFree" "true"
-      Option "DRI" "3"
-    '';
-    # Fix for GDM with NVIDIA - let it handle display detection
-    config = ''
-      Section "Device"
-        Identifier "nvidia"
-        Driver "nvidia"
-        BusID "PCI:1:0:0"
-        Option "AllowEmptyInitialConfiguration"
-      EndSection
-    '';
-    xkb = {
-      layout = "br";
-      variant = "";
-    };
-  };
+  # Configure X server video drivers for NVIDIA support
+  services.xserver.videoDrivers = ["nvidia"];
+
+  # Wayland-first configuration with X server for compatibility
+  # X server enables XWayland automatically
+  # GDM and GNOME will prefer Wayland but support X11 apps through XWayland
 
   services.dbus = {
     enable = true;
@@ -262,12 +246,26 @@
       LIBVA_DRIVER_NAME = "iHD"; # Intel VAAPI driver (modern)
       SHELL = "${pkgs.zsh}/bin/zsh";
 
+      # Force Wayland for all applications
+      WAYLAND_DISPLAY = "wayland-0";
+      XDG_SESSION_TYPE = "wayland";
+
       # Wayland support for Intel graphics
       # NIXOS_OZONE_WL = "1"; # Disabled in favor of VS Code overlay
       MOZ_ENABLE_WAYLAND = "1";
-      QT_QPA_PLATFORM = "wayland;xcb";
-      GDK_BACKEND = "wayland,x11";
+
+      # Override desktop coordinator settings for pure Wayland
+      QT_QPA_PLATFORM = lib.mkForce "wayland"; # No X11 fallback
+      GDK_BACKEND = lib.mkForce "wayland"; # No X11 fallback
       VDPAU_DRIVER = "va_gl";
+
+      # Force applications to use Wayland
+      SDL_VIDEODRIVER = "wayland";
+      CLUTTER_BACKEND = "wayland";
+
+      # Scaling settings
+      GDK_SCALE = "1";
+      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
 
       # Gaming-specific optimizations for NVIDIA Optimus
       __GL_THREADED_OPTIMIZATIONS = "1";
