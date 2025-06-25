@@ -85,6 +85,9 @@ in {
         GTK_THEME = "adw-gtk3-dark";
       };
 
+      # Enable desktop fonts configuration
+      modules.desktop.fonts.enable = true;
+
       # GNOME-specific packages
       environment.systemPackages = with pkgs; [
         # Core GNOME packages

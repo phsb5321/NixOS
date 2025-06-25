@@ -134,44 +134,8 @@ in {
           style = cfg.rendering.hinting.style;
         };
 
-        localConf = ''
-          <?xml version="1.0"?>
-          <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
-          <fontconfig>
-            <!-- Disable bitmap fonts -->
-            <selectfont>
-              <rejectfont>
-                <pattern>
-                  <patelt name="scalable"><bool>false</bool></patelt>
-                </pattern>
-              </rejectfont>
-            </selectfont>
-
-            <!-- Enable TrueType hinting -->
-            <match target="font">
-              <edit name="hinting" mode="assign"><bool>true</bool></edit>
-            </match>
-
-            <!-- Configure Nerd Fonts specifics -->
-            <match target="pattern">
-              <test name="family" qual="any">
-                <string>monospace</string>
-              </test>
-              <edit binding="same" mode="prepend" name="family">
-                <string>JetBrainsMono Nerd Font Mono</string>
-                <string>FiraCode Nerd Font Mono</string>
-              </edit>
-            </match>
-
-            <!-- Enable system-wide emoji support -->
-            <match target="pattern">
-              <test name="family"><string>monospace</string></test>
-              <edit name="family" mode="append_last">
-                <string>Noto Color Emoji</string>
-              </edit>
-            </match>
-          </fontconfig>
-        '';
+        # Note: localConf is handled by modules.desktop.fonts to avoid conflicts
+        # when desktop environment is enabled
       };
     };
 
