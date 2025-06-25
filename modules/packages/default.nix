@@ -34,11 +34,6 @@ in {
         type = types.listOf types.package;
         default = with pkgs; [
           vscode
-          insomnia
-          postman
-          (writeShellScriptBin "bruno" ''
-            exec ${bruno}/bin/bruno --enable-features=UseOzonePlatform --ozone-platform=wayland "$@"
-          '')
           android-tools
           llvm
           clang
