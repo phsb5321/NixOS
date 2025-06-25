@@ -36,7 +36,9 @@ in {
           vscode
           insomnia
           postman
-          bruno
+          (writeShellScriptBin "bruno" ''
+            exec ${bruno}/bin/bruno --enable-features=UseOzonePlatform --ozone-platform=wayland "$@"
+          '')
           android-tools
           llvm
           clang

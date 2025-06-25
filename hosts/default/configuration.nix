@@ -92,8 +92,12 @@
     # Wayland optimizations
     NIXOS_OZONE_WL = "1";
     MOZ_ENABLE_WAYLAND = "1";
-    QT_QPA_PLATFORM = "wayland;xcb";
+    QT_QPA_PLATFORM = lib.mkForce "wayland;xcb";
     GDK_BACKEND = "wayland,x11";
+    
+    # Electron/Chromium apps (like Bruno) Wayland fixes
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+    ELECTRON_ENABLE_WAYLAND = "1";
   };
 
   # GDM and session fixes
