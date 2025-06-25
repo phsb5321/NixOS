@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-# Simple alias for the enhanced nixswitch script
-
-exec "$HOME/NixOS/user-scripts/nixswitch.sh" "$@"
