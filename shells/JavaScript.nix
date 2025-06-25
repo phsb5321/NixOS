@@ -1,7 +1,7 @@
 # ~/NixOS/shells/JavaScript.nix
 # {pkgs ? import (fetchTarball "https://github.com/nixos/nixpkgs/archive/nixos-unstable.tar.gz") {}}:
 # Uses Nixpkgs 24.05
-{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {}}:
+{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz") {}}:
 # Uses Nixpkgs Default (Latest)
 # {pkgs ? import <nixpkgs> {}}:
 # Uses the latest Nixpkgs
@@ -100,7 +100,7 @@ in
       ${builtins.concatStringsSep "\n" (map (pm: "alias ${pm}='run_in_project ${pm}'") packageManagers)}
 
       # Print environment information
-      echo "🚀 JavaScript/TypeScript development environment (NixOS 24.05) is ready!"
+      echo "🚀 JavaScript/TypeScript development environment (Nixpkgs 24.05) is ready!"
       echo "📦 Installed package groups:"
       ${builtins.concatStringsSep "\n" (map (group: "echo \"  - ${group.name}\"") packageGroups)}
       echo "🔧 Use 'pnpm', 'npm', 'yarn', or 'bun' to manage your project dependencies."
