@@ -188,7 +188,7 @@ in {
           style = cfg.rendering.hinting.style;
         };
 
-        # Additional fontconfig configuration - Fix for the XML error
+        # Complete fontconfig configuration - handles both core and desktop font needs
         localConf = ''
           <?xml version="1.0"?>
           <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
@@ -218,6 +218,33 @@ in {
                 <string>Hack Nerd Font Mono</string>
                 <string>RobotoMono Nerd Font Mono</string>
                 <string>SourceCodePro Nerd Font Mono</string>
+              </edit>
+            </match>
+
+            <!-- Enable system-wide emoji support -->
+            <match target="pattern">
+              <test name="family"><string>monospace</string></test>
+              <edit name="family" mode="append_last">
+                <string>Noto Color Emoji</string>
+              </edit>
+            </match>
+
+            <!-- Better font substitution for application compatibility -->
+            <match target="pattern">
+              <test name="family"><string>serif</string></test>
+              <edit name="family" mode="prepend">
+                <string>DejaVu Serif</string>
+                <string>Liberation Serif</string>
+                <string>Noto Serif</string>
+              </edit>
+            </match>
+
+            <match target="pattern">
+              <test name="family"><string>sans-serif</string></test>
+              <edit name="family" mode="prepend">
+                <string>DejaVu Sans</string>
+                <string>Liberation Sans</string>
+                <string>Noto Sans</string>
               </edit>
             </match>
           </fontconfig>
