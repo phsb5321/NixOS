@@ -1,4 +1,4 @@
-{pkgs ? import (fetchTarball "https://github.com/nixos/nixpkgs/archive/nixpkgs-unstable.tar.gz") {}}: let
+{pkgs ? import <nixpkgs> {}}: let
   # Create a Python environment with necessary packages for MicroPython development
   pythonEnv = pkgs.python3.withPackages (ps:
     with ps; [
