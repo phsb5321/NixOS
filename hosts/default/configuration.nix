@@ -50,6 +50,9 @@
     calibre
     anydesk
 
+    # Communication
+    telegram-desktop
+
     # LACT for AMD GPU control
     lact
   ];
