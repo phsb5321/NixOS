@@ -145,7 +145,7 @@ in {
         top = "btop";
 
         # NixOS system management aliases
-        nixswitch = "$HOME/NixOS/user-scripts/nixswitch.sh";
+        nixswitch = "$HOME/NixOS/user-scripts/nixswitch.sh default";
         nixs = "$HOME/NixOS/user-scripts/nixswitch.sh"; # Short alias
         nix-shell-select = "$HOME/NixOS/user-scripts/nix-shell-selector.sh";
         textractor = "$HOME/NixOS/user-scripts/textractor.sh";
