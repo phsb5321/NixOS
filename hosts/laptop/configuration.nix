@@ -296,15 +296,8 @@
     ];
   };
 
-  # XDG Portal configuration for laptop
-  xdg.portal = {
-    enable = true;
-    extraPortals = [
-      pkgs.xdg-desktop-portal-gtk
-      pkgs.xdg-desktop-portal-gnome
-    ];
-    wlr.enable = true;
-  };
+  # XDG Portal configuration for laptop (GNOME handles this automatically)
+  # Note: GNOME module configures XDG portals properly
 
   # Laptop-specific boot configuration for NVIDIA Optimus
   boot = {
