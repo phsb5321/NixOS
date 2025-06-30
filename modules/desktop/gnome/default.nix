@@ -29,7 +29,7 @@ in {
       };
 
       # Ensure proper session packages for GDM (critical fix for login issue)
-      services.displayManager.sessionPackages = [pkgs.gnome-session];
+      services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
 
       # Ensure only GDM is enabled
       services.displayManager.sddm.enable = lib.mkForce false;
@@ -98,16 +98,29 @@ in {
         # Critical fix for GNOME rendering issues in NixOS 25.05
         GSK_RENDERER = "opengl";
 
-        # X11 specific settings (since wayland = false in shared config)
-        GDK_BACKEND = mkIf (!cfg.displayManager.wayland) "x11";
-        QT_QPA_PLATFORM = mkIf (!cfg.displayManager.wayland) "xcb";
+        # Backend settings (conditional on Wayland vs X11)
+        GDK_BACKEND =
+          if cfg.displayManager.wayland
+          then "wayland,x11"
+          else "x11";
+        QT_QPA_PLATFORM =
+          if cfg.displayManager.wayland
+          then "wayland;xcb"
+          else "xcb";
 
-        # Wayland optimization (when enabled)
-        NIXOS_OZONE_WL = mkIf cfg.displayManager.wayland "1";
-        GDK_BACKEND = mkIf cfg.displayManager.wayland "wayland,x11";
-        QT_QPA_PLATFORM = mkIf cfg.displayManager.wayland "wayland;xcb";
-        MOZ_ENABLE_WAYLAND = mkIf cfg.displayManager.wayland "1";
-        ELECTRON_OZONE_PLATFORM_HINT = mkIf cfg.displayManager.wayland "wayland";
+        # Wayland-specific optimizations
+        NIXOS_OZONE_WL =
+          if cfg.displayManager.wayland
+          then "1"
+          else "0";
+        MOZ_ENABLE_WAYLAND =
+          if cfg.displayManager.wayland
+          then "1"
+          else "0";
+        ELECTRON_OZONE_PLATFORM_HINT =
+          if cfg.displayManager.wayland
+          then "wayland"
+          else "x11";
 
         # Common settings
         XCURSOR_THEME = "Adwaita";
@@ -560,9 +573,18 @@ in {
           XCURSOR_SIZE = "24";
 
           # Session-specific settings
-          GDK_BACKEND = if cfg.displayManager.wayland then "wayland,x11" else "x11";
-          QT_QPA_PLATFORM = if cfg.displayManager.wayland then "wayland;xcb" else "xcb";
-          NIXOS_OZONE_WL = mkIf cfg.displayManager.wayland "1";
+          GDK_BACKEND =
+            if cfg.displayManager.wayland
+            then "wayland,x11"
+            else "x11";
+          QT_QPA_PLATFORM =
+            if cfg.displayManager.wayland
+            then "wayland;xcb"
+            else "xcb";
+          NIXOS_OZONE_WL =
+            if cfg.displayManager.wayland
+            then "1"
+            else "0";
         };
       };
     })

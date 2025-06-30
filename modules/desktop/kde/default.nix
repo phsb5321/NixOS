@@ -102,7 +102,10 @@ in {
   config = mkIf (cfg.enable && cfg.environment == "kde") {
     # Configure Display Manager
     services.displayManager = {
-      defaultSession = if cfg.displayManager.wayland then "plasma" else "plasmax11";
+      defaultSession =
+        if cfg.displayManager.wayland
+        then "plasma"
+        else "plasmax11";
       autoLogin = mkIf cfg.autoLogin.enable {
         enable = true;
         user = cfg.autoLogin.user;
@@ -141,7 +144,10 @@ in {
       (mkIf (!cfg.displayManager.wayland) {
         XDG_SESSION_TYPE = "x11";
         XDG_CURRENT_DESKTOP = "KDE";
-        XDG_SESSION_DESKTOP = if cfg.kde.version == "plasma5" then "KDE" else "plasma";
+        XDG_SESSION_DESKTOP =
+          if cfg.kde.version == "plasma5"
+          then "KDE"
+          else "plasma";
         KDE_FULL_SESSION = "true";
       })
       (mkIf (cfg.displayManager.wayland && cfg.kde.version == "plasma6") {

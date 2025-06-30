@@ -43,9 +43,19 @@ in {
     services.displayManager = {
       defaultSession = mkDefault (
         if cfg.environment == "gnome"
-        then (if cfg.displayManager.wayland then "gnome" else "gnome-xorg")
+        then
+          (
+            if cfg.displayManager.wayland
+            then "gnome"
+            else "gnome-xorg"
+          )
         else if cfg.environment == "kde"
-        then (if cfg.displayManager.wayland then "plasma" else "plasmax11")
+        then
+          (
+            if cfg.displayManager.wayland
+            then "plasma"
+            else "plasmax11"
+          )
         else "gnome-xorg"
       );
     };
