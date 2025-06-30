@@ -147,8 +147,25 @@ in {
         top = "btop";
 
         # NixOS system management aliases
-        nixswitch = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh default";
+        nixswitch = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh"; # Auto-detect host
         nixs = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh"; # Short alias
+
+        # Host-specific aliases
+        nixswitch-default = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh default";
+        nixswitch-laptop = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh laptop";
+        nixs-default = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh default";
+        nixs-laptop = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh laptop";
+
+        # Additional nixswitch utilities
+        nixswitch-dry = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh --dry-run";
+        nixswitch-clean = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh --clean";
+        nixswitch-fast = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh --fast";
+        nixswitch-list = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh --list";
+        nixswitch-info = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh --info";
+        nixswitch-gens = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh --generations";
+        nixswitch-rollback = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh --rollback";
+
+        # Other system scripts
         nix-shell-select = "cd $HOME/NixOS && ./user-scripts/nix-shell-selector.sh";
         textractor = "cd $HOME/NixOS && ./user-scripts/textractor.sh";
 
