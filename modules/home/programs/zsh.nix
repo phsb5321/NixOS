@@ -147,12 +147,10 @@ in {
         top = "btop";
 
         # NixOS system management aliases
-        nixswitch = "$HOME/NixOS/user-scripts/nixswitch.sh default";
-        nixs = "$HOME/NixOS/user-scripts/nixswitch.sh"; # Short alias
-        nix-shell-select = "$HOME/NixOS/user-scripts/nix-shell-selector.sh";
-        textractor = "$HOME/NixOS/user-scripts/textractor.sh";
-        wayland-diag = "$HOME/NixOS/user-scripts/wayland-diagnostic.sh";
-        termfix = "$HOME/NixOS/user-scripts/terminal-fix.sh";
+        nixswitch = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh default";
+        nixs = "cd $HOME/NixOS && ./user-scripts/nixswitch.sh"; # Short alias
+        nix-shell-select = "cd $HOME/NixOS && ./user-scripts/nix-shell-selector.sh";
+        textractor = "cd $HOME/NixOS && ./user-scripts/textractor.sh";
 
         # Quick navigation
         ".." = "cd ..";
