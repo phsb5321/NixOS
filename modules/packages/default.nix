@@ -64,7 +64,7 @@ in {
           bruno
           # Modern typesetting system
           typst
-          # code-cursor  # Temporarily disabled due to download issues
+          code-cursor # Temporarily disabled due to download issues
         ];
         description = "List of development packages to install";
       };
