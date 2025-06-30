@@ -60,6 +60,10 @@ in {
           android-tools
           llvm
           clang
+          # API testing and documentation
+          bruno
+          # Modern typesetting system
+          typst
           # code-cursor  # Temporarily disabled due to download issues
         ];
         description = "List of development packages to install";
@@ -96,6 +100,8 @@ in {
           lsof
           seahorse
           bleachbit
+          # PDF viewer (modern Qt 6 version)
+          kdePackages.okular
         ];
         description = "List of utility packages to install";
       };
