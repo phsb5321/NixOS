@@ -101,17 +101,15 @@ in {
 
   config = mkIf (cfg.enable && cfg.environment == "kde") {
     # Configure Display Manager
-    services.xserver.displayManager = {
-      defaultSession = "plasma";
+    services.displayManager = {
+      defaultSession = if cfg.displayManager.wayland then "plasma" else "plasmax11";
       autoLogin = mkIf cfg.autoLogin.enable {
         enable = true;
         user = cfg.autoLogin.user;
       };
       sddm = {
         enable = true;
-        wayland = mkIf (cfg.kde.version == "plasma6") {
-          enable = true;
-        };
+        wayland.enable = cfg.displayManager.wayland;
         settings = {
           Theme = {
             CursorTheme = "breeze_cursors";
@@ -138,15 +136,15 @@ in {
       plasma6.enable = true;
     };
 
-    # Session variables for Plasma
+    # Session variables for Plasma - force X11 for troubleshooting
     environment.sessionVariables = mkMerge [
-      (mkIf (cfg.kde.version == "plasma5") {
+      (mkIf (!cfg.displayManager.wayland) {
         XDG_SESSION_TYPE = "x11";
         XDG_CURRENT_DESKTOP = "KDE";
-        XDG_SESSION_DESKTOP = "KDE";
+        XDG_SESSION_DESKTOP = if cfg.kde.version == "plasma5" then "KDE" else "plasma";
         KDE_FULL_SESSION = "true";
       })
-      (mkIf (cfg.kde.version == "plasma6") {
+      (mkIf (cfg.displayManager.wayland && cfg.kde.version == "plasma6") {
         XDG_SESSION_TYPE = "wayland";
         XDG_CURRENT_DESKTOP = "KDE";
         XDG_SESSION_DESKTOP = "plasma";

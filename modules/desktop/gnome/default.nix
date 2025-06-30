@@ -23,7 +23,7 @@ in {
       };
 
       # Ensure proper session packages for GDM
-      services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
+      services.displayManager.sessionPackages = [pkgs.gnome-session];
 
       # Modern audio system optimized for Wayland
       security.rtkit.enable = true;
@@ -50,19 +50,17 @@ in {
       # Additional required services
       services.geoclue2.enable = true;
 
-      # Essential system environment variables with GSK_RENDERER fix
+      # Essential system environment variables with NVIDIA hardware acceleration
       environment.sessionVariables = {
-        # Fix for GNOME white window issue in NixOS 25.05
+        # Use hardware acceleration with NVIDIA
         GSK_RENDERER = "opengl";
         # Modern theming
         XCURSOR_THEME = "Bibata-Modern-Classic";
         XCURSOR_SIZE = "24";
         GTK_THEME = "Orchis-Dark-Compact";
-        # Wayland optimization
-        NIXOS_OZONE_WL = "1";
-        GDK_BACKEND = "wayland,x11";
-        MOZ_ENABLE_WAYLAND = "1";
-        QT_QPA_PLATFORM = "wayland;xcb";
+        # X11 specific settings
+        GDK_BACKEND = "x11";
+        QT_QPA_PLATFORM = "xcb";
       };
 
       # Enable desktop fonts
