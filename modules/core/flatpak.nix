@@ -77,12 +77,12 @@ in {
       ];
       config = {
         common = {
-          default = [
+          default = mkDefault [
             "gtk"
           ];
         };
         gnome = {
-          default = [
+          default = mkDefault [
             "gnome"
             "gtk"
           ];
