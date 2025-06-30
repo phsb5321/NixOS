@@ -1,8 +1,8 @@
 # ~/NixOS/modules/home/programs/ghostty.nix
 {
   config,
-  pkgs,
   lib,
+  pkgs,
   ...
 }:
 with lib; let
