@@ -205,7 +205,7 @@
     prime = {
       # Enable sync mode - NVIDIA GPU drives the display
       sync.enable = true;
-      
+
       # Disable offload mode since we're using sync
       offload.enable = false;
 

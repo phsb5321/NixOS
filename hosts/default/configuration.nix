@@ -91,10 +91,6 @@
     AMD_VULKAN_ICD = "RADV";
     VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
     VDPAU_DRIVER = "radeonsi";
-
-    # Electron/Chromium apps (like Bruno) Wayland fixes
-    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
-    ELECTRON_ENABLE_WAYLAND = "1";
   };
 
   # GDM and session fixes
