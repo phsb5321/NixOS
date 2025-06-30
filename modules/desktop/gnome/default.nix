@@ -23,10 +23,13 @@ in {
         desktopManager.gnome.enable = true;
         displayManager.gdm = {
           enable = true;
-          wayland = true;
+          wayland = cfg.displayManager.wayland;
           autoSuspend = cfg.displayManager.autoSuspend;
         };
       };
+
+      # Ensure proper session packages for GDM (critical fix for login issue)
+      services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
 
       # Ensure only GDM is enabled
       services.displayManager.sddm.enable = lib.mkForce false;
@@ -90,25 +93,38 @@ in {
         jack.enable = true;
       };
 
-      # Environment variables with graphics fixes and Wayland optimization
+      # Environment variables - X11 focused since Wayland is disabled in shared config
       environment.sessionVariables = {
         # Critical fix for GNOME rendering issues in NixOS 25.05
         GSK_RENDERER = "opengl";
 
-        # Wayland optimization
-        NIXOS_OZONE_WL = "1";
-        GDK_BACKEND = "wayland,x11";
-        QT_QPA_PLATFORM = "wayland;xcb";
-        MOZ_ENABLE_WAYLAND = "1";
+        # Backend settings (conditional on Wayland vs X11)
+        GDK_BACKEND =
+          if cfg.displayManager.wayland
+          then "wayland,x11"
+          else "x11";
+        QT_QPA_PLATFORM =
+          if cfg.displayManager.wayland
+          then "wayland;xcb"
+          else "xcb";
 
-        # Electron apps Wayland support
-        ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+        # Wayland-specific optimizations
+        NIXOS_OZONE_WL =
+          if cfg.displayManager.wayland
+          then "1"
+          else "0";
+        MOZ_ENABLE_WAYLAND =
+          if cfg.displayManager.wayland
+          then "1"
+          else "0";
+        ELECTRON_OZONE_PLATFORM_HINT =
+          if cfg.displayManager.wayland
+          then "wayland"
+          else "x11";
 
-        # Cursor theme
+        # Common settings
         XCURSOR_THEME = "Adwaita";
         XCURSOR_SIZE = "24";
-
-        # Theme consistency
         GTK_THEME = mkIf cfg.theming.preferDark "Adwaita:dark";
       };
 
@@ -547,7 +563,7 @@ in {
           };
         };
 
-        # Environment variables for user session
+        # Environment variables for user session - X11 focused when Wayland disabled
         home.sessionVariables = {
           # Critical graphics fix for NixOS 25.05
           GSK_RENDERER = "opengl";
@@ -556,10 +572,19 @@ in {
           XCURSOR_THEME = "Adwaita";
           XCURSOR_SIZE = "24";
 
-          # Wayland preferences
-          GDK_BACKEND = "wayland,x11";
-          QT_QPA_PLATFORM = "wayland;xcb";
-          NIXOS_OZONE_WL = "1";
+          # Session-specific settings
+          GDK_BACKEND =
+            if cfg.displayManager.wayland
+            then "wayland,x11"
+            else "x11";
+          QT_QPA_PLATFORM =
+            if cfg.displayManager.wayland
+            then "wayland;xcb"
+            else "xcb";
+          NIXOS_OZONE_WL =
+            if cfg.displayManager.wayland
+            then "1"
+            else "0";
         };
       };
     })
