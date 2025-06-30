@@ -141,31 +141,15 @@ in {
       blueman.enable = mkIf cfg.hardware.enableBluetooth true;
     };
 
-    # XDG portals configuration
+    # XDG portals configuration - Only set defaults, let specific DEs override
     xdg.portal = {
       enable = true;
-      extraPortals = with pkgs;
-        [
-          xdg-desktop-portal-gtk
-        ]
-        ++ optionals (cfg.environment == "gnome") [
-          xdg-desktop-portal-gnome
-        ]
-        ++ optionals (cfg.environment == "kde") [
-          xdg-desktop-portal-kde
-        ];
-
+      # Don't set extraPortals here to avoid conflicts - let specific DE modules handle it
       config = {
         common = {
           default = mkDefault ["gtk"];
         };
-        gnome = mkIf (cfg.environment == "gnome") {
-          default = mkDefault ["gnome" "gtk"];
-          "org.freedesktop.impl.portal.Secret" = mkDefault ["gnome-keyring"];
-        };
-        kde = mkIf (cfg.environment == "kde") {
-          default = mkDefault ["kde"];
-        };
+        # GNOME and KDE modules will override these settings
       };
     };
 

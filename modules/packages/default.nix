@@ -33,11 +33,34 @@ in {
       packages = mkOption {
         type = types.listOf types.package;
         default = with pkgs; [
-          vscode
+          # Use VSCode with essential extensions instead of problematic code-cursor
+          (vscode-with-extensions.override {
+            vscodeExtensions = with vscode-extensions; [
+              # AI-powered coding assistance (Cursor alternative)
+              github.copilot
+              github.copilot-chat
+
+              # Essential development extensions
+              ms-python.python
+              rust-lang.rust-analyzer
+              ms-vscode.cpptools
+              golang.go
+              redhat.vscode-yaml
+
+              # Git and collaboration
+              eamodio.gitlens
+
+              # UI enhancements
+              pkief.material-icon-theme
+
+              # Productivity
+              esbenp.prettier-vscode
+            ];
+          })
           android-tools
           llvm
           clang
-          code-cursor
+          # code-cursor  # Temporarily disabled due to download issues
         ];
         description = "List of development packages to install";
       };
