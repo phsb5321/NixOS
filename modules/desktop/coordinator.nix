@@ -30,21 +30,7 @@ in {
         autoSuspend = cfg.displayManager.autoSuspend;
       };
 
-      # SDDM configuration for KDE
-      displayManager.sddm = mkIf (cfg.environment == "kde") {
-        enable = true;
-        wayland.enable = cfg.displayManager.wayland;
-        settings = {
-          Theme = {
-            CursorTheme = "breeze_cursors";
-            Font = "Noto Sans";
-          };
-          General = {
-            InputMethod = "";
-            Numlock = "on";
-          };
-        };
-      };
+      # SDDM configuration for KDE is handled by the KDE module
 
       # Auto-login configuration
       displayManager.autoLogin = mkIf cfg.autoLogin.enable {
@@ -57,10 +43,10 @@ in {
     services.displayManager = {
       defaultSession = mkDefault (
         if cfg.environment == "gnome"
-        then "gnome"
+        then (if cfg.displayManager.wayland then "gnome" else "gnome-xorg")
         else if cfg.environment == "kde"
-        then "plasma"
-        else "gnome"
+        then (if cfg.displayManager.wayland then "plasma" else "plasmax11")
+        else "gnome-xorg"
       );
     };
 

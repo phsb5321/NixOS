@@ -145,7 +145,6 @@
     shell = "${pkgs.zsh}/bin/zsh";
     extraGroups = [
       "nvidia" # NVIDIA GPU access
-      "sddm"
     ];
   };
 
@@ -202,13 +201,13 @@
     # NVIDIA driver package (use production version)
     package = config.boot.kernelPackages.nvidiaPackages.production;
 
-    # Enable PRIME for hybrid graphics (Optimus)
+    # Enable PRIME for hybrid graphics (Optimus) - use NVIDIA as primary
     prime = {
-      # Enable offload mode - apps can request NVIDIA GPU when needed
-      offload = {
-        enable = true;
-        enableOffloadCmd = true;
-      };
+      # Enable sync mode - NVIDIA GPU drives the display
+      sync.enable = true;
+      
+      # Disable offload mode since we're using sync
+      offload.enable = false;
 
       # Specify the Intel and NVIDIA GPU BUS IDs
       # You may need to adjust these based on your specific laptop
@@ -221,7 +220,7 @@
   # NVIDIA container toolkit for containerized applications
   hardware.nvidia-container-toolkit.enable = true;
 
-  # Configure X server video drivers for NVIDIA support
+  # Configure X server video drivers - use NVIDIA as primary GPU
   services.xserver.videoDrivers = ["nvidia"];
 
   # Wayland-first configuration with X server for compatibility
@@ -234,39 +233,35 @@
   };
   # Laptop-specific PAM services
   security.pam.services = {
-    sddm.enableKwallet = true;
-    sddm-greeter.enableKwallet = true;
     login.enableGnomeKeyring = true;
   };
 
-  # Laptop-specific environment configuration (Intel/NVIDIA specific only)
+  # Laptop-specific environment configuration (NVIDIA primary)
   environment = {
     sessionVariables = {
       LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
-      LIBVA_DRIVER_NAME = "iHD"; # Intel VAAPI driver (modern)
       SHELL = "${pkgs.zsh}/bin/zsh";
 
-      # Force applications to use specific backend for Intel graphics
-      VDPAU_DRIVER = "va_gl";
+      # NVIDIA as primary GPU configuration
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      LIBVA_DRIVER_NAME = "nvidia"; # Use NVIDIA for video acceleration
+      VDPAU_DRIVER = "nvidia";
 
       # Scaling settings
       GDK_SCALE = "1";
       QT_AUTO_SCREEN_SCALE_FACTOR = "1";
 
-      # Gaming-specific optimizations for NVIDIA Optimus
+      # NVIDIA optimizations
       __GL_THREADED_OPTIMIZATIONS = "1";
       __GL_SHADER_DISK_CACHE = "1";
       __GL_SHADER_DISK_CACHE_PATH = "/tmp/gl_cache";
-
-      # NVIDIA Optimus offloading
-      __NV_PRIME_RENDER_OFFLOAD = "1";
-      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      __GL_SYNC_TO_VBLANK = "1";
 
       # Steam optimizations
       STEAM_RUNTIME_HEAVY = "1";
       STEAM_FRAME_FORCE_CLOSE = "1";
 
-      # Vulkan optimizations (auto-detected for NVIDIA/Intel hybrid)
+      # Vulkan optimizations for NVIDIA
       DXVK_HUD = "fps,memory,gpuload";
       DXVK_ASYNC = "1";
       VKD3D_CONFIG = "dxr11";
