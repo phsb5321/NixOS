@@ -63,9 +63,9 @@
     enable = true;
     environment = "gnome";
 
-    # Re-enable Wayland with custom gnome-session wrapper fix
+    # Use X11 for now to troubleshoot graphics issues
     displayManager = {
-      wayland = true;
+      wayland = false;
       autoSuspend = true;
     };
 
@@ -98,8 +98,8 @@
     };
   };
 
-  # Use the GNOME Wayland session with fixed wrapper
-  services.displayManager.defaultSession = lib.mkForce "gnome";
+  # Use the GNOME X11 session since Wayland is disabled
+  services.displayManager.defaultSession = lib.mkForce "gnome-xorg";
 
   # Common networking configuration
   modules.networking = {
