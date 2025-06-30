@@ -22,8 +22,9 @@ in {
         desktopManager.gnome.enable = true;
       };
 
-      # Ensure proper session packages for GDM
-      services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
+      # Display manager with Wayland support
+      services.gnome.core-shell.enable = true;
+      services.gnome.core-os-services.enable = true;
 
       # Modern audio system optimized for Wayland
       security.rtkit.enable = true;
@@ -32,14 +33,12 @@ in {
         alsa.enable = true;
         alsa.support32Bit = true;
         pulse.enable = true;
-        wireplumber.enable = true; # Modern session manager
+        wireplumber.enable = true;
       };
 
       # Essential GNOME services (streamlined)
       services.gnome = {
         gnome-keyring.enable = true;
-        core-shell.enable = true;
-        core-os-services.enable = true;
         gnome-settings-daemon.enable = true;
         evolution-data-server.enable = true;
         glib-networking.enable = true;
@@ -50,14 +49,13 @@ in {
       # Additional required services
       services.geoclue2.enable = true;
 
-      # Essential system environment variables with GSK_RENDERER fix
+      # Essential system environment variables with graphics fixes
       environment.sessionVariables = {
-        # Fix for GNOME white window issue in NixOS 25.05
+        # Fix for GNOME rendering issues in NixOS 25.05
         GSK_RENDERER = "opengl";
-        # Modern theming
+        # Unified cursor configuration
         XCURSOR_THEME = "Bibata-Modern-Classic";
         XCURSOR_SIZE = "24";
-        GTK_THEME = "Orchis-Dark-Compact";
         # Wayland optimization
         NIXOS_OZONE_WL = "1";
         GDK_BACKEND = "wayland,x11";
@@ -65,42 +63,28 @@ in {
         QT_QPA_PLATFORM = "wayland;xcb";
       };
 
-      # Enable desktop fonts
-      modules.desktop.fonts.enable = true;
-
-      # Consolidated and optimized package list
+      # Streamlined package list - only essentials
       environment.systemPackages = with pkgs; [
-        # Essential GNOME packages
+        # Core GNOME tools
         gnome-tweaks
         gnome-extension-manager
         dconf-editor
 
-        # Core GNOME extensions (curated set)
+        # Essential GNOME extensions
         gnomeExtensions.dash-to-dock
-        gnomeExtensions.blur-my-shell
         gnomeExtensions.user-themes
-        gnomeExtensions.clipboard-indicator
         gnomeExtensions.caffeine
-        gnomeExtensions.gsconnect
-        gnomeExtensions.just-perfection
 
-        # Unified theme packages (no duplicates)
-        orchis-theme
-        tela-icon-theme
+        # Unified cursor theme
         bibata-cursors
 
-        # Essential theme dependencies only
+        # Essential dependencies
         libadwaita
         adw-gtk3
         gsettings-desktop-schemas
-
-        # Modern fonts
-        cantarell-fonts
-        noto-fonts
-        noto-fonts-emoji
       ];
 
-      # Exclude unwanted GNOME packages to reduce bloat
+      # Remove unwanted GNOME packages
       environment.gnome.excludePackages = with pkgs; [
         gnome-tour
         epiphany
@@ -112,6 +96,8 @@ in {
         simple-scan
         totem
         cheese
+        gnome-contacts
+        gnome-calendar
       ];
 
       # Modern XDG portal configuration
@@ -121,11 +107,9 @@ in {
         config.gnome.default = ["gnome"];
       };
 
-      # System-wide GNOME settings with modern defaults
+      # Minimal system-wide GNOME settings
       services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
         [org.gnome.desktop.interface]
-        gtk-theme='Orchis-Dark-Compact'
-        icon-theme='Tela-dark'
         cursor-theme='Bibata-Modern-Classic'
         cursor-size=24
         color-scheme='prefer-dark'
@@ -136,7 +120,7 @@ in {
         button-layout='appmenu:minimize,maximize,close'
 
         [org.gnome.shell]
-        enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'clipboard-indicator@tudmotu.com', 'gsconnect@andyholmes.github.io', 'caffeine@patapon.info', 'just-perfection-desktop@just-perfection']
+        enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'caffeine@patapon.info']
 
         [org.gnome.shell.extensions.dash-to-dock]
         dock-position='BOTTOM'
@@ -154,19 +138,20 @@ in {
       services.upower.enable = true;
       programs.dconf.enable = true;
 
-      # Streamlined Home Manager configuration
+      # Simplified Home Manager configuration
       home-manager.users.notroot = {
-        # Modern GTK configuration
+        # Unified cursor theme configuration
+        home.pointerCursor = {
+          gtk.enable = true;
+          x11.enable = true;
+          name = "Bibata-Modern-Classic";
+          size = 24;
+          package = pkgs.bibata-cursors;
+        };
+
+        # Minimal GTK configuration
         gtk = {
           enable = true;
-          theme = {
-            name = "Orchis-Dark-Compact";
-            package = pkgs.orchis-theme;
-          };
-          iconTheme = {
-            name = "Tela-dark";
-            package = pkgs.tela-icon-theme;
-          };
           cursorTheme = {
             name = "Bibata-Modern-Classic";
             package = pkgs.bibata-cursors;
@@ -179,8 +164,6 @@ in {
         # Essential DConf settings
         dconf.settings = {
           "org/gnome/desktop/interface" = {
-            gtk-theme = "Orchis-Dark-Compact";
-            icon-theme = "Tela-dark";
             cursor-theme = "Bibata-Modern-Classic";
             cursor-size = 24;
             color-scheme = "prefer-dark";
@@ -193,20 +176,13 @@ in {
               "org.gnome.Nautilus.desktop"
               "org.gnome.Console.desktop"
               "firefox.desktop"
+              "ghostty.desktop"
             ];
             enabled-extensions = [
               "user-theme@gnome-shell-extensions.gcampax.github.com"
               "dash-to-dock@micxgx.gmail.com"
-              "blur-my-shell@aunetx"
-              "clipboard-indicator@tudmotu.com"
-              "gsconnect@andyholmes.github.io"
               "caffeine@patapon.info"
-              "just-perfection-desktop@just-perfection"
             ];
-          };
-
-          "org/gnome/shell/extensions/user-theme" = {
-            name = "Orchis-Dark-Compact";
           };
 
           "org/gnome/shell/extensions/dash-to-dock" = {
@@ -224,7 +200,6 @@ in {
 
         # Environment variables for consistent theming
         home.sessionVariables = {
-          GTK_THEME = "Orchis-Dark-Compact";
           XCURSOR_THEME = "Bibata-Modern-Classic";
           XCURSOR_SIZE = "24";
           GSK_RENDERER = "opengl"; # Critical fix for NixOS 25.05
