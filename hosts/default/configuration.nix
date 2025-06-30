@@ -82,18 +82,12 @@
   # Explicitly configure AMD drivers
   services.xserver.videoDrivers = ["amdgpu"];
 
-  # Enhanced Wayland/AMD graphics support for NixOS 25.05
+  # AMD-specific optimizations (let GNOME module handle generic Wayland vars)
   environment.sessionVariables = {
-    # AMD-specific optimizations
+    # AMD-specific optimizations only
     AMD_VULKAN_ICD = "RADV";
     VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
     VDPAU_DRIVER = "radeonsi";
-
-    # Wayland optimizations
-    NIXOS_OZONE_WL = "1";
-    MOZ_ENABLE_WAYLAND = "1";
-    QT_QPA_PLATFORM = lib.mkForce "wayland;xcb";
-    GDK_BACKEND = "wayland,x11";
 
     # Electron/Chromium apps (like Bruno) Wayland fixes
     ELECTRON_OZONE_PLATFORM_HINT = "wayland";
@@ -110,7 +104,7 @@
   };
 
   # Explicitly disable conflicting display managers
-  services.xserver.displayManager.sddm.enable = lib.mkForce false;
+  services.displayManager.sddm.enable = lib.mkForce false;
 
   # Additional networking overrides if needed
   networking.networkmanager.dns = lib.mkForce "default";

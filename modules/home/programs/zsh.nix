@@ -48,6 +48,8 @@ in {
         if [[ -n "$SSH_CONNECTION" ]]; then
           # Use bash for SSH sessions to ensure stability
           export SHELL="${pkgs.bash}/bin/bash"
+          # Override TERM for SSH compatibility
+          export TERM="xterm-256color"
         else
           # Set explicit shell path for local sessions
           export SHELL="/etc/profiles/per-user/notroot/bin/zsh"
@@ -145,11 +147,12 @@ in {
         top = "btop";
 
         # NixOS system management aliases
-        nixswitch = "$HOME/NixOS/user-scripts/nixswitch.sh";
+        nixswitch = "$HOME/NixOS/user-scripts/nixswitch.sh default";
         nixs = "$HOME/NixOS/user-scripts/nixswitch.sh"; # Short alias
         nix-shell-select = "$HOME/NixOS/user-scripts/nix-shell-selector.sh";
         textractor = "$HOME/NixOS/user-scripts/textractor.sh";
         wayland-diag = "$HOME/NixOS/user-scripts/wayland-diagnostic.sh";
+        termfix = "$HOME/NixOS/user-scripts/terminal-fix.sh";
 
         # Quick navigation
         ".." = "cd ..";
@@ -179,7 +182,7 @@ in {
 
       oh-my-zsh = {
         enable = true;
-        plugins = ["git" "sudo" "command-not-found"];
+        plugins = ["git" "command-not-found"];
       };
 
       envExtra = ''

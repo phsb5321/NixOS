@@ -239,29 +239,15 @@
     login.enableGnomeKeyring = true;
   };
 
-  # Laptop-specific environment configuration for Intel/Wayland on NixOS 25.05
+  # Laptop-specific environment configuration (Intel/NVIDIA specific only)
   environment = {
     sessionVariables = {
       LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
       LIBVA_DRIVER_NAME = "iHD"; # Intel VAAPI driver (modern)
       SHELL = "${pkgs.zsh}/bin/zsh";
 
-      # Force Wayland for all applications
-      WAYLAND_DISPLAY = "wayland-0";
-      XDG_SESSION_TYPE = "wayland";
-
-      # Wayland support for Intel graphics
-      # NIXOS_OZONE_WL = "1"; # Disabled in favor of VS Code overlay
-      MOZ_ENABLE_WAYLAND = "1";
-
-      # Override desktop coordinator settings for pure Wayland
-      QT_QPA_PLATFORM = lib.mkForce "wayland"; # No X11 fallback
-      GDK_BACKEND = lib.mkForce "wayland"; # No X11 fallback
+      # Force applications to use specific backend for Intel graphics
       VDPAU_DRIVER = "va_gl";
-
-      # Force applications to use Wayland
-      SDL_VIDEODRIVER = "wayland";
-      CLUTTER_BACKEND = "wayland";
 
       # Scaling settings
       GDK_SCALE = "1";
@@ -284,11 +270,6 @@
       DXVK_HUD = "fps,memory,gpuload";
       DXVK_ASYNC = "1";
       VKD3D_CONFIG = "dxr11";
-
-      # Electron/VS Code Wayland configuration to fix warnings
-      # ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Handled by VS Code overlay
-      # ELECTRON_ENABLE_WAYLAND = "1"; # Handled by VS Code overlay
-      # ELECTRON_DISABLE_SANDBOX = "0"; # Handled by VS Code overlay
     };
 
     systemPackages = with pkgs; [
