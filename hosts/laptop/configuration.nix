@@ -223,6 +223,14 @@
   # Configure X server video drivers - use NVIDIA as primary GPU
   services.xserver.videoDrivers = ["nvidia"];
 
+  # Fix GNOME Shell timeout by increasing service timeout
+  systemd.services."org.gnome.Shell@x11" = {
+    serviceConfig = {
+      TimeoutStartSec = 60; # Increase timeout from default 30s to 60s
+      TimeoutStopSec = 30;
+    };
+  };
+
   # Wayland-first configuration with X server for compatibility
   # X server enables XWayland automatically
   # GDM and GNOME will prefer Wayland but support X11 apps through XWayland
@@ -384,4 +392,33 @@
       });
     })
   ];
+
+  # Fix GNOME session registration issues
+  services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
+
+  # Ensure proper GNOME session configuration
+  services.gnome.core-shell.enable = true;
+  services.gnome.core-os-services.enable = true;
+  services.gnome.core-apps.enable = true;
+
+  # Fonts configuration
+  fonts = {
+    enableDefaultPackages = true;
+    packages = with pkgs; [
+      nerd-fonts.jetbrains-mono
+      cantarell-fonts
+      dejavu_fonts
+      source-sans-pro
+      source-serif-pro
+      ubuntu_font_family
+    ];
+    fontconfig = {
+      enable = true;
+      defaultFonts = {
+        serif = ["Source Serif Pro" "DejaVu Serif"];
+        sansSerif = ["Source Sans Pro" "DejaVu Sans"];
+        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
+      };
+    };
+  };
 }
