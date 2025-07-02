@@ -127,6 +127,15 @@ in {
           bleachbit
           # PDF viewer (modern Qt 6 version)
           kdePackages.okular
+          
+          # Font packages to fix UI cramping issues
+          corefonts # Microsoft Core Fonts
+          vistafonts # Microsoft Vista fonts
+          cantarell-fonts # GNOME default fonts
+          liberation_ttf # Microsoft font alternatives
+          noto-fonts # Google Noto fonts
+          noto-fonts-cjk-sans # CJK character support
+          noto-fonts-emoji # Emoji support
         ];
         description = "List of utility packages to install";
       };
