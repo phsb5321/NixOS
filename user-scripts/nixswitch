@@ -357,11 +357,27 @@ get_commit_message() {
 git_add_commit_push() {
   local host="$1"
 
-  info "Starting git workflow..."
+  info "Starting post-rebuild git workflow..."
 
-  # Check if we have changes to commit
-  if ! check_git_status; then
-    info "No changes to commit"
+  # Check for uncommitted changes first
+  local has_uncommitted_changes=false
+  if ! git -C "$FLAKE_DIR" diff --quiet || ! git -C "$FLAKE_DIR" diff --cached --quiet; then
+    has_uncommitted_changes=true
+  fi
+
+  # Check if we have unpushed commits
+  local has_unpushed_commits=false
+  if git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
+    local unpushed_count
+    unpushed_count=$(git -C "$FLAKE_DIR" rev-list --count origin..HEAD 2>/dev/null || echo "0")
+    if [[ "$unpushed_count" -gt 0 ]]; then
+      has_unpushed_commits=true
+    fi
+  fi
+
+  # If no uncommitted changes and no unpushed commits, nothing to do
+  if [[ "$has_uncommitted_changes" == "false" && "$has_unpushed_commits" == "false" ]]; then
+    info "No changes to commit or push"
     return 0
   fi
 
@@ -372,66 +388,74 @@ git_add_commit_push() {
     "🔄 Post-Rebuild Git Workflow"
   echo
 
-  # Ask if user wants to commit changes
-  if ! gum confirm "Commit and push changes after successful rebuild?"; then
-    info "Skipping git operations"
-    return 0
+  # Handle uncommitted changes if any
+  if [[ "$has_uncommitted_changes" == "true" ]]; then
+    # Show what will be added
+    gum style --foreground 99 "📋 New files to be committed:"
+    git -C "$FLAKE_DIR" status --porcelain | head -10
+    if [[ $(git -C "$FLAKE_DIR" status --porcelain | wc -l) -gt 10 ]]; then
+      info "... and $(($(git -C "$FLAKE_DIR" status --porcelain | wc -l) - 10)) more files"
+    fi
+    echo
+
+    if gum confirm "Commit new changes from rebuild?"; then
+      # Git add
+      if ! gum spin --spinner dot --title "Adding files..." -- \
+        git -C "$FLAKE_DIR" add -A; then
+        error "Failed to add files to git"
+        return 1
+      fi
+
+      # Get commit message
+      local commit_message
+      commit_message=$(get_commit_message)
+
+      # Git commit
+      if ! gum spin --spinner dot --title "Creating commit..." -- \
+        git -C "$FLAKE_DIR" commit -m "$commit_message"; then
+        error "Failed to commit changes"
+        return 1
+      fi
+
+      success "New changes committed successfully"
+      has_unpushed_commits=true # Now we definitely have something to push
+    else
+      info "Skipping commit of new changes"
+    fi
   fi
 
-  # Show what will be added
-  gum style --foreground 99 "📋 Files to be added:"
-  git -C "$FLAKE_DIR" status --porcelain | head -10
-  if [[ $(git -C "$FLAKE_DIR" status --porcelain | wc -l) -gt 10 ]]; then
-    info "... and $(($(git -C "$FLAKE_DIR" status --porcelain | wc -l) - 10)) more files"
-  fi
-  echo
+  # Handle pushing if we have unpushed commits
+  if [[ "$has_unpushed_commits" == "true" ]]; then
+    if ! git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
+      warning "No remote repository configured"
+      info "Commits created locally only"
+      return 0
+    fi
 
-  # Final confirmation
-  if ! gum confirm "Proceed with git add, commit, and push?"; then
-    info "Git operations cancelled"
-    return 0
-  fi
+    # Show unpushed commits
+    local unpushed_count
+    unpushed_count=$(git -C "$FLAKE_DIR" rev-list --count origin..HEAD 2>/dev/null || echo "0")
 
-  # Git add
-  info "Adding changes to git..."
-  if gum spin --spinner dot --title "Adding files..." -- \
-    git -C "$FLAKE_DIR" add -A; then
-    success "Files added to git"
-  else
-    error "Failed to add files to git"
-    return 1
-  fi
+    echo
+    gum style --foreground 99 "📤 Ready to push $unpushed_count commit(s) to remote:"
+    git -C "$FLAKE_DIR" log --oneline origin..HEAD | head -5
+    if [[ "$unpushed_count" -gt 5 ]]; then
+      info "... and $(($unpushed_count - 5)) more commits"
+    fi
+    echo
 
-  # Get commit message
-  local commit_message
-  commit_message=$(get_commit_message)
-
-  # Git commit
-  info "Committing changes..."
-  if gum spin --spinner dot --title "Creating commit..." -- \
-    git -C "$FLAKE_DIR" commit -m "$commit_message"; then
-    success "Changes committed successfully"
-  else
-    error "Failed to commit changes"
-    return 1
-  fi
-
-  # Check if we have a remote
-  if ! git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
-    warning "No remote repository configured"
-    info "Commit created locally only"
-    return 0
-  fi
-
-  # Git push
-  info "Pushing to remote repository..."
-  if gum spin --spinner dot --title "Pushing to remote..." -- \
-    git -C "$FLAKE_DIR" push; then
-    success "Changes pushed to remote repository"
-  else
-    error "Failed to push to remote repository"
-    warning "Changes are committed locally but not pushed"
-    return 1
+    if gum confirm "Push all commits to remote repository?"; then
+      if gum spin --spinner dot --title "Pushing to remote..." -- \
+        git -C "$FLAKE_DIR" push; then
+        success "All commits pushed to remote repository"
+      else
+        error "Failed to push to remote repository"
+        warning "Commits are saved locally but not pushed"
+        return 1
+      fi
+    else
+      info "Commits saved locally only"
+    fi
   fi
 
   # Show final git status
@@ -527,22 +551,8 @@ commit_current_changes() {
     return 1
   fi
 
-  # Check if we have a remote and offer to push
-  if git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
-    if gum confirm "Push to remote repository?"; then
-      if gum spin --spinner dot --title "Pushing to remote..." -- \
-        git -C "$FLAKE_DIR" push; then
-        success "Changes pushed to remote repository"
-      else
-        warning "Failed to push to remote repository"
-        info "Changes are committed locally"
-      fi
-    else
-      info "Changes committed locally only"
-    fi
-  else
-    info "Changes committed locally (no remote configured)"
-  fi
+  # For pre-rebuild commits, we only commit locally - never push
+  info "Changes committed locally (push will happen after successful rebuild)"
 
   return 0
 }
