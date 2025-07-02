@@ -33,38 +33,63 @@ in {
       packages = mkOption {
         type = types.listOf types.package;
         default = with pkgs; [
-          # Use VSCode with essential extensions instead of problematic code-cursor
-          (vscode-with-extensions.override {
-            vscodeExtensions = with vscode-extensions; [
-              # AI-powered coding assistance (Cursor alternative)
-              github.copilot
-              github.copilot-chat
+          # Code editors (VSCode manages its own extensions)
+          vscode
+          code-cursor
 
-              # Essential development extensions
-              ms-python.python
-              rust-lang.rust-analyzer
-              ms-vscode.cpptools
-              golang.go
-              redhat.vscode-yaml
+          # API testing and development
+          bruno # Open-source API client (Postman alternative)
+          bruno-cli # Bruno command-line interface
 
-              # Git and collaboration
-              eamodio.gitlens
+          # Language runtimes and package managers
+          nodejs # Node.js runtime
+          python3 # Python 3 interpreter
+          rustc # Rust compiler
+          cargo # Rust package manager
+          go # Go programming language
+          openjdk # OpenJDK Java runtime
 
-              # UI enhancements
-              pkief.material-icon-theme
+          # Development tools and compilers
+          android-tools # Android development tools
+          llvm # LLVM compiler infrastructure
+          clang # C/C++ compiler
+          gcc # GNU Compiler Collection
+          gdb # GNU Debugger
+          cmake # Cross-platform build system
+          ninja # Small build system with focus on speed
+          pkg-config # Package configuration tool
 
-              # Productivity
-              esbenp.prettier-vscode
-            ];
-          })
-          android-tools
-          llvm
-          clang
-          # API testing and documentation
-          bruno
-          # Modern typesetting system
-          typst
-          code-cursor # Temporarily disabled due to download issues
+          # Version control and collaboration
+          gh # GitHub CLI
+          glab # GitLab CLI
+          lazygit # Simple terminal UI for git commands
+
+          # Modern development utilities
+          typst # Modern typesetting system
+          just # Command runner (make alternative)
+          direnv # Environment variable manager per directory
+          httpie # User-friendly CLI HTTP client
+          jq # Command-line JSON processor
+          yq # YAML processor (jq for YAML)
+
+          # Database tools
+          sqlite # Lightweight database
+          sqlite-utils # SQLite command-line utilities
+
+          # Container and cloud tools
+          docker-compose # Define and run multi-container applications
+          kubectl # Kubernetes command-line tool
+
+          # Performance and debugging
+          valgrind # Memory debugging tools
+          strace # System call tracer
+          ltrace # Library call tracer
+          perf-tools # Performance analysis tools
+
+          # Network tools
+          nmap # Network scanner
+          wireshark # Network protocol analyzer
+          tcpdump # Network packet analyzer
         ];
         description = "List of development packages to install";
       };
