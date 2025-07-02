@@ -135,7 +135,7 @@ in {
         # Unified cursor theme across all environments
         XCURSOR_THEME = "Adwaita";
         XCURSOR_SIZE = "24";
-        
+
         # Use default Adwaita theme with dark support
         GTK_THEME = mkIf cfg.theming.preferDark "Adwaita:dark";
 
@@ -194,7 +194,7 @@ in {
         gnomeExtensions.clipboard-indicator # Clipboard manager
         gnomeExtensions.night-theme-switcher # Automatic dark/light theme switching
         gnomeExtensions.gsconnect # Phone integration (KDE Connect)
-        
+
         # Workspace and window management
         gnomeExtensions.workspace-indicator # Better workspace indicator
         gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
@@ -328,7 +328,7 @@ in {
                   <string>DejaVu Sans</string>
                 </edit>
               </match>
-              
+
               <!-- Ensure proper font sizes -->
               <match target="font">
                 <edit name="antialias" mode="assign"><bool>true</bool></edit>
@@ -336,7 +336,7 @@ in {
                 <edit name="hintstyle" mode="assign"><const>hintslight</const></edit>
                 <edit name="rgba" mode="assign"><const>rgb</const></edit>
               </match>
-              
+
               <!-- Disable bitmap fonts that can cause scaling issues -->
               <selectfont>
                 <rejectfont>
