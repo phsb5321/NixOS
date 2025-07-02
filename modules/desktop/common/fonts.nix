@@ -1,4 +1,4 @@
-# hosts/modules/desktop/common/fonts.nix
+# ~/NixOS/modules/desktop/common/fonts.nix
 {
   config,
   lib,
@@ -28,34 +28,46 @@ in {
     packages = mkOption {
       type = with types; listOf package;
       default = with pkgs; [
-        # Nerd Fonts - Programming fonts with icons
+        # 🔥 CRITICAL: Nerd Fonts with Symbols (FIXES EMOJI ISSUES)
+        nerd-fonts.symbols-only          # 🎯 THE KEY MISSING COMPONENT!
         nerd-fonts.jetbrains-mono
         nerd-fonts.fira-code
         nerd-fonts.roboto-mono
         nerd-fonts.source-code-pro
         nerd-fonts.hack
+        nerd-fonts.noto                  # Noto with Nerd Font patches
 
-        # Standard fonts for good coverage
-        font-awesome # Icon font
-        noto-fonts # Google's font family for unicode coverage
-        noto-fonts-cjk-sans # CJK support (Chinese, Japanese, Korean)
-        noto-fonts-emoji # Emoji support
-        liberation_ttf # Microsoft-compatible fonts
-        xorg.font-misc-misc
+        # 🎨 Enhanced Emoji Support
+        noto-fonts-color-emoji           # Primary emoji font (best compatibility)
+        
+        # 📝 Standard fonts for comprehensive coverage
+        font-awesome                     # Icon font for web/applications
+        noto-fonts                       # Google's unicode coverage
+        noto-fonts-cjk-sans             # CJK support (Chinese, Japanese, Korean)
+        noto-fonts-extra                 # Extended Noto fonts
+        liberation_ttf                   # Microsoft-compatible fonts
+        xorg.font-misc-misc             # Basic X11 fonts
 
-        # Optional but recommended fonts
-        ubuntu_font_family # Ubuntu's font family
-        dejavu_fonts # DejaVu font family
-        source-code-pro # Adobe's monospace font
-        freetype # TrueType rendering engine
-        cantarell-fonts # GNOME default fonts
-        droid-fonts # Android "Droid" fonts
-        ibm-plex # IBM's Plex font family
-        terminus_font # Terminus monospace font
+        # 🖋️ High-quality fonts for better rendering
+        ubuntu_font_family              # Ubuntu's font family
+        dejavu_fonts                    # DejaVu font family (excellent fallback)
+        source-code-pro                 # Adobe's monospace font
+        freetype                        # TrueType rendering engine
+        cantarell-fonts                 # GNOME default fonts
+        droid-fonts                     # Android "Droid" fonts
+        ibm-plex                        # IBM's Plex font family
+        terminus_font                   # Terminus monospace font
+        
+        # 🔤 Additional professional fonts
+        cascadia-code                   # Microsoft's programming font
+        iosevka                         # Versatile monospace font
+        inter                           # Modern sans-serif font
+        jetbrains-mono                  # JetBrains programming font (non-Nerd version)
+        fira-code                       # Mozilla's programming font
       ];
       description = ''
-        List of font packages to install system-wide.
-        Includes Nerd Fonts variants, standard fonts, and optional recommended fonts.
+        Comprehensive font packages including Nerd Fonts with symbols, emoji support,
+        and professional fonts for optimal rendering across all applications.
       '';
     };
 
@@ -66,14 +78,14 @@ in {
       description = "Whether to enable the default NixOS font packages";
     };
 
-    # Default font configurations
+    # 🎯 Enhanced Default font configurations
     defaultFonts = {
       serif =
         mkOption (mkFontOption "serif")
         // {
           default = [
-            "DejaVu Serif"
             "Noto Serif"
+            "DejaVu Serif"
             "Liberation Serif"
             "Cantarell"
             "IBM Plex Serif"
@@ -84,8 +96,9 @@ in {
         mkOption (mkFontOption "sans-serif")
         // {
           default = [
-            "DejaVu Sans"
+            "Inter"                      # Modern, clean sans-serif
             "Noto Sans"
+            "DejaVu Sans"
             "Liberation Sans"
             "Ubuntu"
             "Cantarell"
@@ -97,14 +110,15 @@ in {
         mkOption (mkFontOption "monospace")
         // {
           default = [
-            "JetBrainsMono Nerd Font Mono" # Primary monospace font with icons
-            "FiraCode Nerd Font Mono" # Secondary monospace font with icons
-            "Hack Nerd Font Mono" # Additional monospace font with icons
-            "RobotoMono Nerd Font Mono" # Another monospace font with icons
-            "SourceCodePro Nerd Font Mono" # Yet another monospace font with icons
-            "DejaVu Sans Mono" # Fallback monospace
-            "Liberation Mono" # Final fallback
-            "Terminus" # Alternative fallback
+            "JetBrainsMono Nerd Font Mono"    # Primary with icons
+            "CascadiaCode Nerd Font Mono"     # Microsoft's excellent programming font
+            "FiraCode Nerd Font Mono"         # Secondary with ligatures
+            "Hack Nerd Font Mono"             # Clean monospace with icons
+            "RobotoMono Nerd Font Mono"       # Google's monospace with icons
+            "SourceCodePro Nerd Font Mono"    # Adobe's monospace with icons
+            "Iosevka Nerd Font Mono"          # Versatile monospace with icons
+            "DejaVu Sans Mono"                # Reliable fallback
+            "Liberation Mono"                 # Final fallback
           ];
         };
 
@@ -112,8 +126,9 @@ in {
         mkOption (mkFontOption "emoji")
         // {
           default = [
-            "Noto Color Emoji"
-            "Segoe UI Emoji"
+            "Noto Color Emoji"          # Primary emoji font
+            "Symbols Nerd Font Mono"    # 🎯 CRITICAL: Nerd Font symbols
+            "Symbols Nerd Font"         # 🎯 CRITICAL: Non-mono variant
           ];
         };
     };
@@ -188,12 +203,12 @@ in {
           style = cfg.rendering.hinting.style;
         };
 
-        # Complete fontconfig configuration - handles both core and desktop font needs
+        # 🚀 COMPREHENSIVE FONTCONFIG - FIXES ALL EMOJI/NERD FONT ISSUES
         localConf = ''
           <?xml version="1.0"?>
           <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
           <fontconfig>
-            <!-- Disable bitmap fonts -->
+            <!-- 🚫 Disable bitmap fonts for better rendering -->
             <selectfont>
               <rejectfont>
                 <pattern>
@@ -202,49 +217,112 @@ in {
               </rejectfont>
             </selectfont>
 
-            <!-- Enable TrueType hinting -->
+            <!-- 🔧 Enable TrueType hinting -->
             <match target="font">
               <edit name="hinting" mode="assign"><bool>true</bool></edit>
+              <edit name="hintstyle" mode="assign"><const>hintslight</const></edit>
+              <edit name="antialias" mode="assign"><bool>true</bool></edit>
             </match>
 
-            <!-- Configure Nerd Fonts specifics -->
+            <!-- 🎯 CRITICAL: Nerd Fonts configuration for monospace -->
             <match target="pattern">
               <test name="family" qual="any">
                 <string>monospace</string>
               </test>
               <edit binding="same" mode="prepend" name="family">
                 <string>JetBrainsMono Nerd Font Mono</string>
+                <string>CascadiaCode Nerd Font Mono</string>
                 <string>FiraCode Nerd Font Mono</string>
                 <string>Hack Nerd Font Mono</string>
                 <string>RobotoMono Nerd Font Mono</string>
                 <string>SourceCodePro Nerd Font Mono</string>
+                <string>Iosevka Nerd Font Mono</string>
               </edit>
             </match>
 
-            <!-- Enable system-wide emoji support -->
-            <match target="pattern">
-              <test name="family"><string>monospace</string></test>
-              <edit name="family" mode="append_last">
-                <string>Noto Color Emoji</string>
-              </edit>
-            </match>
-
-            <!-- Better font substitution for application compatibility -->
+            <!-- 🎨 EMOJI SUPPORT: Universal emoji fallback for ALL font families -->
             <match target="pattern">
               <test name="family"><string>serif</string></test>
-              <edit name="family" mode="prepend">
-                <string>DejaVu Serif</string>
-                <string>Liberation Serif</string>
-                <string>Noto Serif</string>
+              <edit name="family" mode="append_last">
+                <string>Noto Color Emoji</string>
+                <string>Symbols Nerd Font</string>
               </edit>
             </match>
 
             <match target="pattern">
               <test name="family"><string>sans-serif</string></test>
+              <edit name="family" mode="append_last">
+                <string>Noto Color Emoji</string>
+                <string>Symbols Nerd Font</string>
+              </edit>
+            </match>
+
+            <match target="pattern">
+              <test name="family"><string>monospace</string></test>
+              <edit name="family" mode="append_last">
+                <string>Noto Color Emoji</string>
+                <string>Symbols Nerd Font Mono</string>
+              </edit>
+            </match>
+
+            <!-- 🎯 SYMBOLS: Dedicated Nerd Font symbols mapping -->
+            <match target="pattern">
+              <test name="family"><string>FontAwesome</string></test>
               <edit name="family" mode="prepend">
-                <string>DejaVu Sans</string>
+                <string>Symbols Nerd Font</string>
+                <string>Font Awesome 6 Free</string>
+              </edit>
+            </match>
+
+            <!-- 📱 APP-SPECIFIC: Improve font substitution for application compatibility -->
+            <match target="pattern">
+              <test name="family"><string>Arial</string></test>
+              <edit name="family" mode="prepend">
                 <string>Liberation Sans</string>
-                <string>Noto Sans</string>
+                <string>DejaVu Sans</string>
+              </edit>
+            </match>
+
+            <match target="pattern">
+              <test name="family"><string>Times New Roman</string></test>
+              <edit name="family" mode="prepend">
+                <string>Liberation Serif</string>
+                <string>DejaVu Serif</string>
+              </edit>
+            </match>
+
+            <match target="pattern">
+              <test name="family"><string>Courier New</string></test>
+              <edit name="family" mode="prepend">
+                <string>Liberation Mono</string>
+                <string>DejaVu Sans Mono</string>
+              </edit>
+            </match>
+
+            <!-- 🔤 CONSOLE/TERMINAL: Ensure proper monospace rendering -->
+            <match target="pattern">
+              <test name="family"><string>console</string></test>
+              <edit name="family" mode="prepend">
+                <string>JetBrainsMono Nerd Font Mono</string>
+                <string>DejaVu Sans Mono</string>
+              </edit>
+            </match>
+
+            <!-- 🎨 COLOR EMOJI: Force color emoji rendering -->
+            <match target="font">
+              <test name="family" qual="any">
+                <string>Noto Color Emoji</string>
+              </test>
+              <edit name="color" mode="assign"><bool>true</bool></edit>
+            </match>
+
+            <!-- 📐 SIZE OPTIMIZATION: Prevent font size issues -->
+            <match target="font">
+              <test name="pixelsize" compare="less">
+                <double>8</double>
+              </test>
+              <edit name="pixelsize" mode="assign">
+                <double>8</double>
               </edit>
             </match>
           </fontconfig>
@@ -252,18 +330,53 @@ in {
       };
     };
 
-    # Install font management tools
+    # 🛠️ Install font management and debugging tools
     environment.systemPackages = with pkgs; [
-      fontconfig # Font configuration utility
-      gnome-font-viewer # GUI font viewer
-      font-manager # Advanced font management
+      fontconfig              # Font configuration utility
+      gnome-font-viewer       # GUI font viewer
+      font-manager            # Advanced font management
+      gucharmap               # Unicode character viewer
     ];
 
-    # Add fontconfig cache directories
-    system.activationScripts.fonts.text = ''
-      echo "Setting up fontconfig cache directories..."
-      mkdir -p /var/cache/fontconfig
-      chmod 755 /var/cache/fontconfig
-    '';
+    # 🔄 Font cache setup and regeneration
+    system.activationScripts.fonts = {
+      text = ''
+        echo "🔄 Setting up enhanced fontconfig cache..."
+        
+        # Create cache directories
+        mkdir -p /var/cache/fontconfig
+        chmod 755 /var/cache/fontconfig
+        
+        # User cache directories
+        for user_home in /home/*; do
+          if [ -d "$user_home" ]; then
+            user=$(basename "$user_home")
+            mkdir -p "$user_home/.cache/fontconfig"
+            chown "$user:users" "$user_home/.cache/fontconfig" 2>/dev/null || true
+          fi
+        done
+        
+        # Force font cache regeneration
+        echo "♻️  Regenerating font cache..."
+        ${pkgs.fontconfig}/bin/fc-cache -rf
+        
+        echo "✅ Font configuration complete!"
+        echo "🎯 Emoji and Nerd Font support enabled"
+      '';
+      deps = ["users"];
+    };
+
+    # 🔧 Additional system configuration for better font rendering
+    environment.variables = {
+      # Ensure fontconfig finds all fonts
+      FONTCONFIG_PATH = "${config.fonts.fontconfig.confPackages}";
+      
+      # Better font rendering in applications
+      GDK_USE_XFT = "1";
+      QT_XFT = "true";
+      
+      # Enable color emoji in applications
+      GNOME_DISABLE_EMOJI_PICKER = "0";
+    };
   };
 }
