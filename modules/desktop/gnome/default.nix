@@ -138,6 +138,12 @@ in {
         
         # Use default Adwaita theme with dark support
         GTK_THEME = mkIf cfg.theming.preferDark "Adwaita:dark";
+
+        # Font-related environment variables to fix UI cramping
+        GDK_SCALE = "1";
+        GDK_DPI_SCALE = "1";
+        QT_SCALE_FACTOR = "1";
+        QT_AUTO_SCREEN_SCALE_FACTOR = "0";
       };
 
       # Comprehensive GNOME package set with extensive extensions
@@ -165,14 +171,10 @@ in {
         # Multimedia
         celluloid # Modern video player
 
-<<<<<<< HEAD
-        # Essential GNOME extensions - Core functionality
-=======
         # Input method framework (fix for ibus-daemon missing)
         ibus
 
         # Essential GNOME extensions
->>>>>>> 543941522a6c5a5a9cf53a1132562a506568ef26
         gnomeExtensions.dash-to-dock
         gnomeExtensions.user-themes
         gnomeExtensions.just-perfection
@@ -273,6 +275,9 @@ in {
             "org/gnome/desktop/interface" = {
               cursor-theme = "Adwaita";
               cursor-size = mkInt32 24;
+              # Fix scaling issues on GDM
+              scaling-factor = mkUint32 1;
+              text-scaling-factor = 1.0;
               color-scheme =
                 if cfg.theming.preferDark
                 then "prefer-dark"
@@ -282,7 +287,7 @@ in {
         }
       ];
 
-      # Fonts configuration
+      # Fonts configuration - CRITICAL FIX for UI cramping
       fonts = {
         enableDefaultPackages = true;
         packages = with pkgs; [
@@ -291,14 +296,57 @@ in {
           source-sans-pro
           source-serif-pro
           ubuntu_font_family
+          # Add Microsoft fonts for better app compatibility
+          corefonts
+          vistafonts
         ];
         fontconfig = {
           enable = true;
-          defaultFonts = {
-            serif = ["Source Serif Pro" "DejaVu Serif"];
-            sansSerif = ["Source Sans Pro" "DejaVu Sans"];
-            monospace = ["DejaVu Sans Mono"];
+          # Critical font configuration to fix UI cramping
+          antialias = true;
+          subpixel.rgba = "rgb";
+          hinting = {
+            enable = true;
+            style = "slight";
+            autohint = false;
           };
+          defaultFonts = {
+            serif = ["Source Serif Pro" "DejaVu Serif" "Cantarell"];
+            sansSerif = ["Source Sans Pro" "DejaVu Sans" "Cantarell"];
+            monospace = ["DejaVu Sans Mono" "Source Code Pro"];
+          };
+          # Additional font configuration to prevent cramping
+          localConf = ''
+            <?xml version="1.0"?>
+            <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+            <fontconfig>
+              <!-- Fix for UI element cramping -->
+              <match target="pattern">
+                <test name="family"><string>sans-serif</string></test>
+                <edit name="family" mode="prepend" binding="strong">
+                  <string>Cantarell</string>
+                  <string>DejaVu Sans</string>
+                </edit>
+              </match>
+              
+              <!-- Ensure proper font sizes -->
+              <match target="font">
+                <edit name="antialias" mode="assign"><bool>true</bool></edit>
+                <edit name="hinting" mode="assign"><bool>true</bool></edit>
+                <edit name="hintstyle" mode="assign"><const>hintslight</const></edit>
+                <edit name="rgba" mode="assign"><const>rgb</const></edit>
+              </match>
+              
+              <!-- Disable bitmap fonts that can cause scaling issues -->
+              <selectfont>
+                <rejectfont>
+                  <pattern>
+                    <patelt name="scalable"><bool>false</bool></patelt>
+                  </pattern>
+                </rejectfont>
+              </selectfont>
+            </fontconfig>
+          '';
         };
       };
 
@@ -349,18 +397,24 @@ in {
 
         # Comprehensive DConf settings for the complete GNOME experience
         dconf.settings = {
-          # Interface settings with proper dark theme support
+          # Interface settings with proper dark theme support and FIXED FONT SIZES
           "org/gnome/desktop/interface" = {
             color-scheme =
               if cfg.theming.preferDark
               then "prefer-dark"
               else "default";
             cursor-theme = "Adwaita";
+            # CRITICAL FIX: Proper font configuration to prevent UI cramping
             font-name = "Cantarell 11";
             document-font-name = "Cantarell 11";
             monospace-font-name = "Source Code Pro 10";
+            # Font rendering settings to fix cramping
             font-antialiasing = "grayscale";
             font-hinting = "slight";
+            # Scaling settings to prevent cramping
+            scaling-factor = mkUint32 1;
+            text-scaling-factor = 1.0;
+            # UI behavior settings
             enable-hot-corners = false;
             show-battery-percentage = true;
             clock-show-weekday = true;
@@ -375,6 +429,7 @@ in {
             focus-mode = "click";
             auto-raise = false;
             raise-on-click = true;
+            # FIXED: Proper titlebar font to prevent cramping
             titlebar-font = "Cantarell Bold 11";
           };
 
@@ -383,6 +438,8 @@ in {
             workspaces-only-on-primary = true;
             center-new-windows = true;
             attach-modal-dialogs = true;
+            # Additional settings to fix scaling issues
+            experimental-features = [];
           };
 
           # Shell configuration with comprehensive extensions
@@ -656,9 +713,6 @@ in {
           # Critical graphics fix for NixOS 25.05
           GSK_RENDERER = "opengl";
 
-<<<<<<< HEAD
-          # Unified cursor consistency
-=======
           # Fix GNOME Shell timeout and startup issues
           GNOME_SHELL_SLOWDOWN_FACTOR = "1";
           GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
@@ -670,7 +724,6 @@ in {
           XMODIFIERS = "@im=ibus";
 
           # Cursor consistency
->>>>>>> 543941522a6c5a5a9cf53a1132562a506568ef26
           XCURSOR_THEME = "Adwaita";
           XCURSOR_SIZE = "24";
 
