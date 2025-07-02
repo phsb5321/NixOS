@@ -43,16 +43,11 @@
     flake-utils,
     ...
   } @ inputs: let
-    # System configuration
-    system = "x86_64-linux";
+    # Supported systems
+    supportedSystems = ["x86_64-linux" "aarch64-linux"];
 
-    # Get NixOS version dynamically
-    systemVersion = let
-      version = nixpkgs.lib.version;
-      versionParts = builtins.splitVersion version;
-      major = builtins.head versionParts;
-      minor = builtins.elemAt versionParts 1;
-    in "${major}.${minor}";
+    # Helper function to create package sets
+    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
     # Package configuration
     pkgsConfig = {
@@ -60,107 +55,183 @@
       allowUnfreePredicate = _: true;
     };
 
-    # Create package sets
-    pkgs = import nixpkgs {
-      inherit system;
-      config = pkgsConfig;
-    };
+    # Helper function to create a NixOS system
+    mkNixosSystem = {
+      system,
+      hostname,
+      configPath, # Path to the host configuration directory
+      nixpkgsInput ? nixpkgs, # Allow different nixpkgs versions per host
+      extraModules ? [],
+      extraSpecialArgs ? {},
+    }: let
+      # Get NixOS version dynamically from the input
+      systemVersion = let
+        version = nixpkgsInput.lib.version;
+        versionParts = builtins.splitVersion version;
+        major = builtins.head versionParts;
+        minor = builtins.elemAt versionParts 1;
+      in "${major}.${minor}";
 
-    pkgs-unstable = import nixpkgs-unstable {
-      inherit system;
-      config = pkgsConfig;
-    };
+      # Create package sets
+      pkgs = import nixpkgsInput {
+        inherit system;
+        config = pkgsConfig;
+      };
 
-    # Special args for modules
-    specialArgs = {
-      inherit inputs systemVersion system;
-      pkgs-unstable = pkgs-unstable;
-      stablePkgs = pkgs;
-      bleedPkgs = pkgs-unstable;
+      pkgs-unstable = import nixpkgs-unstable {
+        inherit system;
+        config = pkgsConfig;
+      };
+
+      # Common special args for all hosts
+      baseSpecialArgs =
+        {
+          inherit inputs systemVersion system hostname;
+          pkgs-unstable = pkgs-unstable;
+          stablePkgs = pkgs;
+          bleedPkgs = pkgs-unstable;
+        }
+        // extraSpecialArgs;
+    in
+      nixpkgsInput.lib.nixosSystem {
+        inherit system;
+        specialArgs = baseSpecialArgs;
+        modules =
+          [
+            # Host-specific configuration
+            ./hosts/${configPath}/configuration.nix
+
+            # Home Manager integration
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                extraSpecialArgs = baseSpecialArgs;
+              };
+            }
+
+            # Base system configuration
+            {
+              nixpkgs.config = pkgsConfig;
+
+              # Nix settings
+              nix = {
+                settings = {
+                  experimental-features = ["nix-command" "flakes"];
+                  auto-optimise-store = true;
+                };
+
+                gc = {
+                  automatic = true;
+                  dates = "weekly";
+                  options = nixpkgsInput.lib.mkDefault "--delete-older-than 7d";
+                };
+              };
+
+              # System version
+              system.stateVersion = systemVersion;
+
+              # Set hostname
+              networking.hostName = nixpkgsInput.lib.mkDefault hostname;
+            }
+          ]
+          ++ extraModules;
+      };
+
+    # Define all your hosts here
+    hosts = {
+      default = {
+        system = "x86_64-linux";
+        hostname = "nixos-desktop";
+        configPath = "default"; # Maps to hosts/default/
+        # Uses stable nixpkgs by default
+      };
+
+      laptop = {
+        system = "x86_64-linux";
+        hostname = "nixos-laptop";
+        configPath = "laptop"; # Maps to hosts/laptop/
+        # Uses stable nixpkgs by default
+      };
+
+      # Example: server using stable for reliability
+      # server = {
+      #   system = "x86_64-linux";
+      #   hostname = "nixos-server";
+      #   configPath = "server";
+      #   nixpkgsInput = nixpkgs;  # Explicitly stable
+      # };
+
+      # Example: development machine using unstable
+      # dev = {
+      #   system = "x86_64-linux";
+      #   hostname = "nixos-dev";
+      #   configPath = "dev";
+      #   nixpkgsInput = nixpkgs-unstable;  # Latest packages
+      # };
     };
   in {
-    # NixOS Configurations
-    nixosConfigurations = {
-      default = nixpkgs.lib.nixosSystem {
-        inherit system specialArgs;
-        modules = [
-          ./hosts/default/configuration.nix
+    # NixOS Configurations - Generated from hosts definition
+    nixosConfigurations =
+      nixpkgs.lib.mapAttrs (
+        name: hostConfig:
+          mkNixosSystem hostConfig
+      )
+      hosts;
 
-          # Home Manager integration
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              extraSpecialArgs = specialArgs;
-            };
-          }
+    # Formatter for each system
+    formatter = forAllSystems (
+      system:
+        (import nixpkgs {inherit system;}).nixpkgs-fmt
+    );
 
-          # Base system configuration
-          {
-            nixpkgs.config = pkgsConfig;
-
-            # Nix settings
-            nix = {
-              settings = {
-                experimental-features = ["nix-command" "flakes"];
-                auto-optimise-store = true;
-              };
-
-              gc = {
-                automatic = true;
-                dates = "weekly";
-                options = nixpkgs.lib.mkDefault "--delete-older-than 7d";
-              };
-            };
-
-            # System version
-            system.stateVersion = systemVersion;
-          }
+    # Development shells (useful for development)
+    devShells = forAllSystems (system: let
+      pkgs = import nixpkgs {
+        inherit system;
+        config = pkgsConfig;
+      };
+    in {
+      default = pkgs.mkShell {
+        name = "nixos-config";
+        buildInputs = with pkgs; [
+          nixpkgs-fmt
+          statix # Nix linter
+          deadnix # Dead code detection
         ];
       };
+    });
 
-      laptop = nixpkgs.lib.nixosSystem {
-        inherit system specialArgs;
-        modules = [
-          ./hosts/laptop/configuration.nix
-
-          # Home Manager integration
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              extraSpecialArgs = specialArgs;
-            };
-          }
-
-          # Base system configuration
-          {
-            nixpkgs.config = pkgsConfig;
-
-            # Nix settings
-            nix = {
-              settings = {
-                experimental-features = ["nix-command" "flakes"];
-                auto-optimise-store = true;
-              };
-
-              gc = {
-                automatic = true;
-                dates = "weekly";
-                options = nixpkgs.lib.mkDefault "--delete-older-than 7d";
-              };
-            };
-
-            # System version
-            system.stateVersion = systemVersion;
-          }
-        ];
+    # Helper scripts for deployment (optional)
+    packages = forAllSystems (system: let
+      pkgs = import nixpkgs {
+        inherit system;
+        config = pkgsConfig;
       };
-    };
+    in {
+      # Script to deploy to a specific host
+      deploy = pkgs.writeShellScriptBin "deploy" ''
+        set -e
+        HOST=''${1:-default}
 
-    # Formatter
-    formatter.${system} = pkgs.nixpkgs-fmt;
+        if [ -z "$HOST" ]; then
+          echo "Usage: $0 <hostname>"
+          echo "Available hosts: ${builtins.concatStringsSep " " (builtins.attrNames hosts)}"
+          exit 1
+        fi
+
+        echo "Deploying to $HOST..."
+        nixos-rebuild switch --flake .#$HOST --target-host $HOST --use-remote-sudo
+      '';
+
+      # Script to build without switching
+      build = pkgs.writeShellScriptBin "build" ''
+        set -e
+        HOST=''${1:-default}
+        echo "Building configuration for $HOST..."
+        nixos-rebuild build --flake .#$HOST
+      '';
+    });
   };
 }

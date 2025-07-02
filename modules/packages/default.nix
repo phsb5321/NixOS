@@ -127,7 +127,7 @@ in {
           bleachbit
           # PDF viewer (modern Qt 6 version)
           kdePackages.okular
-          
+
           # Font packages to fix UI cramping issues
           corefonts # Microsoft Core Fonts
           vistafonts # Microsoft Vista fonts
