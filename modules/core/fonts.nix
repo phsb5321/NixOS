@@ -16,6 +16,7 @@ in {
         # Nerd Fonts - Programming fonts with icons
         nerd-fonts.jetbrains-mono
         nerd-fonts.fira-code
+        nerd-fonts.symbols-only
 
         # Standard fonts for good coverage
         font-awesome
