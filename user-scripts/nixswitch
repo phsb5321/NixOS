@@ -86,7 +86,7 @@ auto_detect_host() {
   local hostname
   hostname=$(hostname)
 
-  info "Detecting host based on hostname: $hostname"
+  info "Detecting host based on hostname: $hostname" >&2
 
   case "$hostname" in
   *laptop* | *mobile* | nixos-laptop)

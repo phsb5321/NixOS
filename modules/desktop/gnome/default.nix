@@ -96,35 +96,50 @@ in {
       # 🚨 CRITICAL FIXES: Environment variables for rendering and interface issues
       environment.sessionVariables = {
         # 🎯 FIX ARTIFACTS: GSK renderer configuration to fix Gnome interface artifacts
-        GSK_RENDERER = "gl";  # Use stable GL renderer instead of problematic ngl
-        
+        GSK_RENDERER = "gl"; # Use stable GL renderer instead of problematic ngl
+
         # 🎯 FIX RENDERING: Additional rendering fixes for Gnome 47+
-        GDK_BACKEND = if cfg.displayManager.wayland then "wayland,x11" else "x11";
-        QT_QPA_PLATFORM = if cfg.displayManager.wayland then "wayland;xcb" else "xcb";
-        
+        GDK_BACKEND =
+          if cfg.displayManager.wayland
+          then "wayland,x11"
+          else "x11";
+        QT_QPA_PLATFORM =
+          if cfg.displayManager.wayland
+          then "wayland;xcb"
+          else "xcb";
+
         # 🎯 GNOME SHELL: Prevent crashes and improve stability
         GNOME_SHELL_SLOWDOWN_FACTOR = "1";
         GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
-        
+
         # 🎯 WAYLAND OPTIMIZATIONS: Better app compatibility
-        NIXOS_OZONE_WL = if cfg.displayManager.wayland then "1" else "0";
-        MOZ_ENABLE_WAYLAND = if cfg.displayManager.wayland then "1" else "0";
-        ELECTRON_OZONE_PLATFORM_HINT = if cfg.displayManager.wayland then "wayland" else "x11";
-        
+        NIXOS_OZONE_WL =
+          if cfg.displayManager.wayland
+          then "1"
+          else "0";
+        MOZ_ENABLE_WAYLAND =
+          if cfg.displayManager.wayland
+          then "1"
+          else "0";
+        ELECTRON_OZONE_PLATFORM_HINT =
+          if cfg.displayManager.wayland
+          then "wayland"
+          else "x11";
+
         # 🎯 CURSOR THEME: Unified cursor theme across all environments
         XCURSOR_THEME = "Adwaita";
         XCURSOR_SIZE = "24";
-        
+
         # 🎯 FONT RENDERING: Critical fixes for emoji and font display
         FONTCONFIG_FILE = "${pkgs.fontconfig.out}/etc/fonts/fonts.conf";
-        GNOME_DISABLE_EMOJI_PICKER = "0";  # Enable emoji picker
-        
+        GNOME_DISABLE_EMOJI_PICKER = "0"; # Enable emoji picker
+
         # 🎯 SCALING: Prevent UI cramping and ensure proper scaling
         GDK_SCALE = "1";
         GDK_DPI_SCALE = "1";
         QT_SCALE_FACTOR = "1";
         QT_AUTO_SCREEN_SCALE_FACTOR = "0";
-        
+
         # 🎯 INPUT METHODS: Better text input support
         GTK_IM_MODULE = "ibus";
         QT_IM_MODULE = "ibus";
@@ -158,12 +173,12 @@ in {
 
         # 🎯 CRITICAL: Input method framework (fix for ibus-daemon missing)
         ibus
-        ibus-engines.uniemoji  # Better emoji input
+        ibus-engines.uniemoji # Better emoji input
 
         # 🎯 FONT TOOLS: Essential for debugging font issues
         gnome-font-viewer
         font-manager
-        gucharmap  # Character map for emoji/symbols
+        gucharmap # Character map for emoji/symbols
 
         # Essential GNOME extensions
         gnomeExtensions.dash-to-dock
@@ -236,14 +251,14 @@ in {
         enable = true;
         wlr.enable = false; # We're using GNOME, not wlroots
         extraPortals = lib.mkForce [
-          pkgs.xdg-desktop-portal-gnome  # Primary for GNOME with accent color support
-          pkgs.xdg-desktop-portal-gtk    # Fallback for compatibility
+          pkgs.xdg-desktop-portal-gnome # Primary for GNOME with accent color support
+          pkgs.xdg-desktop-portal-gtk # Fallback for compatibility
         ];
         config = {
           common = {
             default = ["gnome" "gtk"];
             "org.freedesktop.impl.portal.Secret" = ["gnome-keyring"];
-            "org.freedesktop.impl.portal.Settings" = ["gnome"];  # Critical for accent colors
+            "org.freedesktop.impl.portal.Settings" = ["gnome"]; # Critical for accent colors
           };
           gnome = {
             default = ["gnome" "gtk"];
@@ -252,7 +267,7 @@ in {
             "org.freedesktop.impl.portal.Print" = ["gnome"];
             "org.freedesktop.impl.portal.Notification" = ["gnome"];
             "org.freedesktop.impl.portal.Wallpaper" = ["gnome"];
-            "org.freedesktop.impl.portal.Settings" = ["gnome"];  # Enable accent color support
+            "org.freedesktop.impl.portal.Settings" = ["gnome"]; # Enable accent color support
           };
         };
       };
@@ -271,9 +286,12 @@ in {
               # Fix scaling issues on GDM
               scaling-factor = mkUint32 1;
               text-scaling-factor = 1.0;
-              color-scheme = if cfg.theming.preferDark then "prefer-dark" else "default";
+              color-scheme =
+                if cfg.theming.preferDark
+                then "prefer-dark"
+                else "default";
               # 🎯 ACCENT COLOR: Enable accent color support for Gnome 47+
-              accent-color = "blue";  # Default accent color, user can change in settings
+              accent-color = "blue"; # Default accent color, user can change in settings
             };
           };
         }
@@ -284,28 +302,28 @@ in {
         enableDefaultPackages = true;
         packages = with pkgs; [
           # 🎯 ESSENTIAL: Proper font stack for Gnome
-          cantarell-fonts          # Default Gnome font
-          inter                    # Modern, highly readable UI font
-          ubuntu_font_family       # Excellent screen readability
-          dejavu_fonts            # Reliable fallback fonts
-          source-sans-pro         # Clean sans serif
-          source-serif-pro        # Quality serif font
-          
+          cantarell-fonts # Default Gnome font
+          inter # Modern, highly readable UI font
+          ubuntu_font_family # Excellent screen readability
+          dejavu_fonts # Reliable fallback fonts
+          source-sans-pro # Clean sans serif
+          source-serif-pro # Quality serif font
+
           # 🎯 EMOJI SUPPORT: Critical packages for emoji display
-          noto-fonts-color-emoji  # Primary emoji font
-          noto-fonts             # Unicode coverage
-          noto-fonts-cjk-sans    # Asian language support
-          
+          noto-fonts-color-emoji # Primary emoji font
+          noto-fonts # Unicode coverage
+          noto-fonts-cjk-sans # Asian language support
+
           # 🎯 NERD FONTS: Icon and symbol support
           nerd-fonts.symbols-only # Essential for proper symbol display
           nerd-fonts.jetbrains-mono
           nerd-fonts.fira-code
-          
+
           # 🎯 COMPATIBILITY: Microsoft fonts for better app compatibility
-          corefonts              # Arial, Times New Roman, etc.
-          liberation_ttf         # Open source alternatives
+          corefonts # Arial, Times New Roman, etc.
+          liberation_ttf # Open source alternatives
         ];
-        
+
         fontconfig = {
           enable = true;
           antialias = true;
@@ -315,15 +333,15 @@ in {
             style = "slight";
             autohint = false;
           };
-          
+
           # 🎯 CRITICAL: Proper font fallback order for emoji and symbols
           defaultFonts = {
             serif = ["Source Serif Pro" "Noto Serif" "DejaVu Serif" "Cantarell"];
             sansSerif = ["Inter" "Ubuntu" "Cantarell" "Noto Sans" "DejaVu Sans"];
             monospace = ["JetBrainsMono Nerd Font Mono" "FiraCode Nerd Font Mono" "DejaVu Sans Mono"];
-            emoji = ["Noto Color Emoji" "Symbols Nerd Font"];  # Critical for emoji display
+            emoji = ["Noto Color Emoji" "Symbols Nerd Font"]; # Critical for emoji display
           };
-          
+
           # 🎯 FONTCONFIG: Advanced configuration to fix emoji and rendering issues
           localConf = ''
             <?xml version="1.0"?>
@@ -337,7 +355,7 @@ in {
                   <string>Symbols Nerd Font</string>
                 </edit>
               </match>
-              
+
               <match target="pattern">
                 <test name="family"><string>sans-serif</string></test>
                 <edit name="family" mode="append_last">
@@ -345,7 +363,7 @@ in {
                   <string>Symbols Nerd Font</string>
                 </edit>
               </match>
-              
+
               <match target="pattern">
                 <test name="family"><string>monospace</string></test>
                 <edit name="family" mode="append_last">
@@ -353,7 +371,7 @@ in {
                   <string>Symbols Nerd Font Mono</string>
                 </edit>
               </match>
-              
+
               <!-- Force color emoji rendering -->
               <match target="font">
                 <test name="family" qual="any">
@@ -361,7 +379,7 @@ in {
                 </test>
                 <edit name="color" mode="assign"><bool>true</bool></edit>
               </match>
-              
+
               <!-- Improve font rendering quality -->
               <match target="font">
                 <edit name="antialias" mode="assign"><bool>true</bool></edit>
@@ -369,7 +387,7 @@ in {
                 <edit name="hintstyle" mode="assign"><const>hintslight</const></edit>
                 <edit name="rgba" mode="assign"><const>rgb</const></edit>
               </match>
-              
+
               <!-- Disable bitmap fonts that cause scaling issues -->
               <selectfont>
                 <rejectfont>
@@ -400,7 +418,10 @@ in {
         gtk = {
           enable = true;
           theme = {
-            name = if cfg.theming.preferDark then "Adwaita-dark" else "Adwaita";
+            name =
+              if cfg.theming.preferDark
+              then "Adwaita-dark"
+              else "Adwaita";
             package = pkgs.gnome-themes-extra;
           };
           iconTheme = {
@@ -435,21 +456,24 @@ in {
         dconf.settings = {
           # Interface settings with accent color support and improved fonts
           "org/gnome/desktop/interface" = {
-            color-scheme = if cfg.theming.preferDark then "prefer-dark" else "default";
+            color-scheme =
+              if cfg.theming.preferDark
+              then "prefer-dark"
+              else "default";
             cursor-theme = "Adwaita";
-            
+
             # 🎯 ACCENT COLOR: Enable accent color support (Gnome 47+)
-            accent-color = "blue";  # User can change this in settings
-            
+            accent-color = "blue"; # User can change this in settings
+
             # 🎯 ENHANCED FONTS: Better readability and emoji support
             font-name = "Inter 11";
             document-font-name = "Inter 11";
             monospace-font-name = "JetBrainsMono Nerd Font Mono 10";
-            
+
             # Font rendering optimizations
             font-antialiasing = "grayscale";
             font-hinting = "slight";
-            
+
             # UI behavior settings
             scaling-factor = mkUint32 1;
             text-scaling-factor = 1.0;
@@ -459,7 +483,7 @@ in {
             clock-show-date = true;
             clock-show-seconds = false;
             locate-pointer = true;
-            
+
             # 🎯 ANIMATIONS: Disable problematic animations that cause artifacts
             enable-animations = true;
             gtk-enable-primary-paste = true;
@@ -473,7 +497,10 @@ in {
             raise-on-click = true;
             titlebar-font = "Inter Bold 11";
             # 🎯 THEME: Support for accent colors in window decorations
-            theme = if cfg.theming.preferDark then "Adwaita-dark" else "Adwaita";
+            theme =
+              if cfg.theming.preferDark
+              then "Adwaita-dark"
+              else "Adwaita";
           };
 
           # 🎯 MUTTER: Enhanced compositor settings to reduce artifacts
@@ -482,7 +509,7 @@ in {
             workspaces-only-on-primary = true;
             center-new-windows = true;
             attach-modal-dialogs = true;
-            
+
             # 🎯 EXPERIMENTAL: Enable features needed for accent colors (Gnome 47+)
             experimental-features = []; # Keep empty unless specific features needed
           };
