@@ -169,7 +169,7 @@ validate_configuration() {
 
   # Run with spinner for better UX
   if gum spin --spinner dot --title "Checking flake syntax..." -- \
-    nix flake check --no-build "$FLAKE_DIR" 2>/dev/null; then
+    nix flake check --no-build "$FLAKE_DIR"; then
     success "Flake syntax validation passed"
   else
     error "Flake syntax validation failed"
@@ -179,7 +179,7 @@ validate_configuration() {
 
   info "Validating host configuration..."
   if gum spin --spinner dot --title "Validating host config..." -- \
-    nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run 2>/dev/null; then
+    nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run; then
     success "Host configuration validation passed"
   else
     error "Host configuration validation failed"
