@@ -605,16 +605,18 @@ in {
           "org/gnome/shell/extensions/night-theme-switcher" = {
             enable = true;
             time-source = "nightlight";
-            gtk-variants = {
-              enabled = true;
-              day = "Adwaita";
-              night = "Adwaita-dark";
-            };
-            shell-variants = {
-              enabled = true;
-              day = "Adwaita";
-              night = "Adwaita-dark";
-            };
+          };
+
+          "org/gnome/shell/extensions/night-theme-switcher/gtk-variants" = {
+            enabled = true;
+            day = "Adwaita";
+            night = "Adwaita-dark";
+          };
+
+          "org/gnome/shell/extensions/night-theme-switcher/shell-variants" = {
+            enabled = true;
+            day = "Adwaita";
+            night = "Adwaita-dark";
           };
 
           # GSConnect configuration for phone integration
