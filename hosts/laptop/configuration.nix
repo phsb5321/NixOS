@@ -4,6 +4,7 @@
   pkgs,
   lib,
   inputs,
+  hostname,
   systemVersion,
   bleedPkgs,
   ...
@@ -15,9 +16,11 @@
     ../shared/common.nix
   ];
 
-  # Laptop-specific configuration
-  # Override hostname for laptop
-  modules.networking.hostName = "nixos-laptop";
+  # Host-specific metadata
+  networking.hostName = hostname;
+
+  # Override shared configuration as needed
+  modules.networking.hostName = hostname;
   modules.home.hostName = "laptop";
 
   # WiFi Hardware and Firmware Configuration
@@ -198,227 +201,89 @@
     # Enable NVIDIA settings menu
     nvidiaSettings = true;
 
-    # NVIDIA driver package (use production version)
-    package = config.boot.kernelPackages.nvidiaPackages.production;
+    # Select the driver package (stable for laptops)
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
 
-    # Enable PRIME for hybrid graphics (Optimus) - use NVIDIA as primary
+    # Optimus/PRIME configuration for hybrid graphics
     prime = {
-      # Enable sync mode - NVIDIA GPU drives the display
+      # Sync mode for better performance but higher power consumption
       sync.enable = true;
 
-      # Disable offload mode since we're using sync
-      offload.enable = false;
+      # Use these if you need offload mode instead:
+      # offload.enable = true;
+      # offload.enableOffloadCmd = true;
 
-      # Specify the Intel and NVIDIA GPU BUS IDs
-      # You may need to adjust these based on your specific laptop
-      # Run `sudo lshw -c display` to find your actual BUS IDs
-      intelBusId = "PCI:0:2:0"; # Common Intel integrated graphics BUS ID
-      nvidiaBusId = "PCI:1:0:0"; # Common NVIDIA discrete graphics BUS ID
+      # Bus IDs for Intel and NVIDIA GPUs (use lspci to find these)
+      # Run: lspci | grep -E "(VGA|3D)"
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
     };
   };
 
-  # NVIDIA container toolkit for containerized applications
-  hardware.nvidia-container-toolkit.enable = true;
-
-  # Configure X server video drivers - use NVIDIA as primary GPU
+  # Video drivers for hybrid graphics
   services.xserver.videoDrivers = ["nvidia"];
 
-  # Fix GNOME Shell timeout by increasing service timeout
-  systemd.services."org.gnome.Shell@x11" = {
-    serviceConfig = {
-      TimeoutStartSec = 60; # Increase timeout from default 30s to 60s
-      TimeoutStopSec = 30;
-    };
+  # NVIDIA-specific environment variables
+  environment.sessionVariables = {
+    # NVIDIA specific
+    LIBVA_DRIVER_NAME = "nvidia";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    NVD_BACKEND = "direct";
   };
 
-  # Wayland-first configuration with X server for compatibility
-  # X server enables XWayland automatically
-  # GDM and GNOME will prefer Wayland but support X11 apps through XWayland
-
-  services.dbus = {
-    enable = true;
-    packages = [pkgs.dconf];
-  };
-  # Laptop-specific PAM services
-  security.pam.services = {
-    login.enableGnomeKeyring = true;
-  };
-
-  # Laptop-specific environment configuration (NVIDIA primary)
-  environment = {
-    sessionVariables = {
-      LD_LIBRARY_PATH = lib.mkForce "/run/opengl-driver/lib:/run/opengl-driver-32/lib:${pkgs.pipewire}/lib";
-      SHELL = "${pkgs.zsh}/bin/zsh";
-
-      # NVIDIA as primary GPU configuration
-      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-      LIBVA_DRIVER_NAME = "nvidia"; # Use NVIDIA for video acceleration
-      VDPAU_DRIVER = "nvidia";
-
-      # Scaling settings
-      GDK_SCALE = "1";
-      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
-
-      # NVIDIA optimizations
-      __GL_THREADED_OPTIMIZATIONS = "1";
-      __GL_SHADER_DISK_CACHE = "1";
-      __GL_SHADER_DISK_CACHE_PATH = "/tmp/gl_cache";
-      __GL_SYNC_TO_VBLANK = "1";
-
-      # Steam optimizations
-      STEAM_RUNTIME_HEAVY = "1";
-      STEAM_FRAME_FORCE_CLOSE = "1";
-
-      # Vulkan optimizations for NVIDIA
-      DXVK_HUD = "fps,memory,gpuload";
-      DXVK_ASYNC = "1";
-      VKD3D_CONFIG = "dxr11";
-    };
-
-    systemPackages = with pkgs; [
-      # Laptop-specific packages for NixOS 25.05
-      linux-firmware
-      wayland
-      xdg-utils
-      xdg-desktop-portal
-      xdg-desktop-portal-gtk
-      xdg-desktop-portal-gnome
-      mesa-demos
-      lshw
-      xorg.xrandr
-      xorg.xinput
-
-      # Verification tools for Intel graphics
-      libva-utils # vainfo command
-      vulkan-tools # vulkaninfo
-      glxinfo
-
-      # Gaming-specific tools for laptop with NVIDIA Optimus
-      corectrl # GPU monitoring and control
-      btop # System monitoring
-      intel-gpu-tools # Intel GPU debugging and monitoring (integrated GPU)
-      mesa-demos # Mesa utilities (glxinfo, glxgears, etc.)
-
-      # NVIDIA-specific tools
-      # Note: nvidia-offload script is provided by hardware.nvidia.prime.offload
-    ];
-  };
-
-  # XDG Portal configuration for laptop (GNOME handles this automatically)
-  # Note: GNOME module configures XDG portals properly
-
-  # Laptop-specific boot configuration for NVIDIA Optimus
+  # Laptop-specific boot configuration
   boot = {
-    # Remove NVIDIA modules from blacklist to enable NVIDIA GPU
-    blacklistedKernelModules = [
-      "nouveau" # Keep nouveau blacklisted (conflicts with proprietary driver)
-    ];
+    kernelPackages = pkgs.linuxPackages_latest;
+    tmp.useTmpfs = true;
 
-    # Hybrid graphics optimizations for NixOS 25.05 with gaming enhancements
+    # Laptop-optimized kernel parameters
     kernelParams = [
-      # Intel graphics optimizations (still used for power saving)
-      "i915.enable_fbc=1"
-      "i915.enable_psr=2"
-      "i915.enable_hd_vgaarb=1"
-      "i915.enable_dc=2"
-      "i915.enable_guc=3" # Enable GuC and HuC firmware loading
-      "i915.enable_huc=1"
-      "i915.fastboot=1" # Enable fastboot
-      "i915.semaphores=1" # Enable semaphores for better performance
-      "mitigations=off" # Disable CPU mitigations for better gaming performance
-      "split_lock_detect=off" # Disable split lock detection for gaming
-      # WiFi-specific parameters to handle hard block issues
-      "rfkill.default_state=1"
-      "iwlwifi.power_save=0"
-      "iwlwifi.11n_disable=0"
-      "iwlwifi.uapsd_disable=3"
-      # ACPI and hardware parameters for Clevo/Avell laptops
-      "acpi_osi=\"Windows 2020\""
-      "pci=noaer"
-      # More aggressive rfkill workarounds
-      "rfkill.master_switch_mode=2"
-      "acpi_enforce_resources=lax"
-      # Try to prevent ACPI from managing WiFi rfkill
-      "acpi_backlight=vendor"
-      # Gaming performance optimizations
-      "processor.max_cstate=1" # Reduce CPU sleep states for lower latency
-      "intel_idle.max_cstate=0" # Disable deeper C-states for gaming
-      # Uncomment if needed for specific Intel GPUs (12th Gen Alder Lake example)
-      # "i915.force_probe=46a8"
+      # NVIDIA parameters for laptops
+      "nvidia-drm.modeset=1"
+      "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
+
+      # Power management
+      "acpi_osi=Linux"
+      "pcie_aspm=force"
     ];
 
-    kernelModules = ["i915" "iwlwifi"];
-    initrd.kernelModules = ["i915"];
+    # Load NVIDIA modules early
+    initrd.kernelModules = ["nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm"];
+  };
 
-    loader = {
-      systemd-boot.enable = true;
-      efi = {
-        canTouchEfiVariables = true;
-        efiSysMountPoint = "/boot";
-      };
+  # Laptop-specific power management
+  powerManagement = {
+    enable = true;
+    cpuFreqGovernor = "powersave";
+  };
+
+  # TLP for advanced power management
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+
+      # Disable USB autosuspend for mouse/keyboard
+      USB_BLACKLIST_PHONE = 1;
     };
+  };
+
+  # Laptop-specific services
+  services = {
+    # Battery optimization
+    auto-cpufreq.enable = true;
+
+    # Thermal management
+    thermald.enable = true;
   };
 
   # Laptop-specific programs
-  programs.gnupg.agent = {
-    enable = true;
-    enableSSHSupport = true;
-  };
-
-  # Enable Docker for development
-  virtualisation.docker.enable = true;
-
-  # Enable Tailscale for laptop
-  services.tailscale.enable = true;
-
-  # Custom VS Code configuration to fix Electron warnings
-  nixpkgs.overlays = [
-    (final: prev: {
-      vscode = prev.vscode.overrideAttrs (oldAttrs: {
-        # Replace the default wrapper to avoid problematic flags
-        postFixup =
-          (oldAttrs.postFixup or "")
-          + ''
-                      # Create a new wrapper that ignores NIXOS_OZONE_WL and uses proper flags
-                      rm $out/bin/code
-                      cat > $out/bin/code << EOF
-            #!${final.bash}/bin/bash
-            exec -a "\$0" "$out/bin/.code-wrapped" \\
-              --ozone-platform=wayland \\
-              "\$@"
-            EOF
-                      chmod +x $out/bin/code
-          '';
-      });
-    })
-  ];
-
-  # Fix GNOME session registration issues
-  services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
-
-  # Ensure proper GNOME session configuration
-  services.gnome.core-shell.enable = true;
-  services.gnome.core-os-services.enable = true;
-  services.gnome.core-apps.enable = true;
-
-  # Fonts configuration
-  fonts = {
-    enableDefaultPackages = true;
-    packages = with pkgs; [
-      nerd-fonts.jetbrains-mono
-      cantarell-fonts
-      dejavu_fonts
-      source-sans-pro
-      source-serif-pro
-      ubuntu_font_family
-    ];
-    fontconfig = {
-      enable = true;
-      defaultFonts = {
-        serif = ["Source Serif Pro" "DejaVu Serif"];
-        sansSerif = ["Source Sans Pro" "DejaVu Sans"];
-        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
-      };
-    };
+  programs = {
+    # Auto CPU frequency scaling
+    auto-cpufreq.enable = true;
   };
 }

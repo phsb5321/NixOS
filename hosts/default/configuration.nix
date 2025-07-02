@@ -1,10 +1,12 @@
 # ~/NixOS/hosts/default/configuration.nix
 {
+  config,
   pkgs,
   lib,
   inputs,
-  bleedPkgs,
+  hostname,
   systemVersion,
+  bleedPkgs,
   ...
 }: {
   imports = [
@@ -12,6 +14,13 @@
     ../../modules
     ../shared/common.nix
   ];
+
+  # Host-specific metadata
+  networking.hostName = hostname;
+
+  # Override shared configuration as needed
+  modules.networking.hostName = hostname;
+  modules.home.hostName = "default";
 
   # Desktop-specific configuration
   # Enable gaming packages for desktop
