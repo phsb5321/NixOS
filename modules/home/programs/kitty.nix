@@ -24,7 +24,7 @@ in {
 
         # Font configuration optimized for programming
         font = {
-          name = "JetBrainsMono Nerd Font";
+          name = "JetBrainsMono Nerd Font Mono";
           size = 12;
         };
 
