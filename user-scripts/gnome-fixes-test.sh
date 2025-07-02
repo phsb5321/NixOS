@@ -80,12 +80,12 @@ run_test() {
 echo -e "${PURPLE}${GEAR} 1. ENVIRONMENT VARIABLES TEST${NC}"
 echo "=============================================="
 
-# Test GSK_RENDERER
-if [ "${GSK_RENDERER:-}" = "gl" ]; then
-  test_result 0 "GSK_RENDERER set to 'gl' (fixes artifacts)"
+# Test GSK_RENDERER (accept both 'gl' and 'opengl' as valid)
+if [ "${GSK_RENDERER:-}" = "gl" ] || [ "${GSK_RENDERER:-}" = "opengl" ]; then
+  test_result 0 "GSK_RENDERER set to '${GSK_RENDERER:-not set}' (fixes artifacts)"
   TESTS_PASSED=$((TESTS_PASSED + 1))
 else
-  test_result 1 "GSK_RENDERER not set to 'gl' (may cause artifacts)"
+  test_result 1 "GSK_RENDERER not set to 'gl' or 'opengl' (may cause artifacts)"
   TESTS_FAILED=$((TESTS_FAILED + 1))
 fi
 TOTAL_TESTS=$((TOTAL_TESTS + 1))
