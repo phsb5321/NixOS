@@ -273,6 +273,9 @@
   };
 
   # Laptop-specific services
+  # Disable power-profiles-daemon to use TLP and auto-cpufreq instead
+  services.power-profiles-daemon.enable = lib.mkForce false;
+
   services = {
     # Battery optimization
     auto-cpufreq.enable = true;
@@ -281,9 +284,4 @@
     thermald.enable = true;
   };
 
-  # Laptop-specific programs
-  programs = {
-    # Auto CPU frequency scaling
-    auto-cpufreq.enable = true;
-  };
 }
