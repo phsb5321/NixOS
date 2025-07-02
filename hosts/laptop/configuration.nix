@@ -283,5 +283,4 @@
     # Thermal management
     thermald.enable = true;
   };
-
 }

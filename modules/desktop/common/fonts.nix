@@ -29,47 +29,47 @@ in {
       type = with types; listOf package;
       default = with pkgs; [
         # 🔥 CRITICAL: Nerd Fonts with Symbols (FIXES EMOJI AND SYMBOL ISSUES)
-        nerd-fonts.symbols-only          # 🎯 THE KEY MISSING COMPONENT!
+        nerd-fonts.symbols-only # 🎯 THE KEY MISSING COMPONENT!
         nerd-fonts.jetbrains-mono
         nerd-fonts.fira-code
         nerd-fonts.roboto-mono
         nerd-fonts.source-code-pro
         nerd-fonts.hack
-        nerd-fonts.noto                  # Noto with Nerd Font patches
+        nerd-fonts.noto # Noto with Nerd Font patches
 
         # 🎨 ENHANCED EMOJI SUPPORT: Multiple emoji fonts for maximum compatibility
-        noto-fonts-color-emoji           # Primary emoji font (best compatibility)
-        twemoji-color-font              # Twitter emoji as fallback
-        openmoji-color                  # OpenMoji fallback
-        
+        noto-fonts-color-emoji # Primary emoji font (best compatibility)
+        twemoji-color-font # Twitter emoji as fallback
+        openmoji-color # OpenMoji fallback
+
         # 📝 ENHANCED: Modern fonts for comprehensive coverage and readability
-        inter                           # Modern, highly readable UI font - prioritized
-        font-awesome                    # Icon font for web/applications
-        noto-fonts                      # Google's unicode coverage
-        noto-fonts-cjk-sans            # CJK support (Chinese, Japanese, Korean)
-        noto-fonts-extra                # Extended Noto fonts
-        liberation_ttf                  # Microsoft-compatible fonts
-        xorg.font-misc-misc            # Basic X11 fonts
+        inter # Modern, highly readable UI font - prioritized
+        font-awesome # Icon font for web/applications
+        noto-fonts # Google's unicode coverage
+        noto-fonts-cjk-sans # CJK support (Chinese, Japanese, Korean)
+        noto-fonts-extra # Extended Noto fonts
+        liberation_ttf # Microsoft-compatible fonts
+        xorg.font-misc-misc # Basic X11 fonts
 
         # 🖋️ High-quality fonts optimized for readability
-        ubuntu_font_family             # Ubuntu's font family (excellent screen readability)
-        dejavu_fonts                   # DejaVu font family (excellent fallback)
-        source-code-pro                # Adobe's monospace font
-        freetype                       # TrueType rendering engine
-        cantarell-fonts                # GNOME default fonts
-        droid-fonts                    # Android "Droid" fonts
-        ibm-plex                       # IBM's Plex font family (professional readability)
-        terminus_font                  # Terminus monospace font
-        
+        ubuntu_font_family # Ubuntu's font family (excellent screen readability)
+        dejavu_fonts # DejaVu font family (excellent fallback)
+        source-code-pro # Adobe's monospace font
+        freetype # TrueType rendering engine
+        cantarell-fonts # GNOME default fonts
+        droid-fonts # Android "Droid" fonts
+        ibm-plex # IBM's Plex font family (professional readability)
+        terminus_font # Terminus monospace font
+
         # 🔤 Additional professional fonts
-        cascadia-code                  # Microsoft's programming font
-        iosevka                        # Versatile monospace font
-        jetbrains-mono                 # JetBrains programming font (non-Nerd version)
-        fira-code                      # Mozilla's programming font
-        
+        cascadia-code # Microsoft's programming font
+        iosevka # Versatile monospace font
+        jetbrains-mono # JetBrains programming font (non-Nerd version)
+        fira-code # Mozilla's programming font
+
         # 🎯 COMPATIBILITY: Microsoft fonts for better app support
-        corefonts                      # Arial, Times New Roman, etc.
-        vistafonts                     # Vista-era Microsoft fonts
+        corefonts # Arial, Times New Roman, etc.
+        vistafonts # Vista-era Microsoft fonts
       ];
       description = ''
         Comprehensive font packages including Nerd Fonts with symbols, enhanced emoji support,
@@ -103,10 +103,10 @@ in {
         mkOption (mkFontOption "sans-serif")
         // {
           default = [
-            "Inter"                      # Modern, highly readable UI font - prioritized for readability
-            "Ubuntu"                     # Excellent readability, designed for screens
-            "Cantarell"                  # Gnome default
-            "IBM Plex Sans"              # Professional, highly legible font
+            "Inter" # Modern, highly readable UI font - prioritized for readability
+            "Ubuntu" # Excellent readability, designed for screens
+            "Cantarell" # Gnome default
+            "IBM Plex Sans" # Professional, highly legible font
             "Noto Sans"
             "DejaVu Sans"
             "Liberation Sans"
@@ -117,17 +117,17 @@ in {
         mkOption (mkFontOption "monospace")
         // {
           default = [
-            "JetBrainsMono Nerd Font Mono"    # Excellent for programming, clear character distinction
-            "CascadiaCode Nerd Font Mono"     # Microsoft's excellent programming font with great readability
-            "Ubuntu Mono"                     # Very readable monospace font
-            "IBM Plex Mono"                   # Professional monospace with excellent readability
-            "FiraCode Nerd Font Mono"         # Good ligature support
-            "Hack Nerd Font Mono"             # Clean monospace with icons
-            "RobotoMono Nerd Font Mono"       # Google's monospace with icons
-            "SourceCodePro Nerd Font Mono"    # Adobe's monospace with icons
-            "Iosevka Nerd Font Mono"          # Versatile monospace with icons
-            "DejaVu Sans Mono"                # Reliable fallback
-            "Liberation Mono"                 # Final fallback
+            "JetBrainsMono Nerd Font Mono" # Excellent for programming, clear character distinction
+            "CascadiaCode Nerd Font Mono" # Microsoft's excellent programming font with great readability
+            "Ubuntu Mono" # Very readable monospace font
+            "IBM Plex Mono" # Professional monospace with excellent readability
+            "FiraCode Nerd Font Mono" # Good ligature support
+            "Hack Nerd Font Mono" # Clean monospace with icons
+            "RobotoMono Nerd Font Mono" # Google's monospace with icons
+            "SourceCodePro Nerd Font Mono" # Adobe's monospace with icons
+            "Iosevka Nerd Font Mono" # Versatile monospace with icons
+            "DejaVu Sans Mono" # Reliable fallback
+            "Liberation Mono" # Final fallback
           ];
         };
 
@@ -135,11 +135,11 @@ in {
         mkOption (mkFontOption "emoji")
         // {
           default = [
-            "Noto Color Emoji"          # Primary emoji font - best support
-            "Twemoji"                   # Twitter emoji fallback
-            "OpenMoji"                  # Open source emoji fallback
-            "Symbols Nerd Font Mono"    # 🎯 CRITICAL: Nerd Font symbols
-            "Symbols Nerd Font"         # 🎯 CRITICAL: Non-mono variant
+            "Noto Color Emoji" # Primary emoji font - best support
+            "Twemoji" # Twitter emoji fallback
+            "OpenMoji" # Open source emoji fallback
+            "Symbols Nerd Font Mono" # 🎯 CRITICAL: Nerd Font symbols
+            "Symbols Nerd Font" # 🎯 CRITICAL: Non-mono variant
           ];
         };
     };
@@ -407,22 +407,22 @@ in {
 
     # 🛠️ Install font management and debugging tools
     environment.systemPackages = with pkgs; [
-      fontconfig              # Font configuration utility
-      gnome-font-viewer       # GUI font viewer
-      font-manager            # Advanced font management
-      gucharmap               # Unicode character viewer (essential for debugging emoji)
-      fontforge               # Font editor for troubleshooting
+      fontconfig # Font configuration utility
+      gnome-font-viewer # GUI font viewer
+      font-manager # Advanced font management
+      gucharmap # Unicode character viewer (essential for debugging emoji)
+      fontforge # Font editor for troubleshooting
     ];
 
     # 🔄 Enhanced font cache setup and regeneration with better error handling
     system.activationScripts.fonts = {
       text = ''
         echo "🔄 Setting up enhanced fontconfig cache for emoji and Nerd Fonts..."
-        
+
         # Create cache directories with proper permissions
         mkdir -p /var/cache/fontconfig
         chmod 755 /var/cache/fontconfig
-        
+
         # User cache directories
         for user_home in /home/*; do
           if [ -d "$user_home" ]; then
@@ -432,11 +432,11 @@ in {
             chmod 755 "$user_home/.cache/fontconfig" 2>/dev/null || true
           fi
         done
-        
+
         # Force font cache regeneration with verbose output
         echo "♻️  Regenerating font cache for emoji and symbol support..."
         ${pkgs.fontconfig}/bin/fc-cache -rf --verbose
-        
+
         # Verify emoji font installation
         echo "🔍 Verifying emoji font installation..."
         if ${pkgs.fontconfig}/bin/fc-list | grep -q "Noto Color Emoji"; then
@@ -444,13 +444,13 @@ in {
         else
           echo "⚠️  Noto Color Emoji not found - check font installation"
         fi
-        
+
         if ${pkgs.fontconfig}/bin/fc-list | grep -q "Symbols Nerd Font"; then
           echo "✅ Symbols Nerd Font found"
         else
           echo "⚠️  Symbols Nerd Font not found - check Nerd Fonts installation"
         fi
-        
+
         echo "✅ Font configuration complete!"
         echo "🎯 Enhanced emoji and Nerd Font support enabled"
         echo "🔧 Run 'fc-list | grep -i emoji' to verify emoji fonts"
@@ -464,17 +464,17 @@ in {
       # Ensure fontconfig finds all fonts
       FONTCONFIG_PATH = "${config.fonts.fontconfig.confPackages}";
       FONTCONFIG_FILE = "${config.fonts.fontconfig.confPackages}/etc/fonts/fonts.conf";
-      
+
       # Better font rendering in applications
       GDK_USE_XFT = "1";
       QT_XFT = "true";
-      
+
       # Enable color emoji in applications
       GNOME_DISABLE_EMOJI_PICKER = "0";
-      
+
       # Force proper font fallback in problematic apps
       PANGO_GRAVITY_HINT = "natural";
-      
+
       # Better font rendering for web browsers
       WEBKIT_DISABLE_COMPOSITING_MODE = "0";
     };
@@ -494,7 +494,7 @@ in {
             <family>Symbols Nerd Font</family>
           </prefer>
         </alias>
-        
+
         <!-- Ensure Nerd Font symbols are available -->
         <alias>
           <family>symbols</family>
