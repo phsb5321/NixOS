@@ -437,7 +437,6 @@ in {
           "org/gnome/desktop/interface" = {
             color-scheme = if cfg.theming.preferDark then "prefer-dark" else "default";
             cursor-theme = "Adwaita";
-            cursor-size = mkInt32 24;
             
             # 🎯 ACCENT COLOR: Enable accent color support (Gnome 47+)
             accent-color = "blue";  # User can change this in settings
