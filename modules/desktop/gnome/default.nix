@@ -122,13 +122,15 @@ in {
           then "wayland"
           else "x11";
 
-        # Common settings
+        # Unified cursor theme across all environments
         XCURSOR_THEME = "Adwaita";
         XCURSOR_SIZE = "24";
+        
+        # Use default Adwaita theme with dark support
         GTK_THEME = mkIf cfg.theming.preferDark "Adwaita:dark";
       };
 
-      # Comprehensive GNOME package set
+      # Comprehensive GNOME package set with extensive extensions
       environment.systemPackages = with pkgs; [
         # Core GNOME applications
         gnome-text-editor
@@ -153,27 +155,51 @@ in {
         # Multimedia
         celluloid # Modern video player
 
-        # Essential GNOME extensions
+        # Essential GNOME extensions - Core functionality
         gnomeExtensions.dash-to-dock
         gnomeExtensions.user-themes
-        gnomeExtensions.caffeine
-        gnomeExtensions.appindicator
-        gnomeExtensions.blur-my-shell
-        gnomeExtensions.vitals
-        gnomeExtensions.clipboard-indicator
         gnomeExtensions.just-perfection
-        gnomeExtensions.space-bar
-        gnomeExtensions.logo-menu
-        gnomeExtensions.night-theme-switcher
+
+        # System monitoring extensions - Multiple options for comprehensive monitoring
+        gnomeExtensions.vitals # Temperature, voltage, fan speed, memory, CPU, network, storage
+        gnomeExtensions.system-monitor-next # Classic system monitor with graphs
+        gnomeExtensions.tophat # Elegant system resource monitor
+        gnomeExtensions.multicore-system-monitor # Individual CPU core monitoring
+        gnomeExtensions.system-monitor-2 # Alternative system monitor
+        gnomeExtensions.resource-monitor # Real-time monitoring in top bar
+
+        # Productivity and customization extensions
+        gnomeExtensions.caffeine # Prevent screen lock
+        gnomeExtensions.appindicator # System tray support
+        gnomeExtensions.blur-my-shell # Blur effects for shell elements
+        gnomeExtensions.clipboard-indicator # Clipboard manager
+        gnomeExtensions.night-theme-switcher # Automatic dark/light theme switching
+        gnomeExtensions.gsconnect # Phone integration (KDE Connect)
+        
+        # Workspace and window management
+        gnomeExtensions.workspace-indicator # Better workspace indicator
+        gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
+        gnomeExtensions.smart-auto-move # Remember window positions
+
+        # Quick access and navigation
+        gnomeExtensions.places-status-indicator # Quick access to bookmarks
+        gnomeExtensions.removable-drive-menu # USB drive management
+        gnomeExtensions.sound-output-device-chooser # Audio device switching
+
+        # Visual enhancements
+        gnomeExtensions.logo-menu # Custom logo in activities
+        gnomeExtensions.weather-or-not # Weather in top panel
+        gnomeExtensions.desktop-icons-ng-ding # Desktop icons support
 
         # Additional useful extensions
-        gnomeExtensions.desktop-icons-ng-ding
-        gnomeExtensions.sound-output-device-chooser
-        gnomeExtensions.workspace-indicator
-        gnomeExtensions.places-status-indicator
-        gnomeExtensions.removable-drive-menu
+        gnomeExtensions.clipboard-history # Enhanced clipboard manager
+        gnomeExtensions.current-workspace-name # Show workspace name
+        gnomeExtensions.improved-workspace-indicator # Better workspace display
+        gnomeExtensions.translate-clipboard # Translate clipboard content
+        gnomeExtensions.night-light-slider-updated # Night light control
+        gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
 
-        # Theme and appearance
+        # Theme and appearance packages
         adwaita-icon-theme
         gnome-themes-extra
         libadwaita
@@ -222,7 +248,7 @@ in {
       # Flatpak integration
       services.flatpak.enable = true;
 
-      # Modern DConf configuration instead of deprecated extraGSettingsOverrides
+      # Modern DConf configuration - unified cursor theme for GDM
       programs.dconf.enable = true;
       programs.dconf.profiles.gdm.databases = [
         {
@@ -272,7 +298,7 @@ in {
 
       # Home Manager integration for user-level GNOME configuration
       home-manager.users.notroot = {
-        # GTK theme configuration
+        # GTK theme configuration - with proper dark theme support
         gtk = {
           enable = true;
           theme = {
@@ -295,7 +321,7 @@ in {
           gtk4.extraConfig.gtk-application-prefer-dark-theme = cfg.theming.preferDark;
         };
 
-        # Cursor theme for all environments
+        # Unified cursor theme for all environments
         home.pointerCursor = {
           gtk.enable = true;
           x11.enable = true;
@@ -306,7 +332,7 @@ in {
 
         # Comprehensive DConf settings for the complete GNOME experience
         dconf.settings = {
-          # Interface settings
+          # Interface settings with proper dark theme support
           "org/gnome/desktop/interface" = {
             color-scheme =
               if cfg.theming.preferDark
@@ -342,13 +368,14 @@ in {
             attach-modal-dialogs = true;
           };
 
-          # Shell configuration
+          # Shell configuration with comprehensive extensions
           "org/gnome/shell" = {
             favorite-apps = [
               "org.gnome.Nautilus.desktop"
               "org.gnome.Console.desktop"
               "firefox.desktop"
-              "ghostty.desktop"
+              "kitty.desktop"
+              "code.desktop"
               "org.gnome.Software.desktop"
               "org.gnome.Calculator.desktop"
               "org.gnome.TextEditor.desktop"
@@ -362,11 +389,23 @@ in {
               "Vitals@CoreCoding.com"
               "clipboard-indicator@tudmotu.com"
               "just-perfection-desktop@just-perfection"
+              "space-bar@luchrioh"
+              "logo-menu@aryan_k"
+              "night-theme-switcher@romainvigier.fr"
+              "desktop-icons@csoriano"
+              "sound-output-device-chooser@kgshank.net"
+              "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
+              "places-menu@gnome-shell-extensions.gcampax.github.com"
+              "removable-drive-menu@gnome-shell-extensions.gcampax.github.com"
+              "gsconnect@andyholmes.github.io"
+              "system-monitor-next@paradoxxx.zero.gmail.com"
+              "tophat@fflewddur.github.io"
+              "weather-or-not@somepaulo.github.io"
             ];
             disable-user-extensions = false;
           };
 
-          # Dash to Dock configuration
+          # Dash to Dock configuration - clean and functional
           "org/gnome/shell/extensions/dash-to-dock" = {
             dock-position = "BOTTOM";
             autohide = true;
@@ -520,7 +559,7 @@ in {
             locations = "[]";
           };
 
-          # Extensions settings
+          # Extension configurations
           "org/gnome/shell/extensions/caffeine" = {
             enable-fullscreen = true;
             restore-state = true;
@@ -548,27 +587,51 @@ in {
           "org/gnome/shell/extensions/vitals" = {
             hide-icons = false;
             hide-zeros = false;
-            hot-sensors = ["_processor_usage_" "_memory_usage_" "_system_load_1m_"];
+            hot-sensors = ["_processor_usage_" "_memory_usage_" "_system_load_1m_" "_temperature_cpu_" "_network-rx_"];
             position-in-panel = 2;
             show-battery = true;
-            show-fan = false;
+            show-fan = true;
             show-memory = true;
-            show-network = false;
+            show-network = true;
             show-processor = true;
-            show-storage = false;
-            show-system = false;
-            show-temperature = false;
+            show-storage = true;
+            show-system = true;
+            show-temperature = true;
             show-voltage = false;
             use-higher-precision = false;
           };
+
+          # Night theme switcher configuration
+          "org/gnome/shell/extensions/night-theme-switcher" = {
+            enable = true;
+            time-source = "nightlight";
+            gtk-variants = {
+              enabled = true;
+              day = "Adwaita";
+              night = "Adwaita-dark";
+            };
+            shell-variants = {
+              enabled = true;
+              day = "Adwaita";
+              night = "Adwaita-dark";
+            };
+          };
+
+          # GSConnect configuration for phone integration
+          "org/gnome/shell/extensions/gsconnect" = {
+            enabled = true;
+            show-indicators = true;
+            show-battery = true;
+            show-connectivity = true;
+          };
         };
 
-        # Environment variables for user session - X11 focused when Wayland disabled
+        # Environment variables for user session
         home.sessionVariables = {
           # Critical graphics fix for NixOS 25.05
           GSK_RENDERER = "opengl";
 
-          # Cursor consistency
+          # Unified cursor consistency
           XCURSOR_THEME = "Adwaita";
           XCURSOR_SIZE = "24";
 

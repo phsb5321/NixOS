@@ -1,814 +1,473 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-IFS=$'\n\t'
 
 #######################################
-# Configuration
+# Enhanced NixOS Switch - Simplified Edition
+# Focuses on auto-detect host functionality with beautiful gum UI
 #######################################
-readonly SCRIPT_VERSION="5.1.0"
-readonly SCRIPT_NAME=$(basename "$0")
+
+readonly SCRIPT_VERSION="6.0.0"
 readonly FLAKE_DIR="$HOME/NixOS"
 readonly LOG_DIR="$HOME/.local/share/nixos-rebuild/logs"
-readonly STATE_DIR="$HOME/.local/share/nixos-rebuild/state"
-readonly CACHE_DIR="$HOME/.cache/nixos-rebuild"
-readonly LOCK_FILE="$HOME/.local/share/nixos-rebuild/rebuild.lock"
-readonly PARALLEL_JOBS=$(nproc)
-readonly DEFAULT_KEEP_GENERATIONS=7
-readonly DEFAULT_OPERATION="switch"
-readonly MIN_FREE_SPACE_GB=5
 
-# Color definitions for gum
-declare -A COLORS=(
-    ["primary"]="212"
-    ["error"]="196"
-    ["warning"]="214"
-    ["success"]="84"
-    ["info"]="39"
-    ["accent"]="99"
-)
+# Ensure required tools are available
+if ! command -v gum &>/dev/null; then
+  echo "❌ Gum is required but not installed. Please install it first."
+  exit 1
+fi
 
-# Global variables
-declare -a CLEANUP_PIDS=()
-declare SUDO_PID=""
-declare LOG_FILE=""
+if ! command -v nix &>/dev/null; then
+  echo "❌ Nix is required but not installed."
+  exit 1
+fi
 
 #######################################
-# Error handling and cleanup
+# Beautiful UI Functions
 #######################################
-trap 'cleanup' EXIT INT TERM
 
-cleanup() {
-    # Kill any running background processes
-    for pid in "${CLEANUP_PIDS[@]}"; do
-        if kill -0 "$pid" 2>/dev/null; then
-            kill -TERM "$pid" 2>/dev/null || true
-        fi
-    done
-
-    # Kill sudo keep-alive
-    if [[ -n "$SUDO_PID" ]] && kill -0 "$SUDO_PID" 2>/dev/null; then
-        kill -TERM "$SUDO_PID" 2>/dev/null || true
-    fi
-
-    # Remove lock file
-    if [[ -f "$LOCK_FILE" ]]; then
-        rm -f "$LOCK_FILE"
-    fi
-
-    # Wait for background jobs to finish
-    wait 2>/dev/null || true
-}
-
-#######################################
-# Utility functions
-#######################################
-die() {
-    gum style --foreground "${COLORS[error]}" "ERROR: $1" >&2
-    exit 1
-}
-
-warn() {
-    gum style --foreground "${COLORS[warning]}" "WARNING: $1" >&2
-}
-
-info() {
-    gum style --foreground "${COLORS[info]}" "INFO: $1"
+banner() {
+  gum style \
+    --foreground 212 \
+    --border-foreground 212 \
+    --border double \
+    --align center \
+    --width 60 \
+    --margin "1 2" \
+    --padding "1 4" \
+    "🚀 NixOS Switch v${SCRIPT_VERSION}" \
+    "Auto-detecting host and rebuilding system"
 }
 
 success() {
-    gum style --foreground "${COLORS[success]}" "✓ $1"
+  gum style \
+    --foreground 84 \
+    --bold \
+    "✅ $1"
 }
 
-log() {
-    local msg=$1
-    local level=${2:-info}
-    local timestamp
-    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+error() {
+  gum style \
+    --foreground 196 \
+    --bold \
+    "❌ $1" >&2
+}
 
-    # Always log to file
-    if [[ -n "$LOG_FILE" ]]; then
-        echo "[$timestamp] ($level) $msg" >>"$LOG_FILE"
-    fi
+info() {
+  gum style \
+    --foreground 39 \
+    "ℹ️  $1"
+}
 
-    # Show in terminal based on verbosity
-    if [[ "${VERBOSE:-false}" == true || "$level" != "info" ]]; then
-        local color="${COLORS[$level]:-39}"
-        # Handle very long messages that could exceed argument limits
-        if [[ ${#msg} -gt 8000 ]]; then
-            # For very long messages, use echo instead of gum to avoid "Argument list too long"
-            echo -e "\033[38;5;${color}m[$timestamp] ${msg:0:1000}... [truncated]\033[0m"
-        else
-            gum style --foreground "$color" "[$timestamp] $msg"
-        fi
-    fi
+warning() {
+  gum style \
+    --foreground 214 \
+    "⚠️  $1"
+}
+
+log_message() {
+  local level="$1"
+  local message="$2"
+
+  # Log to file with timestamp
+  if [[ -n "${LOG_FILE:-}" ]]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $message" >>"$LOG_FILE"
+  fi
+
+  # Display with gum log for beautiful output
+  gum log --structured --level "$level" "$message"
 }
 
 #######################################
-# System requirements and setup
+# Core Functions
 #######################################
-check_requirements() {
-    local -a required=("gum" "nix" "git" "alejandra" "parallel")
-    local missing=()
 
-    for cmd in "${required[@]}"; do
-        if ! command -v "$cmd" &>/dev/null; then
-            missing+=("$cmd")
-        fi
-    done
+auto_detect_host() {
+  local hostname
+  hostname=$(hostname)
 
-    if [ ${#missing[@]} -ne 0 ]; then
-        die "Missing required tools: ${missing[*]}"
-    fi
+  info "Detecting host based on hostname: $hostname"
+
+  case "$hostname" in
+  *laptop* | *mobile* | nixos-laptop)
+    echo "laptop"
+    ;;
+  *desktop* | nixos | *)
+    echo "default"
+    ;;
+  esac
 }
 
-check_sudo_access() {
-    if ! sudo -v &>/dev/null; then
-        if ! sudo -v; then
-            die "Root privileges are required to run this script."
-        fi
-    fi
+verify_environment() {
+  local host="$1"
 
-    # Keep sudo alive in the background
-    (
-        while true; do
-            sudo -v 2>/dev/null || exit 1
-            sleep 45
-        done
-    ) &
-    SUDO_PID=$!
-}
+  # Check flake directory
+  if [[ ! -d "$FLAKE_DIR" ]]; then
+    error "Flake directory not found: $FLAKE_DIR"
+    exit 1
+  fi
 
-ensure_directories() {
-    local user_dirs=(
-        "$LOG_DIR"
-        "$STATE_DIR"
-        "$CACHE_DIR"
-        "${LOCK_FILE%/*}"
-    )
+  if [[ ! -f "$FLAKE_DIR/flake.nix" ]]; then
+    error "No flake.nix found in $FLAKE_DIR"
+    exit 1
+  fi
 
-    for dir in "${user_dirs[@]}"; do
-        if [[ ! -d "$dir" ]]; then
-            mkdir -p "$dir"
-            chmod 700 "$dir"
-        fi
+  # Check host configuration
+  if [[ ! -d "$FLAKE_DIR/hosts/$host" ]]; then
+    error "Host configuration '$host' not found"
+    info "Available hosts:"
+    for h in "$FLAKE_DIR"/hosts/*/; do
+      if [[ -d "$h" ]]; then
+        gum style --foreground 99 "  • $(basename "$h")"
+      fi
     done
+    exit 1
+  fi
+
+  success "Environment verification passed"
 }
 
 setup_logging() {
-    ensure_directories
-    LOG_FILE="${LOG_DIR}/nixos-rebuild-${host:-system}-$(date '+%Y%m%d_%H%M%S').log"
-    touch "$LOG_FILE"
+  # Create log directory
+  mkdir -p "$LOG_DIR"
 
-    # Clean old logs in background
-    {
-        find "$LOG_DIR" -type f -name "*.log" -mtime +30 -delete 2>/dev/null || true
-    } &
+  # Create log file with timestamp
+  LOG_FILE="$LOG_DIR/nixswitch-$(date '+%Y%m%d_%H%M%S').log"
+  touch "$LOG_FILE"
+
+  # Clean old logs (keep last 10)
+  find "$LOG_DIR" -name "nixswitch-*.log" -type f | sort -r | tail -n +11 | xargs -r rm
+
+  info "Logging to: $LOG_FILE"
 }
 
-check_disk_space() {
-    local available_gb
-    available_gb=$(df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ')
+check_system_health() {
+  info "Performing system health checks..."
 
-    if [[ "$available_gb" -lt "$MIN_FREE_SPACE_GB" ]]; then
-        warn "Low disk space: ${available_gb}GB available (recommended: ${MIN_FREE_SPACE_GB}GB+)"
-        if gum confirm "Continue anyway?"; then
-            return 0
-        else
-            die "Aborted due to low disk space"
-        fi
+  # Check disk space
+  local available_gb
+  available_gb=$(df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ')
+
+  if [[ "$available_gb" -lt 5 ]]; then
+    warning "Low disk space: ${available_gb}GB available"
+    if ! gum confirm "Continue with low disk space?"; then
+      error "Aborted due to low disk space"
+      exit 1
     fi
+  else
+    success "Disk space check: ${available_gb}GB available"
+  fi
 
-    info "Disk space check: ${available_gb}GB available"
+  # Check for dirty git state
+  if git -C "$FLAKE_DIR" diff --quiet && git -C "$FLAKE_DIR" diff --cached --quiet; then
+    success "Git state is clean"
+  else
+    warning "Uncommitted changes detected"
+    if gum confirm "Show git status?"; then
+      git -C "$FLAKE_DIR" status --short
+    fi
+    if ! gum confirm "Continue with uncommitted changes?"; then
+      info "Please commit your changes and try again"
+      exit 1
+    fi
+  fi
 }
 
-#######################################
-# Command execution
-#######################################
-execute() {
-    local name=$1
-    shift
-    local cmd=("$@")
-
-    if [[ "${DRY_RUN:-false}" == true ]]; then
-        log "Would execute: ${cmd[*]}" "info"
-        gum style --foreground "${COLORS[accent]}" "⊝ $name (dry-run)"
-        return 0
-    fi
-
-    local temp_out temp_err
-    temp_out=$(mktemp)
-    temp_err=$(mktemp)
-
-    local start_time end_time duration
-    start_time=$(date +%s)
-
-    if "${cmd[@]}" >"$temp_out" 2>"$temp_err"; then
-        end_time=$(date +%s)
-        duration=$((end_time - start_time))
-
-        local output errors
-        output=$(cat "$temp_out")
-        errors=$(cat "$temp_err")
-        rm -f "$temp_out" "$temp_err"
-
-        # Log output and errors - handle large outputs safely
-        if [[ -n "$output" ]]; then
-            # For very large outputs, log only a summary to avoid "Argument list too long"
-            local line_count=$(echo "$output" | wc -l)
-            if [[ $line_count -gt 100 ]]; then
-                local first_lines=$(echo "$output" | head -20)
-                local last_lines=$(echo "$output" | tail -20)
-                log "Build output ($line_count lines):\n$first_lines\n... [$((line_count - 40)) lines omitted] ...\n$last_lines" "info"
-            elif [[ ${#output} -gt 5000 ]]; then
-                # If single line is very long, truncate it
-                log "Build output (truncated): ${output:0:2000}... [truncated]" "info"
-            else
-                log "$output" "info"
-            fi
-        fi
-        if [[ -n "$errors" ]]; then
-            # Handle large error outputs similarly
-            local line_count=$(echo "$errors" | wc -l)
-            if [[ $line_count -gt 50 ]]; then
-                local first_lines=$(echo "$errors" | head -15)
-                local last_lines=$(echo "$errors" | tail -15)
-                log "Error output ($line_count lines):\n$first_lines\n... [$((line_count - 30)) lines omitted] ...\n$last_lines" "warning"
-            elif [[ ${#errors} -gt 5000 ]]; then
-                # If single line is very long, truncate it
-                log "Error output (truncated): ${errors:0:2000}... [truncated]" "warning"
-            else
-                log "$errors" "warning"
-            fi
-        fi
-
-        success "$name (${duration}s)"
-        return 0
-    else
-        local exit_code=$?
-        end_time=$(date +%s)
-        duration=$((end_time - start_time))
-
-        local output errors
-        output=$(cat "$temp_out")
-        errors=$(cat "$temp_err")
-        rm -f "$temp_out" "$temp_err"
-
-        # Display formatted error output
-        if [[ -n "$output" || -n "$errors" ]]; then
-            echo
-            gum style --foreground "${COLORS[error]}" "Error in $name (${duration}s):"
-
-            if [[ -n "$errors" ]]; then
-                echo "$errors" | while IFS= read -r line; do
-                    if [[ "$line" =~ ^error: ]]; then
-                        gum style --foreground "${COLORS[error]}" "  $line"
-                    elif [[ "$line" =~ ^warning: ]]; then
-                        gum style --foreground "${COLORS[warning]}" "  $line"
-                    else
-                        echo "  $line"
-                    fi
-                done
-            fi
-
-            if [[ -n "$output" ]]; then
-                echo "$output" | while IFS= read -r line; do
-                    echo "  $line"
-                done
-            fi
-            echo
-        fi
-
-        gum style --foreground "${COLORS[error]}" "✗ $name failed (${duration}s)"
-        return $exit_code
-    fi
-}
-
-#######################################
-# Host management
-#######################################
-auto_detect_host() {
-    local current_hostname
-    current_hostname=$(hostname)
-
-    case "$current_hostname" in
-    *laptop* | *mobile* | nixos-laptop) echo "laptop" ;;
-    *desktop* | nixos | *) echo "default" ;;
-    esac
-}
-
-list_hosts() {
-    local hosts_dir="$FLAKE_DIR/hosts"
-    if [[ -d "$hosts_dir" ]]; then
-        info "Available hosts:"
-        for host in "$hosts_dir"/*/; do
-            if [[ -d "$host" ]]; then
-                local host_name
-                host_name=$(basename "$host")
-                gum style --foreground "${COLORS[primary]}" "• $host_name"
-
-                # Show last build info if available
-                local last_build="$STATE_DIR/last_build_$host_name"
-                if [[ -f "$last_build" ]]; then
-                    local last_time
-                    last_time=$(cat "$last_build")
-                    gum style --foreground "${COLORS[accent]}" "  Last build: $last_time"
-                fi
-            fi
-        done
-
-        # Show auto-detected host
-        local detected_host
-        detected_host=$(auto_detect_host)
-        gum style --foreground "${COLORS[info]}" "Auto-detected: $detected_host (based on hostname: $(hostname))"
-    fi
-}
-
-verify_host() {
-    local host=$1
-    if [[ ! -d "$FLAKE_DIR/hosts/$host" ]]; then
-        gum style --foreground "${COLORS[error]}" "Host '$host' not found."
-        list_hosts
-        exit 1
-    fi
-}
-
-verify_flake_directory() {
-    if [[ ! -d "$FLAKE_DIR" ]]; then
-        die "Flake directory not found: $FLAKE_DIR"
-    fi
-    if [[ ! -f "$FLAKE_DIR/flake.nix" ]]; then
-        die "No flake.nix found in $FLAKE_DIR"
-    fi
-}
-
-#######################################
-# Configuration validation
-#######################################
 validate_configuration() {
-    local host=$1
-    info "Validating configuration..."
+  local host="$1"
 
-    if ! execute "Check flake syntax" nix flake check --no-build; then
-        die "Flake syntax validation failed"
-    fi
+  info "Validating flake configuration..."
 
-    if ! execute "Validate host config" nix build ".#nixosConfigurations.$host.config.system.build.toplevel" --dry-run; then
-        die "Host configuration validation failed"
-    fi
+  # Run with spinner for better UX
+  if gum spin --spinner dot --title "Checking flake syntax..." -- \
+    nix flake check --no-build "$FLAKE_DIR" 2>/dev/null; then
+    success "Flake syntax validation passed"
+  else
+    error "Flake syntax validation failed"
+    log_message "error" "Flake syntax validation failed"
+    exit 1
+  fi
 
-    # Check for common security issues
-    if [[ -f "$FLAKE_DIR/flake.nix" ]]; then
-        if grep -q "allowBroken.*true" "$FLAKE_DIR/flake.nix"; then
-            warn "allowBroken is enabled - this may introduce security risks"
-        fi
-    fi
-
-    success "Configuration validation passed"
-    return 0
+  info "Validating host configuration..."
+  if gum spin --spinner dot --title "Validating host config..." -- \
+    nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run 2>/dev/null; then
+    success "Host configuration validation passed"
+  else
+    error "Host configuration validation failed"
+    log_message "error" "Host configuration validation failed for host: $host"
+    exit 1
+  fi
 }
 
-#######################################
-# Garbage collection and optimization
-#######################################
-smart_garbage_collection() {
-    local keep_days="${KEEP_GENERATIONS:-$DEFAULT_KEEP_GENERATIONS}"
-    local aggressive="${AGGRESSIVE_GC:-false}"
+perform_rebuild() {
+  local host="$1"
+  local start_time end_time duration
 
-    info "Starting intelligent garbage collection..."
+  start_time=$(date +%s)
 
-    # Core GC operations
-    execute "Clean old system generations" \
-        sudo nix-collect-garbage --delete-older-than "${keep_days}d"
+  info "Starting NixOS rebuild for host: $host"
+  log_message "info" "Starting rebuild for host: $host"
 
-    execute "Clean old user generations" \
-        nix-collect-garbage --delete-older-than "${keep_days}d"
+  # Ask for sudo password upfront
+  if ! sudo -v; then
+    error "Sudo access required"
+    exit 1
+  fi
 
-    if [[ -d "/nix/var/nix/profiles" ]]; then
-        execute "Clean old profile generations" \
-            sudo find /nix/var/nix/profiles -name "*-*-link" -mtime +"$keep_days" -delete
+  # Keep sudo alive during build
+  {
+    while true; do
+      sudo -v 2>/dev/null || exit 1
+      sleep 45
+    done
+  } &
+  local sudo_pid=$!
+
+  # Trap to cleanup sudo keep-alive
+  trap 'kill $sudo_pid 2>/dev/null || true' EXIT
+
+  # Format code before building
+  if command -v alejandra &>/dev/null; then
+    gum spin --spinner dot --title "Formatting Nix code..." -- \
+      alejandra "$FLAKE_DIR" &>/dev/null || true
+    success "Code formatting completed"
+  fi
+
+  # Main rebuild with beautiful progress display
+  local rebuild_cmd=(
+    sudo nixos-rebuild switch
+    --flake "$FLAKE_DIR#$host"
+    --show-trace
+    --verbose
+  )
+
+  info "Executing: ${rebuild_cmd[*]}"
+  log_message "info" "Executing rebuild command: ${rebuild_cmd[*]}"
+
+  # Use gum spin for the rebuild process
+  if gum spin \
+    --spinner globe \
+    --title "Building and switching to new configuration..." \
+    --show-output \
+    -- "${rebuild_cmd[@]}" 2>&1 | tee -a "$LOG_FILE"; then
+
+    end_time=$(date +%s)
+    duration=$((end_time - start_time))
+
+    success "System rebuild completed successfully! (${duration}s)"
+    log_message "info" "Rebuild completed successfully in ${duration}s"
+
+    # Show current generation
+    local current_gen
+    current_gen=$(sudo nixos-rebuild list-generations | grep current | head -1 | awk '{print $1}')
+    info "Current generation: $current_gen"
+
+  else
+    end_time=$(date +%s)
+    duration=$((end_time - start_time))
+
+    error "System rebuild failed after ${duration}s"
+    log_message "error" "Rebuild failed after ${duration}s"
+
+    if gum confirm "View recent logs?"; then
+      tail -n 50 "$LOG_FILE" | gum pager
     fi
 
-    # Store operations
-    execute "Verify store integrity" nix-store --verify --check-contents
+    exit 1
+  fi
 
-    if [[ "${SKIP_OPTIMIZE:-false}" != true ]]; then
-        execute "Optimize nix store" nix-store --optimize
-    fi
-
-    execute "Clean unused store paths" nix-store --gc
-
-    # Maintenance tasks
-    local maintenance_tasks=()
-
-    if command -v journalctl &>/dev/null; then
-        maintenance_tasks+=("sudo journalctl --vacuum-time=7d --quiet")
-        maintenance_tasks+=("sudo journalctl --vacuum-size=500M --quiet")
-    fi
-
-    if [[ -d "$HOME/.cache/nix" ]]; then
-        maintenance_tasks+=("find $HOME/.cache/nix -type f -mtime +7 -delete 2>/dev/null || true")
-    fi
-
-    if [[ -d "$CACHE_DIR" ]]; then
-        maintenance_tasks+=("find $CACHE_DIR -type f -mtime +7 -delete 2>/dev/null || true")
-    fi
-
-    # Run maintenance tasks in parallel if any exist
-    if [[ ${#maintenance_tasks[@]} -gt 0 ]]; then
-        info "Running ${#maintenance_tasks[@]} maintenance tasks in parallel"
-        printf '%s\n' "${maintenance_tasks[@]}" |
-            parallel --jobs 3 --line-buffer 'bash -c "{}"' 2>/dev/null || true
-    fi
-
-    if [[ "$aggressive" == true ]]; then
-        warn "Running aggressive cleanup - this may take longer"
-        execute "Aggressive GC (all unreachable)" nix-collect-garbage -d
-
-        if [[ -d "/tmp" ]]; then
-            execute "Clean build temps" \
-                sudo find /tmp -name "nix-build-*" -type d -mtime +1 -exec rm -rf {} + 2>/dev/null || true
-        fi
-
-        if [[ -d "$HOME/.cache/nix" ]]; then
-            execute "Clean nix build cache" rm -rf "$HOME/.cache/nix"/*
-        fi
-    fi
+  # Cleanup
+  kill $sudo_pid 2>/dev/null || true
 }
 
-clean_rebuild() {
-    local host=$1
+post_rebuild_tasks() {
+  info "Performing post-rebuild cleanup..."
 
-    warn "Performing clean rebuild - this will remove cached builds and rebuild from scratch"
+  # Quick garbage collection
+  gum spin --spinner dot --title "Cleaning up old generations..." -- \
+    nix-collect-garbage --delete-older-than 7d 2>/dev/null || true
 
-    if gum confirm "This will clear Nix store cache. Continue?"; then
-        # Clear cached evaluation results
-        rm -rf ~/.cache/nix/eval-cache-v5/ 2>/dev/null || true
-
-        # Update flake inputs
-        execute "Update flake inputs" nix flake update
-
-        # Force garbage collection
-        info "Running garbage collection to clean stale paths..."
-        nix-collect-garbage -d
-
-        # Clear cached builds for this host
-        rm -f "$STATE_DIR/last_build_$host" 2>/dev/null || true
-
-        success "Clean rebuild preparation complete"
-    else
-        die "Clean rebuild cancelled"
-    fi
-}
-
-#######################################
-# System operations
-#######################################
-pre_build_optimizations() {
-    info "Running pre-build optimizations..."
-
-    # Set optimal build settings
-    export NIX_BUILD_CORES="$PARALLEL_JOBS"
-    export NIX_CONFIG="
-        max-jobs = auto
-        cores = $PARALLEL_JOBS
-        sandbox = true
-        auto-optimise-store = true
-        keep-outputs = false
-        keep-derivations = false
-    "
-
-    # Warm up the evaluation cache
-    execute "Warm evaluation cache" \
-        nix eval ".#nixosConfigurations.$1.config.system.build.toplevel.drvPath" --raw
-}
-
-rebuild_system() {
-    local host=$1
-    local operation=${2:-$DEFAULT_OPERATION}
-    cd "$FLAKE_DIR" || die "Could not change to flake directory"
-
-    echo "$$" >"$LOCK_FILE"
-    echo "$(date)" >"$STATE_DIR/last_build_$host"
-
-    # Pre-build checks
-    check_disk_space
-
-    # Pre-build optimizations
-    pre_build_optimizations "$host"
-
-    # Validate configuration first
-    if [[ "${SKIP_VALIDATION:-false}" != true ]]; then
-        validate_configuration "$host"
-    fi
-
-    # Update system
-    if [[ "${SKIP_UPDATE:-false}" != true ]]; then
-        info "Updating system..."
-        execute "Update flake inputs" nix flake update
-    fi
-
-    # Garbage collection
-    if [[ "${SKIP_GC:-false}" != true ]]; then
-        smart_garbage_collection
-    fi
-
-    # Format code
-    if [[ "${SKIP_FORMAT:-false}" != true ]]; then
-        execute "Format configuration files" alejandra .
-    fi
-
-    # Build system
-    local rebuild_cmd=(sudo nixos-rebuild "$operation" --flake ".#${host}")
-    [[ "${DRY_RUN:-false}" == true ]] && rebuild_cmd+=(--dry-run)
-    [[ "${VERBOSE:-false}" == true ]] && rebuild_cmd+=(--verbose)
-    [[ "${FAST_BUILD:-false}" == true ]] && rebuild_cmd+=(--fast)
-
-    # Add parallel build flags
-    rebuild_cmd+=(--option max-jobs auto --option cores "$PARALLEL_JOBS")
-
-    execute "Rebuilding system ($operation)" "${rebuild_cmd[@]}"
-
-    # Post-build tasks
-    if [[ "${DRY_RUN:-false}" != true && "$operation" == "switch" ]]; then
-        post_build_tasks "$host"
-    fi
-}
-
-post_build_tasks() {
-    local host=$1
-
-    info "Running post-build tasks..."
-
-    # Git operations
-    if [[ "${SKIP_PUSH:-false}" != true ]]; then
-        handle_git_operations "$host"
-    fi
-
-    # System maintenance
-    if [[ "${SKIP_MAINTENANCE:-false}" != true ]]; then
-        perform_maintenance
-    fi
-
-    # Update build timestamp
-    echo "$(date)" >"$STATE_DIR/last_build_$host"
-}
-
-handle_git_operations() {
-    local host=$1
-
-    if ! git status &>/dev/null; then
-        warn "Not a git repository or git command failed"
-        return 1
-    fi
-
-    if ! git diff-index --quiet HEAD --; then
-        local gen
-        gen=$(sudo nixos-rebuild --flake ".#${host}" list-generations | grep current | head -1)
-
-        execute "Stage changes" git add .
-        execute "Commit changes" git commit -m "rebuild(${host}): ${gen}"
-
-        if gum confirm "Push changes to remote?"; then
-            execute "Push changes" git push
-        fi
-    else
-        info "No changes to commit"
-    fi
-}
-
-perform_maintenance() {
-    info "Performing system maintenance..."
-
-    execute "Clean systemd logs" sudo journalctl --vacuum-time=7d
-
-    if command -v updatedb &>/dev/null; then
-        execute "Update locate database" sudo updatedb
-    fi
-
-    if [[ -d "$HOME/.cache" ]]; then
-        execute "Clean package caches" \
-            find "$HOME/.cache" -name "*.cache" -mtime +7 -delete 2>/dev/null || true
-    fi
-}
-
-#######################################
-# Information and management
-#######################################
-show_generations() {
-    info "System generations:"
-    sudo nixos-rebuild list-generations | head -20
-
-    echo
-    info "User generations:"
-    nix-env --list-generations | head -10
-}
-
-rollback_generation() {
-    show_generations
-    echo
-    local gen
-    gen=$(gum input --placeholder "Enter generation number to rollback to")
-
-    if [[ ! "$gen" =~ ^[0-9]+$ ]]; then
-        die "Invalid generation number: $gen"
-    fi
-
-    if gum confirm "Rollback to generation $gen?"; then
-        execute "Rollback to generation $gen" \
-            sudo nixos-rebuild switch --rollback --switch-generation "$gen"
-    fi
+  success "Post-rebuild tasks completed"
 }
 
 show_system_info() {
-    info "System Information:"
-    echo "  CPU cores: $PARALLEL_JOBS"
-    echo "  Memory: $(free -h | awk 'NR==2{print $2}')"
-    echo "  Disk space: $(df -h /nix | awk 'NR==2{print $4}') available"
-    echo "  Nix version: $(nix --version)"
-    echo "  Current generation: $(sudo nixos-rebuild list-generations | grep current | head -1)"
+  local host="$1"
+
+  gum style \
+    --foreground 99 \
+    --border normal \
+    --border-foreground 99 \
+    --padding "1 2" \
+    --margin "1 0" \
+    "📊 System Information" \
+    "" \
+    "Host: $host" \
+    "Hostname: $(hostname)" \
+    "Kernel: $(uname -r)" \
+    "Nix Version: $(nix --version | head -1)" \
+    "CPU Cores: $(nproc)" \
+    "Memory: $(free -h | awk 'NR==2{print $2}')" \
+    "Disk Space: $(df -h /nix | awk 'NR==2{print $4}') available"
 }
 
 #######################################
-# Help and usage
+# Main Function
 #######################################
-show_help() {
-    cat <<EOF
-Enhanced NixOS Rebuild Script v${SCRIPT_VERSION}
 
-Usage: $SCRIPT_NAME [options] [host]
-
-Options:
-  -n, --dry-run         Dry run mode
-  -c, --clean           Clean rebuild (clear caches and stale store paths)
-  -o, --operation OP    Operation to perform (switch|boot|test|build) [default: switch]
-  --no-update           Skip system updates
-  --no-optimize         Skip store optimization
-  --no-format           Skip file formatting
-  --no-push             Skip git push
-  --no-validation       Skip configuration validation
-  --no-gc               Skip garbage collection
-  --no-maintenance      Skip post-build maintenance
-  --aggressive-gc       Perform aggressive garbage collection
-  --fast                Fast build mode (skip some optimizations)
-  -v, --verbose         Enable verbose output
-  -k, --keep DAYS       Keep generations for specified days (default: $DEFAULT_KEEP_GENERATIONS)
-  -l, --list            List available hosts
-  -g, --generations     Show system generations
-  -r, --rollback        Rollback to a previous generation
-  -i, --info            Show system information
-  -h, --help            Show this help message
-
-Host Detection:
-  If no host is specified, the script will auto-detect based on hostname:
-  • Hostnames containing 'laptop' or 'mobile' → laptop configuration
-  • Other hostnames (including 'nixos') → default configuration
-
-Operations:
-  switch    Apply configuration and make it the boot default
-  boot      Apply configuration on next boot only
-  test      Apply configuration temporarily (reverts on reboot)
-  build     Build configuration without applying
-
-Features:
-  • Parallel processing for faster builds (using $PARALLEL_JOBS cores)
-  • Intelligent garbage collection with multiple strategies
-  • Enhanced error handling and logging
-  • Pre and post-build optimizations
-  • System health monitoring
-  • Security validation checks
-  • Automatic host detection based on hostname
-
-Available hosts:
-$(for h in "$FLAKE_DIR"/hosts/*/; do echo "  $(basename "$h")"; done)
-EOF
-}
-
-#######################################
-# Main script
-#######################################
 main() {
-    check_sudo_access
+  # Show beautiful banner
+  banner
 
-    local host=""
-    local operation="$DEFAULT_OPERATION"
-    DRY_RUN=false
-    SKIP_UPDATE=false
-    SKIP_OPTIMIZE=false
-    SKIP_FORMAT=false
-    SKIP_PUSH=false
-    SKIP_VALIDATION=false
-    SKIP_GC=false
-    SKIP_MAINTENANCE=false
-    VERBOSE=false
-    AGGRESSIVE_GC=false
-    FAST_BUILD=false
-    KEEP_GENERATIONS=$DEFAULT_KEEP_GENERATIONS
+  # Setup logging first
+  setup_logging
 
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-        -n | --dry-run) DRY_RUN=true ;;
-        --no-update) SKIP_UPDATE=true ;;
-        --no-optimize) SKIP_OPTIMIZE=true ;;
-        --no-format) SKIP_FORMAT=true ;;
-        --no-push) SKIP_PUSH=true ;;
-        --no-validation) SKIP_VALIDATION=true ;;
-        --no-gc) SKIP_GC=true ;;
-        --no-maintenance) SKIP_MAINTENANCE=true ;;
-        --aggressive-gc) AGGRESSIVE_GC=true ;;
-        --fast) FAST_BUILD=true ;;
-        -v | --verbose) VERBOSE=true ;;
-        -c | --clean)
-            if [[ -z "$host" ]]; then
-                host=$(auto_detect_host)
-            fi
-            clean_rebuild "$host"
-            exit 0
-            ;;
-        -o | --operation)
-            shift
-            operation=$1
-            if [[ ! "$operation" =~ ^(switch|boot|test|build)$ ]]; then
-                die "Invalid operation: $operation. Must be one of: switch, boot, test, build"
-            fi
-            ;;
-        -k | --keep)
-            shift
-            KEEP_GENERATIONS=$1
-            ;;
-        -h | --help)
-            show_help
-            exit 0
-            ;;
-        -l | --list)
-            list_hosts
-            exit 0
-            ;;
-        -g | --generations)
-            show_generations
-            exit 0
-            ;;
-        -r | --rollback)
-            rollback_generation
-            exit 0
-            ;;
-        -i | --info)
-            show_system_info
-            exit 0
-            ;;
-        *)
-            if [[ -z "$host" ]]; then
-                host=$1
-            else
-                die "Unknown option: $1"
-            fi
-            ;;
-        esac
-        shift
-    done
+  # Use specified host or auto-detect
+  local host
+  if [[ -n "${SPECIFIED_HOST:-}" ]]; then
+    host="$SPECIFIED_HOST"
+    gum style \
+      --foreground 212 \
+      --bold \
+      "🎯 Using specified host: $host"
+  else
+    host=$(auto_detect_host)
+    gum style \
+      --foreground 212 \
+      --bold \
+      "🎯 Auto-detected host: $host"
+  fi
 
-    if [[ -z "$host" ]]; then
-        host=$(auto_detect_host)
-        info "No host specified. Auto-detected: $host (based on hostname: $(hostname))"
-        info "Use -l or --list to see all available hosts, or specify a different host manually."
-    fi
+  # Change to flake directory
+  cd "$FLAKE_DIR" || {
+    error "Failed to change to flake directory: $FLAKE_DIR"
+    exit 1
+  }
 
-    # Lock file check
-    if [[ -f "$LOCK_FILE" ]]; then
-        local pid
-        pid=$(cat "$LOCK_FILE")
-        if kill -0 "$pid" 2>/dev/null; then
-            die "Another instance is running (PID: $pid)"
-        else
-            rm -f "$LOCK_FILE"
-        fi
-    fi
+  # Show system info
+  show_system_info "$host"
 
-    verify_flake_directory
-    verify_host "$host"
-    setup_logging
+  # Verify environment
+  verify_environment "$host"
 
-    if [[ $DRY_RUN == true ]]; then
-        warn "Running in dry-run mode - no changes will be made"
-    fi
+  # System health checks
+  check_system_health
 
-    if [[ $FAST_BUILD == true ]]; then
-        info "Fast build mode enabled - skipping some optimizations"
-    fi
+  # Validate configuration
+  validate_configuration "$host"
 
-    if [[ $DRY_RUN == false ]]; then
-        if ! gum confirm "Ready to $operation $host. Continue?"; then
-            info "Operation cancelled"
-            exit 0
-        fi
-    fi
+  # Final confirmation with beautiful prompt
+  echo
+  gum style \
+    --foreground 214 \
+    --bold \
+    "⚡ Ready to rebuild and switch to new configuration"
 
-    rebuild_system "$host" "$operation"
+  if ! gum confirm --default=true "Proceed with rebuild?"; then
+    info "Operation cancelled by user"
+    exit 0
+  fi
 
-    success "System rebuild completed successfully!"
+  echo
+
+  # Perform the rebuild
+  perform_rebuild "$host"
+
+  # Post-rebuild tasks
+  post_rebuild_tasks
+
+  # Final success message
+  echo
+  gum style \
+    --foreground 84 \
+    --border double \
+    --border-foreground 84 \
+    --align center \
+    --width 50 \
+    --margin "1 2" \
+    --padding "1 3" \
+    "🎉 SUCCESS!" \
+    "NixOS rebuild completed" \
+    "Host: $host"
+
+  # Offer to view logs
+  if gum confirm "View detailed logs?"; then
+    gum pager <"$LOG_FILE"
+  fi
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    check_requirements
-    main "$@"
-fi
+# Help function for --help flag
+show_help() {
+  gum style \
+    --foreground 212 \
+    --bold \
+    "🚀 NixOS Switch v${SCRIPT_VERSION}"
+  echo
+  gum style \
+    --foreground 39 \
+    "Simplified NixOS rebuild script with auto-host detection"
+  echo
+  gum style \
+    --foreground 99 \
+    "Usage: nixswitch [host] [--help]" \
+    "       nixswitch default|laptop"
+  echo
+  gum style \
+    --foreground 84 \
+    "Features:" \
+    "• Auto-detects host based on hostname" \
+    "• Beautiful terminal UI with gum" \
+    "• Comprehensive logging" \
+    "• System health checks" \
+    "• Configuration validation" \
+    "• Automatic cleanup"
+  echo
+  gum style \
+    --foreground 214 \
+    "Host Detection Rules:" \
+    "• *laptop*, *mobile*, nixos-laptop → 'laptop'" \
+    "• All other hostnames → 'default'"
+}
+
+# Handle command line arguments
+case "${1:-}" in
+-h | --help | help)
+  show_help
+  exit 0
+  ;;
+default | laptop)
+  # Host specified explicitly - use it instead of auto-detection
+  SPECIFIED_HOST="$1"
+  ;;
+--*)
+  # Handle legacy flags with informative messages
+  case "$1" in
+  --dry-run | --clean | --fast | --list | --info | --generations | --rollback)
+    error "Legacy option '$1' is no longer supported"
+    info "This simplified script focuses only on auto-detect host functionality"
+    echo
+    show_help
+    exit 1
+    ;;
+  *)
+    error "Unknown option: $1"
+    echo
+    show_help
+    exit 1
+    ;;
+  esac
+  ;;
+"")
+  # No arguments - use auto-detection
+  SPECIFIED_HOST=""
+  ;;
+*)
+  error "Unknown host: $1"
+  info "Available hosts: default, laptop"
+  echo
+  show_help
+  exit 1
+  ;;
+esac
+
+# Run main function (no arguments passed since we handle them above)
+main
