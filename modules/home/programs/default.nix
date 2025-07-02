@@ -8,6 +8,5 @@
     ./nixvim.nix
     ./zellij.nix
     ./ghostty.nix
-    ./vscode.nix
   ];
 }
