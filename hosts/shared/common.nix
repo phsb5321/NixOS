@@ -87,15 +87,6 @@
       enable = false;
       user = "notroot";
     };
-    fonts = {
-      enable = true;
-      packages = with pkgs; [
-        nerd-fonts.jetbrains-mono
-      ];
-      defaultFonts = {
-        monospace = ["JetBrainsMono Nerd Font" "FiraCode Nerd Font Mono" "Fira Code"];
-      };
-    };
   };
 
   # Use the GNOME X11 session since Wayland is disabled

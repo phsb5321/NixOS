@@ -98,6 +98,16 @@ in {
         # Critical fix for GNOME rendering issues in NixOS 25.05
         GSK_RENDERER = "opengl";
 
+        # Fix GNOME Shell timeout and startup issues
+        GNOME_SHELL_SLOWDOWN_FACTOR = "1";
+        GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
+        GNOME_SHELL_DEBUG_MODE = "1";
+
+        # IBus environment variables
+        GTK_IM_MODULE = "ibus";
+        QT_IM_MODULE = "ibus";
+        XMODIFIERS = "@im=ibus";
+
         # Backend settings (conditional on Wayland vs X11)
         GDK_BACKEND =
           if cfg.displayManager.wayland
@@ -155,7 +165,14 @@ in {
         # Multimedia
         celluloid # Modern video player
 
+<<<<<<< HEAD
         # Essential GNOME extensions - Core functionality
+=======
+        # Input method framework (fix for ibus-daemon missing)
+        ibus
+
+        # Essential GNOME extensions
+>>>>>>> 543941522a6c5a5a9cf53a1132562a506568ef26
         gnomeExtensions.dash-to-dock
         gnomeExtensions.user-themes
         gnomeExtensions.just-perfection
@@ -539,6 +556,12 @@ in {
           "org/gnome/desktop/input-sources" = {
             sources = [["xkb" "br"]];
             xkb-options = [""];
+            mru-sources = [["xkb" "br"]];
+          };
+
+          # IBus configuration (fix for missing ibus-daemon)
+          "org/gnome/desktop/interface" = {
+            gtk-im-module = "ibus";
           };
 
           "org/gnome/desktop/peripherals/keyboard" = {
@@ -633,7 +656,21 @@ in {
           # Critical graphics fix for NixOS 25.05
           GSK_RENDERER = "opengl";
 
+<<<<<<< HEAD
           # Unified cursor consistency
+=======
+          # Fix GNOME Shell timeout and startup issues
+          GNOME_SHELL_SLOWDOWN_FACTOR = "1";
+          GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
+          GNOME_SHELL_DEBUG_MODE = "1";
+
+          # IBus environment variables
+          GTK_IM_MODULE = "ibus";
+          QT_IM_MODULE = "ibus";
+          XMODIFIERS = "@im=ibus";
+
+          # Cursor consistency
+>>>>>>> 543941522a6c5a5a9cf53a1132562a506568ef26
           XCURSOR_THEME = "Adwaita";
           XCURSOR_SIZE = "24";
 
