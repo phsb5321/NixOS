@@ -158,19 +158,8 @@ check_system_health() {
     success "Disk space check: ${available_gb}GB available"
   fi
 
-  # Check for dirty git state
-  if git -C "$FLAKE_DIR" diff --quiet && git -C "$FLAKE_DIR" diff --cached --quiet; then
-    success "Git state is clean"
-  else
-    warning "Uncommitted changes detected"
-    if gum confirm "Show git status?"; then
-      git -C "$FLAKE_DIR" status --short
-    fi
-    if ! gum confirm "Continue with uncommitted changes?"; then
-      info "Please commit your changes and try again"
-      exit 1
-    fi
-  fi
+  # Check git state with enhanced handling
+  pre_rebuild_git_check
 }
 
 validate_configuration() {
@@ -311,6 +300,254 @@ show_system_info() {
 }
 
 #######################################
+# Enhanced Git Integration
+#######################################
+
+check_git_status() {
+  local has_changes=false
+
+  # Check for any changes (staged, unstaged, untracked)
+  if ! git -C "$FLAKE_DIR" diff --quiet ||
+    ! git -C "$FLAKE_DIR" diff --cached --quiet ||
+    [[ -n "$(git -C "$FLAKE_DIR" ls-files --others --exclude-standard)" ]]; then
+    has_changes=true
+  fi
+
+  if [[ "$has_changes" == "true" ]]; then
+    warning "Git changes detected"
+
+    if gum confirm "Show detailed git status?"; then
+      echo
+      gum style --foreground 99 --bold "📝 Git Status:"
+      git -C "$FLAKE_DIR" status --short --branch
+      echo
+    fi
+
+    return 0 # Has changes
+  else
+    success "Git repository is clean"
+    return 1 # No changes
+  fi
+}
+
+get_commit_message() {
+  local default_msg="nixos: update configuration (auto-commit after successful rebuild)"
+
+  gum style --foreground 214 --bold "📝 Git Commit"
+  echo
+
+  local commit_msg
+  if gum confirm "Use default commit message?"; then
+    commit_msg="$default_msg"
+  else
+    commit_msg=$(gum input \
+      --placeholder "Enter commit message..." \
+      --prompt "📝 " \
+      --width 60)
+
+    # Use default if empty
+    if [[ -z "$commit_msg" ]]; then
+      commit_msg="$default_msg"
+    fi
+  fi
+
+  echo "$commit_msg"
+}
+
+git_add_commit_push() {
+  local host="$1"
+
+  info "Starting git workflow..."
+
+  # Check if we have changes to commit
+  if ! check_git_status; then
+    info "No changes to commit"
+    return 0
+  fi
+
+  echo
+  gum style \
+    --foreground 214 \
+    --bold \
+    "🔄 Post-Rebuild Git Workflow"
+  echo
+
+  # Ask if user wants to commit changes
+  if ! gum confirm "Commit and push changes after successful rebuild?"; then
+    info "Skipping git operations"
+    return 0
+  fi
+
+  # Show what will be added
+  gum style --foreground 99 "📋 Files to be added:"
+  git -C "$FLAKE_DIR" status --porcelain | head -10
+  if [[ $(git -C "$FLAKE_DIR" status --porcelain | wc -l) -gt 10 ]]; then
+    info "... and $(($(git -C "$FLAKE_DIR" status --porcelain | wc -l) - 10)) more files"
+  fi
+  echo
+
+  # Final confirmation
+  if ! gum confirm "Proceed with git add, commit, and push?"; then
+    info "Git operations cancelled"
+    return 0
+  fi
+
+  # Git add
+  info "Adding changes to git..."
+  if gum spin --spinner dot --title "Adding files..." -- \
+    git -C "$FLAKE_DIR" add -A; then
+    success "Files added to git"
+  else
+    error "Failed to add files to git"
+    return 1
+  fi
+
+  # Get commit message
+  local commit_message
+  commit_message=$(get_commit_message)
+
+  # Git commit
+  info "Committing changes..."
+  if gum spin --spinner dot --title "Creating commit..." -- \
+    git -C "$FLAKE_DIR" commit -m "$commit_message"; then
+    success "Changes committed successfully"
+  else
+    error "Failed to commit changes"
+    return 1
+  fi
+
+  # Check if we have a remote
+  if ! git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
+    warning "No remote repository configured"
+    info "Commit created locally only"
+    return 0
+  fi
+
+  # Git push
+  info "Pushing to remote repository..."
+  if gum spin --spinner dot --title "Pushing to remote..." -- \
+    git -C "$FLAKE_DIR" push; then
+    success "Changes pushed to remote repository"
+  else
+    error "Failed to push to remote repository"
+    warning "Changes are committed locally but not pushed"
+    return 1
+  fi
+
+  # Show final git status
+  echo
+  gum style \
+    --foreground 84 \
+    --border normal \
+    --border-foreground 84 \
+    --padding "1 2" \
+    --margin "1 0" \
+    "✅ Git Workflow Complete" \
+    "" \
+    "✓ Files added" \
+    "✓ Changes committed" \
+    "✓ Pushed to remote" \
+    "" \
+    "Host: $host" \
+    "Commit: $(git -C "$FLAKE_DIR" rev-parse --short HEAD)"
+
+  log_message "info" "Git workflow completed successfully for host: $host"
+}
+
+pre_rebuild_git_check() {
+  # Check for uncommitted changes before rebuild
+  if ! git -C "$FLAKE_DIR" diff --quiet || ! git -C "$FLAKE_DIR" diff --cached --quiet; then
+    warning "Uncommitted changes detected"
+
+    if gum confirm "Show git status?"; then
+      echo
+      git -C "$FLAKE_DIR" status --short --branch
+      echo
+    fi
+
+    echo
+    gum style --foreground 214 --bold "🔄 Pre-Rebuild Git Options"
+    echo
+
+    # Offer to commit changes before rebuild
+    if gum confirm "Commit changes before attempting rebuild?"; then
+      if commit_current_changes; then
+        success "Changes committed successfully"
+      else
+        error "Failed to commit changes"
+        if ! gum confirm "Continue rebuild anyway?"; then
+          info "Please handle your git changes and try again"
+          exit 1
+        fi
+      fi
+    else
+      info "Proceeding with uncommitted changes"
+      if ! gum confirm "Continue rebuild with uncommitted changes?"; then
+        info "Please handle your git changes and try again"
+        exit 1
+      fi
+    fi
+  else
+    success "Git state is clean"
+  fi
+}
+
+commit_current_changes() {
+  info "Committing current changes..."
+
+  # Show what will be added
+  gum style --foreground 99 "📋 Files to be committed:"
+  git -C "$FLAKE_DIR" status --porcelain | head -10
+  if [[ $(git -C "$FLAKE_DIR" status --porcelain | wc -l) -gt 10 ]]; then
+    info "... and $(($(git -C "$FLAKE_DIR" status --porcelain | wc -l) - 10)) more files"
+  fi
+  echo
+
+  # Final confirmation
+  if ! gum confirm "Add and commit these changes?"; then
+    info "Commit cancelled"
+    return 1
+  fi
+
+  # Git add
+  if ! gum spin --spinner dot --title "Adding files..." -- \
+    git -C "$FLAKE_DIR" add -A; then
+    error "Failed to add files to git"
+    return 1
+  fi
+
+  # Get commit message
+  local commit_message
+  commit_message=$(get_commit_message)
+
+  # Git commit
+  if ! gum spin --spinner dot --title "Creating commit..." -- \
+    git -C "$FLAKE_DIR" commit -m "$commit_message"; then
+    error "Failed to commit changes"
+    return 1
+  fi
+
+  # Check if we have a remote and offer to push
+  if git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
+    if gum confirm "Push to remote repository?"; then
+      if gum spin --spinner dot --title "Pushing to remote..." -- \
+        git -C "$FLAKE_DIR" push; then
+        success "Changes pushed to remote repository"
+      else
+        warning "Failed to push to remote repository"
+        info "Changes are committed locally"
+      fi
+    else
+      info "Changes committed locally only"
+    fi
+  else
+    info "Changes committed locally (no remote configured)"
+  fi
+
+  return 0
+}
+
+#######################################
 # Main Function
 #######################################
 
@@ -375,6 +612,9 @@ main() {
   # Post-rebuild tasks
   post_rebuild_tasks
 
+  # Git workflow (add, commit, push)
+  git_add_commit_push "$host"
+
   # Final success message
   echo
   gum style \
@@ -419,6 +659,7 @@ show_help() {
     "• Comprehensive logging" \
     "• System health checks" \
     "• Configuration validation" \
+    "• Git integration (add/commit/push)" \
     "• Automatic cleanup"
   echo
   gum style \
