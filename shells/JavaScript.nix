@@ -23,6 +23,7 @@
     ])
     (mkPackageGroup "Testing Tools" [
       pkgs.playwright-driver.browsers
+      pkgs.cypress
     ])
     (mkPackageGroup "Code Quality Tools" [
       pkgs.nodePackages.eslint
@@ -68,6 +69,9 @@ in
     buildInputs = allPackages;
 
     shellHook = ''
+      # Clean up NIX_PATH to suppress warnings
+      export NIX_PATH=$(echo "$NIX_PATH" | sed 's|/nix/var/nix/profiles/per-user/root/channels[^:]*:||g')
+
       # Set up centralized store for package managers
       ${builtins.concatStringsSep "\n" (map setupPackageManager packageManagers)}
 
