@@ -24,6 +24,12 @@
     (mkPackageGroup "Testing Tools" [
       pkgs.playwright-driver.browsers
     ])
+    (mkPackageGroup "Code Quality Tools" [
+      pkgs.nodePackages.eslint
+      pkgs.nodePackages.prettier
+      pkgs.nodePackages.typescript
+      pkgs.nodePackages.typescript-language-server
+    ])
     (mkPackageGroup "Database Tools" [
       pkgs.nodePackages.prisma
       pkgs.postgresql_16
@@ -32,11 +38,13 @@
     (mkPackageGroup "Build Tools" [
       pkgs.gcc
       pkgs.gnumake
+      pkgs.nodePackages.webpack
     ])
     (mkPackageGroup "Utility Tools" [
       pkgs.jq
       pkgs.yq
       pkgs.openssl
+      pkgs.nodePackages.nodemon
     ])
     (mkPackageGroup "Browser Tools" [
       pkgs.chromium
@@ -63,44 +71,44 @@ in
       # Set up centralized store for package managers
       ${builtins.concatStringsSep "\n" (map setupPackageManager packageManagers)}
 
-      # Configure pnpm to use the centralized store
+      # Configure pnpm for Cypress compatibility
       pnpm config set store-dir "${centralizedStore}/pnpm/store" &>/dev/null
+      pnpm config set side-effects-cache false &>/dev/null
+      pnpm config set auto-install-peers true &>/dev/null
+      pnpm config set node-linker hoisted &>/dev/null
 
-      # Update pnpm to latest version
+      # Update package managers
       pnpm self-update &>/dev/null || true
+      if command -v bun &> /dev/null; then
+        bun upgrade &>/dev/null || true
+      fi
 
-      # Set up Prisma environment variables
+      # Set up environment variables
       export PRISMA_QUERY_ENGINE_LIBRARY="${pkgs.prisma-engines}/lib/libquery_engine.node"
       export PRISMA_QUERY_ENGINE_BINARY="${pkgs.prisma-engines}/bin/query-engine"
       export PRISMA_SCHEMA_ENGINE_BINARY="${pkgs.prisma-engines}/bin/schema-engine"
-
-      # Set up Puppeteer
       export PUPPETEER_EXECUTABLE_PATH="$(which chromium)"
-
-      # Set up Playwright
       export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
       export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+      export CYPRESS_CACHE_FOLDER="${centralizedStore}/cypress/cache"
+      export CYPRESS_VERIFY_TIMEOUT=100000
+      export TSC_NONPOLLING_WATCHER=1
+      export TSC_WATCHFILE=UseFsEvents
 
-      # Function to run commands only in project directories
-      run_in_project() {
-        if [ -f "package.json" ]; then
-          "$@"
-        else
-          echo "Error: No package.json found. Please run this command in a JavaScript project directory."
-        fi
-      }
+      # Create cypress cache directory
+      mkdir -p "${centralizedStore}/cypress/cache"
 
-      # Set up aliases for package managers
-      ${builtins.concatStringsSep "\n" (map (pm: "alias ${pm}='run_in_project ${pm}'") packageManagers)}
-
-      # Print environment information
-      echo "🚀 JavaScript/TypeScript development environment (Nixpkgs 24.05) is ready!"
-      echo "📦 Installed package groups:"
-      ${builtins.concatStringsSep "\n" (map (group: "echo \"  - ${group.name}\"") packageGroups)}
-      echo "🔧 Use 'pnpm', 'npm', 'yarn', or 'bun' to manage your project dependencies."
-      echo "🦕 Deno is now available in your environment."
-      echo "🏗️  NestJS CLI is available. Use 'nest' to create and manage NestJS projects."
-      echo "🎭 Playwright is configured for testing. Install @playwright/test in your project."
-      echo "   Note: Make sure your npm playwright version matches the nix version for compatibility."
+      echo ""
+      echo "🚀 ✨ JavaScript/TypeScript Development Environment ✨ 🚀"
+      echo ""
+      echo "📦 Node.js • pnpm • yarn • bun • 🦕 deno"
+      echo "🔧 TypeScript • ESLint • Prettier • Webpack • Nodemon"
+      echo "🧪 Playwright • Cypress • Testing Ready"
+      echo "🗄️  Prisma • PostgreSQL • Database Tools"
+      echo "🏗️  NestJS CLI • Vercel CLI • Build Tools"
+      echo "🌐 Chromium • Browser Tools Ready"
+      echo ""
+      echo "⚡ Ready to build amazing things! ⚡"
+      echo ""
     '';
   }
