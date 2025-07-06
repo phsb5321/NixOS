@@ -21,6 +21,7 @@ in {
     ./document-tools.nix
     ./version-sync.nix
     ./flatpak.nix
+    ./gui-app-deps.nix
   ];
 
   options.modules.core = with lib; {
