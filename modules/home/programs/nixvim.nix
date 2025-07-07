@@ -37,7 +37,7 @@ in {
               conceallevel = 2;
               daily_notes = {
                 folder = "3. Resources/Daily";
-                date_format = "%Y/%B/%d (%A)";
+                date_format = "%Y/%m-%B/%d (%A)";
               };
             };
           };
