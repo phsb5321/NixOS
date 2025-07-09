@@ -36,12 +36,12 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # First, forcefully disable the home-manager service to avoid conflicts
-    systemd.services."home-manager-${cfg.username}".enable = lib.mkForce false;
-
     # Home Manager core settings
     home-manager = {
       backupFileExtension = "bkp";
+      useGlobalPkgs = true;
+      useUserPackages = true;
+      
       extraSpecialArgs = {
         inherit inputs;
         forceActivation = true;
@@ -60,11 +60,6 @@ in {
           username = cfg.username;
           homeDirectory = "/home/${cfg.username}";
           stateVersion = systemVersion;
-
-          # File management options - handles conflicts
-          file = {
-            ".config".enable = false; # Skip managing whole .config directory
-          };
 
           packages = with pkgs;
             [
@@ -112,7 +107,7 @@ in {
 
           sessionVariables = {
             EDITOR = "nvim";
-            SHELL = "/etc/profiles/per-user/notroot/bin/zsh";
+            SHELL = "${pkgs.zsh}/bin/zsh";
           };
         };
 
@@ -127,9 +122,6 @@ in {
             bluez5.roles              = [ hfp_hf hfp_ag hsp_hs hsp_ag a2dp_sink a2dp_source ]
           }
         '';
-
-        # Disable any legacy ghostty config to avoid collisions
-        home.file.".config/ghostty/config".enable = false;
       };
     };
   };
