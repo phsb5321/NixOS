@@ -18,12 +18,12 @@
   boot.extraModulePackages = [];
 
   fileSystems."/" = {
-    device = "/dev/disk/by-uuid/3fb7b5aa-54c7-4ad5-b4ae-c5cb5ef5143e";
+    device = "/dev/disk/by-uuid/1875afed-c5c1-4c6b-b2bb-7881af38d623";
     fsType = "ext4";
   };
 
   fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/76CD-4081";
+    device = "/dev/disk/by-uuid/13B7-26B8";
     fsType = "vfat";
     options = ["fmask=0077" "dmask=0077"];
   };
@@ -40,8 +40,4 @@
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
-
-  # UEFI boot loader configuration
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
 }
