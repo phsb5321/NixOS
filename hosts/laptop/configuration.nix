@@ -48,7 +48,7 @@
     # Laptop-specific utilities
     powertop
     tlp
-    
+
     # Development tools for mobile work
     git
     vim
