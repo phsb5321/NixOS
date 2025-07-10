@@ -102,6 +102,7 @@ in {
               inputs.nixvim
               ngrok
               zellij
+              vscode
             ]
             ++ cfg.extraPackages;
 
