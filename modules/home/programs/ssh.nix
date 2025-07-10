@@ -11,29 +11,29 @@ in {
     home-manager.users.${cfg.username} = {
       programs.ssh = {
         enable = true;
-        
+
         # Common SSH configuration
         extraConfig = ''
           # Use SSH key agent for authentication
           AddKeysToAgent yes
-          
+
           # Keep connections alive
           ServerAliveInterval 60
           ServerAliveCountMax 3
-          
+
           # Reuse connections
           ControlMaster auto
           ControlPath ~/.ssh/sockets/%r@%h-%p
           ControlPersist 600
-          
+
           # Security settings
           HashKnownHosts yes
           VisualHostKey yes
-          
+
           # Performance
           Compression yes
         '';
-        
+
         # Common host configurations
         matchBlocks = {
           # GitHub configuration
@@ -43,7 +43,7 @@ in {
             identityFile = "~/.ssh/id_ed25519";
             identitiesOnly = true;
           };
-          
+
           # GitLab configuration
           "gitlab.com" = {
             hostname = "gitlab.com";
@@ -51,7 +51,7 @@ in {
             identityFile = "~/.ssh/id_ed25519";
             identitiesOnly = true;
           };
-          
+
           # Local development servers
           "*.local" = {
             checkHostIP = false;
@@ -60,7 +60,7 @@ in {
           };
         };
       };
-      
+
       # Create SSH socket directory
       home.file.".ssh/sockets/.keep".text = "";
     };
