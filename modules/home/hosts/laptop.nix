@@ -82,7 +82,7 @@ with lib; {
         ms-python.python
         rust-lang.rust-analyzer
         esbenp.prettier-vscode
-        ms-vscode.vscode-typescript-next
+        # ms-vscode.vscode-typescript-next  # Temporarily disabled - extension not available
         ms-vscode-remote.remote-ssh
         jnoortheen.nix-ide
       ];
