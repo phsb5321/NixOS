@@ -55,8 +55,10 @@ in {
           # Local development servers
           "*.local" = {
             checkHostIP = false;
-            strictHostKeyChecking = false;
-            userKnownHostsFile = "/dev/null";
+            extraOptions = {
+              StrictHostKeyChecking = "no";
+              UserKnownHostsFile = "/dev/null";
+            };
           };
         };
       };
