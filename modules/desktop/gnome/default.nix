@@ -320,7 +320,7 @@ in {
           nerd-fonts.fira-code
 
           # 🎯 COMPATIBILITY: Microsoft fonts for better app compatibility
-          corefonts # Arial, Times New Roman, etc.
+          # corefonts # Arial, Times New Roman, etc. - temporarily disabled due to network issues
           liberation_ttf # Open source alternatives
         ];
 

@@ -68,11 +68,11 @@ in {
             };
           };
           gitsigns.enable = true;
-          neo-tree = {
-            enable = true;
-            closeIfLastWindow = true;
-            window.width = 30;
-          };
+          # neo-tree = {  # Temporarily disabled due to network issues
+          #   enable = true;
+          #   closeIfLastWindow = true;
+          #   window.width = 30;
+          # };
           which-key.enable = true;
           comment.enable = true;
           nvim-autopairs.enable = true;

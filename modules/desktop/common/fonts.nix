@@ -68,8 +68,8 @@ in {
         fira-code # Mozilla's programming font
 
         # 🎯 COMPATIBILITY: Microsoft fonts for better app support
-        corefonts # Arial, Times New Roman, etc.
-        vistafonts # Vista-era Microsoft fonts
+        # corefonts # Arial, Times New Roman, etc. - temporarily disabled due to network issues
+        # vistafonts # Vista-era Microsoft fonts - temporarily disabled due to network issues
       ];
       description = ''
         Comprehensive font packages including Nerd Fonts with symbols, enhanced emoji support,
