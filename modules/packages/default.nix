@@ -60,9 +60,13 @@ in {
           pkg-config # Package configuration tool
 
           # Version control and collaboration
+          git # Git version control system
+          git-lfs # Git Large File Storage
           gh # GitHub CLI
           glab # GitLab CLI
           lazygit # Simple terminal UI for git commands
+          gitui # Terminal UI for git
+          delta # Syntax-highlighting pager for git
 
           # Modern development utilities
           typst # Modern typesetting system
@@ -71,6 +75,15 @@ in {
           httpie # User-friendly CLI HTTP client
           jq # Command-line JSON processor
           yq # YAML processor (jq for YAML)
+          fd # Fast alternative to find
+          ripgrep # Fast grep alternative
+          bat # Cat with syntax highlighting
+          eza # Modern ls replacement
+          zoxide # Smart cd command
+          fzf # Fuzzy finder
+          tree # Directory tree viewer
+          htop # Interactive process viewer
+          btop # Modern htop alternative
 
           # Database tools
           sqlite # Lightweight database
@@ -129,8 +142,8 @@ in {
           kdePackages.okular
 
           # Font packages to fix UI cramping issues
-          corefonts # Microsoft Core Fonts
-          vistafonts # Microsoft Vista fonts
+          # corefonts # Microsoft Core Fonts - temporarily disabled due to network issues
+          # vistafonts # Microsoft Vista fonts - temporarily disabled due to network issues
           cantarell-fonts # GNOME default fonts
           liberation_ttf # Microsoft font alternatives
           noto-fonts # Google Noto fonts
