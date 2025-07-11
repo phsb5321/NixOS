@@ -217,6 +217,5 @@
     rtkit.enable = true;
   };
 
-  # Common console settings
-  console.keyMap = "br-abnt2";
+  # Keyboard configuration is now handled by the core module
 }
