@@ -58,16 +58,72 @@
     # Development tools specific to desktop
     calibre
     anydesk
+    postman
+    dbeaver-bin
+    android-studio
+    android-tools
+
+    # Media and Graphics - Desktop workstation
+    gimp
+    inkscape
+    blender
+    krita
+    kdePackages.kdenlive
+    obs-studio
 
     # Communication
     telegram-desktop
+    discord
+    slack
+    zoom-us
+
+    # Gaming (desktop only)
+    steam
+    lutris
+    wine
+    winetricks
+
+    # Productivity - Desktop
+    obsidian
+    notion-app-enhanced
+
+    # System monitoring
+    htop
+    btop
+    nvtop-amd
 
     # LACT for AMD GPU control
     lact
+
+    # Core development tools
+    gh
+    git-crypt
+    gnupg
+    ripgrep
+    fd
+    jq
+    yq
+    unzip
+    zip
+    p7zip
+
+    # Fonts
+    nerd-fonts.jetbrains-mono
+    noto-fonts-emoji
+    noto-fonts
+    noto-fonts-cjk-sans
   ];
 
   # Desktop-specific networking ports
   modules.networking.firewall.openPorts = [22 3000];
+
+  # LACT configuration for AMD GPU (system-level)
+  environment.etc."lact/config.yaml".text = ''
+    daemon:
+      log_level: warn
+      admin_groups:
+        - wheel
+  '';
 
   # AMD-specific hardware configuration for NixOS 25.05
   hardware.cpu.intel.updateMicrocode = true;
@@ -100,6 +156,10 @@
     AMD_VULKAN_ICD = "RADV";
     VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
     VDPAU_DRIVER = "radeonsi";
+    RADV_PERFTEST = "gpl";
+    
+    # Desktop development (moved from Home Manager)
+    CHROME_EXECUTABLE = "${pkgs.google-chrome}/bin/google-chrome-stable";
   };
 
   # GDM and session fixes

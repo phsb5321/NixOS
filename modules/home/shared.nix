@@ -18,7 +18,7 @@ with lib; {
       autosuggestion.enable = true;
       syntaxHighlighting.enable = true;
 
-      initExtra = ''
+      initContent = ''
         # Common shell initialization
         eval "$(starship init zsh)"
         eval "$(zoxide init zsh)"
@@ -153,27 +153,12 @@ with lib; {
       enable = true;
       enableZshIntegration = true;
       git = true;
-      icons = true;
+      icons = "auto";
     };
   };
 
-  # Common packages for all hosts
+  # Essential packages for all hosts (user-level tools only)
   home.packages = with pkgs; [
-    # Fonts
-    nerd-fonts.jetbrains-mono
-    noto-fonts-emoji
-    noto-fonts
-    noto-fonts-cjk-sans
-
-    # Development Tools - Core
-    gh
-    git-crypt
-    gnupg
-    ripgrep
-    fd
-    jq
-    yq
-
     # Shell utilities
     zsh-syntax-highlighting
     zsh-autosuggestions
@@ -183,9 +168,6 @@ with lib; {
     # File management
     yazi
     tree
-    unzip
-    zip
-    p7zip
 
     # Network tools
     wget

@@ -32,7 +32,7 @@ NixOS/
 The new packages module provides categorized package management:
 
 - **browsers**: Web browsers (Chrome, Firefox, Brave, etc.)
-- **development**: Development tools (VSCode, Postman, etc.)
+- **development**: Development tools (Postman, API clients, etc.)
 - **media**: Media and entertainment (Spotify, Discord, VLC, etc.)
 - **utilities**: System utilities (gparted, syncthing, etc.)
 - **gaming**: Gaming-related packages (Steam, GameMode, etc.)
