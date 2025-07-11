@@ -28,7 +28,7 @@ in {
           rerere.enabled = true;
           branch.autosetupmerge = "always";
           branch.autosetuprebase = "always";
-          
+
           # Delta configuration for better diffs
           delta = {
             navigate = true;
@@ -36,7 +36,7 @@ in {
             line-numbers = true;
             side-by-side = true;
           };
-          
+
           # Better log formatting
           alias = {
             lg = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit";
