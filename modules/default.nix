@@ -6,5 +6,6 @@
     ./home
     ./core
     ./packages
+    ./hardware
   ];
 }

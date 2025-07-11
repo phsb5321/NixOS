@@ -40,8 +40,46 @@
     };
   };
 
-  # Laptop-specific package preferences (disabled gaming to save battery)
-  modules.packages.gaming.enable = false;
+  # 🎯 NVIDIA GPU: Enable Nvidia GPU support with optimized laptop configuration
+  modules.hardware.nvidia = {
+    enable = true;
+
+    # GPU Bus IDs (verified with lspci)
+    intelBusId = "PCI:0:2:0";  # Intel UHD Graphics
+    nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
+
+    # Driver configuration - GTX 1650 Mobile uses Turing architecture
+    driver = {
+      version = "stable";
+      openSource = true; # Turing architecture supports open drivers
+    };
+
+    # PRIME configuration - offload mode for battery efficiency
+    prime = {
+      mode = "offload"; # Use Intel by default, offload to Nvidia when needed
+      allowExternalGpu = false;
+    };
+
+    # Power management optimized for laptops
+    powerManagement = {
+      enable = false; # Disable experimental power management
+      finegrained = true; # Enable fine-grained power management for Turing+
+    };
+
+    # Performance settings
+    performance = {
+      forceFullCompositionPipeline = false; # Don't force to avoid WebGL issues
+    };
+
+    # Laptop-specific features
+    laptop = {
+      enableSpecializations = true; # Enable performance/battery boot options
+      enableOffloadWrapper = true; # Create nvidia-offload command
+    };
+  };
+
+  # Laptop-specific package preferences
+  modules.packages.gaming.enable = true; # Enable gaming with Nvidia GPU
 
   # Laptop-specific extra packages
   modules.packages.extraPackages = with pkgs; [
