@@ -63,46 +63,8 @@ in {
 
           packages = with pkgs;
             [
-              # Fonts
-              nerd-fonts.jetbrains-mono
-              noto-fonts-emoji
-              noto-fonts
-              noto-fonts-cjk-sans
-
-              # Shell and Terminal
-              zsh
-              starship # Cross-shell prompt
-              kitty
-              grc # Generic colorizer
-              eza # Modern ls replacement
-              bat # Modern cat replacement
-              vivid # LS_COLORS generator
-              zsh-syntax-highlighting
-              zsh-autosuggestions
-              zsh-you-should-use
-              zsh-fast-syntax-highlighting
-
-              # Development Tools
-              ffmpeg
-              gh
-              git
-              zoxide # Smart directory jumper
-              fzf # Fuzzy finder
-              ripgrep # Fast grep
-              fd # Fast find
-
-              # Applications
-              yazi-unwrapped
-              texlive.combined.scheme-full
-              dbeaver-bin
-              amberol
-              remmina
-              obsidian
-              d2
-              inputs.nixvim
-              ngrok
-              zellij
-              vscode
+              # Core Home Manager packages (user-level only)
+              # All application packages should be at system level
             ]
             ++ cfg.extraPackages;
 

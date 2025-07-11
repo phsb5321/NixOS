@@ -230,10 +230,15 @@
     xserver.desktopManager.gnome.extraGSettingsOverrides = ''
       [org.gnome.desktop.input-sources]
       sources=[('xkb', 'br+abnt2')]
-      xkb-options=['grp:alt_shift_toggle,compose:ralt']
+      xkb-options=['grp:alt_shift_toggle','compose:ralt']
       
       [org.gnome.desktop.peripherals.keyboard]
       numlock-state=true
+    '';
+    
+    # Force X11 keyboard layout to be applied consistently
+    xserver.displayManager.sessionCommands = ''
+      ${pkgs.xorg.setxkbmap}/bin/setxkbmap -layout br -variant abnt2 -option "grp:alt_shift_toggle,compose:ralt"
     '';
     
     # Audio system
@@ -261,11 +266,6 @@
     printing.enable = true;
     upower.enable = true;
     geoclue2.enable = true;
-    
-    # Ensure keyboard layout is properly set
-    xserver.displayManager.sessionCommands = ''
-      ${pkgs.xorg.setxkbmap}/bin/setxkbmap -layout br -variant abnt2 -option "grp:alt_shift_toggle,compose:ralt"
-    '';
     
     # Laptop power management (use TLP instead of power-profiles-daemon)
     power-profiles-daemon.enable = false; # Explicitly disable to prevent conflicts with TLP
@@ -312,6 +312,32 @@
     };
     gamemode.enable = true;
   };
+
+  # Laptop-specific configurations (moved from Home Manager)
+  environment.etc = {
+    # Power management configuration for laptop
+    "powertop/powertop.conf".text = ''
+      # Laptop power optimization
+      echo 'auto' > '/sys/bus/pci/devices/0000:00:1f.3/power/control'
+      echo 'auto' > '/sys/bus/i2c/devices/i2c-0/device/power/control'
+    '';
+  };
+
+  # Laptop-specific services (moved from Home Manager)
+  services.redshift = {
+    enable = true;
+    temperature = {
+      day = 6500;
+      night = 4500;
+    };
+    brightness = {
+      day = "1";
+      night = "0.8";
+    };
+  };
+
+  # Location for redshift
+  location.provider = "geoclue2";
 
   # 🎯 SYSTEM PACKAGES: Core tools, gaming, and applications
   environment.systemPackages = with pkgs; [
@@ -407,11 +433,34 @@
     font-manager
     gucharmap
     
-    # Development and productivity
-    vscode
-    
     # Additional utilities
     celluloid # Video player
+    
+    # Laptop-specific packages (moved from Home Manager)
+    dbeaver-bin
+    amberol # Lightweight music player
+    vlc
+    discord
+    telegram-desktop
+    libreoffice
+    remmina
+    ngrok
+    brightnessctl
+    acpi
+    powertop
+    tlp
+    texlive.combined.scheme-full
+    zellij
+    tmux
+    
+    # Core development tools
+    gh
+    git-crypt
+    gnupg
+    ripgrep
+    fd
+    jq
+    yq
     
     # Fonts
     nerd-fonts.jetbrains-mono
@@ -443,6 +492,35 @@
     
     # Font rendering
     FONTCONFIG_FILE = "${pkgs.fontconfig.out}/etc/fonts/fonts.conf";
+    
+    # Laptop-specific environment variables (moved from Home Manager)
+    POWERTOP_ENABLE = "1";
+    DOCKER_BUILDKIT = "1";
+    COMPOSE_DOCKER_CLI_BUILD = "1";
+    TERM = "xterm-256color";
+    COLORTERM = "truecolor";
+  };
+
+  # Systemd service to ensure ABNT2 keyboard layout persists
+  systemd.user.services.fix-keyboard-layout = {
+    description = "Fix ABNT2 keyboard layout";
+    after = [ "graphical-session.target" ];
+    wantedBy = [ "default.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.writeShellScript "fix-keyboard" ''
+        # Wait for GNOME to fully load
+        sleep 3
+        
+        # Apply X11 keyboard layout
+        ${pkgs.xorg.setxkbmap}/bin/setxkbmap -layout br -variant abnt2 -option "grp:alt_shift_toggle,compose:ralt"
+        
+        # Apply GNOME settings
+        ${pkgs.glib}/bin/gsettings set org.gnome.desktop.input-sources sources "[('xkb', 'br+abnt2')]"
+        ${pkgs.glib}/bin/gsettings set org.gnome.desktop.input-sources xkb-options "['grp:alt_shift_toggle','compose:ralt']"
+      ''}";
+    };
   };
 
   # Virtualization
