@@ -5,6 +5,7 @@
     ./starship.nix
     ./kitty.nix
     ./git.nix
+    ./ssh.nix
     ./nixvim.nix
     ./zellij.nix
     ./ghostty.nix

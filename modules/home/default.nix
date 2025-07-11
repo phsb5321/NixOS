@@ -41,7 +41,7 @@ in {
       backupFileExtension = "bkp";
       useGlobalPkgs = true;
       useUserPackages = true;
-      
+
       extraSpecialArgs = {
         inherit inputs;
         forceActivation = true;
