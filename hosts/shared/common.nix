@@ -1,4 +1,6 @@
 # ~/NixOS/hosts/shared/common.nix
+# This configuration is now primarily for desktop hosts
+# The laptop has its own integrated configuration
 {
   pkgs,
   lib,
@@ -6,7 +8,7 @@
   systemVersion,
   ...
 }: {
-  # Common configuration shared between all hosts
+  # Common configuration shared between desktop hosts (not laptop)
 
   # Override gnome-session to fix Wayland wrapper bug
   nixpkgs.overlays = [
