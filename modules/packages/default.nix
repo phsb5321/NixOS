@@ -33,10 +33,6 @@ in {
       packages = mkOption {
         type = types.listOf types.package;
         default = with pkgs; [
-          # Code editors (VSCode manages its own extensions)
-          vscode
-          code-cursor
-
           # API testing and development
           bruno # Open-source API client (Postman alternative)
           bruno-cli # Bruno command-line interface
@@ -140,6 +136,9 @@ in {
           bleachbit
           # PDF viewer (modern Qt 6 version)
           kdePackages.okular
+
+          # Custom system scripts
+          (writeShellScriptBin "nixswitch" (builtins.readFile ../../user-scripts/nixswitch))
 
           # Font packages to fix UI cramping issues
           # corefonts # Microsoft Core Fonts - temporarily disabled due to network issues

@@ -49,6 +49,27 @@ in {
       default = [];
       description = "Additional system-wide packages to install";
     };
+
+    # 🎯 KEYBOARD LAYOUT: Configuration options for Brazilian layout
+    keyboard = {
+      layout = mkOption {
+        type = types.str;
+        default = "br";
+        description = "Keyboard layout";
+      };
+
+      variant = mkOption {
+        type = types.str;
+        default = "abnt2";
+        description = "Keyboard variant";
+      };
+
+      options = mkOption {
+        type = types.str;
+        default = "grp:alt_shift_toggle,compose:ralt";
+        description = "Keyboard options";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -215,6 +236,18 @@ in {
       fstrim.enable = true;
       thermald.enable = true;
       printing.enable = true;
+    };
+
+    # 🎯 KEYBOARD LAYOUT: Configure console and X11 keyboard layout
+    console.keyMap = "br-abnt2";
+
+    # Configure X11 keyboard layout if X11 is available
+    services.xserver = lib.mkIf config.services.xserver.enable {
+      xkb = {
+        layout = cfg.keyboard.layout;
+        variant = cfg.keyboard.variant;
+        options = cfg.keyboard.options;
+      };
     };
 
     # Basic systemd-resolved configuration (Docker DNS will depend on this)

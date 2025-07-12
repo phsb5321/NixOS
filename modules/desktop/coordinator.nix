@@ -17,10 +17,10 @@ in {
       # Video drivers - set by specific hosts if needed
       videoDrivers = mkDefault [];
 
-      # Keyboard layout
+      # Keyboard layout - use mkDefault to allow override by specific environments
       xkb = {
-        layout = "br";
-        variant = "";
+        layout = mkDefault "br";
+        variant = mkDefault "";
       };
 
       # GDM configuration for GNOME
@@ -31,12 +31,12 @@ in {
       };
 
       # SDDM configuration for KDE is handled by the KDE module
+    };
 
-      # Auto-login configuration
-      displayManager.autoLogin = mkIf cfg.autoLogin.enable {
-        enable = true;
-        user = cfg.autoLogin.user;
-      };
+    # Auto-login configuration - updated for NixOS 25.05
+    services.displayManager.autoLogin = mkIf cfg.autoLogin.enable {
+      enable = true;
+      user = cfg.autoLogin.user;
     };
 
     # New display manager service configuration for NixOS 25.05
