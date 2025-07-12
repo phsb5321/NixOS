@@ -55,9 +55,6 @@ in {
           export SHELL="/etc/profiles/per-user/notroot/bin/zsh"
         fi
 
-        # starship prompt
-        eval "$(${pkgs.starship}/bin/starship init zsh)"
-
         # NVIDIA GPU offload function
         nvidia-run() {
           if [ $# -eq 0 ]; then
