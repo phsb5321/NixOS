@@ -2,7 +2,6 @@
 {
   imports = [
     ./zsh.nix
-    ./starship.nix
     ./kitty.nix
     ./git.nix
     ./ssh.nix

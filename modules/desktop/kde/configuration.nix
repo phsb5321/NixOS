@@ -108,7 +108,6 @@
     username = "notroot";
     hostName = "default";
     extraPackages = with pkgs; [
-      vscode
       google-chrome
       insomnia
       postman
