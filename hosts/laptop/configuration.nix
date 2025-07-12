@@ -357,6 +357,7 @@
     unzip
     p7zip
     gum # TUI toolkit for beautiful scripts
+    starship # Shell prompt
     
     # Development tools
     nodejs_22
