@@ -90,7 +90,7 @@
     # System monitoring
     htop
     btop
-    nvtop-amd
+    nvtopPackages.amd
 
     # LACT for AMD GPU control
     lact
