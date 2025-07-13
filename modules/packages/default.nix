@@ -240,14 +240,9 @@ in {
           zsh-you-should-use
           zsh-fast-syntax-highlighting
 
-          # Development Tools (from home-manager)
-          ffmpeg
-          gh
-          git
+          # Development Tools (basic ones not covered in development packages)
+          ffmpeg # Media processing tool
           zoxide # Smart directory jumper
-          fzf # Fuzzy finder
-          ripgrep # Fast grep
-          fd # Fast find
           neovim # Text editor (replaces nixvim)
 
           # Applications (from home-manager)
@@ -260,7 +255,7 @@ in {
           d2
           ngrok
           zellij
-          vscode
+          # vscode removed from here as it's already in development packages
         ];
         description = "List of terminal and shell packages to install";
       };
