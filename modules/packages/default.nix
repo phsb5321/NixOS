@@ -59,6 +59,9 @@ in {
           ninja # Small build system with focus on speed
           pkg-config # Package configuration tool
 
+          # Dotfiles management
+          chezmoi # Manage your dotfiles across multiple machines
+
           # Version control and collaboration
           git # Git version control system
           git-lfs # Git Large File Storage
