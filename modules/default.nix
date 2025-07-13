@@ -6,5 +6,6 @@
     ./core
     ./packages
     ./hardware
+    ./dotfiles
   ];
 }
