@@ -15,7 +15,7 @@ in {
   config = mkIf cfg.enable {
     services.xserver.xkb = {
       layout = "br";
-      variant = mkDefault "abnt2";
+      variant = mkDefault ""; # Default to standard Brazilian ABNT (no variant)
     };
 
     environment.systemPackages = cfg.extraPackages;

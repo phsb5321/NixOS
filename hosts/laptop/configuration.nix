@@ -69,6 +69,15 @@
   # Laptop-specific networking - no special ports needed
   modules.networking.firewall.openPorts = [22]; # SSH only
 
+  # Laptop-specific keyboard configuration - use ABNT2 variant
+  services.xserver.xkb = {
+    layout = "br";
+    variant = lib.mkForce "abnt2"; # Laptop uses Brazilian ABNT2 variant
+  };
+  
+  # Console keymap for laptop
+  console.keyMap = lib.mkForce "br-abnt2";
+
   # Laptop-specific bootloader configuration
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

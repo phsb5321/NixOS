@@ -60,7 +60,7 @@ in {
 
       variant = mkOption {
         type = types.str;
-        default = "abnt2";
+        default = ""; # Default to standard Brazilian ABNT (no variant)
         description = "Keyboard variant";
       };
 
@@ -239,7 +239,7 @@ in {
     };
 
     # 🎯 KEYBOARD LAYOUT: Configure console and X11 keyboard layout
-    console.keyMap = "br-abnt2";
+    console.keyMap = "br"; # Default to standard Brazilian keymap
 
     # Configure X11 keyboard layout if X11 is available
     services.xserver = lib.mkIf config.services.xserver.enable {
