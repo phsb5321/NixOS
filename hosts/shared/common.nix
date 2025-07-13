@@ -114,18 +114,71 @@
     };
   };
 
-  # Common locale settings
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pt_BR.UTF-8";
-    LC_IDENTIFICATION = "pt_BR.UTF-8";
-    LC_MEASUREMENT = "pt_BR.UTF-8";
-    LC_MONETARY = "pt_BR.UTF-8";
-    LC_NAME = "pt_BR.UTF-8";
-    LC_NUMERIC = "pt_BR.UTF-8";
-    LC_PAPER = "pt_BR.UTF-8";
-    LC_TELEPHONE = "pt_BR.UTF-8";
-    LC_TIME = "pt_BR.UTF-8";
+  # Console keymap configuration
+  console = {
+    font = "Lat2-Terminus16";
+    useXkbConfig = true; # Use X keyboard configuration in console
   };
+
+  # X11/Wayland keyboard configuration
+  services.xserver.xkb = {
+    layout = "us,br";
+    variant = ",abnt2";
+    options = "grp:alt_shift_toggle,compose:ralt"; # Alt+Shift to switch, Right Alt as compose key
+  };
+
+  # Input method configuration
+  i18n.inputMethod = {
+    enable = true;
+    type = "ibus";
+  };
+
+  # GNOME-specific keyboard integration fixes
+  services.gnome.gnome-settings-daemon.enable = lib.mkForce true;
+
+  # 🚨 CRITICAL: Configure dconf/gsettings for GNOME keyboard integration
+  services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
+    # Input Sources Configuration
+    [org.gnome.desktop.input-sources]
+    sources=[('xkb', 'us'), ('xkb', 'br+abnt2')]
+    xkb-options=['grp:alt_shift_toggle', 'compose:ralt']
+
+    # Ensure consistent keyboard settings
+    [org.gnome.desktop.peripherals.keyboard]
+    numlock-state=true
+    remember-numlock-state=true
+
+    # Interface consistency
+    [org.gnome.desktop.interface]
+    show-battery-percentage=true
+  '';
+
+  services.xserver.desktopManager.gnome.extraGSettingsOverridePackages = [
+    pkgs.gsettings-desktop-schemas
+    pkgs.gnome-settings-daemon
+  ];
+
+  # Enhanced locale settings with keyboard integration
+  i18n = {
+    defaultLocale = "en_US.UTF-8";
+    extraLocaleSettings = {
+      LC_ADDRESS = "pt_BR.UTF-8";
+      LC_IDENTIFICATION = "pt_BR.UTF-8";
+      LC_MEASUREMENT = "pt_BR.UTF-8";
+      LC_MONETARY = "pt_BR.UTF-8";
+      LC_NAME = "pt_BR.UTF-8";
+      LC_NUMERIC = "pt_BR.UTF-8";
+      LC_PAPER = "pt_BR.UTF-8";
+      LC_TELEPHONE = "pt_BR.UTF-8";
+      LC_TIME = "pt_BR.UTF-8";
+    };
+  };
+
+  # Enhanced boot configuration to fix early keyboard issues
+  boot.kernelParams = [
+    "consoleblank=0"  # Prevent console blanking
+    "rd.systemd.show_status=true"  # Show systemd status during boot
+  ];
 
   # System-level environment variables (migrated from home-manager)
   environment.variables = {
