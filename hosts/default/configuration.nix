@@ -20,6 +20,8 @@
 
   # Override shared configuration as needed
   modules.networking.hostName = hostname;
+  
+  # Desktop uses shared keyboard configuration from common.nix
   # Note: Home Manager removed - packages are now managed at system level
 
   # Desktop-specific configuration
