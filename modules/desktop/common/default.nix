@@ -15,7 +15,7 @@ in {
   config = mkIf cfg.enable {
     services.xserver.xkb = {
       layout = "br";
-      variant = mkDefault "";
+      variant = mkDefault "abnt2";
     };
 
     environment.systemPackages = cfg.extraPackages;
