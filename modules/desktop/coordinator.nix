@@ -17,11 +17,8 @@ in {
       # Video drivers - set by specific hosts if needed
       videoDrivers = mkDefault [];
 
-      # Keyboard layout - use mkDefault to allow override by specific environments
-      xkb = {
-        layout = mkDefault "br";
-        variant = mkDefault ""; # Default to standard Brazilian ABNT (no variant)
-      };
+      # Let desktop environments handle keyboard configuration automatically
+      # (removed explicit keyboard layout configuration)
 
       # GDM configuration for GNOME
       displayManager.gdm = mkIf (cfg.environment == "gnome") {

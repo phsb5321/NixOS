@@ -13,10 +13,8 @@ in {
   ];
 
   config = mkIf cfg.enable {
-    services.xserver.xkb = {
-      layout = "br";
-      variant = mkDefault ""; # Default to standard Brazilian ABNT (no variant)
-    };
+    # Let desktop environments handle keyboard configuration automatically
+    # (removed explicit X11 keyboard layout configuration)
 
     environment.systemPackages = cfg.extraPackages;
 
