@@ -165,10 +165,7 @@
   # GDM and session fixes
   services.xserver = {
     enable = true;
-    xkb = {
-      layout = "br";
-      variant = ""; # Default host uses standard Brazilian ABNT (no variant)
-    };
+    # Let GNOME handle keyboard configuration automatically
   };
 
   # Explicitly disable conflicting display managers
