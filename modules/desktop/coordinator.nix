@@ -20,7 +20,7 @@ in {
       # Keyboard layout - use mkDefault to allow override by specific environments
       xkb = {
         layout = mkDefault "br";
-        variant = mkDefault "abnt2";
+        variant = mkDefault ""; # Default to standard Brazilian ABNT (no variant)
       };
 
       # GDM configuration for GNOME

@@ -167,7 +167,7 @@
     enable = true;
     xkb = {
       layout = "br";
-      variant = lib.mkDefault "abnt2";
+      variant = ""; # Default host uses standard Brazilian ABNT (no variant)
     };
   };
 
