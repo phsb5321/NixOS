@@ -52,16 +52,17 @@ Contains shared settings for:
 
 ### 3. Dotfiles Management (chezmoi)
 
-**NEW**: Comprehensive dotfiles management with chezmoi:
+**UPDATED**: Comprehensive dotfiles management with chezmoi using project-local storage:
 
-- **Independent of Nix**: Chezmoi operates separately from NixOS and Home Manager
-- **Single source of truth**: All dotfiles in one centralized, version-controlled repository
-- **Instantaneous sync**: Changes apply immediately without rebuilding NixOS
-- **Cross-platform**: Works on Linux, macOS, Windows, WSL
-- **Helper scripts**: `init-chezmoi`, `dotfiles-edit`, `dotfiles-sync`, etc.
-- **Shell aliases**: `dotfiles`, `chezcode`, `chezsync`, `chezadd`
+- **Project Integration**: Dotfiles stored in `~/NixOS/dotfiles/` within the repository
+- **Pre-imported Configuration**: Common dotfiles already imported and ready to use
+- **Instantaneous Sync**: Changes apply immediately without rebuilding NixOS
+- **Independent Operation**: Works separately from NixOS and Home Manager
+- **Helper Scripts**: `dotfiles-init`, `dotfiles-edit`, `dotfiles-apply`, etc.
+- **Shell Aliases**: `dotfiles`, `dotfiles-diff`
+- **Git Integration**: Dotfiles directory is its own git repository
 
-See `CHEZMOI_SETUP.md` for complete setup and usage instructions.
+See `DOTFILES_README.md` and `CHEZMOI_SETUP.md` for complete setup and usage instructions.
 
 ### 4. Host-Specific Configurations
 
@@ -171,23 +172,23 @@ This structure makes it much easier to maintain multiple NixOS configurations wh
 ### Dotfiles Management Commands
 
 ```bash
-# Initialize chezmoi
-init-chezmoi
-
-# Add dotfiles to management
-dotfiles-add ~/.bashrc ~/.zshrc ~/.config/nvim
-
-# Edit dotfiles in VS Code/Cursor
-dotfiles-edit  # or chezcode
-
-# Sync changes to system
-dotfiles-sync  # or chezsync
+# Initialize dotfiles
+dotfiles-init
 
 # Check status
 dotfiles-status  # or dotfiles
 
-# Comprehensive manager
-./user-scripts/dotfiles help
+# Edit dotfiles in VS Code/Cursor
+dotfiles-edit
+
+# Apply changes to system
+dotfiles-apply
+
+# Add new files to management
+dotfiles-add ~/.new-config
+
+# Sync with git
+dotfiles-sync
 ```
 
 ### NixOS Rebuild Commands
