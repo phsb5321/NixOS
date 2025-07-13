@@ -69,6 +69,9 @@
   # Laptop-specific networking - no special ports needed
   modules.networking.firewall.openPorts = [22]; # SSH only
 
+  # Enable explicit keyboard configuration for laptop (ABNT2)
+  modules.core.keyboard.enable = true;
+
   # Laptop-specific keyboard configuration - use ABNT2 variant
   services.xserver.xkb = {
     layout = "br";

@@ -52,6 +52,12 @@ in {
 
     # 🎯 KEYBOARD LAYOUT: Configuration options for Brazilian layout
     keyboard = {
+      enable = mkOption {
+        type = types.bool;
+        default = false; # Disabled by default to let desktop environments handle it
+        description = "Enable explicit keyboard configuration";
+      };
+
       layout = mkOption {
         type = types.str;
         default = "br";
@@ -238,11 +244,11 @@ in {
       printing.enable = true;
     };
 
-    # 🎯 KEYBOARD LAYOUT: Configure console and X11 keyboard layout
-    console.keyMap = "br"; # Default to standard Brazilian keymap
+    # 🎯 KEYBOARD LAYOUT: Configure console and X11 keyboard layout (only if enabled)
+    console.keyMap = lib.mkIf cfg.keyboard.enable "br"; # Default to standard Brazilian keymap
 
-    # Configure X11 keyboard layout if X11 is available
-    services.xserver = lib.mkIf config.services.xserver.enable {
+    # Configure X11 keyboard layout if X11 is available and keyboard config is enabled
+    services.xserver = lib.mkIf (config.services.xserver.enable && cfg.keyboard.enable) {
       xkb = {
         layout = cfg.keyboard.layout;
         variant = cfg.keyboard.variant;
