@@ -140,10 +140,15 @@ in {
         QT_SCALE_FACTOR = "1";
         QT_AUTO_SCREEN_SCALE_FACTOR = "0";
 
-        # 🎯 INPUT METHODS: Better text input support
+        # 🎯 INPUT METHODS: Better text input support and keyboard integration
         GTK_IM_MODULE = "ibus";
         QT_IM_MODULE = "ibus";
         XMODIFIERS = "@im=ibus";
+        
+        # 🎯 KEYBOARD: Environment variables for proper keyboard handling
+        XKB_DEFAULT_LAYOUT = "us,br";
+        XKB_DEFAULT_VARIANT = ",abnt2";
+        XKB_DEFAULT_OPTIONS = "grp:alt_shift_toggle,compose:ralt";
       };
 
       # 🎨 ENHANCED: Comprehensive GNOME package set with proper font support
