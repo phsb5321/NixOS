@@ -165,8 +165,15 @@
   # GDM and session fixes
   services.xserver = {
     enable = true;
-    # Let GNOME handle keyboard configuration automatically
+    # Use the same keyboard configuration as /etc/nixos/configuration.nix
+    xkb = {
+      layout = "br";
+      variant = "";
+    };
   };
+
+  # Console keymap matching /etc/nixos/configuration.nix
+  console.keyMap = "br-abnt2";
 
   # Explicitly disable conflicting display managers
   services.displayManager.sddm.enable = lib.mkForce false;
