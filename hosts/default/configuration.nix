@@ -175,7 +175,7 @@
   };
 
   # Console keymap matching /etc/nixos/configuration.nix
-  console.keyMap = "br-abnt2";
+  console.keyMap = lib.mkForce "br-abnt2";
 
   # Explicitly disable conflicting display managers
   services.displayManager.sddm.enable = lib.mkForce false;

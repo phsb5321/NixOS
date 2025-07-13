@@ -122,9 +122,9 @@
 
   # X11/Wayland keyboard configuration
   services.xserver.xkb = {
-    layout = "us,br";
-    variant = ",abnt2";
-    options = "grp:alt_shift_toggle,compose:ralt"; # Alt+Shift to switch, Right Alt as compose key
+    layout = lib.mkForce "br";
+    variant = lib.mkForce ",abnt2";
+    options = lib.mkForce "grp:alt_shift_toggle,compose:ralt"; # Alt+Shift to switch, Right Alt as compose key
   };
 
   # Input method configuration
@@ -140,7 +140,7 @@
   services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
     # Input Sources Configuration
     [org.gnome.desktop.input-sources]
-    sources=[('xkb', 'us'), ('xkb', 'br+abnt2')]
+    sources=[('xkb', 'br+abnt2')]
     xkb-options=['grp:alt_shift_toggle', 'compose:ralt']
 
     # Ensure consistent keyboard settings

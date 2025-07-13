@@ -75,7 +75,7 @@
   # Laptop-specific keyboard configuration - use ABNT2 variant
   services.xserver.xkb = {
     layout = "br";
-    variant = lib.mkForce "abnt2"; # Laptop uses Brazilian ABNT2 variant
+    variant = lib.mkForce ",abnt2"; # Aligned with shared configuration
   };
   
   # Console keymap for laptop
