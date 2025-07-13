@@ -77,7 +77,7 @@
     layout = "br";
     variant = lib.mkForce ",abnt2"; # Aligned with shared configuration
   };
-  
+
   # Console keymap for laptop
   console.keyMap = lib.mkForce "br-abnt2";
 

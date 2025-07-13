@@ -176,8 +176,8 @@
 
   # Enhanced boot configuration to fix early keyboard issues
   boot.kernelParams = [
-    "consoleblank=0"  # Prevent console blanking
-    "rd.systemd.show_status=true"  # Show systemd status during boot
+    "consoleblank=0" # Prevent console blanking
+    "rd.systemd.show_status=true" # Show systemd status during boot
   ];
 
   # System-level environment variables (migrated from home-manager)
