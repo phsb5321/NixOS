@@ -38,6 +38,7 @@ in {
   config = mkIf cfg.enable {
     # Home Manager core settings
     home-manager = {
+      backupFileExtension = "bkp";
       useGlobalPkgs = true;
       useUserPackages = true;
 
