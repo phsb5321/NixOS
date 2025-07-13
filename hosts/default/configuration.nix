@@ -167,7 +167,7 @@
     enable = true;
     xkb = {
       layout = "br";
-      variant = "";
+      variant = lib.mkDefault "";
     };
   };
 
