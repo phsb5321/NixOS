@@ -20,7 +20,7 @@
 
   # Override shared configuration as needed
   modules.networking.hostName = hostname;
-  modules.home.hostName = "default";
+  # Note: Home Manager removed - packages are now managed at system level
 
   # Desktop-specific configuration
   # Enable gaming packages for desktop

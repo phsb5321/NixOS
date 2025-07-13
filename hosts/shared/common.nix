@@ -35,6 +35,7 @@
     media.enable = true;
     utilities.enable = true;
     audioVideo.enable = true;
+    terminal.enable = true; # Enable terminal tools (migrated from home-manager)
     python = {
       enable = true;
       withGTK = true; # Enable GTK support by default
@@ -113,14 +114,6 @@
     };
   };
 
-  # Common home configuration
-  modules.home = {
-    enable = true;
-    username = "notroot";
-    hostName = lib.mkDefault "default"; # Can be overridden per host
-    # extraPackages will be defined per host
-  };
-
   # Common locale settings
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
@@ -132,6 +125,12 @@
     LC_PAPER = "pt_BR.UTF-8";
     LC_TELEPHONE = "pt_BR.UTF-8";
     LC_TIME = "pt_BR.UTF-8";
+  };
+
+  # System-level environment variables (migrated from home-manager)
+  environment.variables = {
+    EDITOR = "nvim";
+    SHELL = "${pkgs.zsh}/bin/zsh";
   };
 
   # Common user configuration

@@ -3,7 +3,6 @@
   imports = [
     ./desktop
     ./networking
-    ./home
     ./core
     ./packages
     ./hardware

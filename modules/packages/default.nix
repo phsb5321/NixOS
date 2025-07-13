@@ -215,6 +215,57 @@ in {
       };
     };
 
+    # Terminal and shell tools (migrated from home-manager)
+    terminal = {
+      enable = mkEnableOption "terminal and shell tools";
+      packages = mkOption {
+        type = types.listOf types.package;
+        default = with pkgs; [
+          # Fonts
+          nerd-fonts.jetbrains-mono
+          noto-fonts-emoji
+          noto-fonts
+          noto-fonts-cjk-sans
+
+          # Shell and Terminal
+          zsh
+          starship # Cross-shell prompt
+          kitty
+          grc # Generic colorizer
+          eza # Modern ls replacement
+          bat # Modern cat replacement
+          vivid # LS_COLORS generator
+          zsh-syntax-highlighting
+          zsh-autosuggestions
+          zsh-you-should-use
+          zsh-fast-syntax-highlighting
+
+          # Development Tools (from home-manager)
+          ffmpeg
+          gh
+          git
+          zoxide # Smart directory jumper
+          fzf # Fuzzy finder
+          ripgrep # Fast grep
+          fd # Fast find
+          neovim # Text editor (replaces nixvim)
+
+          # Applications (from home-manager)
+          yazi-unwrapped
+          texlive.combined.scheme-full
+          dbeaver-bin
+          amberol
+          remmina
+          obsidian
+          d2
+          ngrok
+          zellij
+          vscode
+        ];
+        description = "List of terminal and shell packages to install";
+      };
+    };
+
     # Additional packages that can be enabled per host
     extraPackages = mkOption {
       type = types.listOf types.package;
@@ -231,6 +282,7 @@ in {
       ++ (optionals utilities.enable utilities.packages)
       ++ (optionals gaming.enable gaming.packages)
       ++ (optionals audioVideo.enable audioVideo.packages)
+      ++ (optionals terminal.enable terminal.packages)
       ++ (optionals python.enable [python.package])
       ++ extraPackages;
   };

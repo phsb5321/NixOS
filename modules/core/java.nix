@@ -65,7 +65,7 @@ in {
     environment.variables = {
       JAVA_HOME = "${cfg.package.home}";
       _JAVA_AWT_WM_NONREPARENTING = "1";
-      ANDROID_HOME = mkIf cfg.androidTools.enable "/home/${config.modules.home.username}/.android/sdk";
+      ANDROID_HOME = mkIf cfg.androidTools.enable "/home/notroot/.android/sdk";
     };
 
     # Add udev rules for Android devices
@@ -84,7 +84,7 @@ in {
     users.groups.adbusers = {};
 
     # Add your user to adbusers group if Android tools are enabled
-    users.users.${config.modules.home.username}.extraGroups = mkIf cfg.androidTools.enable ["adbusers"];
+    users.users.notroot.extraGroups = mkIf cfg.androidTools.enable ["adbusers"];
 
     # System configurations for better Java application support
     security.polkit.enable = true;
