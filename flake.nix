@@ -8,12 +8,6 @@
     # Unstable for latest packages when needed
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-    # Home Manager
-    home-manager = {
-      url = "github:nix-community/home-manager/release-25.05";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Firefox Nightly (official nix-community source)
     firefox-nightly = {
       url = "github:nix-community/flake-firefox-nightly";
@@ -26,11 +20,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixvim = {
-      url = "github:nix-community/nixvim";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -39,7 +28,6 @@
     self,
     nixpkgs,
     nixpkgs-unstable,
-    home-manager,
     flake-utils,
     ...
   } @ inputs: let
@@ -100,17 +88,6 @@
           [
             # Host-specific configuration
             ./hosts/${configPath}/configuration.nix
-
-            # Home Manager integration
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                backupFileExtension = "backup";
-                extraSpecialArgs = baseSpecialArgs;
-              };
-            }
 
             # Base system configuration
             {

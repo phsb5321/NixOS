@@ -20,7 +20,7 @@
 
   # Override shared configuration as needed
   modules.networking.hostName = hostname;
-  modules.home.hostName = "laptop";
+  # Note: Home Manager removed - packages are now managed at system level
 
   # Enable auto-login for laptop convenience
   modules.desktop.autoLogin = {
