@@ -1,17 +1,17 @@
 # Keyboard Configuration Summary
 
-## ✅ Current Status: GNOME AUTO-DETECTION + LAPTOP OVERRIDE
+## ✅ Current Status: DEFAULT HOST USES /etc/nixos KEYBOARD CONFIG
 
-The default host now lets GNOME handle keyboard detection automatically, while the laptop has explicit ABNT2 configuration.
+The default host now uses the same keyboard configuration as `/etc/nixos/configuration.nix` for better compatibility, while the laptop maintains explicit ABNT2 configuration.
 
 ### Configuration Details
 
 **Default host:**
 
-- **X11 Layout**: `us` (GNOME default - auto-detected)
-- **X11 Variant**: `""` (GNOME will auto-detect and configure)
-- **Console Keymap**: `us` (system default)
-- **Keyboard Handling**: GNOME manages keyboard configuration automatically
+- **X11 Layout**: `br` (Brazilian)
+- **X11 Variant**: `""` (Standard Brazilian ABNT - matches `/etc/nixos/configuration.nix`)
+- **Console Keymap**: `br-abnt2` (matches `/etc/nixos/configuration.nix`)
+- **Source**: Based on system's `/etc/nixos/configuration.nix`
 
 **Laptop host:**
 
@@ -23,28 +23,33 @@ The default host now lets GNOME handle keyboard detection automatically, while t
 
 ### Configuration Sources
 
-1. **Core Module** (`modules/core/default.nix`):
-   - Added `keyboard.enable` option (default: false)
-   - Console keymap and X11 settings only applied when `keyboard.enable = true`
-   - Allows desktop environments to handle keyboard detection when disabled
+1. **Default Host** (`hosts/default/configuration.nix`):
+   - Uses the exact same keyboard configuration as `/etc/nixos/configuration.nix`
+   - X11 layout: `br` with empty variant (standard Brazilian ABNT)
+   - Console keymap: `br-abnt2`
 
-2. **Desktop Modules**:
-   - Removed explicit keyboard configurations from coordinator and common modules
-   - Desktop environments (GNOME) now handle keyboard detection automatically
+2. **Laptop Host** (`hosts/laptop/configuration.nix`):
+   - Enables `modules.core.keyboard.enable = true`
+   - Uses `mkForce` to override with `abnt2` variant
+   - Console keymap: `br-abnt2`
 
-3. **Host Configurations**:
-   - **Default host**: No explicit keyboard configuration - GNOME auto-detects
-   - **Laptop host**: Enables `modules.core.keyboard.enable = true` and uses explicit ABNT2 configuration
+3. **Core Module** (`modules/core/default.nix`):
+   - Keyboard configuration only applied when `keyboard.enable = true`
+   - Allows hosts to use their own explicit keyboard settings
+
+4. **Desktop Modules**:
+   - Removed explicit keyboard configurations
+   - Allows hosts to define their own keyboard settings
 
 ### Recent Fixes Applied
 
-- ✅ Removed explicit keyboard configuration from default host
-- ✅ Added `keyboard.enable` option to core module (disabled by default)
-- ✅ Removed keyboard configs from desktop coordinator and common modules
-- ✅ Default host now uses GNOME's automatic keyboard detection
-- ✅ Laptop host explicitly enables keyboard config and uses ABNT2
+- ✅ Applied `/etc/nixos/configuration.nix` keyboard configuration to default host
+- ✅ Default host now uses `br` layout with empty variant (standard Brazilian ABNT)
+- ✅ Default host console keymap set to `br-abnt2` (matches system config)
+- ✅ Laptop host maintains explicit ABNT2 configuration with `modules.core.keyboard.enable = true`
+- ✅ Updated syntax to use `services.xserver.xkb` format (not deprecated format)
 - ✅ Tested configuration with `nix flake check` and `nix eval`
-- ✅ Console uses system defaults unless explicitly overridden
+- ✅ Both hosts now have proven working keyboard configurations
 
 ### Testing Commands
 
@@ -62,9 +67,9 @@ nix eval .#nixosConfigurations.laptop.config.console.keyMap --json
 
 **Default host commands should show:**
 
-- **X11 Layout**: `"us"` (GNOME default)
-- **X11 Variant**: `""` (GNOME will auto-detect)
-- **Console Keymap**: `"us"` (system default)
+- **X11 Layout**: `"br"`
+- **X11 Variant**: `""` (empty string - standard Brazilian ABNT)
+- **Console Keymap**: `"br-abnt2"`
 
 **Laptop host commands should show:**
 
@@ -75,9 +80,9 @@ nix eval .#nixosConfigurations.laptop.config.console.keyMap --json
 
 ## No Further Actions Needed
 
-The keyboard configuration now properly handles different approaches:
+The keyboard configuration now uses proven working settings:
 
-- **Default host**: GNOME automatically detects and configures the keyboard layout
+- **Default host**: Uses the exact same keyboard configuration as `/etc/nixos/configuration.nix` (br layout, empty variant, br-abnt2 console)
 - **Laptop host**: Uses explicit Brazilian ABNT2 configuration via NixOS
 
-This allows GNOME's intelligent keyboard detection to work on the default host while maintaining precise control on the laptop where ABNT2 is specifically needed.
+This ensures the default host has the same keyboard behavior as the system's base configuration, providing reliable and consistent keyboard functionality.
