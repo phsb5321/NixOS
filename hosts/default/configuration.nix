@@ -167,7 +167,7 @@
     enable = true;
     xkb = {
       layout = "br";
-      variant = lib.mkDefault "";
+      variant = lib.mkDefault "abnt2";
     };
   };
 
