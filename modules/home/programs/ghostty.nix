@@ -66,14 +66,12 @@ in {
           gtk-adwaita = true;
 
           # Terminal behavior
-          scrollback-lines = 10000;
           mouse-hide-while-typing = true;
           copy-on-select = false;
           click-repeat-interval = 500;
 
-          # Audio settings
-          audible-bell = false;
-          visual-bell = true;
+          # Audio settings (remove audible-bell and visual-bell as they're unknown)
+          # bell settings removed due to compatibility issues
 
           # Theme and appearance
           theme =
@@ -145,10 +143,8 @@ in {
           working-directory = "inherit";
           auto-update = "check";
 
-          # Platform-specific optimizations for Linux/GNOME
-          linux-cgroup = "systemd";
-          linux-cgroup-memory-limit = "1GB";
-          linux-cgroup-cpu-weight = 100;
+          # Platform-specific optimizations removed due to compatibility issues
+          # linux-cgroup settings removed
         };
       };
 

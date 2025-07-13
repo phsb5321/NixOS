@@ -152,3 +152,4 @@ Example minimal host configuration:
 ```
 
 This structure makes it much easier to maintain multiple NixOS configurations while sharing common functionality.
+Test change for rebuild
