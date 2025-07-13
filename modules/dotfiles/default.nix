@@ -8,164 +8,107 @@
 with lib; let
   cfg = config.modules.dotfiles;
 
-  # Helper script to initialize chezmoi with proper setup
-  initChezmoiScript = pkgs.writeShellScriptBin "init-chezmoi" ''
+  # Path to the dotfiles directory within the NixOS project
+  dotfilesPath = "${config.users.users.${cfg.username}.home}/NixOS/dotfiles";
+
+  # Script to initialize chezmoi with our custom source directory
+  initScript = pkgs.writeShellScriptBin "dotfiles-init" ''
     #!/usr/bin/env bash
-    # Initialize chezmoi dotfiles management
-    
     set -euo pipefail
     
-    REPO_URL=""
-    DOTFILES_DIR="$HOME/.local/share/chezmoi"
+    echo "🧰 Initializing Chezmoi with NixOS Project Dotfiles"
+    echo "=================================================="
     
-    echo "🧰 Chezmoi Dotfiles Setup"
-    echo "========================="
-    
-    # Check if chezmoi is installed
+    # Check if chezmoi is available
     if ! command -v chezmoi &> /dev/null; then
-        echo "❌ chezmoi is not installed. Please rebuild your NixOS configuration first."
+        echo "❌ chezmoi is not installed. Please rebuild your NixOS configuration."
         exit 1
     fi
     
-    # Ask for repository URL or initialize from scratch
-    read -p "Enter your dotfiles repository URL (leave empty to start fresh): " REPO_URL
+    # Path to our dotfiles directory
+    DOTFILES_DIR="${dotfilesPath}"
     
-    if [[ -n "$REPO_URL" ]]; then
-        echo "📦 Initializing chezmoi from repository: $REPO_URL"
-        chezmoi init "$REPO_URL"
-        echo "✅ Repository cloned to: $(chezmoi source-path)"
-        
-        read -p "Apply dotfiles now? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            chezmoi apply
-            echo "✅ Dotfiles applied successfully!"
-        fi
-    else
-        echo "🆕 Initializing fresh chezmoi configuration"
-        chezmoi init --prompt
-        echo "✅ Chezmoi initialized at: $(chezmoi source-path)"
-        
-        echo ""
-        echo "Next steps:"
-        echo "1. Add your dotfiles: chezmoi add ~/.bashrc ~/.zshrc ~/.config/nvim"
-        echo "2. Edit dotfiles: chezmoi edit ~/.bashrc"
-        echo "3. Apply changes: chezmoi apply"
-        echo "4. Set up git: cd $(chezmoi source-path) && git init"
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+        exit 1
     fi
     
-    echo ""
-    echo "📁 Chezmoi source directory: $(chezmoi source-path)"
-    echo "💡 Use 'dotfiles-edit' to open dotfiles in your editor"
-    echo "💡 Use 'dotfiles-sync' to sync changes"
+    echo "📁 Using dotfiles from: $DOTFILES_DIR"
+    
+    # Initialize chezmoi with our source directory
+    export CHEZMOI_SOURCE_DIR="$DOTFILES_DIR"
+    
+    # Apply dotfiles
+    echo "🔄 Applying dotfiles..."
+    chezmoi apply --source "$DOTFILES_DIR"
+    
+    echo "✅ Dotfiles initialized and applied successfully!"
+    echo "💡 Source directory: $DOTFILES_DIR"
+    echo "💡 Edit dotfiles: code $DOTFILES_DIR"
+    echo "💡 Apply changes: dotfiles-apply"
   '';
 
-  # Helper script to edit dotfiles in VS Code
-  editDotfilesScript = pkgs.writeShellScriptBin "dotfiles-edit" ''
+  # Script to apply dotfile changes
+  applyScript = pkgs.writeShellScriptBin "dotfiles-apply" ''
     #!/usr/bin/env bash
-    # Open chezmoi source directory in VS Code
-    
-    if ! command -v chezmoi &> /dev/null; then
-        echo "❌ chezmoi is not installed"
-        exit 1
-    fi
-    
-    SOURCE_PATH=$(chezmoi source-path)
-    
-    if [[ ! -d "$SOURCE_PATH" ]]; then
-        echo "❌ Chezmoi not initialized. Run 'init-chezmoi' first."
-        exit 1
-    fi
-    
-    if command -v code &> /dev/null; then
-        echo "📝 Opening dotfiles in VS Code: $SOURCE_PATH"
-        code "$SOURCE_PATH"
-    elif command -v cursor &> /dev/null; then
-        echo "📝 Opening dotfiles in Cursor: $SOURCE_PATH"
-        cursor "$SOURCE_PATH"
-    else
-        echo "📁 Dotfiles directory: $SOURCE_PATH"
-        echo "💡 No supported editor found. Install VS Code or Cursor."
-    fi
-  '';
-
-  # Helper script to sync dotfiles
-  syncDotfilesScript = pkgs.writeShellScriptBin "dotfiles-sync" ''
-    #!/usr/bin/env bash
-    # Sync dotfiles with chezmoi
-    
     set -euo pipefail
     
-    if ! command -v chezmoi &> /dev/null; then
-        echo "❌ chezmoi is not installed"
+    DOTFILES_DIR="${dotfilesPath}"
+    
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+        echo "Run 'dotfiles-init' first."
         exit 1
     fi
     
-    SOURCE_PATH=$(chezmoi source-path)
+    echo "🔄 Applying dotfiles from: $DOTFILES_DIR"
     
-    if [[ ! -d "$SOURCE_PATH" ]]; then
-        echo "❌ Chezmoi not initialized. Run 'init-chezmoi' first."
-        exit 1
-    fi
-    
-    echo "🔄 Syncing dotfiles..."
-    
-    # Show what would change
-    if chezmoi diff --no-pager | grep -q .; then
-        echo "📋 Pending changes:"
-        chezmoi diff --no-pager
-        echo ""
-        
-        read -p "Apply these changes? (Y/n): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Nn]$ ]]; then
-            echo "❌ Sync cancelled"
-            exit 0
-        fi
-    else
-        echo "✅ No changes to apply"
+    # Show diff if requested
+    if [[ "''${1:-}" == "--diff" ]]; then
+        chezmoi diff --source "$DOTFILES_DIR" --no-pager
+        exit 0
     fi
     
     # Apply changes
-    chezmoi apply
-    echo "✅ Dotfiles synced successfully!"
-    
-    # If we're in a git repository, offer to commit and push
-    cd "$SOURCE_PATH"
-    if git rev-parse --git-dir > /dev/null 2>&1; then
-        if [[ -n $(git status --porcelain) ]]; then
-            echo ""
-            read -p "Commit and push changes to git? (y/N): " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                git add .
-                read -p "Enter commit message (default: 'Update dotfiles'): " COMMIT_MSG
-                COMMIT_MSG=''${COMMIT_MSG:-"Update dotfiles"}
-                git commit -m "$COMMIT_MSG"
-                
-                if git remote get-url origin > /dev/null 2>&1; then
-                    git push
-                    echo "✅ Changes pushed to remote repository"
-                else
-                    echo "⚠️  No remote repository configured"
-                fi
-            fi
-        fi
-    fi
+    chezmoi apply --source "$DOTFILES_DIR"
+    echo "✅ Dotfiles applied successfully!"
   '';
 
-  # Helper script to add new files to chezmoi
-  addDotfilesScript = pkgs.writeShellScriptBin "dotfiles-add" ''
+  # Script to edit dotfiles
+  editScript = pkgs.writeShellScriptBin "dotfiles-edit" ''
     #!/usr/bin/env bash
-    # Add files to chezmoi management
+    set -euo pipefail
     
-    if ! command -v chezmoi &> /dev/null; then
-        echo "❌ chezmoi is not installed"
+    DOTFILES_DIR="${dotfilesPath}"
+    
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+        echo "Run 'dotfiles-init' first."
         exit 1
     fi
     
-    if [[ ! -d "$(chezmoi source-path)" ]]; then
-        echo "❌ Chezmoi not initialized. Run 'init-chezmoi' first."
+    echo "📝 Opening dotfiles directory in editor..."
+    
+    if command -v code &> /dev/null; then
+        code "$DOTFILES_DIR"
+    elif command -v cursor &> /dev/null; then
+        cursor "$DOTFILES_DIR"
+    else
+        echo "📁 Dotfiles directory: $DOTFILES_DIR"
+        echo "💡 Install VS Code or Cursor for direct editing."
+    fi
+  '';
+
+  # Script to add new dotfiles
+  addScript = pkgs.writeShellScriptBin "dotfiles-add" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    DOTFILES_DIR="${dotfilesPath}"
+    
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+        echo "Run 'dotfiles-init' first."
         exit 1
     fi
     
@@ -174,58 +117,104 @@ with lib; let
         echo "Examples:"
         echo "  dotfiles-add ~/.bashrc"
         echo "  dotfiles-add ~/.config/nvim"
-        echo "  dotfiles-add ~/.ssh/config"
         exit 1
     fi
     
     for file in "$@"; do
         if [[ -e "$file" ]]; then
-            echo "📁 Adding $file to chezmoi..."
-            chezmoi add "$file"
+            echo "📁 Adding $file to dotfiles..."
+            chezmoi add --source "$DOTFILES_DIR" "$file"
             echo "✅ Added $file"
         else
             echo "❌ File not found: $file"
         fi
     done
     
-    echo ""
-    echo "💡 Use 'dotfiles-edit' to modify your dotfiles"
-    echo "💡 Use 'dotfiles-sync' to apply changes"
+    echo "💡 Edit dotfiles: dotfiles-edit"
+    echo "💡 Apply changes: dotfiles-apply"
   '';
 
-  # Helper script to show chezmoi status
-  statusDotfilesScript = pkgs.writeShellScriptBin "dotfiles-status" ''
+  # Script to show status
+  statusScript = pkgs.writeShellScriptBin "dotfiles-status" ''
     #!/usr/bin/env bash
-    # Show chezmoi status and managed files
+    set -euo pipefail
     
-    if ! command -v chezmoi &> /dev/null; then
-        echo "❌ chezmoi is not installed"
+    DOTFILES_DIR="${dotfilesPath}"
+    
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+        echo "Run 'dotfiles-init' first."
         exit 1
     fi
     
-    if [[ ! -d "$(chezmoi source-path)" ]]; then
-        echo "❌ Chezmoi not initialized. Run 'init-chezmoi' first."
-        exit 1
-    fi
-    
-    echo "🧰 Chezmoi Status"
+    echo "🧰 Dotfiles Status"
     echo "================"
-    echo "📁 Source directory: $(chezmoi source-path)"
+    echo "📁 Source directory: $DOTFILES_DIR"
     echo ""
     
     echo "📋 Managed files:"
-    chezmoi managed
+    chezmoi managed --source "$DOTFILES_DIR" 2>/dev/null || echo "No files managed yet"
     echo ""
     
     echo "🔄 Status:"
-    chezmoi status
-    echo ""
-    
-    # Check if there are differences
-    if chezmoi diff --no-pager | grep -q .; then
-        echo "⚠️  There are pending changes. Run 'dotfiles-sync' to apply them."
+    if chezmoi status --source "$DOTFILES_DIR" 2>/dev/null | grep -q .; then
+        chezmoi status --source "$DOTFILES_DIR"
+        echo ""
+        echo "⚠️  There are changes. Run 'dotfiles-apply' to apply them."
     else
         echo "✅ All dotfiles are up to date"
+    fi
+  '';
+
+  # Script to sync with git (if git repository)
+  syncScript = pkgs.writeShellScriptBin "dotfiles-sync" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    DOTFILES_DIR="${dotfilesPath}"
+    
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+        exit 1
+    fi
+    
+    cd "$DOTFILES_DIR"
+    
+    # Check if this is a git repository
+    if ! git rev-parse --git-dir > /dev/null 2>&1; then
+        echo "📁 Not a git repository. Initialize with:"
+        echo "cd $DOTFILES_DIR && git init && git add . && git commit -m 'Initial dotfiles'"
+        exit 1
+    fi
+    
+    echo "� Syncing dotfiles with git..."
+    
+    # Add all changes
+    git add .
+    
+    # Check if there are changes to commit
+    if git diff --staged --quiet; then
+        echo "✅ No changes to commit"
+    else
+        # Commit changes
+        echo "� Changes detected, committing..."
+        read -p "Enter commit message (default: 'Update dotfiles'): " commit_msg
+        commit_msg=''${commit_msg:-"Update dotfiles"}
+        git commit -m "$commit_msg"
+        echo "✅ Changes committed"
+        
+        # Push if remote exists
+        if git remote get-url origin > /dev/null 2>&1; then
+            read -p "Push to remote? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                git push
+                echo "✅ Changes pushed to remote"
+            fi
+        else
+            echo "💡 No remote configured. Set up with:"
+            echo "git remote add origin <your-repo-url>"
+        fi
     fi
   '';
 
@@ -233,10 +222,10 @@ in {
   options.modules.dotfiles = {
     enable = mkEnableOption "dotfiles management with chezmoi";
     
-    autoSetup = mkOption {
-      type = types.bool;
-      default = false;
-      description = "Automatically run chezmoi init on first boot (requires manual intervention)";
+    username = mkOption {
+      type = types.str;
+      default = "notroot";
+      description = "Username for dotfiles management";
     };
     
     enableHelperScripts = mkOption {
@@ -247,39 +236,22 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # Ensure chezmoi is available system-wide
+    # Ensure chezmoi is available
     environment.systemPackages = [
       pkgs.chezmoi
     ] ++ (optionals cfg.enableHelperScripts [
-      initChezmoiScript
-      editDotfilesScript
-      syncDotfilesScript
-      addDotfilesScript
-      statusDotfilesScript
+      initScript
+      applyScript
+      editScript
+      addScript
+      statusScript
+      syncScript
     ]);
 
     # Create shell aliases for convenience
     environment.shellAliases = mkIf cfg.enableHelperScripts {
       "dotfiles" = "dotfiles-status";
-      "chezcd" = "cd $(chezmoi source-path)";
-      "chezcode" = "dotfiles-edit";
-      "chezsync" = "dotfiles-sync";
-      "chezadd" = "dotfiles-add";
+      "dotfiles-diff" = "dotfiles-apply --diff";
     };
-
-    # Add helpful message to MOTD
-    environment.etc."motd".text = mkIf cfg.enableHelperScripts ''
-      
-      🧰 Dotfiles Management Commands:
-      ================================
-      init-chezmoi      - Initialize chezmoi setup
-      dotfiles-status   - Show managed files and status
-      dotfiles-edit     - Edit dotfiles in VS Code/Cursor
-      dotfiles-add      - Add files to chezmoi
-      dotfiles-sync     - Apply changes and sync
-      
-      Aliases: dotfiles, chezcd, chezcode, chezsync, chezadd
-      
-    '';
   };
 }

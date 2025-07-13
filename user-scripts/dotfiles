@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# ~/NixOS/user-scripts/dotfiles
-# Simple wrapper for chezmoi-manager.sh
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec "$SCRIPT_DIR/chezmoi-manager.sh" "$@"

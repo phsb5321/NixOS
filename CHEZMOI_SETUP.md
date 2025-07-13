@@ -1,133 +1,116 @@
 # Chezmoi Dotfiles Management Setup
 
-This NixOS configuration now includes a comprehensive chezmoi setup for managing dotfiles across multiple machines. Chezmoi is completely independent of Nix and Home Manager, providing a single source of truth for all your dotfiles.
+This NixOS configuration includes a comprehensive chezmoi setup for managing dotfiles. The dotfiles are stored directly within the NixOS project directory, making them part of your configuration repository.
 
 ## What's Included
 
-### 1. Chezmoi Package
-- Added `chezmoi` to the development tools in `modules/packages/default.nix`
-- Available system-wide on all hosts
+### 1. Project-Local Dotfiles Directory
+- Dotfiles stored in `~/NixOS/dotfiles/` within the project
+- Integrated with the NixOS git repository
+- No separate chezmoi source directory needed
 
-### 2. Dotfiles Module (`modules/dotfiles/default.nix`)
-- Comprehensive dotfiles management configuration
-- Helper scripts for common operations
-- Shell aliases for convenience
-- Helpful MOTD messages
+### 2. Imported Dotfiles
+The following dotfiles have been imported and are ready to use:
+- **Shell Configuration**: `.zshrc`, `.bashrc`, `.profile`
+- **Git Configuration**: `.gitconfig`
+- **Node/NPM Configuration**: `.npmrc`
+- **Terminal Configuration**: 
+  - Powerlevel10k: `.p10k.zsh`
+  - Kitty terminal: `.config/kitty/`
+  - Starship prompt: `.config/starship.toml`
+- **Editor Configuration**: Neovim (`.config/nvim/`)
 
-### 3. Helper Scripts
+### 3. Dotfiles Module (`modules/dotfiles/default.nix`)
+- Project-local chezmoi configuration
+- Helper scripts for dotfiles management
+- Custom source directory pointing to `~/NixOS/dotfiles`
+
+### 4. Helper Scripts
 The following scripts are installed system-wide:
-- `init-chezmoi` - Initialize chezmoi setup
+- `dotfiles-init` - Initialize and apply dotfiles
 - `dotfiles-edit` - Open dotfiles in VS Code/Cursor
-- `dotfiles-sync` - Apply changes and sync
-- `dotfiles-add` - Add files to chezmoi
+- `dotfiles-apply` - Apply dotfile changes
+- `dotfiles-add` - Add new files to dotfiles
 - `dotfiles-status` - Show managed files and status
+- `dotfiles-sync` - Sync changes with git
 
-### 4. Shell Aliases
+### 5. Shell Aliases
 Convenient aliases are available:
 - `dotfiles` → `dotfiles-status`
-- `chezcd` → `cd $(chezmoi source-path)`
-- `chezcode` → `dotfiles-edit`
-- `chezsync` → `dotfiles-sync`
-- `chezadd` → `dotfiles-add`
-
-### 5. Comprehensive Manager Script
-- `user-scripts/chezmoi-manager.sh` - Full-featured dotfiles manager
-- `user-scripts/dotfiles` - Simple wrapper script
+- `dotfiles-diff` → `dotfiles-apply --diff`
 
 ## Quick Start
 
 ### 1. Rebuild NixOS Configuration
+
 ```bash
 sudo nixos-rebuild switch
 ```
 
-### 2. Initialize Chezmoi
-Choose one of these options:
+### 2. Initialize Dotfiles
 
-**Option A: Start from existing repository**
 ```bash
-init-chezmoi
-# Enter your repository URL when prompted
+dotfiles-init
 ```
 
-**Option B: Start fresh**
+This will apply all the imported dotfiles to your home directory.
+
+### 3. Check Status
+
 ```bash
-init-chezmoi
-# Leave repository URL empty when prompted
+dotfiles-status
 ```
 
-**Option C: Use the comprehensive manager**
-```bash
-./user-scripts/dotfiles init
-```
+### 4. Edit Dotfiles
 
-### 3. Add Your Dotfiles
 ```bash
-# Add individual files
-dotfiles-add ~/.bashrc ~/.zshrc ~/.config/nvim
-
-# Or use the quick setup for common files
-./user-scripts/dotfiles quick-setup
-```
-
-### 4. Edit Your Dotfiles
-```bash
-# Open in VS Code/Cursor
 dotfiles-edit
-
-# Or use the manager
-./user-scripts/dotfiles edit
 ```
+
+This opens the `~/NixOS/dotfiles` directory in VS Code/Cursor.
 
 ### 5. Apply Changes
-```bash
-# Sync changes to your system
-dotfiles-sync
 
-# Or use the manager
-./user-scripts/dotfiles sync
+```bash
+dotfiles-apply
 ```
+
+This applies any changes you made to the dotfiles.
 
 ## Workflow
 
 ### Daily Usage
-1. **Edit dotfiles**: `dotfiles-edit` or `chezcode`
-2. **Apply changes**: `dotfiles-sync` or `chezsync`
+
+1. **Edit dotfiles**: `dotfiles-edit`
+2. **Apply changes**: `dotfiles-apply`
 3. **Check status**: `dotfiles-status` or `dotfiles`
-4. **Add new files**: `dotfiles-add ~/.new-config` or `chezadd ~/.new-config`
+4. **Add new files**: `dotfiles-add ~/.new-config`
 
 ### Git Integration
-The setup includes automatic git integration:
-- Initialize git repository: `./user-scripts/dotfiles git-setup`
-- Auto-commit and push during sync operations
-- Maintains version history of your dotfiles
+
+The dotfiles directory is a git repository within your NixOS project:
+- Sync with git: `dotfiles-sync`
+- Commit and push changes automatically
+- Full version history of your dotfiles
 
 ## Features
 
-### ✅ Independent of Nix
-- Chezmoi operates completely independently of NixOS and Home Manager
-- No Nix dependencies for chezmoi operations
-- Portable across different systems
+### ✅ Project Integration
+- Dotfiles are part of your NixOS configuration repository
+- Single git repository for both system config and dotfiles
+- No separate chezmoi repository needed
 
 ### ✅ Instantaneous Sync
-- Changes to dotfiles in chezmoi source are applied immediately when you run sync
+- Changes apply immediately with `dotfiles-apply`
 - No need to rebuild NixOS configuration
 - Real-time dotfiles management
 
-### ✅ Single Source of Truth
-- All dotfiles are managed in one central location
-- Version controlled with git
-- Easy to share across multiple machines
-
-### ✅ Cross-Platform
-- Works on Linux, macOS, Windows, WSL
-- Same workflow everywhere
-- Host-specific templating available
-
-### ✅ Secure
-- Optional encryption for secrets
-- GPG or age encryption support
-- Safe storage of sensitive configuration
+### ✅ Pre-Imported Configuration
+- Common dotfiles already imported and ready to use
+- Shell configurations (zsh, bash)
+- Terminal configurations (kitty, starship, powerlevel10k)
+- Editor configurations (neovim)
+- Git and development tool configurations
 
 ## Advanced Features
 
