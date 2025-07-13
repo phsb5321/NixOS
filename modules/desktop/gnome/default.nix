@@ -26,40 +26,7 @@ in {
           wayland = cfg.displayManager.wayland;
           autoSuspend = cfg.displayManager.autoSuspend;
         };
-
-        # 🎯 KEYBOARD LAYOUT: Configure X11 keymap for Brazilian ABNT2
-        xkb = {
-          layout = lib.mkForce config.modules.core.keyboard.layout;
-          variant = lib.mkForce config.modules.core.keyboard.variant;
-          options = lib.mkForce config.modules.core.keyboard.options;
-        };
       };
-
-      # 🎯 CONSOLE KEYBOARD: Ensure console uses Brazilian ABNT2 layout
-      console.keyMap = "br-abnt2";
-
-      # 🎯 AUTOLOGIN WORKAROUND: GNOME autologin fix for getty conflicts
-      systemd.services."getty@tty1".enable = lib.mkForce false;
-      systemd.services."autovt@tty1".enable = lib.mkForce false;
-
-      # 🎯 LOCALE SETTINGS: Enhanced Brazilian Portuguese locale configuration
-      i18n = {
-        defaultLocale = "en_US.UTF-8";
-        extraLocaleSettings = {
-          LC_ADDRESS = "pt_BR.UTF-8";
-          LC_IDENTIFICATION = "pt_BR.UTF-8";
-          LC_MEASUREMENT = "pt_BR.UTF-8";
-          LC_MONETARY = "pt_BR.UTF-8";
-          LC_NAME = "pt_BR.UTF-8";
-          LC_NUMERIC = "pt_BR.UTF-8";
-          LC_PAPER = "pt_BR.UTF-8";
-          LC_TELEPHONE = "pt_BR.UTF-8";
-          LC_TIME = "pt_BR.UTF-8";
-        };
-      };
-
-      # 🎯 TIMEZONE: Set Brazilian timezone
-      time.timeZone = "America/Recife";
 
       # Ensure proper session packages for GDM (critical fix for login issue)
       services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
@@ -82,16 +49,6 @@ in {
         gnome-remote-desktop.enable = true;
         gnome-user-share.enable = true;
         rygel.enable = true; # DLNA media sharing
-      };
-
-      # 🎯 PROGRAMS: Essential programs for GNOME (from fresh install)
-      programs = {
-        firefox.enable = true;
-        gnupg.agent = {
-          enable = true;
-          enableSSHSupport = true;
-        };
-        mtr.enable = true;
       };
 
       # Essential system services
@@ -141,15 +98,6 @@ in {
         # 🎯 FIX ARTIFACTS: GSK renderer configuration to fix Gnome interface artifacts
         GSK_RENDERER = "gl"; # Use stable GL renderer instead of problematic ngl
 
-        # 🎯 NVIDIA GPU: Enhanced Nvidia GPU support for GNOME
-        __GL_SHADER_DISK_CACHE = mkIf config.modules.hardware.nvidia.enable "1";
-        __GL_SHADER_DISK_CACHE_PATH = mkIf config.modules.hardware.nvidia.enable "$HOME/.cache/nvidia-shader-cache";
-
-        # 🎯 NVIDIA PRIME: Better PRIME offload support in GNOME
-        __NV_PRIME_RENDER_OFFLOAD_PROVIDER = mkIf (config.modules.hardware.nvidia.enable && config.modules.hardware.nvidia.prime.mode == "offload") "NVIDIA-G0";
-        __GLX_VENDOR_LIBRARY_NAME = mkIf config.modules.hardware.nvidia.enable "nvidia";
-        __VK_LAYER_NV_optimus = mkIf config.modules.hardware.nvidia.enable "NVIDIA_only";
-
         # 🎯 FIX RENDERING: Additional rendering fixes for Gnome 47+
         GDK_BACKEND =
           if cfg.displayManager.wayland
@@ -192,15 +140,10 @@ in {
         QT_SCALE_FACTOR = "1";
         QT_AUTO_SCREEN_SCALE_FACTOR = "0";
 
-        # 🎯 INPUT METHODS: Better text input support with Brazilian layout
+        # 🎯 INPUT METHODS: Better text input support
         GTK_IM_MODULE = "ibus";
         QT_IM_MODULE = "ibus";
         XMODIFIERS = "@im=ibus";
-
-        # 🎯 KEYBOARD LAYOUT: Environment variables for proper Brazilian layout
-        XKB_DEFAULT_LAYOUT = config.modules.core.keyboard.layout;
-        XKB_DEFAULT_VARIANT = config.modules.core.keyboard.variant;
-        XKB_DEFAULT_OPTIONS = config.modules.core.keyboard.options;
       };
 
       # 🎨 ENHANCED: Comprehensive GNOME package set with proper font support
@@ -231,20 +174,67 @@ in {
         # 🎯 CRITICAL: Input method framework (fix for ibus-daemon missing)
         ibus
         ibus-engines.uniemoji # Better emoji input
-        ibus-engines.libpinyin # Chinese input support        # 🎯 KEYBOARD LAYOUT: Additional keyboard utilities for Brazilian layout
-        xkb-switch # Switch keyboard layouts programmatically
-        xorg.setxkbmap # X11 keyboard mapping utility
 
-        # 🎯 ENHANCED: Additional system utilities from fresh install
-        vim # Essential editor
-        wget # Download utility
-        curl # HTTP client
-        
-        # 🎯 NVIDIA GPU: Additional utilities for Nvidia GPU support
-      ] ++ lib.optionals config.modules.hardware.nvidia.enable [
-        vulkan-tools # Vulkan utilities
-        glxinfo # OpenGL information
-        glmark2 # GPU benchmarking
+        # 🎯 FONT TOOLS: Essential for debugging font issues
+        gnome-font-viewer
+        font-manager
+        gucharmap # Character map for emoji/symbols
+
+        # Essential GNOME extensions
+        gnomeExtensions.dash-to-dock
+        gnomeExtensions.user-themes
+        gnomeExtensions.just-perfection
+
+        # System monitoring extensions - Multiple options for comprehensive monitoring
+        gnomeExtensions.vitals # Temperature, voltage, fan speed, memory, CPU, network, storage
+        gnomeExtensions.system-monitor-next # Classic system monitor with graphs
+        gnomeExtensions.tophat # Elegant system resource monitor
+        gnomeExtensions.multicore-system-monitor # Individual CPU core monitoring
+        gnomeExtensions.system-monitor-2 # Alternative system monitor
+        gnomeExtensions.resource-monitor # Real-time monitoring in top bar
+
+        # Productivity and customization extensions
+        gnomeExtensions.caffeine # Prevent screen lock
+        gnomeExtensions.appindicator # System tray support
+        gnomeExtensions.blur-my-shell # Blur effects for shell elements
+        gnomeExtensions.clipboard-indicator # Clipboard manager
+        gnomeExtensions.night-theme-switcher # Automatic dark/light theme switching
+        gnomeExtensions.gsconnect # Phone integration (KDE Connect)
+
+        # Workspace and window management
+        gnomeExtensions.workspace-indicator # Better workspace indicator
+        gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
+        gnomeExtensions.smart-auto-move # Remember window positions
+
+        # Quick access and navigation
+        gnomeExtensions.places-status-indicator # Quick access to bookmarks
+        gnomeExtensions.removable-drive-menu # USB drive management
+        gnomeExtensions.sound-output-device-chooser # Audio device switching
+
+        # Visual enhancements
+        gnomeExtensions.logo-menu # Custom logo in activities
+        gnomeExtensions.weather-or-not # Weather in top panel
+        gnomeExtensions.desktop-icons-ng-ding # Desktop icons support
+
+        # Additional useful extensions
+        gnomeExtensions.clipboard-history # Enhanced clipboard manager
+        gnomeExtensions.current-workspace-name # Show workspace name
+        gnomeExtensions.improved-workspace-indicator # Better workspace display
+        gnomeExtensions.translate-clipboard # Translate clipboard content
+        gnomeExtensions.night-light-slider-updated # Night light control
+        gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
+
+        # Theme and appearance packages
+        adwaita-icon-theme
+        gnome-themes-extra
+        libadwaita
+        adw-gtk3
+        gsettings-desktop-schemas
+
+        # Fonts for better GNOME experience
+        cantarell-fonts
+        source-sans-pro
+        source-serif-pro
       ];
 
       # Remove unwanted GNOME packages but keep useful ones
