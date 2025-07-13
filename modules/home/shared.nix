@@ -18,7 +18,7 @@ with lib; {
       autosuggestion.enable = true;
       syntaxHighlighting.enable = true;
 
-      initContent = ''
+      initExtra = ''
         # Common shell initialization
         eval "$(starship init zsh)"
         eval "$(zoxide init zsh)"
@@ -38,6 +38,71 @@ with lib; {
         nixos-rebuild-build = "nixos-rebuild build --flake ~/NixOS#${hostname}";
         hm-switch = "home-manager switch --flake ~/NixOS#notroot@${hostname}";
         flake-update = "cd ~/NixOS && nix flake update";
+      };
+    };
+
+    # Starship prompt
+    starship = {
+      enable = true;
+      settings = {
+        format = "[](#9A348E)$os$username[](bg:#DA627D fg:#9A348E)$directory[](fg:#DA627D bg:#FCA17D)$git_branch$git_status[](fg:#FCA17D bg:#86BBD8)$c$elixir$elm$golang$gradle$haskell$java$julia$nodejs$nim$rust$scala[](fg:#86BBD8 bg:#06969A)$docker_context[](fg:#06969A bg:#33658A)$time[ ](fg:#33658A)";
+
+        os = {
+          style = "bg:#9A348E fg:#ffffff";
+          symbols = {
+            NixOS = " ";
+          };
+        };
+
+        username = {
+          show_always = true;
+          style_user = "bg:#9A348E fg:#ffffff";
+          style_root = "bg:#9A348E fg:#ffffff";
+          format = "[$user ]($style)";
+        };
+
+        directory = {
+          style = "fg:#ffffff bg:#DA627D";
+          format = "[ $path ]($style)";
+          truncation_length = 3;
+          truncation_symbol = "…/";
+        };
+
+        git_branch = {
+          symbol = "";
+          style = "bg:#FCA17D";
+          format = "[[ $symbol $branch ](fg:#ffffff bg:#FCA17D)]($style)";
+        };
+
+        git_status = {
+          style = "bg:#FCA17D";
+          format = "[[($all_status$ahead_behind )](fg:#ffffff bg:#FCA17D)]($style)";
+        };
+
+        nodejs = {
+          symbol = "";
+          style = "bg:#86BBD8";
+          format = "[[ $symbol( $version) ](fg:#ffffff bg:#86BBD8)]($style)";
+        };
+
+        rust = {
+          symbol = "";
+          style = "bg:#86BBD8";
+          format = "[[ $symbol( $version) ](fg:#ffffff bg:#86BBD8)]($style)";
+        };
+
+        golang = {
+          symbol = "";
+          style = "bg:#86BBD8";
+          format = "[[ $symbol( $version) ](fg:#ffffff bg:#86BBD8)]($style)";
+        };
+
+        time = {
+          disabled = false;
+          time_format = "%R";
+          style = "bg:#33658A";
+          format = "[[  $time ](fg:#ffffff bg:#33658A)]($style)";
+        };
       };
     };
 
@@ -88,12 +153,27 @@ with lib; {
       enable = true;
       enableZshIntegration = true;
       git = true;
-      icons = "auto";
+      icons = true;
     };
   };
 
-  # Essential packages for all hosts (user-level tools only)
+  # Common packages for all hosts
   home.packages = with pkgs; [
+    # Fonts
+    nerd-fonts.jetbrains-mono
+    noto-fonts-emoji
+    noto-fonts
+    noto-fonts-cjk-sans
+
+    # Development Tools - Core
+    gh
+    git-crypt
+    gnupg
+    ripgrep
+    fd
+    jq
+    yq
+
     # Shell utilities
     zsh-syntax-highlighting
     zsh-autosuggestions
@@ -103,6 +183,9 @@ with lib; {
     # File management
     yazi
     tree
+    unzip
+    zip
+    p7zip
 
     # Network tools
     wget
