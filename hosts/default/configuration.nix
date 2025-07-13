@@ -157,7 +157,7 @@
     VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
     VDPAU_DRIVER = "radeonsi";
     RADV_PERFTEST = "gpl";
-    
+
     # Desktop development (moved from Home Manager)
     CHROME_EXECUTABLE = "${pkgs.google-chrome}/bin/google-chrome-stable";
   };
