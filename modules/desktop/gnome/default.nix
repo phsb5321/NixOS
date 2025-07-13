@@ -144,7 +144,7 @@ in {
         GTK_IM_MODULE = "ibus";
         QT_IM_MODULE = "ibus";
         XMODIFIERS = "@im=ibus";
-        
+
         # 🎯 KEYBOARD: Environment variables for proper keyboard handling
         XKB_DEFAULT_LAYOUT = "us,br";
         XKB_DEFAULT_VARIANT = ",abnt2";
