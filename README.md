@@ -50,7 +50,20 @@ Contains shared settings for:
 - Locale settings
 - Desktop environment (GNOME)
 
-### 3. Host-Specific Configurations
+### 3. Dotfiles Management (chezmoi)
+
+**NEW**: Comprehensive dotfiles management with chezmoi:
+
+- **Independent of Nix**: Chezmoi operates separately from NixOS and Home Manager
+- **Single source of truth**: All dotfiles in one centralized, version-controlled repository
+- **Instantaneous sync**: Changes apply immediately without rebuilding NixOS
+- **Cross-platform**: Works on Linux, macOS, Windows, WSL
+- **Helper scripts**: `init-chezmoi`, `dotfiles-edit`, `dotfiles-sync`, etc.
+- **Shell aliases**: `dotfiles`, `chezcode`, `chezsync`, `chezadd`
+
+See `CHEZMOI_SETUP.md` for complete setup and usage instructions.
+
+### 4. Host-Specific Configurations
 
 #### Desktop (`hosts/default/configuration.nix`)
 
@@ -152,4 +165,40 @@ Example minimal host configuration:
 ```
 
 This structure makes it much easier to maintain multiple NixOS configurations while sharing common functionality.
-Test change for rebuild
+
+## Quick Reference
+
+### Dotfiles Management Commands
+
+```bash
+# Initialize chezmoi
+init-chezmoi
+
+# Add dotfiles to management
+dotfiles-add ~/.bashrc ~/.zshrc ~/.config/nvim
+
+# Edit dotfiles in VS Code/Cursor
+dotfiles-edit  # or chezcode
+
+# Sync changes to system
+dotfiles-sync  # or chezsync
+
+# Check status
+dotfiles-status  # or dotfiles
+
+# Comprehensive manager
+./user-scripts/dotfiles help
+```
+
+### NixOS Rebuild Commands
+
+```bash
+# Test configuration
+sudo nixos-rebuild test --flake .
+
+# Switch to new configuration
+sudo nixos-rebuild switch --flake .
+
+# Build without switching
+sudo nixos-rebuild build --flake .
+```

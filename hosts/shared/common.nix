@@ -42,6 +42,12 @@
     };
   };
 
+  # Enable dotfiles management with chezmoi
+  modules.dotfiles = {
+    enable = true;
+    enableHelperScripts = true;
+  };
+
   # Common core module configuration
   modules.core = {
     enable = true;
