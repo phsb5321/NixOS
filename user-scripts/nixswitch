@@ -743,57 +743,57 @@ SPECIFIED_HOST=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -h|--help|help)
-      show_help
-      exit 0
-      ;;
-    --non-interactive|-y)
-      NON_INTERACTIVE=true
-      shift
-      ;;
-    --commit-message)
-      if [[ -n "${2:-}" ]]; then
-        COMMIT_MESSAGE="$2"
-        shift 2
-      else
-        error "Option --commit-message requires a message"
-        exit 1
-      fi
-      ;;
-    default|laptop)
-      # Host specified explicitly - use it instead of auto-detection
-      SPECIFIED_HOST="$1"
-      shift
-      ;;
-    --*)
-      # Handle legacy flags with informative messages
-      case "$1" in
-        --dry-run|--clean|--fast|--list|--info|--generations|--rollback)
-          error "Legacy option '$1' is no longer supported"
-          info "This simplified script focuses only on auto-detect host functionality"
-          echo
-          show_help
-          exit 1
-          ;;
-        *)
-          error "Unknown option: $1"
-          echo
-          show_help
-          exit 1
-          ;;
-      esac
-      ;;
-    "")
-      # Empty argument, skip
-      shift
-      ;;
-    *)
-      error "Unknown argument: $1"
-      info "Available hosts: default, laptop"
+  -h | --help | help)
+    show_help
+    exit 0
+    ;;
+  --non-interactive | -y)
+    NON_INTERACTIVE=true
+    shift
+    ;;
+  --commit-message)
+    if [[ -n "${2:-}" ]]; then
+      COMMIT_MESSAGE="$2"
+      shift 2
+    else
+      error "Option --commit-message requires a message"
+      exit 1
+    fi
+    ;;
+  default | laptop)
+    # Host specified explicitly - use it instead of auto-detection
+    SPECIFIED_HOST="$1"
+    shift
+    ;;
+  --*)
+    # Handle legacy flags with informative messages
+    case "$1" in
+    --dry-run | --clean | --fast | --list | --info | --generations | --rollback)
+      error "Legacy option '$1' is no longer supported"
+      info "This simplified script focuses only on auto-detect host functionality"
       echo
       show_help
       exit 1
       ;;
+    *)
+      error "Unknown option: $1"
+      echo
+      show_help
+      exit 1
+      ;;
+    esac
+    ;;
+  "")
+    # Empty argument, skip
+    shift
+    ;;
+  *)
+    error "Unknown argument: $1"
+    info "Available hosts: default, laptop"
+    echo
+    show_help
+    exit 1
+    ;;
   esac
 done
 
