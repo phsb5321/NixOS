@@ -72,10 +72,15 @@
     krita
     kdePackages.kdenlive
     obs-studio
+    
+    # Music streaming
+    spotify      # Official Spotify client
+    spot         # Native GNOME Spotify client (lightweight)
+    ncspot       # Terminal-based Spotify client (minimal resources)
 
     # Communication
     telegram-desktop
-    discord
+    vesktop      # Better Discord client with Vencord built-in
     slack
     zoom-us
 
