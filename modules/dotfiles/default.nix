@@ -166,7 +166,7 @@ with lib; let
     fi
   '';
 
-  # Script to sync with git (if git repository)
+  # Script to show backup info and manage dotfiles
   syncScript = pkgs.writeShellScriptBin "dotfiles-sync" ''
     #!/usr/bin/env bash
     set -euo pipefail
@@ -178,44 +178,21 @@ with lib; let
         exit 1
     fi
 
-    cd "$DOTFILES_DIR"
-
-    # Check if this is a git repository
-    if ! git rev-parse --git-dir > /dev/null 2>&1; then
-        echo "📁 Not a git repository. Initialize with:"
-        echo "cd $DOTFILES_DIR && git init && git add . && git commit -m 'Initial dotfiles'"
-        exit 1
-    fi
-
-    echo "� Syncing dotfiles with git..."
-
-    # Add all changes
-    git add .
-
-    # Check if there are changes to commit
-    if git diff --staged --quiet; then
-        echo "✅ No changes to commit"
-    else
-        # Commit changes
-        echo "� Changes detected, committing..."
-        read -p "Enter commit message (default: 'Update dotfiles'): " commit_msg
-        commit_msg=''${commit_msg:-"Update dotfiles"}
-        git commit -m "$commit_msg"
-        echo "✅ Changes committed"
-
-        # Push if remote exists
-        if git remote get-url origin > /dev/null 2>&1; then
-            read -p "Push to remote? (y/N): " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                git push
-                echo "✅ Changes pushed to remote"
-            fi
-        else
-            echo "💡 No remote configured. Set up with:"
-            echo "git remote add origin <your-repo-url>"
-        fi
-    fi
+    echo "📁 Dotfiles Management Info"
+    echo "=========================="
+    echo "📁 Source directory: $DOTFILES_DIR"
+    echo "🏠 Target directory: $HOME"
+    echo ""
+    echo "💡 Dotfiles are managed as part of your NixOS project."
+    echo "💡 Changes are version controlled with the main NixOS repository."
+    echo "💡 Use your main git workflow to commit dotfiles changes:"
+    echo ""
+    echo "   cd /home/notroot/NixOS"
+    echo "   git add dotfiles/"
+    echo "   git commit -m 'Update dotfiles'"
+    echo ""
+    echo "📋 Currently managed files:"
+    chezmoi managed --source "$DOTFILES_DIR" 2>/dev/null || echo "No files managed yet"
   '';
 in {
   options.modules.dotfiles = {
@@ -253,6 +230,7 @@ in {
     environment.shellAliases = mkIf cfg.enableHelperScripts {
       "dotfiles" = "dotfiles-status";
       "dotfiles-diff" = "dotfiles-apply --diff";
+      "dotfiles-info" = "dotfiles-sync";
     };
   };
 }
