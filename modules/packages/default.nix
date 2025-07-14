@@ -118,10 +118,10 @@ in {
         type = types.listOf types.package;
         default = with pkgs; [
           vlc
-          spotify            # Official Spotify client
-          spot              # Native GNOME Spotify client (lightweight)
-          ncspot            # Terminal-based Spotify client (minimal resources)
-          vesktop           # Better Discord client with Vencord built-in
+          spotify # Official Spotify client
+          spot # Native GNOME Spotify client (lightweight)
+          ncspot # Terminal-based Spotify client (minimal resources)
+          vesktop # Better Discord client with Vencord built-in
           obs-studio
           gimp
         ];
