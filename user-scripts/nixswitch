@@ -7,19 +7,19 @@ set -euo pipefail
 # Focuses on auto-detect host functionality with beautiful gum UI
 #######################################
 
-readonly SCRIPT_VERSION="6.0.0"
+readonly SCRIPT_VERSION="6.1.0"
 readonly FLAKE_DIR="$HOME/NixOS"
 readonly LOG_DIR="$HOME/.local/share/nixos-rebuild/logs"
 
 # Ensure required tools are available
 if ! command -v gum &>/dev/null; then
-  echo "❌ Gum is required but not installed. Please install it first."
-  exit 1
+    echo "❌ Gum is required but not installed. Please install it first."
+    exit 1
 fi
 
 if ! command -v nix &>/dev/null; then
-  echo "❌ Nix is required but not installed."
-  exit 1
+    echo "❌ Nix is required but not installed."
+    exit 1
 fi
 
 #######################################
@@ -27,7 +27,7 @@ fi
 #######################################
 
 banner() {
-  gum style \
+    gum style \
     --foreground 212 \
     --border-foreground 212 \
     --border double \
@@ -40,42 +40,42 @@ banner() {
 }
 
 success() {
-  gum style \
+    gum style \
     --foreground 84 \
     --bold \
     "✅ $1"
 }
 
 error() {
-  gum style \
+    gum style \
     --foreground 196 \
     --bold \
     "❌ $1" >&2
 }
 
 info() {
-  gum style \
+    gum style \
     --foreground 39 \
     "ℹ️  $1"
 }
 
 warning() {
-  gum style \
+    gum style \
     --foreground 214 \
     "⚠️  $1"
 }
 
 log_message() {
-  local level="$1"
-  local message="$2"
-
-  # Log to file with timestamp
-  if [[ -n "${LOG_FILE:-}" ]]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $message" >>"$LOG_FILE"
-  fi
-
-  # Display with gum log for beautiful output
-  gum log --structured --level "$level" "$message"
+    local level="$1"
+    local message="$2"
+    
+    # Log to file with timestamp
+    if [[ -n "${LOG_FILE:-}" ]]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $message" >>"$LOG_FILE"
+    fi
+    
+    # Display with gum log for beautiful output
+    gum log --structured --level "$level" "$message"
 }
 
 #######################################
@@ -83,206 +83,234 @@ log_message() {
 #######################################
 
 auto_detect_host() {
-  local hostname
-  hostname=$(hostname)
-
-  info "Detecting host based on hostname: $hostname" >&2
-
-  case "$hostname" in
-  *laptop* | *mobile* | nixos-laptop)
-    echo "laptop"
-    ;;
-  *desktop* | nixos | *)
-    echo "default"
-    ;;
-  esac
+    local hostname
+    hostname=$(hostname)
+    
+    info "Detecting host based on hostname: $hostname" >&2
+    
+    case "$hostname" in
+        *laptop* | *mobile* | nixos-laptop)
+            echo "laptop"
+        ;;
+        *desktop* | nixos | *)
+            echo "default"
+        ;;
+    esac
 }
 
 verify_environment() {
-  local host="$1"
-
-  # Check flake directory
-  if [[ ! -d "$FLAKE_DIR" ]]; then
-    error "Flake directory not found: $FLAKE_DIR"
-    exit 1
-  fi
-
-  if [[ ! -f "$FLAKE_DIR/flake.nix" ]]; then
-    error "No flake.nix found in $FLAKE_DIR"
-    exit 1
-  fi
-
-  # Check host configuration
-  if [[ ! -d "$FLAKE_DIR/hosts/$host" ]]; then
-    error "Host configuration '$host' not found"
-    info "Available hosts:"
-    for h in "$FLAKE_DIR"/hosts/*/; do
-      if [[ -d "$h" ]]; then
-        gum style --foreground 99 "  • $(basename "$h")"
-      fi
-    done
-    exit 1
-  fi
-
-  success "Environment verification passed"
+    local host="$1"
+    
+    # Check flake directory
+    if [[ ! -d "$FLAKE_DIR" ]]; then
+        error "Flake directory not found: $FLAKE_DIR"
+        exit 1
+    fi
+    
+    if [[ ! -f "$FLAKE_DIR/flake.nix" ]]; then
+        error "No flake.nix found in $FLAKE_DIR"
+        exit 1
+    fi
+    
+    # Check host configuration
+    if [[ ! -d "$FLAKE_DIR/hosts/$host" ]]; then
+        error "Host configuration '$host' not found"
+        info "Available hosts:"
+        for h in "$FLAKE_DIR"/hosts/*/; do
+            if [[ -d "$h" ]]; then
+                gum style --foreground 99 "  • $(basename "$h")"
+            fi
+        done
+        exit 1
+    fi
+    
+    success "Environment verification passed"
 }
 
 setup_logging() {
-  # Create log directory
-  mkdir -p "$LOG_DIR"
+    # Create log directory
+    mkdir -p "$LOG_DIR"
+    
+    # Create log file with timestamp
+    LOG_FILE="$LOG_DIR/nixswitch-$(date '+%Y%m%d_%H%M%S').log"
+    touch "$LOG_FILE"
+    
+    # Clean old logs (keep last 10)
+    find "$LOG_DIR" -name "nixswitch-*.log" -type f | sort -r | tail -n +11 | xargs -r rm
+    
+    info "Logging to: $LOG_FILE"
+}
 
-  # Create log file with timestamp
-  LOG_FILE="$LOG_DIR/nixswitch-$(date '+%Y%m%d_%H%M%S').log"
-  touch "$LOG_FILE"
-
-  # Clean old logs (keep last 10)
-  find "$LOG_DIR" -name "nixswitch-*.log" -type f | sort -r | tail -n +11 | xargs -r rm
-
-  info "Logging to: $LOG_FILE"
+update_flake() {
+    info "Updating flake inputs..."
+    
+    # Update flake lock file
+    if gum spin --spinner dot --title "Updating flake inputs..." -- \
+    nix flake update "$FLAKE_DIR"; then
+        success "Flake inputs updated successfully"
+        
+        # Show what was updated
+        if [[ -f "$FLAKE_DIR/flake.lock" ]]; then
+            local lock_changes
+            lock_changes=$(git -C "$FLAKE_DIR" diff --name-only flake.lock 2>/dev/null || echo "")
+            if [[ -n "$lock_changes" ]]; then
+                info "Flake lock file updated"
+                if gum confirm "Show flake update details?"; then
+                    git -C "$FLAKE_DIR" show --stat flake.lock | head -20
+                fi
+            fi
+        fi
+    else
+        error "Failed to update flake inputs"
+        log_message "error" "Flake update failed"
+        if ! gum confirm "Continue with rebuild anyway?"; then
+            exit 1
+        fi
+    fi
 }
 
 check_system_health() {
-  info "Performing system health checks..."
-
-  # Check disk space
-  local available_gb
-  available_gb=$(df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ')
-
-  if [[ "$available_gb" -lt 5 ]]; then
-    warning "Low disk space: ${available_gb}GB available"
-    if ! gum confirm "Continue with low disk space?"; then
-      error "Aborted due to low disk space"
-      exit 1
+    info "Performing system health checks..."
+    
+    # Check disk space
+    local available_gb
+    available_gb=$(df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ')
+    
+    if [[ "$available_gb" -lt 5 ]]; then
+        warning "Low disk space: ${available_gb}GB available"
+        if ! gum confirm "Continue with low disk space?"; then
+            error "Aborted due to low disk space"
+            exit 1
+        fi
+    else
+        success "Disk space check: ${available_gb}GB available"
     fi
-  else
-    success "Disk space check: ${available_gb}GB available"
-  fi
-
-  # Check git state with enhanced handling
-  pre_rebuild_git_check
+    
+    # Check git state with enhanced handling
+    pre_rebuild_git_check
 }
 
 validate_configuration() {
-  local host="$1"
-
-  info "Validating flake configuration..."
-
-  # Run with spinner for better UX
-  if gum spin --spinner dot --title "Checking flake syntax..." -- \
+    local host="$1"
+    
+    info "Validating flake configuration..."
+    
+    # Run with spinner for better UX
+    if gum spin --spinner dot --title "Checking flake syntax..." -- \
     nix flake check --no-build "$FLAKE_DIR"; then
-    success "Flake syntax validation passed"
-  else
-    error "Flake syntax validation failed"
-    log_message "error" "Flake syntax validation failed"
-    exit 1
-  fi
-
-  info "Validating host configuration..."
-  if gum spin --spinner dot --title "Validating host config..." -- \
+        success "Flake syntax validation passed"
+    else
+        error "Flake syntax validation failed"
+        log_message "error" "Flake syntax validation failed"
+        exit 1
+    fi
+    
+    info "Validating host configuration..."
+    if gum spin --spinner dot --title "Validating host config..." -- \
     nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run; then
-    success "Host configuration validation passed"
-  else
-    error "Host configuration validation failed"
-    log_message "error" "Host configuration validation failed for host: $host"
-    exit 1
-  fi
+        success "Host configuration validation passed"
+    else
+        error "Host configuration validation failed"
+        log_message "error" "Host configuration validation failed for host: $host"
+        exit 1
+    fi
 }
 
 perform_rebuild() {
-  local host="$1"
-  local start_time end_time duration
-
-  start_time=$(date +%s)
-
-  info "Starting NixOS rebuild for host: $host"
-  log_message "info" "Starting rebuild for host: $host"
-
-  # Ask for sudo password upfront
-  if ! sudo -v; then
-    error "Sudo access required"
-    exit 1
-  fi
-
-  # Keep sudo alive during build
-  {
-    while true; do
-      sudo -v 2>/dev/null || exit 1
-      sleep 45
-    done
-  } &
-  local sudo_pid=$!
-
-  # Trap to cleanup sudo keep-alive
-  trap 'kill $sudo_pid 2>/dev/null || true' EXIT
-
-  # Format code before building
-  if command -v alejandra &>/dev/null; then
-    gum spin --spinner dot --title "Formatting Nix code..." -- \
-      alejandra "$FLAKE_DIR" &>/dev/null || true
-    success "Code formatting completed"
-  fi
-
-  # Main rebuild with beautiful progress display
-  local rebuild_cmd=(
-    sudo nixos-rebuild switch
-    --flake "$FLAKE_DIR#$host"
-    --show-trace
-    --verbose
-  )
-
-  info "Executing: ${rebuild_cmd[*]}"
-  log_message "info" "Executing rebuild command: ${rebuild_cmd[*]}"
-
-  # Use gum spin for the rebuild process
-  if gum spin \
+    local host="$1"
+    local start_time end_time duration
+    
+    start_time=$(date +%s)
+    
+    info "Starting NixOS rebuild for host: $host"
+    log_message "info" "Starting rebuild for host: $host"
+    
+    # Ask for sudo password upfront
+    if ! sudo -v; then
+        error "Sudo access required"
+        exit 1
+    fi
+    
+    # Keep sudo alive during build
+    {
+        while true; do
+            sudo -v 2>/dev/null || exit 1
+            sleep 45
+        done
+    } &
+    local sudo_pid=$!
+    
+    # Trap to cleanup sudo keep-alive
+    trap 'kill $sudo_pid 2>/dev/null || true' EXIT
+    
+    # Format code before building
+    if command -v alejandra &>/dev/null; then
+        gum spin --spinner dot --title "Formatting Nix code..." -- \
+        alejandra "$FLAKE_DIR" &>/dev/null || true
+        success "Code formatting completed"
+    fi
+    
+    # Main rebuild with beautiful progress display
+    local rebuild_cmd=(
+        sudo nixos-rebuild switch
+        --flake "$FLAKE_DIR#$host"
+        --show-trace
+        --verbose
+    )
+    
+    info "Executing: ${rebuild_cmd[*]}"
+    log_message "info" "Executing rebuild command: ${rebuild_cmd[*]}"
+    
+    # Use gum spin for the rebuild process
+    if gum spin \
     --spinner globe \
     --title "Building and switching to new configuration..." \
     --show-output \
     -- "${rebuild_cmd[@]}" 2>&1 | tee -a "$LOG_FILE"; then
-
-    end_time=$(date +%s)
-    duration=$((end_time - start_time))
-
-    success "System rebuild completed successfully! (${duration}s)"
-    log_message "info" "Rebuild completed successfully in ${duration}s"
-
-    # Show current generation
-    local current_gen
-    current_gen=$(sudo nixos-rebuild list-generations | grep current | head -1 | awk '{print $1}')
-    info "Current generation: $current_gen"
-
-  else
-    end_time=$(date +%s)
-    duration=$((end_time - start_time))
-
-    error "System rebuild failed after ${duration}s"
-    log_message "error" "Rebuild failed after ${duration}s"
-
-    if gum confirm "View recent logs?"; then
-      tail -n 50 "$LOG_FILE" | gum pager
+        
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        
+        success "System rebuild completed successfully! (${duration}s)"
+        log_message "info" "Rebuild completed successfully in ${duration}s"
+        
+        # Show current generation
+        local current_gen
+        current_gen=$(sudo nixos-rebuild list-generations | grep current | head -1 | awk '{print $1}')
+        info "Current generation: $current_gen"
+        
+    else
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        
+        error "System rebuild failed after ${duration}s"
+        log_message "error" "Rebuild failed after ${duration}s"
+        
+        if gum confirm "View recent logs?"; then
+            tail -n 50 "$LOG_FILE" | gum pager
+        fi
+        
+        exit 1
     fi
-
-    exit 1
-  fi
-
-  # Cleanup
-  kill $sudo_pid 2>/dev/null || true
+    
+    # Cleanup
+    kill $sudo_pid 2>/dev/null || true
 }
 
 post_rebuild_tasks() {
-  info "Performing post-rebuild cleanup..."
-
-  # Quick garbage collection
-  gum spin --spinner dot --title "Cleaning up old generations..." -- \
+    info "Performing post-rebuild cleanup..."
+    
+    # Quick garbage collection
+    gum spin --spinner dot --title "Cleaning up old generations..." -- \
     nix-collect-garbage --delete-older-than 7d 2>/dev/null || true
-
-  success "Post-rebuild tasks completed"
+    
+    success "Post-rebuild tasks completed"
 }
 
 show_system_info() {
-  local host="$1"
-
-  gum style \
+    local host="$1"
+    
+    gum style \
     --foreground 99 \
     --border normal \
     --border-foreground 99 \
@@ -304,191 +332,191 @@ show_system_info() {
 #######################################
 
 check_git_status() {
-  local has_changes=false
-
-  # Check for any changes (staged, unstaged, untracked)
-  if ! git -C "$FLAKE_DIR" diff --quiet ||
+    local has_changes=false
+    
+    # Check for any changes (staged, unstaged, untracked)
+    if ! git -C "$FLAKE_DIR" diff --quiet ||
     ! git -C "$FLAKE_DIR" diff --cached --quiet ||
     [[ -n "$(git -C "$FLAKE_DIR" ls-files --others --exclude-standard)" ]]; then
-    has_changes=true
-  fi
-
-  if [[ "$has_changes" == "true" ]]; then
-    warning "Git changes detected"
-
-    if gum confirm "Show detailed git status?"; then
-      echo
-      gum style --foreground 99 --bold "📝 Git Status:"
-      git -C "$FLAKE_DIR" status --short --branch
-      echo
+        has_changes=true
     fi
-
-    return 0 # Has changes
-  else
-    success "Git repository is clean"
-    return 1 # No changes
-  fi
+    
+    if [[ "$has_changes" == "true" ]]; then
+        warning "Git changes detected"
+        
+        if gum confirm "Show detailed git status?"; then
+            echo
+            gum style --foreground 99 --bold "📝 Git Status:"
+            git -C "$FLAKE_DIR" status --short --branch
+            echo
+        fi
+        
+        return 0 # Has changes
+    else
+        success "Git repository is clean"
+        return 1 # No changes
+    fi
 }
 
 get_commit_message() {
-  local default_msg="nixos: update configuration (auto-commit after successful rebuild)"
-
-  # Use provided message if in non-interactive mode
-  if [[ -n "${COMMIT_MESSAGE:-}" ]]; then
-    echo "$COMMIT_MESSAGE"
-    return
-  fi
-
-  gum style --foreground 214 --bold "Git Commit"
-  echo
-
-  local commit_msg
-  if gum confirm "Use default commit message?"; then
-    commit_msg="$default_msg"
-  else
-    commit_msg=$(gum input \
-      --placeholder "Enter commit message..." \
-      --prompt "Commit: " \
-      --width 60)
-
-    # Use default if empty
-    if [[ -z "$commit_msg" ]]; then
-      commit_msg="$default_msg"
+    local default_msg="nixos: update configuration (auto-commit after successful rebuild)"
+    
+    # Use provided message if in non-interactive mode
+    if [[ -n "${COMMIT_MESSAGE:-}" ]]; then
+        echo "$COMMIT_MESSAGE"
+        return
     fi
-  fi
-
-  echo "$commit_msg"
+    
+    gum style --foreground 214 --bold "Git Commit"
+    echo
+    
+    local commit_msg
+    if gum confirm "Use default commit message?"; then
+        commit_msg="$default_msg"
+    else
+        commit_msg=$(gum input \
+            --placeholder "Enter commit message..." \
+            --prompt "Commit: " \
+        --width 60)
+        
+        # Use default if empty
+        if [[ -z "$commit_msg" ]]; then
+            commit_msg="$default_msg"
+        fi
+    fi
+    
+    echo "$commit_msg"
 }
 
 git_add_commit_push() {
-  local host="$1"
-
-  info "Starting post-rebuild git workflow..."
-
-  # Check for uncommitted changes first
-  local has_uncommitted_changes=false
-  if ! git -C "$FLAKE_DIR" diff --quiet || ! git -C "$FLAKE_DIR" diff --cached --quiet; then
-    has_uncommitted_changes=true
-  fi
-
-  # Check if we have unpushed commits
-  local has_unpushed_commits=false
-  if git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
-    local unpushed_count
-    unpushed_count=$(git -C "$FLAKE_DIR" rev-list --count origin..HEAD 2>/dev/null || echo "0")
-    if [[ "$unpushed_count" -gt 0 ]]; then
-      has_unpushed_commits=true
+    local host="$1"
+    
+    info "Starting post-rebuild git workflow..."
+    
+    # Check for uncommitted changes first
+    local has_uncommitted_changes=false
+    if ! git -C "$FLAKE_DIR" diff --quiet || ! git -C "$FLAKE_DIR" diff --cached --quiet; then
+        has_uncommitted_changes=true
     fi
-  fi
-
-  # If no uncommitted changes and no unpushed commits, nothing to do
-  if [[ "$has_uncommitted_changes" == "false" && "$has_unpushed_commits" == "false" ]]; then
-    info "No changes to commit or push"
-    return 0
-  fi
-
-  echo
-  gum style \
+    
+    # Check if we have unpushed commits
+    local has_unpushed_commits=false
+    if git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
+        local unpushed_count
+        unpushed_count=$(git -C "$FLAKE_DIR" rev-list --count origin..HEAD 2>/dev/null || echo "0")
+        if [[ "$unpushed_count" -gt 0 ]]; then
+            has_unpushed_commits=true
+        fi
+    fi
+    
+    # If no uncommitted changes and no unpushed commits, nothing to do
+    if [[ "$has_uncommitted_changes" == "false" && "$has_unpushed_commits" == "false" ]]; then
+        info "No changes to commit or push"
+        return 0
+    fi
+    
+    echo
+    gum style \
     --foreground 214 \
     --bold \
     "Post-Rebuild Git Workflow"
-  echo
-
-  # Handle uncommitted changes if any
-  if [[ "$has_uncommitted_changes" == "true" ]]; then
-    # Show what will be added
-    gum style --foreground 99 "New files to be committed:"
-    git -C "$FLAKE_DIR" status --porcelain | head -10
-    if [[ $(git -C "$FLAKE_DIR" status --porcelain | wc -l) -gt 10 ]]; then
-      info "... and $(($(git -C "$FLAKE_DIR" status --porcelain | wc -l) - 10)) more files"
-    fi
     echo
-
-    # Skip confirmation in non-interactive mode
-    local should_commit=false
-    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-      should_commit=true
-      info "Auto-committing changes (non-interactive mode)"
-    else
-      if gum confirm "Commit new changes from rebuild?"; then
-        should_commit=true
-      fi
+    
+    # Handle uncommitted changes if any
+    if [[ "$has_uncommitted_changes" == "true" ]]; then
+        # Show what will be added
+        gum style --foreground 99 "New files to be committed:"
+        git -C "$FLAKE_DIR" status --porcelain | head -10
+        if [[ $(git -C "$FLAKE_DIR" status --porcelain | wc -l) -gt 10 ]]; then
+            info "... and $(($(git -C "$FLAKE_DIR" status --porcelain | wc -l) - 10)) more files"
+        fi
+        echo
+        
+        # Skip confirmation in non-interactive mode
+        local should_commit=false
+        if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+            should_commit=true
+            info "Auto-committing changes (non-interactive mode)"
+        else
+            if gum confirm "Commit new changes from rebuild?"; then
+                should_commit=true
+            fi
+        fi
+        
+        if [[ "$should_commit" == "true" ]]; then
+            # Git add
+            if ! gum spin --spinner dot --title "Adding files..." -- \
+            git -C "$FLAKE_DIR" add -A; then
+                error "Failed to add files to git"
+                return 1
+            fi
+            
+            # Get commit message
+            local commit_message
+            commit_message=$(get_commit_message)
+            
+            # Git commit
+            if ! gum spin --spinner dot --title "Creating commit..." -- \
+            git -C "$FLAKE_DIR" commit -m "$commit_message"; then
+                error "Failed to commit changes"
+                return 1
+            fi
+            
+            success "New changes committed successfully"
+            has_unpushed_commits=true # Now we definitely have something to push
+        else
+            info "Skipping commit of new changes"
+        fi
     fi
-
-    if [[ "$should_commit" == "true" ]]; then
-      # Git add
-      if ! gum spin --spinner dot --title "Adding files..." -- \
-        git -C "$FLAKE_DIR" add -A; then
-        error "Failed to add files to git"
-        return 1
-      fi
-
-      # Get commit message
-      local commit_message
-      commit_message=$(get_commit_message)
-
-      # Git commit
-      if ! gum spin --spinner dot --title "Creating commit..." -- \
-        git -C "$FLAKE_DIR" commit -m "$commit_message"; then
-        error "Failed to commit changes"
-        return 1
-      fi
-
-      success "New changes committed successfully"
-      has_unpushed_commits=true # Now we definitely have something to push
-    else
-      info "Skipping commit of new changes"
+    
+    # Handle pushing if we have unpushed commits
+    if [[ "$has_unpushed_commits" == "true" ]]; then
+        if ! git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
+            warning "No remote repository configured"
+            info "Commits created locally only"
+            return 0
+        fi
+        
+        # Show unpushed commits
+        local unpushed_count
+        unpushed_count=$(git -C "$FLAKE_DIR" rev-list --count origin..HEAD 2>/dev/null || echo "0")
+        
+        echo
+        gum style --foreground 99 "Ready to push $unpushed_count commit(s) to remote:"
+        git -C "$FLAKE_DIR" log --oneline origin..HEAD | head -5
+        if [[ "$unpushed_count" -gt 5 ]]; then
+            info "... and $(($unpushed_count - 5)) more commits"
+        fi
+        echo
+        
+        # Skip confirmation in non-interactive mode
+        local should_push=false
+        if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+            should_push=true
+            info "Auto-pushing commits (non-interactive mode)"
+        else
+            if gum confirm "Push all commits to remote repository?"; then
+                should_push=true
+            fi
+        fi
+        
+        if [[ "$should_push" == "true" ]]; then
+            if gum spin --spinner dot --title "Pushing to remote..." -- \
+            git -C "$FLAKE_DIR" push; then
+                success "All commits pushed to remote repository"
+            else
+                error "Failed to push to remote repository"
+                warning "Commits are saved locally but not pushed"
+                return 1
+            fi
+        else
+            info "Commits saved locally only"
+        fi
     fi
-  fi
-
-  # Handle pushing if we have unpushed commits
-  if [[ "$has_unpushed_commits" == "true" ]]; then
-    if ! git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
-      warning "No remote repository configured"
-      info "Commits created locally only"
-      return 0
-    fi
-
-    # Show unpushed commits
-    local unpushed_count
-    unpushed_count=$(git -C "$FLAKE_DIR" rev-list --count origin..HEAD 2>/dev/null || echo "0")
-
+    
+    # Show final git status
     echo
-    gum style --foreground 99 "Ready to push $unpushed_count commit(s) to remote:"
-    git -C "$FLAKE_DIR" log --oneline origin..HEAD | head -5
-    if [[ "$unpushed_count" -gt 5 ]]; then
-      info "... and $(($unpushed_count - 5)) more commits"
-    fi
-    echo
-
-    # Skip confirmation in non-interactive mode
-    local should_push=false
-    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-      should_push=true
-      info "Auto-pushing commits (non-interactive mode)"
-    else
-      if gum confirm "Push all commits to remote repository?"; then
-        should_push=true
-      fi
-    fi
-
-    if [[ "$should_push" == "true" ]]; then
-      if gum spin --spinner dot --title "Pushing to remote..." -- \
-        git -C "$FLAKE_DIR" push; then
-        success "All commits pushed to remote repository"
-      else
-        error "Failed to push to remote repository"
-        warning "Commits are saved locally but not pushed"
-        return 1
-      fi
-    else
-      info "Commits saved locally only"
-    fi
-  fi
-
-  # Show final git status
-  echo
-  gum style \
+    gum style \
     --foreground 84 \
     --border normal \
     --border-foreground 84 \
@@ -501,96 +529,96 @@ git_add_commit_push() {
     "" \
     "Host: $host" \
     "Commit: $(git -C "$FLAKE_DIR" rev-parse --short HEAD)"
-
-  log_message "info" "Git workflow completed successfully for host: $host"
+    
+    log_message "info" "Git workflow completed successfully for host: $host"
 }
 
 pre_rebuild_git_check() {
-  # Skip git check in non-interactive mode
-  if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-    info "Skipping git check (non-interactive mode)"
-    return 0
-  fi
-
-  # Check for uncommitted changes before rebuild
-  if ! git -C "$FLAKE_DIR" diff --quiet || ! git -C "$FLAKE_DIR" diff --cached --quiet; then
-    warning "Uncommitted changes detected"
-
-    if gum confirm "Show git status?"; then
-      echo
-      git -C "$FLAKE_DIR" status --short --branch
-      echo
+    # Skip git check in non-interactive mode
+    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        info "Skipping git check (non-interactive mode)"
+        return 0
     fi
-
-    echo
-    gum style --foreground 214 --bold "Pre-Rebuild Git Options"
-    echo
-
-    # Offer to commit changes before rebuild
-    if gum confirm "Commit changes before attempting rebuild?"; then
-      if commit_current_changes; then
-        success "Changes committed successfully"
-      else
-        error "Failed to commit changes"
-        if ! gum confirm "Continue rebuild anyway?"; then
-          info "Please handle your git changes and try again"
-          exit 1
+    
+    # Check for uncommitted changes before rebuild
+    if ! git -C "$FLAKE_DIR" diff --quiet || ! git -C "$FLAKE_DIR" diff --cached --quiet; then
+        warning "Uncommitted changes detected"
+        
+        if gum confirm "Show git status?"; then
+            echo
+            git -C "$FLAKE_DIR" status --short --branch
+            echo
         fi
-      fi
+        
+        echo
+        gum style --foreground 214 --bold "Pre-Rebuild Git Options"
+        echo
+        
+        # Offer to commit changes before rebuild
+        if gum confirm "Commit changes before attempting rebuild?"; then
+            if commit_current_changes; then
+                success "Changes committed successfully"
+            else
+                error "Failed to commit changes"
+                if ! gum confirm "Continue rebuild anyway?"; then
+                    info "Please handle your git changes and try again"
+                    exit 1
+                fi
+            fi
+        else
+            info "Proceeding with uncommitted changes"
+            if ! gum confirm "Continue rebuild with uncommitted changes?"; then
+                info "Please handle your git changes and try again"
+                exit 1
+            fi
+        fi
     else
-      info "Proceeding with uncommitted changes"
-      if ! gum confirm "Continue rebuild with uncommitted changes?"; then
-        info "Please handle your git changes and try again"
-        exit 1
-      fi
+        success "Git state is clean"
     fi
-  else
-    success "Git state is clean"
-  fi
 }
 
 commit_current_changes() {
-  info "Committing current changes..."
-
-  # Show what will be added
-  gum style --foreground 99 "Files to be committed:"
-  git -C "$FLAKE_DIR" status --porcelain | head -10
-  if [[ $(git -C "$FLAKE_DIR" status --porcelain | wc -l) -gt 10 ]]; then
-    info "... and $(($(git -C "$FLAKE_DIR" status --porcelain | wc -l) - 10)) more files"
-  fi
-  echo
-
-  # Skip confirmation in non-interactive mode
-  if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
-    # Final confirmation
-    if ! gum confirm "Add and commit these changes?"; then
-      info "Commit cancelled"
-      return 1
+    info "Committing current changes..."
+    
+    # Show what will be added
+    gum style --foreground 99 "Files to be committed:"
+    git -C "$FLAKE_DIR" status --porcelain | head -10
+    if [[ $(git -C "$FLAKE_DIR" status --porcelain | wc -l) -gt 10 ]]; then
+        info "... and $(($(git -C "$FLAKE_DIR" status --porcelain | wc -l) - 10)) more files"
     fi
-  fi
-
-  # Git add
-  if ! gum spin --spinner dot --title "Adding files..." -- \
+    echo
+    
+    # Skip confirmation in non-interactive mode
+    if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
+        # Final confirmation
+        if ! gum confirm "Add and commit these changes?"; then
+            info "Commit cancelled"
+            return 1
+        fi
+    fi
+    
+    # Git add
+    if ! gum spin --spinner dot --title "Adding files..." -- \
     git -C "$FLAKE_DIR" add -A; then
-    error "Failed to add files to git"
-    return 1
-  fi
-
-  # Get commit message
-  local commit_message
-  commit_message=$(get_commit_message)
-
-  # Git commit
-  if ! gum spin --spinner dot --title "Creating commit..." -- \
+        error "Failed to add files to git"
+        return 1
+    fi
+    
+    # Get commit message
+    local commit_message
+    commit_message=$(get_commit_message)
+    
+    # Git commit
+    if ! gum spin --spinner dot --title "Creating commit..." -- \
     git -C "$FLAKE_DIR" commit -m "$commit_message"; then
-    error "Failed to commit changes"
-    return 1
-  fi
-
-  # For pre-rebuild commits, we only commit locally - never push
-  info "Changes committed locally (push will happen after successful rebuild)"
-
-  return 0
+        error "Failed to commit changes"
+        return 1
+    fi
+    
+    # For pre-rebuild commits, we only commit locally - never push
+    info "Changes committed locally (push will happen after successful rebuild)"
+    
+    return 0
 }
 
 #######################################
@@ -598,77 +626,84 @@ commit_current_changes() {
 #######################################
 
 main() {
-  # Show beautiful banner
-  banner
-
-  # Setup logging first
-  setup_logging
-
-  # Use specified host or auto-detect
-  local host
-  if [[ -n "${SPECIFIED_HOST:-}" ]]; then
-    host="$SPECIFIED_HOST"
+    # Show beautiful banner
+    banner
+    
+    # Setup logging first
+    setup_logging
+    
+    # Use specified host or auto-detect
+    local host
+    if [[ -n "${SPECIFIED_HOST:-}" ]]; then
+        host="$SPECIFIED_HOST"
+        gum style \
+        --foreground 212 \
+        --bold \
+        "🎯 Using specified host: $host"
+    else
+        host=$(auto_detect_host)
+        gum style \
+        --foreground 212 \
+        --bold \
+        "🎯 Auto-detected host: $host"
+    fi
+    
+    # Change to flake directory
+    cd "$FLAKE_DIR" || {
+        error "Failed to change to flake directory: $FLAKE_DIR"
+        exit 1
+    }
+    
+    # Show system info
+    show_system_info "$host"
+    
+    # Verify environment
+    verify_environment "$host"
+    
+    # System health checks
+    check_system_health
+    
+    # Update flake inputs (unless --no-update is specified)
+    if [[ "$SKIP_UPDATE" != "true" ]]; then
+        update_flake
+    else
+        info "Skipping flake update (--no-update specified)"
+    fi
+    
+    # Validate configuration
+    validate_configuration "$host"
+    
+    # Final confirmation with beautiful prompt
+    echo
     gum style \
-      --foreground 212 \
-      --bold \
-      "🎯 Using specified host: $host"
-  else
-    host=$(auto_detect_host)
-    gum style \
-      --foreground 212 \
-      --bold \
-      "🎯 Auto-detected host: $host"
-  fi
-
-  # Change to flake directory
-  cd "$FLAKE_DIR" || {
-    error "Failed to change to flake directory: $FLAKE_DIR"
-    exit 1
-  }
-
-  # Show system info
-  show_system_info "$host"
-
-  # Verify environment
-  verify_environment "$host"
-
-  # System health checks
-  check_system_health
-
-  # Validate configuration
-  validate_configuration "$host"
-
-  # Final confirmation with beautiful prompt
-  echo
-  gum style \
     --foreground 214 \
     --bold \
     "Ready to rebuild and switch to new configuration"
-
-  # Skip confirmation in non-interactive mode
-  if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
-    if ! gum confirm --default=true "Proceed with rebuild?"; then
-      info "Operation cancelled by user"
-      exit 0
+    
+    # Skip confirmation in non-interactive mode
+    if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
+        if ! gum confirm --default=true "Proceed with rebuild?"; then
+            info "Operation cancelled by user"
+            exit 0
+        fi
+    else
+        info "Proceeding with rebuild (non-interactive mode)"
     fi
-  else
-    info "Proceeding with rebuild (non-interactive mode)"
-  fi
-
-  echo
-
-  # Perform the rebuild
-  perform_rebuild "$host"
-
-  # Post-rebuild tasks
-  post_rebuild_tasks
-
-  # Git workflow (add, commit, push) - MOVED AFTER rebuild completion
-  git_add_commit_push "$host"
-
-  # Final success message
-  echo
-  gum style \
+    
+    echo
+    
+    # Perform the rebuild
+    perform_rebuild "$host"
+    
+    # Post-rebuild tasks
+    post_rebuild_tasks
+    
+    # Git workflow (add, commit, push) - MOVED AFTER rebuild completion
+    git_add_commit_push "$host"
+    
+    # Final success message
+    echo
+    gum style \
     --foreground 84 \
     --border double \
     --border-foreground 84 \
@@ -679,57 +714,59 @@ main() {
     "SUCCESS!" \
     "NixOS rebuild completed" \
     "Host: $host"
-
-  # Offer to view logs (skip in non-interactive mode)
-  if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
-    if gum confirm "View detailed logs?"; then
-      gum pager <"$LOG_FILE"
+    
+    # Offer to view logs (skip in non-interactive mode)
+    if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
+        if gum confirm "View detailed logs?"; then
+            gum pager <"$LOG_FILE"
+        fi
     fi
-  fi
 }
 
 # Help function for --help flag
 show_help() {
-  gum style \
+    gum style \
     --foreground 212 \
     --bold \
     "NixOS Switch v${SCRIPT_VERSION}"
-  echo
-  gum style \
+    echo
+    gum style \
     --foreground 39 \
     "Simplified NixOS rebuild script with auto-host detection"
-  echo
-  gum style \
+    echo
+    gum style \
     --foreground 99 \
     "Usage: nixswitch [OPTIONS] [HOST]" \
     "       nixswitch --non-interactive --commit-message 'fix: update config' default"
-  echo
-  gum style \
+    echo
+    gum style \
     --foreground 84 \
     "Options:" \
     "  --non-interactive, -y    Skip all confirmations" \
     "  --commit-message MSG     Use MSG for git commit" \
+    "  --no-update             Skip flake update" \
     "  --help, -h              Show this help"
-  echo
-  gum style \
+    echo
+    gum style \
     --foreground 84 \
     "Hosts:" \
     "  default                 Desktop configuration" \
     "  laptop                  Laptop configuration" \
     "  (auto-detect)           Based on hostname"
-  echo
-  gum style \
+    echo
+    gum style \
     --foreground 84 \
     "Features:" \
     "• Auto-detects host based on hostname" \
     "• Beautiful terminal UI with gum" \
     "• Comprehensive logging" \
     "• System health checks" \
+    "• Flake input updates" \
     "• Configuration validation" \
     "• Git integration (add/commit/push)" \
     "• Automatic cleanup"
-  echo
-  gum style \
+    echo
+    gum style \
     --foreground 214 \
     "Host Detection Rules:" \
     "• *laptop*, *mobile*, nixos-laptop → 'laptop'" \
@@ -740,61 +777,66 @@ show_help() {
 NON_INTERACTIVE=false
 COMMIT_MESSAGE=""
 SPECIFIED_HOST=""
+SKIP_UPDATE=false
 
 while [[ $# -gt 0 ]]; do
-  case $1 in
-  -h | --help | help)
-    show_help
-    exit 0
-    ;;
-  --non-interactive | -y)
-    NON_INTERACTIVE=true
-    shift
-    ;;
-  --commit-message)
-    if [[ -n "${2:-}" ]]; then
-      COMMIT_MESSAGE="$2"
-      shift 2
-    else
-      error "Option --commit-message requires a message"
-      exit 1
-    fi
-    ;;
-  default | laptop)
-    # Host specified explicitly - use it instead of auto-detection
-    SPECIFIED_HOST="$1"
-    shift
-    ;;
-  --*)
-    # Handle legacy flags with informative messages
-    case "$1" in
-    --dry-run | --clean | --fast | --list | --info | --generations | --rollback)
-      error "Legacy option '$1' is no longer supported"
-      info "This simplified script focuses only on auto-detect host functionality"
-      echo
-      show_help
-      exit 1
-      ;;
-    *)
-      error "Unknown option: $1"
-      echo
-      show_help
-      exit 1
-      ;;
+    case $1 in
+        -h | --help | help)
+            show_help
+            exit 0
+        ;;
+        --non-interactive | -y)
+            NON_INTERACTIVE=true
+            shift
+        ;;
+        --commit-message)
+            if [[ -n "${2:-}" ]]; then
+                COMMIT_MESSAGE="$2"
+                shift 2
+            else
+                error "Option --commit-message requires a message"
+                exit 1
+            fi
+        ;;
+        --no-update)
+            SKIP_UPDATE=true
+            shift
+        ;;
+        default | laptop)
+            # Host specified explicitly - use it instead of auto-detection
+            SPECIFIED_HOST="$1"
+            shift
+        ;;
+        --*)
+            # Handle legacy flags with informative messages
+            case "$1" in
+                --dry-run | --clean | --fast | --list | --info | --generations | --rollback)
+                    error "Legacy option '$1' is no longer supported"
+                    info "This simplified script focuses only on auto-detect host functionality"
+                    echo
+                    show_help
+                    exit 1
+                ;;
+                *)
+                    error "Unknown option: $1"
+                    echo
+                    show_help
+                    exit 1
+                ;;
+            esac
+        ;;
+        "")
+            # Empty argument, skip
+            shift
+        ;;
+        *)
+            error "Unknown argument: $1"
+            info "Available hosts: default, laptop"
+            echo
+            show_help
+            exit 1
+        ;;
     esac
-    ;;
-  "")
-    # Empty argument, skip
-    shift
-    ;;
-  *)
-    error "Unknown argument: $1"
-    info "Available hosts: default, laptop"
-    echo
-    show_help
-    exit 1
-    ;;
-  esac
 done
 
 # Run main function (no arguments passed since we handle them above)
