@@ -1,0 +1,32 @@
+# Chezmoi configuration for NixOS project
+# This configures chezmoi to use the dotfiles directory within the project
+
+[data]
+    # Hostname for templating
+    hostname = "{{ .chezmoi.hostname }}"
+    # Username for templating
+    username = "{{ .chezmoi.username }}"
+    # OS for templating
+    os = "{{ .chezmoi.os }}"
+    # Architecture for templating  
+    arch = "{{ .chezmoi.arch }}"
+
+[sourceDir]
+    # Use the dotfiles directory within the NixOS project
+    path = "~/NixOS/dotfiles"
+
+[git]
+    # Auto-commit changes to dotfiles
+    autoCommit = true
+    # Auto-push changes (set to false initially for safety)
+    autoPush = false
+
+[edit]
+    # Use VS Code as the default editor for dotfiles
+    command = "code"
+    args = ["--wait"]
+
+[diff]
+    # Use VS Code for diffs
+    command = "code"
+    args = ["--wait", "--diff"]
