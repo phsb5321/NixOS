@@ -20,7 +20,6 @@
 
   # Override shared configuration as needed
   modules.networking.hostName = hostname;
-  modules.home.hostName = "default";
 
   # Desktop-specific configuration
   # Enable gaming packages for desktop
@@ -95,7 +94,7 @@
     # System monitoring
     htop
     btop
-    nvtop-amd
+    nvtopPackages.amd
 
     # LACT for AMD GPU control
     lact
