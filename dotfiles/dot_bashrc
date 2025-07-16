@@ -1,0 +1,7 @@
+# pnpm
+export PNPM_HOME="/home/notroot/Documents/Code/CITi/DeliCasa/client-V2/.pnpm-store"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
