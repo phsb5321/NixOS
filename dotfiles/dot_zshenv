@@ -1,0 +1,14 @@
+# Environment variables
+# Source home-manager session variables if they exist
+if [[ -f "/etc/profiles/per-user/notroot/etc/profile.d/hm-session-vars.sh" ]]; then
+    . "/etc/profiles/per-user/notroot/etc/profile.d/hm-session-vars.sh"
+else
+    # Home-manager not in use, set basic environment variables
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Only source this once
+if [[ -z "$__HM_ZSH_SESS_VARS_SOURCED" ]]; then
+  export __HM_ZSH_SESS_VARS_SOURCED=1
+  
+fi
