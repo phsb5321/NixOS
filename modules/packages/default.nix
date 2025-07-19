@@ -234,7 +234,9 @@ in {
 
           # Shell and Terminal
           zsh
-          starship # Cross-shell prompt
+          oh-my-zsh # ZSH framework
+          zsh-powerlevel10k # Powerlevel10k theme
+          starship # Cross-shell prompt (alternative)
           kitty
           grc # Generic colorizer
           eza # Modern ls replacement
