@@ -286,11 +286,7 @@ git_workflow() {
     
     # Handle uncommitted changes
     if [[ "$has_changes" == "true" ]]; then
-        gum style --foreground 84 --bold "📋 Changed Files:"
-        git status --porcelain | head -5 | while read -r line; do
-            echo "  $line"
-        done
-        echo
+        git status --porcelain | head -5 | gum table --border thick --header "Changed Files"
         
         if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && ! gum confirm "Commit changes?"; then
             info "Skipping git commit"
@@ -418,11 +414,13 @@ show_help() {
     echo
     gum style --foreground 39 "Streamlined NixOS rebuild with modern TUI and parallel processing"
     echo
-    gum style --foreground 84 --bold "Options:"
-    echo "  --help/-h                Show this help"
-    echo "  --non-interactive/-y     Skip confirmations"
-    echo "  --commit-message MSG     Custom commit message"
-    echo "  default/laptop           Specify host (auto-detected if omitted)"
+    gum table --border thick <<EOF
+Option,Description
+--help/-h,Show this help
+--non-interactive/-y,Skip confirmations
+--commit-message MSG,Custom commit message
+default/laptop,Specify host (auto-detected if omitted)
+EOF
     echo
     gum style --foreground 84 "Features: Auto-detection • Parallel processing • Beautiful TUI • Git integration"
 }

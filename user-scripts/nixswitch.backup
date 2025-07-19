@@ -4,7 +4,18 @@ set -euo pipefail
 
 #######################################
 # NixOS Switch - Streamlined Edition
-# Modern TUI with parallel processing and auto-host detection
+# Modern TUI     # Validate host configuration with proper error handling  
+    if ! gum spin --spinner dot --title "Validating host configuration..." -- \
+        timeout 120s nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run &>/dev/null; then
+        error "Host configuration validation failed for: $host"
+        
+        # Try to get more detailed error information
+        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Show detailed validation errors?"; then
+            echo "Running validation with verbose output:"
+            nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run 2>&1 | head -20
+        fi
+        return 1
+    firallel processing and auto-host detection
 # v7.0.0 - Complete rewrite focusing on performance and UX
 #######################################
 
@@ -48,6 +59,7 @@ log_with_level() {
 info() { log_with_level "info" "$1"; }
 success() { log_with_level "info" "✅ $1"; }
 error() { log_with_level "error" "❌ $1"; }
+warn() { log_with_level "warn" "⚠️  $1"; }
 warn() { log_with_level "warn" "⚠️  $1"; }
 
 progress_group() {
@@ -130,14 +142,9 @@ parallel_updates() {
     
     # Validate host configuration with proper error handling
     if ! gum spin --spinner dot --title "Validating host configuration..." -- \
-    timeout 120s nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run &>/dev/null; then
+    timeout 30s nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run 2>/dev/null; then
         error "Host configuration validation failed for: $host"
-        
-        # Try to get more detailed error information
-        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Show detailed validation errors?"; then
-            echo "Running validation with verbose output:"
-            nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run 2>&1 | head -20
-        fi
+        info "This might be due to syntax errors or missing dependencies"
         return 1
     fi
     
@@ -286,11 +293,7 @@ git_workflow() {
     
     # Handle uncommitted changes
     if [[ "$has_changes" == "true" ]]; then
-        gum style --foreground 84 --bold "📋 Changed Files:"
-        git status --porcelain | head -5 | while read -r line; do
-            echo "  $line"
-        done
-        echo
+        git status --porcelain | head -5 | gum table --border thick --header "Changed Files"
         
         if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && ! gum confirm "Commit changes?"; then
             info "Skipping git commit"
@@ -418,11 +421,13 @@ show_help() {
     echo
     gum style --foreground 39 "Streamlined NixOS rebuild with modern TUI and parallel processing"
     echo
-    gum style --foreground 84 --bold "Options:"
-    echo "  --help/-h                Show this help"
-    echo "  --non-interactive/-y     Skip confirmations"
-    echo "  --commit-message MSG     Custom commit message"
-    echo "  default/laptop           Specify host (auto-detected if omitted)"
+    gum table --border thick <<EOF
+Option,Description
+--help/-h,Show this help
+--non-interactive/-y,Skip confirmations
+--commit-message MSG,Custom commit message
+default/laptop,Specify host (auto-detected if omitted)
+EOF
     echo
     gum style --foreground 84 "Features: Auto-detection • Parallel processing • Beautiful TUI • Git integration"
 }
