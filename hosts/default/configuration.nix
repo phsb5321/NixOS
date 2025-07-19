@@ -21,12 +21,9 @@
   # Override shared configuration as needed
   modules.networking.hostName = hostname;
 
-  # Desktop uses shared keyboard configuration from common.nix
-  # Note: Home Manager removed - packages are now managed at system level
-
   # Desktop-specific configuration
   # Enable gaming packages for desktop
-  modules.packages.gaming.enable = lib.mkForce true;
+  modules.packages.gaming.enable = true;
 
   # Desktop-specific core module additions
   modules.core.java = {
@@ -172,15 +169,11 @@
   # GDM and session fixes
   services.xserver = {
     enable = true;
-    # Use the same keyboard configuration as /etc/nixos/configuration.nix
     xkb = {
       layout = "br";
       variant = "";
     };
   };
-
-  # Console keymap matching /etc/nixos/configuration.nix
-  console.keyMap = lib.mkForce "br-abnt2";
 
   # Explicitly disable conflicting display managers
   services.displayManager.sddm.enable = lib.mkForce false;
