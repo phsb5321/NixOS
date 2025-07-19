@@ -5,9 +5,16 @@ set -euo pipefail
 #######################################
 # Enhanced NixOS Switch - Simplified Edition
 # Focuses on auto-detect host functionality with beautiful gum UI
+#
+# v6.2.0 Changes:
+# - Always performs flake updates and remote sync (--no-update removed)
+# - Enhanced log cleanup (keeps only 5 recent logs, cleans 3+ day old logs)
+# - Added comprehensive system log cleanup (journalctl, /var/log/nixos)
+# - More aggressive garbage collection and nix store optimization
+# - Updated help text to reflect mandatory cleanup and update behaviors
 #######################################
 
-readonly SCRIPT_VERSION="6.1.0"
+readonly SCRIPT_VERSION="6.2.0"
 readonly FLAKE_DIR="$HOME/NixOS"
 readonly LOG_DIR="$HOME/.local/share/nixos-rebuild/logs"
 
@@ -135,14 +142,57 @@ setup_logging() {
     LOG_FILE="$LOG_DIR/nixswitch-$(date '+%Y%m%d_%H%M%S').log"
     touch "$LOG_FILE"
     
-    # Clean old logs (keep last 10)
-    find "$LOG_DIR" -name "nixswitch-*.log" -type f | sort -r | tail -n +11 | xargs -r rm
+    # Always clean old logs (keep last 5 instead of 10 for more aggressive cleanup)
+    find "$LOG_DIR" -name "nixswitch-*.log" -type f | sort -r | tail -n +6 | xargs -r rm
     
-    info "Logging to: $LOG_FILE"
+    # Also clean any logs older than 3 days regardless of count
+    find "$LOG_DIR" -name "nixswitch-*.log" -type f -mtime +3 -delete 2>/dev/null || true
+    
+    # Clean up other common log locations
+    if [[ -d "/var/log/nixos" ]]; then
+        sudo find /var/log/nixos -name "*.log" -type f -mtime +7 -delete 2>/dev/null || true
+    fi
+    
+    # Clean up systemd journal logs older than 1 week
+    sudo journalctl --vacuum-time=1weeks 2>/dev/null || true
+    
+    info "Logging to: $LOG_FILE (comprehensive log cleanup completed)"
 }
 
 update_flake() {
-    info "Updating flake inputs..."
+    info "Updating flake inputs and fetching latest changes..."
+    
+    # First, update the local branch to match remote
+    if git -C "$FLAKE_DIR" remote get-url origin &>/dev/null; then
+        local current_branch
+        current_branch=$(git -C "$FLAKE_DIR" branch --show-current 2>/dev/null || echo "main")
+        
+        info "Fetching latest changes from remote branch: $current_branch"
+        if gum spin --spinner dot --title "Fetching from remote..." -- \
+        git -C "$FLAKE_DIR" fetch origin "$current_branch"; then
+            success "Remote changes fetched successfully"
+            
+            # Check if we're behind remote
+            local behind_count
+            behind_count=$(git -C "$FLAKE_DIR" rev-list --count HEAD..origin/"$current_branch" 2>/dev/null || echo "0")
+            
+            if [[ "$behind_count" -gt 0 ]]; then
+                info "Local branch is $behind_count commit(s) behind remote"
+                if gum spin --spinner dot --title "Pulling latest changes..." -- \
+                git -C "$FLAKE_DIR" pull origin "$current_branch"; then
+                    success "Successfully updated to latest remote changes"
+                else
+                    warning "Failed to pull latest changes, continuing with local state"
+                fi
+            else
+                success "Local branch is up to date with remote"
+            fi
+        else
+            warning "Failed to fetch from remote, continuing with local state"
+        fi
+    else
+        info "No remote repository configured, skipping remote update"
+    fi
     
     # Update flake lock file
     if gum spin --spinner dot --title "Updating flake inputs..." -- \
@@ -155,7 +205,7 @@ update_flake() {
             lock_changes=$(git -C "$FLAKE_DIR" diff --name-only flake.lock 2>/dev/null || echo "")
             if [[ -n "$lock_changes" ]]; then
                 info "Flake lock file updated"
-                if gum confirm "Show flake update details?"; then
+                if gum confirm "Show flake update details?" --default=false; then
                     git -C "$FLAKE_DIR" show --stat flake.lock | head -20
                 fi
             fi
@@ -300,11 +350,19 @@ perform_rebuild() {
 post_rebuild_tasks() {
     info "Performing post-rebuild cleanup..."
     
-    # Quick garbage collection
+    # More aggressive garbage collection - clean up old generations and unused packages
     gum spin --spinner dot --title "Cleaning up old generations..." -- \
-    nix-collect-garbage --delete-older-than 7d 2>/dev/null || true
+    nix-collect-garbage --delete-older-than 3d 2>/dev/null || true
     
-    success "Post-rebuild tasks completed"
+    # Also clean up any unused nix store paths
+    gum spin --spinner dot --title "Optimizing nix store..." -- \
+    nix store optimise 2>/dev/null || true
+    
+    # Clean up any leftover build artifacts
+    gum spin --spinner dot --title "Cleaning build artifacts..." -- \
+    nix-store --gc 2>/dev/null || true
+    
+    success "Post-rebuild cleanup completed"
 }
 
 show_system_info() {
@@ -663,12 +721,9 @@ main() {
     # System health checks
     check_system_health
     
-    # Update flake inputs (unless --no-update is specified)
-    if [[ "$SKIP_UPDATE" != "true" ]]; then
-        update_flake
-    else
-        info "Skipping flake update (--no-update specified)"
-    fi
+    # Always update flake inputs and sync with remote (forced behavior)
+    info "Flake update is always performed for consistency and security"
+    update_flake
     
     # Validate configuration
     validate_configuration "$host"
@@ -744,8 +799,11 @@ show_help() {
     "Options:" \
     "  --non-interactive, -y    Skip all confirmations" \
     "  --commit-message MSG     Use MSG for git commit" \
-    "  --no-update             Skip flake update" \
     "  --help, -h              Show this help"
+    echo
+    gum style \
+    --foreground 214 \
+    "Note: Flake updates and log cleanup are always performed for security and maintenance"
     echo
     gum style \
     --foreground 84 \
@@ -759,12 +817,12 @@ show_help() {
     "Features:" \
     "• Auto-detects host based on hostname" \
     "• Beautiful terminal UI with gum" \
-    "• Comprehensive logging" \
+    "• Comprehensive logging with automatic cleanup" \
     "• System health checks" \
-    "• Flake input updates" \
+    "• Automatic flake input updates and remote sync" \
     "• Configuration validation" \
     "• Git integration (add/commit/push)" \
-    "• Automatic cleanup"
+    "• Aggressive system cleanup and optimization"
     echo
     gum style \
     --foreground 214 \
@@ -777,7 +835,6 @@ show_help() {
 NON_INTERACTIVE=false
 COMMIT_MESSAGE=""
 SPECIFIED_HOST=""
-SKIP_UPDATE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -799,7 +856,9 @@ while [[ $# -gt 0 ]]; do
             fi
         ;;
         --no-update)
-            SKIP_UPDATE=true
+            # Legacy option - inform user it's no longer supported
+            warning "The --no-update option has been removed"
+            info "Flake updates are now always performed for security and consistency"
             shift
         ;;
         default | laptop)
