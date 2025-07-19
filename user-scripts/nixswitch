@@ -219,6 +219,8 @@ perform_rebuild() {
         "Host: $host" \
         "Build time: ${duration}s"
         
+        echo
+        
     else
         local duration=$(( $(date +%s) - start_time ))
         error "Rebuild failed after ${duration}s"
@@ -234,10 +236,9 @@ perform_rebuild() {
 }
 
 parallel_cleanup() {
+    echo
+    gum style --foreground 99 --bold "🧹 System Cleanup"
     info "Running parallel cleanup tasks..."
-    
-    # Create a progress display for cleanup tasks
-    gum style --foreground 99 --bold "🧹 System Cleanup in Progress"
     
     # Use GNU parallel if available, otherwise fall back to background jobs
     if command -v parallel &>/dev/null; then
@@ -282,7 +283,9 @@ git_workflow() {
         return 0
     fi
     
+    echo
     gum style --foreground 214 --bold "📝 Git Workflow"
+    echo
     
     # Handle uncommitted changes
     if [[ "$has_changes" == "true" ]]; then
@@ -385,13 +388,11 @@ main() {
         exit 1
     fi
     
-    # Post-rebuild tasks in parallel
-    {
-        parallel_cleanup &
-        git_workflow "$host" &
-        wait
-    }
+    # Post-rebuild tasks (sequential for clean output)
+    git_workflow "$host"
+    parallel_cleanup
     
+    echo
     # Success celebration
     gum style \
     --foreground 84 \
