@@ -3,6 +3,8 @@
   config,
   lib,
   pkgs,
+  pkgs-unstable,
+  pkgs-master,
   inputs,
   ...
 }:
@@ -34,7 +36,8 @@ in {
         type = types.listOf types.package;
         default = with pkgs; [
           # Code editors (VSCode manages its own extensions)
-          vscode
+          # Use bleeding edge VS Code from master for latest features
+          pkgs-master.vscode
           code-cursor
 
           # API testing and development

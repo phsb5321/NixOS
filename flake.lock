@@ -144,6 +144,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-master": {
+      "locked": {
+        "lastModified": 1752954898,
+        "narHash": "sha256-/Vjccnb1W2vD5pVZbmiBkPRR1ZEkk5swlBi13ROl4x4=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "54a1b8f371ee698cc3ad64495faac747c68c8748",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "master",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-unstable": {
       "locked": {
         "lastModified": 1751382304,
@@ -165,6 +181,7 @@
         "firefox-nightly": "firefox-nightly",
         "flake-utils": "flake-utils_2",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-master": "nixpkgs-master",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "zen-browser": "zen-browser"
       }
