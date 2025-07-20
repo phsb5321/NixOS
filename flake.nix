@@ -5,8 +5,11 @@
     # Use NixOS 25.05 LTS
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
 
-    # Unstable for latest packages when needed
+    # Unstable for latest packages when needed - track master for bleeding edge
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+
+    # Add bleeding edge packages from master branch
+    nixpkgs-master.url = "github:nixos/nixpkgs/master";
 
     # Firefox Nightly (official nix-community source)
     firefox-nightly = {
@@ -28,6 +31,7 @@
     self,
     nixpkgs,
     nixpkgs-unstable,
+    nixpkgs-master,
     flake-utils,
     ...
   } @ inputs: let
@@ -71,13 +75,20 @@
         config = pkgsConfig;
       };
 
+      # Add bleeding edge packages from master
+      pkgs-master = import nixpkgs-master {
+        inherit system;
+        config = pkgsConfig;
+      };
+
       # Common special args for all hosts
       baseSpecialArgs =
         {
           inherit inputs systemVersion system hostname;
           pkgs-unstable = pkgs-unstable;
+          pkgs-master = pkgs-master;
           stablePkgs = pkgs;
-          bleedPkgs = pkgs-unstable;
+          bleedPkgs = pkgs-master; # Most bleeding edge packages
         }
         // extraSpecialArgs;
     in
@@ -131,6 +142,21 @@
         hostname = "nixos-laptop";
         configPath = "laptop"; # Maps to hosts/laptop/
         # Uses stable nixpkgs by default
+      };
+
+      # Bleeding edge variants for maximum freshness
+      default-bleeding = {
+        system = "x86_64-linux";
+        hostname = "nixos-desktop";
+        configPath = "default"; # Maps to hosts/default/
+        nixpkgsInput = nixpkgs-master; # Bleeding edge packages
+      };
+
+      laptop-bleeding = {
+        system = "x86_64-linux";
+        hostname = "nixos-laptop";
+        configPath = "laptop"; # Maps to hosts/laptop/
+        nixpkgsInput = nixpkgs-master; # Bleeding edge packages
       };
 
       # Example: server using stable for reliability
