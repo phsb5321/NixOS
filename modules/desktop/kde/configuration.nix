@@ -2,7 +2,7 @@
   pkgs,
   lib,
   inputs,
-  bleedPkgs,
+  pkgs-unstable,
   systemVersion,
   ...
 }: {
