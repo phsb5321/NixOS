@@ -81,6 +81,16 @@
   # Console keymap for laptop
   console.keyMap = lib.mkForce "br-abnt2";
 
+  # NVIDIA GPU configuration for laptop
+  modules.hardware.nvidia = {
+    enable = true;
+    intelBusId = "PCI:0:2:0"; # Intel UHD Graphics
+    nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
+    prime.mode = "offload"; # Battery-efficient PRIME offload
+    driver.version = "stable";
+    driver.openSource = false; # Use proprietary drivers for GTX 1650
+  };
+
   # Laptop-specific bootloader configuration
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
