@@ -3,12 +3,12 @@
 set -euo pipefail
 
 #######################################
-# NixOS Switch - Streamlined Edition
+# NixOS Switch - Simplified Edition
 # Modern TUI with parallel processing and auto-host detection
-# v7.0.0 - Complete rewrite focusing on performance and UX
+# v8.0.0 - Clean configuration, nixos-unstable/nixpkgs-unstable setup
 #######################################
 
-readonly SCRIPT_VERSION="7.0.0"
+readonly SCRIPT_VERSION="8.0.0"
 readonly FLAKE_DIR="$HOME/NixOS"
 readonly LOG_DIR="$HOME/.cache/nixos-rebuild"
 
@@ -72,7 +72,7 @@ setup_logging() {
     mkdir -p "$LOG_DIR"
     LOG_FILE="$LOG_DIR/nixswitch-$(date '+%Y%m%d_%H%M%S').log"
     
-    # Parallel cleanup of old logs
+    # Cleanup old logs
     {
         find "$LOG_DIR" -name "nixswitch-*.log" -type f | sort -r | tail -n +6 | xargs -r rm &
         find "$LOG_DIR" -name "nixswitch-*.log" -type f -mtime +3 -delete 2>/dev/null &
@@ -91,10 +91,10 @@ parallel_updates() {
     local temp_dir=$(mktemp -d)
     trap "rm -rf $temp_dir" EXIT
     
-    # Run git fetch, flake update, and basic checks in parallel using background jobs
+    # Run git fetch, flake update, and basic checks in parallel
     {
         (git -C "$FLAKE_DIR" fetch origin 2>/dev/null && echo "git_fetch_ok" > "$temp_dir/git_fetch" || echo "git_fetch_failed" > "$temp_dir/git_fetch") &
-        (nix flake update "$FLAKE_DIR" 2>/dev/null && echo "flake_update_ok" > "$temp_dir/flake_update" || echo "flake_update_failed" > "$temp_dir/flake_update") &
+        (nix flake update "$FLAKE_DIR" --refresh 2>/dev/null && echo "flake_update_ok" > "$temp_dir/flake_update" || echo "flake_update_failed" > "$temp_dir/flake_update") &
         (nix flake check --no-build "$FLAKE_DIR" 2>/dev/null && echo "syntax_ok" > "$temp_dir/syntax_check" || echo "syntax_failed" > "$temp_dir/syntax_check") &
         (df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ' > "$temp_dir/disk_space") &
         
@@ -108,7 +108,7 @@ parallel_updates() {
     local flake_result=$(cat "$temp_dir/flake_update" 2>/dev/null || echo "flake_update_failed")
     local syntax_result=$(cat "$temp_dir/syntax_check" 2>/dev/null || echo "syntax_failed")
     
-    # Display results with beautiful formatting
+    # Display results
     progress_group "Update Results" \
     "$(if [[ "$git_result" == "git_fetch_ok" ]]; then echo "✅ Git fetch"; else echo "⚠️  Git fetch (non-critical)"; fi)" \
     "$(if [[ "$flake_result" == "flake_update_ok" ]]; then echo "✅ Flake update"; else echo "❌ Flake update failed"; fi)" \
@@ -128,16 +128,10 @@ parallel_updates() {
     
     [[ "$disk_gb" -lt 5 ]] && warn "Low disk space detected"
     
-    # Validate host configuration with proper error handling
+    # Validate host configuration
     if ! gum spin --spinner dot --title "Validating host configuration..." -- \
     timeout 120s nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run &>/dev/null; then
         error "Host configuration validation failed for: $host"
-        
-        # Try to get more detailed error information
-        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Show detailed validation errors?"; then
-            echo "Running validation with verbose output:"
-            nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run 2>&1 | head -20
-        fi
         return 1
     fi
     
@@ -147,7 +141,7 @@ parallel_updates() {
 perform_rebuild() {
     local host="$1"
     
-    # Enhanced password handling with better UX
+    # Enhanced password handling
     gum style \
     --foreground 214 \
     --border normal \
@@ -156,10 +150,9 @@ perform_rebuild() {
     --margin "1 0" \
     "🔐 System Rebuild Authentication" \
     "" \
-    "Sudo access required for system rebuild" \
-    "Please enter your password when prompted"
+    "Sudo access required for system rebuild"
     
-    # Test sudo access first
+    # Test sudo access
     if ! sudo -v 2>/dev/null; then
         error "Authentication failed - cannot proceed with rebuild"
         return 1
@@ -167,7 +160,7 @@ perform_rebuild() {
     
     success "Authentication successful"
     
-    # Keep sudo alive in background (improved)
+    # Keep sudo alive in background
     (
         while sleep 30; do
             sudo -v 2>/dev/null || break
@@ -176,21 +169,20 @@ perform_rebuild() {
     local sudo_pid=$!
     trap "kill $sudo_pid 2>/dev/null || true" EXIT
     
-    # Format code if available (parallel with other tasks)
+    # Format code if available
     if command -v alejandra &>/dev/null; then
         gum spin --spinner dot --title "Formatting code..." -- alejandra "$FLAKE_DIR" &>/dev/null &
         local format_pid=$!
     fi
     
-    # Main rebuild with enhanced progress and timing
+    # Main rebuild
     local start_time=$(date +%s)
-    
     info "Starting NixOS rebuild for host: $host"
     
-    # Wait for formatting to complete if it was started
+    # Wait for formatting to complete
     [[ -n "${format_pid:-}" ]] && wait $format_pid && success "Code formatting completed"
     
-    # Execute rebuild with better error handling
+    # Execute rebuild
     local rebuild_cmd=(
         sudo nixos-rebuild switch
         --flake "$FLAKE_DIR#$host"
@@ -206,7 +198,7 @@ perform_rebuild() {
         local duration=$(( $(date +%s) - start_time ))
         success "Rebuild completed successfully in ${duration}s"
         
-        # Show generation info in a nice format
+        # Show generation info
         local current_gen=$(sudo nixos-rebuild list-generations | grep current | awk '{print $1}')
         gum style \
         --foreground 84 \
@@ -219,15 +211,9 @@ perform_rebuild() {
         "Host: $host" \
         "Build time: ${duration}s"
         
-        echo
-        
     else
         local duration=$(( $(date +%s) - start_time ))
         error "Rebuild failed after ${duration}s"
-        
-        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "View error logs?"; then
-            tail -n 30 "$LOG_FILE" | gum pager
-        fi
         return 1
     fi
     
@@ -242,13 +228,11 @@ parallel_cleanup() {
     
     # Use GNU parallel if available, otherwise fall back to background jobs
     if command -v parallel &>/dev/null; then
-        # Use GNU parallel for better job management
         parallel --will-cite --halt now,fail=1 --jobs 3 ::: \
         "nix-collect-garbage --delete-older-than 7d 2>/dev/null" \
         "nix store optimise 2>/dev/null" \
         "nix store gc 2>/dev/null" || warn "Some cleanup tasks failed"
     else
-        # Fallback to background jobs
         {
             nix-collect-garbage --delete-older-than 7d 2>/dev/null &
             nix store optimise 2>/dev/null &
@@ -265,7 +249,7 @@ git_workflow() {
     
     cd "$FLAKE_DIR"
     
-    # Check if we have changes or unpushed commits
+    # Check if we have changes
     local has_changes=false
     local has_unpushed=false
     
@@ -295,54 +279,69 @@ git_workflow() {
         done
         echo
         
-        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && ! gum confirm "Commit changes?"; then
+        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Commit changes?"; then
+            local commit_message="${COMMIT_MESSAGE:-"chore: update configuration $(date '+%Y-%m-%d %H:%M')"}"
+            
+            if [[ -z "$COMMIT_MESSAGE" ]] && [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
+                commit_message=$(gum input --placeholder "Enter commit message" --value "$commit_message")
+            fi
+            
+            git add -A
+            git commit -m "$commit_message"
+            success "Changes committed: $commit_message"
+        else
             info "Skipping git commit"
             return 0
         fi
-        
-        local msg=${COMMIT_MESSAGE:-"nixos: automated update after successful rebuild"}
-        git add -A && git commit -m "$msg"
-        success "Changes committed"
-        has_unpushed=true
     fi
     
-    # Handle push
-    if [[ "$has_unpushed" == "true" && "${NON_INTERACTIVE:-false}" != "true" ]]; then
-        if gum confirm "Push commits to remote?"; then
-            git push && success "Pushed to remote"
+    # Push if we have unpushed commits
+    if [[ "$has_unpushed" == "true" ]] || git log --oneline origin..HEAD 2>/dev/null | grep -q .; then
+        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Push to remote?"; then
+            if git push 2>/dev/null; then
+                success "Changes pushed to remote"
+            else
+                warn "Failed to push to remote (non-critical)"
+            fi
         fi
-        elif [[ "$has_unpushed" == "true" && "${NON_INTERACTIVE:-false}" == "true" ]]; then
-        git push && success "Auto-pushed to remote"
     fi
 }
 
-show_system_status() {
+show_success() {
     local host="$1"
+    echo
     
-    # Create a beautiful system status display
-    local sys_info=$(gum join --vertical \
-        "Host: $host" \
-        "Hostname: $(hostname)" \
-        "Kernel: $(uname -r)" \
-        "CPU Cores: $(nproc)" \
-        "Memory: $(free -h | awk 'NR==2{print $2}')" \
-        "Storage: $(df -h /nix | awk 'NR==2{print $4}') free"
-    )
-    
+    # Success celebration
     gum style \
-    --foreground 99 \
-    --border normal \
-    --border-foreground 39 \
-    --padding "1 2" \
-    --margin "1 0" \
-    "📊 System Status" \
+    --foreground 84 \
+    --border double \
+    --border-foreground 84 \
+    --align center \
+    --width 60 \
+    --margin "1 2" \
+    --padding "2 4" \
+    "🎉 SUCCESS! 🎉" \
     "" \
-    "$sys_info"
+    "NixOS rebuild completed successfully" \
+    "Host: $host" \
+    "Time: $(date '+%H:%M:%S')"
 }
 
-#######################################
-# Main Function
-#######################################
+show_help() {
+    gum style --foreground 212 --bold "NixOS Switch v${SCRIPT_VERSION}"
+    echo
+    gum style --foreground 39 "Streamlined NixOS rebuild with modern TUI and parallel processing"
+    echo
+    gum style --foreground 84 --bold "Options:"
+    echo "  --help/-h                Show this help"
+    echo "  --non-interactive/-y     Skip confirmations"
+    echo "  --commit-message MSG     Custom commit message"
+    echo "  default/laptop           Specify host (auto-detected if omitted)"
+    echo "  default-unstable         Use unstable packages for latest software"
+    echo "  laptop-unstable          Use unstable packages on laptop"
+    echo
+    gum style --foreground 84 "Features: Auto-detection • Parallel processing • Beautiful TUI • Git integration"
+}
 
 main() {
     show_banner
@@ -360,13 +359,12 @@ main() {
     # Setup logging
     setup_logging
     
-    # Show system status
-    show_system_status "$host"
-    
     # Verify host configuration exists
-    if [[ ! -d "hosts/$host" ]]; then
-        error "Host configuration '$host' not found"
+    local config_path="hosts/${host//-unstable/}"  # Remove -unstable suffix for path check
+    if [[ ! -d "$config_path" ]]; then
+        error "Host configuration '$config_path' not found"
         info "Available hosts: $(ls hosts/ | tr '\n' ' ')"
+        info "Available configurations: default, laptop, default-unstable, laptop-unstable"
         exit 1
     fi
     
@@ -388,44 +386,12 @@ main() {
         exit 1
     fi
     
-    # Post-rebuild tasks (sequential for clean output)
+    # Post-rebuild tasks
     git_workflow "$host"
     parallel_cleanup
     
-    echo
-    # Success celebration
-    gum style \
-    --foreground 84 \
-    --border double \
-    --border-foreground 84 \
-    --align center \
-    --width 60 \
-    --margin "1 2" \
-    --padding "2 4" \
-    "🎉 SUCCESS! 🎉" \
-    "" \
-    "NixOS rebuild completed successfully" \
-    "Host: $host" \
-    "Time: $(date '+%H:%M:%S')"
-    
-    # Optional log viewing
-    if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "View detailed logs?"; then
-        gum pager < "$LOG_FILE"
-    fi
-}
-
-show_help() {
-    gum style --foreground 212 --bold "NixOS Switch v${SCRIPT_VERSION}"
-    echo
-    gum style --foreground 39 "Streamlined NixOS rebuild with modern TUI and parallel processing"
-    echo
-    gum style --foreground 84 --bold "Options:"
-    echo "  --help/-h                Show this help"
-    echo "  --non-interactive/-y     Skip confirmations"
-    echo "  --commit-message MSG     Custom commit message"
-    echo "  default/laptop           Specify host (auto-detected if omitted)"
-    echo
-    gum style --foreground 84 "Features: Auto-detection • Parallel processing • Beautiful TUI • Git integration"
+    # Success message
+    show_success "$host"
 }
 
 # Command line parsing
@@ -445,7 +411,7 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -y|--non-interactive) NON_INTERACTIVE=true; shift ;;
         --commit-message) COMMIT_MESSAGE="$2"; shift 2 ;;
-        default|laptop) SPECIFIED_HOST="$1"; shift ;;
+        default|laptop|default-unstable|laptop-unstable) SPECIFIED_HOST="$1"; shift ;;
         *) error "Unknown option: $1"; show_help; exit 1 ;;
     esac
 done
