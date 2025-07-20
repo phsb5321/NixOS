@@ -22,6 +22,7 @@ in {
     ./version-sync.nix
     ./flatpak.nix
     ./gui-app-deps.nix
+    # ./bleeding-edge.nix  # Temporarily disabled
   ];
 
   options.modules.core = with lib; {
