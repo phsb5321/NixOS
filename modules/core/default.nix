@@ -5,7 +5,7 @@
   lib,
   pkgs,
   stablePkgs,
-  bleedPkgs,
+  pkgs-unstable,
   system,
   ...
 }: let
@@ -22,7 +22,6 @@ in {
     ./version-sync.nix
     ./flatpak.nix
     ./gui-app-deps.nix
-    # ./bleeding-edge.nix  # Temporarily disabled
   ];
 
   options.modules.core = with lib; {
@@ -340,8 +339,8 @@ in {
         deno
         postgresql
         supabase-cli
-        bleedPkgs.zed-editor
-        bleedPkgs.ghostty
+        pkgs-unstable.zed-editor
+        pkgs-unstable.ghostty
         stockfish
         chromium
 
