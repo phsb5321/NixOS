@@ -5,7 +5,7 @@
   lib,
   pkgs,
   stablePkgs,
-  bleedPkgs,
+  pkgs-unstable,
   system,
   ...
 }: let
@@ -335,12 +335,12 @@ in {
         go
         terraform
         elixir-ls
-        nosql-workbench
+        # nosql-workbench  # Temporarily disabled due to download issues
         deno
         postgresql
         supabase-cli
-        bleedPkgs.zed-editor
-        bleedPkgs.ghostty
+        pkgs-unstable.zed-editor
+        pkgs-unstable.ghostty
         stockfish
         chromium
 

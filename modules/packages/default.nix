@@ -3,6 +3,7 @@
   config,
   lib,
   pkgs,
+  pkgs-unstable,
   inputs,
   ...
 }:
@@ -33,9 +34,9 @@ in {
       packages = mkOption {
         type = types.listOf types.package;
         default = with pkgs; [
-          # Code editors (VSCode manages its own extensions)
-          vscode
-          code-cursor
+          # Code editors - use unstable for latest VS Code
+          pkgs-unstable.vscode
+          # code-cursor  # Temporarily disabled due to download issues
 
           # API testing and development
           bruno # Open-source API client (Postman alternative)
