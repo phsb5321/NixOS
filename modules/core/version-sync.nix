@@ -5,7 +5,7 @@
   lib,
   pkgs,
   stablePkgs,
-  bleedPkgs,
+  pkgs-unstable,
   systemVersion,
   ...
 }:
@@ -22,8 +22,8 @@ in {
     };
 
     packageChannel = mkOption {
-      type = types.enum ["stable" "unstable" "bleeding"];
-      default = "bleeding";
+      type = types.enum ["stable" "unstable"];
+      default = "unstable";
       description = "Which channel to use for user packages";
     };
 

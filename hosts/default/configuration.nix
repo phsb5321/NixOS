@@ -6,7 +6,7 @@
   inputs,
   hostname,
   systemVersion,
-  bleedPkgs,
+  pkgs-unstable,
   ...
 }: {
   imports = [
