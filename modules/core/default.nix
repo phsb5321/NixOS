@@ -335,7 +335,7 @@ in {
         go
         terraform
         elixir-ls
-        nosql-workbench
+        # nosql-workbench  # Temporarily disabled due to download issues
         deno
         postgresql
         supabase-cli
