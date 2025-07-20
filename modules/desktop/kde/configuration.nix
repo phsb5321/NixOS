@@ -235,8 +235,7 @@
     thunderbird.enable = true;
   };
 
-  systemd.packages = with pkgs; [lact];
-  systemd.services.lactd.wantedBy = ["multi-user.target"];
+  # GPU control moved to host-specific configuration to avoid conflicts
 
   security = {
     sudo.wheelNeedsPassword = true;

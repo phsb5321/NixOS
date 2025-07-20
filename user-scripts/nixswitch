@@ -160,6 +160,9 @@ perform_rebuild() {
     
     success "Authentication successful"
     
+    # Pre-rebuild cleanup to prevent service conflicts
+    pre_rebuild_cleanup
+    
     # Keep sudo alive in background
     (
         while sleep 30; do
@@ -209,11 +212,38 @@ perform_rebuild() {
         "" \
         "Generation: $current_gen" \
         "Host: $host" \
-        "Build time: ${duration}s"
+        "        "Build time: ${duration}s"
+        
+        echo
+        
+    # Post-rebuild system check
+    post_rebuild_check
+    
+    # Network connectivity check
+    network_recovery"
         
     else
         local duration=$(( $(date +%s) - start_time ))
         error "Rebuild failed after ${duration}s"
+        
+        # Provide diagnostic information
+        warn "Checking for common issues..."
+        
+        # Check for service conflicts
+        if systemctl list-units --failed --quiet | grep -q "lactd"; then
+            warn "GPU control service (lactd) conflicts detected"
+            info "Try running: sudo systemctl reset-failed && sudo rm -f /run/lactd.sock"
+        fi
+        
+        # Check for systemd issues
+        if ! sudo systemctl is-system-running --quiet; then
+            warn "System state is degraded - some services may have failed"
+            info "Check status with: systemctl status"
+        fi
+        
+        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "View error logs?"; then
+            tail -n 30 "$LOG_FILE" | gum pager
+        fi
         return 1
     fi
     
@@ -343,6 +373,80 @@ show_help() {
     gum style --foreground 84 "Features: Auto-detection • Parallel processing • Beautiful TUI • Git integration"
 }
 
+pre_rebuild_cleanup() {
+    info "Performing pre-rebuild cleanup..."
+    
+    # Reset any failed systemd units that might interfere
+    sudo systemctl reset-failed 2>/dev/null || true
+    
+    # Handle known problematic services
+    if systemctl is-active --quiet lactd.service; then
+        sudo systemctl stop lactd.service 2>/dev/null || true
+    fi
+    
+    # Clean up problematic socket files
+    sudo rm -f /run/lactd.sock 2>/dev/null || true
+    
+    # Wait a moment for services to fully stop
+    sleep 1
+    
+    success "Pre-rebuild cleanup completed"
+}
+
+post_rebuild_check() {
+    info "Performing post-rebuild system check..."
+    
+    # Check if critical services are running
+    local failed_services=()
+    local critical_services=("NetworkManager" "systemd-resolved" "dbus")
+    
+    for service in "${critical_services[@]}"; do
+        if ! systemctl is-active --quiet "$service"; then
+            failed_services+=("$service")
+        fi
+    done
+    
+    if [[ ${#failed_services[@]} -gt 0 ]]; then
+        warn "Some critical services failed to start: ${failed_services[*]}"
+        info "Attempting to restart failed services..."
+        for service in "${failed_services[@]}"; do
+            sudo systemctl start "$service" 2>/dev/null || warn "Failed to restart $service"
+        done
+    fi
+    
+    # Reset any failed non-critical services
+    sudo systemctl reset-failed 2>/dev/null || true
+    
+    success "Post-rebuild check completed"
+}
+
+network_recovery() {
+    info "Checking network connectivity..."
+    
+    # Test basic connectivity
+    if ! ping -c 1 8.8.8.8 &>/dev/null; then
+        warn "Network connectivity issues detected"
+        
+        # Try to restart NetworkManager
+        info "Attempting to restart network services..."
+        sudo systemctl restart NetworkManager 2>/dev/null || true
+        sudo systemctl restart systemd-resolved 2>/dev/null || true
+        
+        # Wait for network to come back up
+        sleep 3
+        
+        # Test again
+        if ping -c 1 8.8.8.8 &>/dev/null; then
+            success "Network connectivity restored"
+        else
+            error "Network recovery failed - manual intervention may be required"
+            return 1
+        fi
+    else
+        success "Network connectivity is working"
+    fi
+}
+
 main() {
     show_banner
     
@@ -381,6 +485,9 @@ main() {
         }
     fi
     
+    # Pre-rebuild cleanup
+    pre_rebuild_cleanup
+    
     # Main rebuild
     if ! perform_rebuild "$host"; then
         exit 1
@@ -389,6 +496,9 @@ main() {
     # Post-rebuild tasks
     git_workflow "$host"
     parallel_cleanup
+    
+    # Post-rebuild check
+    post_rebuild_check
     
     # Success message
     show_success "$host"
