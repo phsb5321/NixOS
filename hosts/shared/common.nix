@@ -143,7 +143,7 @@
   services.gnome.gnome-settings-daemon.enable = lib.mkForce true;
 
   # 🚨 CRITICAL: Configure dconf/gsettings for GNOME keyboard integration
-  services.xserver.desktopManager.gnome.extraGSettingsOverrides = ''
+  services.desktopManager.gnome.extraGSettingsOverrides = ''
     # Input Sources Configuration
     [org.gnome.desktop.input-sources]
     sources=[('xkb', 'br+abnt2')]
@@ -159,7 +159,7 @@
     show-battery-percentage=true
   '';
 
-  services.xserver.desktopManager.gnome.extraGSettingsOverridePackages = [
+  services.desktopManager.gnome.extraGSettingsOverridePackages = [
     pkgs.gsettings-desktop-schemas
     pkgs.gnome-settings-daemon
   ];

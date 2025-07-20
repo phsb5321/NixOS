@@ -20,12 +20,12 @@ in {
       # Core GNOME desktop environment
       services.xserver = {
         enable = true; # Required for XWayland compatibility
-        desktopManager.gnome.enable = true;
-        displayManager.gdm = {
-          enable = true;
-          wayland = cfg.displayManager.wayland;
-          autoSuspend = cfg.displayManager.autoSuspend;
-        };
+      };
+      services.desktopManager.gnome.enable = true;
+      services.displayManager.gdm = {
+        enable = true;
+        wayland = cfg.displayManager.wayland;
+        autoSuspend = cfg.displayManager.autoSuspend;
       };
 
       # Ensure proper session packages for GDM (critical fix for login issue)
