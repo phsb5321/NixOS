@@ -20,14 +20,14 @@ in {
       # Let desktop environments handle keyboard configuration automatically
       # (removed explicit keyboard layout configuration)
 
-      # GDM configuration for GNOME
-      displayManager.gdm = mkIf (cfg.environment == "gnome") {
-        enable = true;
-        wayland = cfg.displayManager.wayland;
-        autoSuspend = cfg.displayManager.autoSuspend;
-      };
-
       # SDDM configuration for KDE is handled by the KDE module
+    };
+
+    # GDM configuration for GNOME (moved to new structure)
+    services.displayManager.gdm = mkIf (cfg.environment == "gnome") {
+      enable = true;
+      wayland = cfg.displayManager.wayland;
+      autoSuspend = cfg.displayManager.autoSuspend;
     };
 
     # Auto-login configuration - updated for NixOS 25.05
@@ -151,7 +151,7 @@ in {
       {
         assertion =
           (cfg.environment == "gnome" -> !config.services.desktopManager.plasma6.enable)
-          && (cfg.environment == "kde" -> !config.services.xserver.desktopManager.gnome.enable);
+          && (cfg.environment == "kde" -> !config.services.desktopManager.gnome.enable);
         message = "You cannot enable multiple desktop environments simultaneously.";
       }
       {
