@@ -216,11 +216,11 @@ perform_rebuild() {
         
         echo
         
-    # Post-rebuild system check
-    post_rebuild_check
-    
-    # Network connectivity check
-    network_recovery"
+        # Post-rebuild system check
+        post_rebuild_check
+        
+        # Network connectivity check
+        network_recovery"
         
     else
         local duration=$(( $(date +%s) - start_time ))
