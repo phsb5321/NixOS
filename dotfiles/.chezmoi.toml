@@ -11,9 +11,8 @@
     # Architecture for templating  
     arch = "{{ .chezmoi.arch }}"
 
-[sourceDir]
-    # Use the dotfiles directory within the NixOS project
-    path = "~/NixOS/dotfiles"
+# Use the dotfiles directory within the NixOS project
+sourceDir = "/home/notroot/NixOS/dotfiles"
 
 [git]
     # Auto-commit changes to dotfiles
