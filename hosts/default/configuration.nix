@@ -233,9 +233,9 @@
     dedicatedServer.openFirewall = true;
   };
 
-  # LACT daemon service for AMD GPU control
-  systemd.packages = with pkgs; [lact];
-  systemd.services.lactd.wantedBy = ["multi-user.target"];
+  # LACT daemon service for AMD GPU control - temporarily disabled due to conflicts
+  # systemd.packages = with pkgs; [lact];
+  # systemd.services.lactd.wantedBy = ["multi-user.target"];
 
   # AMD GPU power management - alternative to hardware.amdgpu.overdrive
   environment.etc."modprobe.d/amdgpu.conf".text = ''
