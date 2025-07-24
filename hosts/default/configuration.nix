@@ -43,9 +43,69 @@
     };
   };
 
-  # Desktop-specific extra packages
+  # Enable comprehensive AMD GPU support with extensive VRAM management
+  modules.hardware.amd = {
+    enable = true;
+
+    # Use performance profile for desktop workstation
+    vram.profile = "performance";
+
+    # Enable all GPU features
+    gpu = {
+      enableOpenCL = true;
+      enableROCm = true;
+      enableVulkan = true;
+    };
+
+    # Advanced VRAM configuration
+    vram = {
+      vmFragmentSize = 10;
+      vmBlockSize = 10;
+      gttSize = 32768;
+      enableLargePages = true;
+      hugePages = {
+        enable = true;
+        count = 4096;
+      };
+    };
+
+    # Performance optimizations
+    performance = {
+      powerProfile = "high";
+      enableMemoryBandwidthOptimization = true;
+      pcie.disableASPM = true;
+    };
+
+    # Enhanced monitoring and debugging
+    monitoring = {
+      enable = true;
+      enableProfiling = true;
+      enableBenchmarking = true;
+      tools = [
+        "radeontop"
+        "nvtop"
+        "amdgpu_top"
+        "umr"
+        "gpu-viewer"
+      ];
+    };
+
+    # Gaming optimizations
+    environment.gaming = {
+      enableDXVKHUD = true;
+      dxvkHudElements = "memory,gpuload,fps,frametime,version";
+    };
+
+    # Development support
+    development = {
+      enableCMake = true;
+      enableMLFrameworks = true;
+    };
+  };
+
+  # Desktop-specific extra packages (non-GPU related)
   modules.packages.extraPackages = with pkgs; [
-    # AMD GPU and Video Tools
+    # Additional GPU monitoring and benchmarking tools not in AMD module
     vulkan-tools
     vulkan-loader
     vulkan-validation-layers
@@ -53,6 +113,10 @@
     vdpauinfo
     glxinfo
     ffmpeg-full
+    mesa-demos
+    vulkan-caps-viewer
+    clinfo
+    renderdoc # Graphics debugging with memory analysis
 
     # Development tools specific to desktop
     calibre
@@ -94,10 +158,6 @@
     # System monitoring
     htop
     btop
-    nvtopPackages.amd
-
-    # LACT for AMD GPU control
-    lact
 
     # Core development tools
     gh
@@ -119,50 +179,16 @@
   ];
 
   # Desktop-specific networking ports
-  modules.networking.firewall.openPorts = [22 3000];
+  modules.networking.firewall.openPorts = [
+    22
+    3000
+  ];
 
-  # LACT configuration for AMD GPU (system-level)
-  environment.etc."lact/config.yaml".text = ''
-    daemon:
-      log_level: warn
-      admin_groups:
-        - wheel
-  '';
-
-  # AMD-specific hardware configuration for NixOS 25.05
+  # CPU microcode updates
   hardware.cpu.intel.updateMicrocode = true;
 
-  # Early kernel mode setting for smooth boot
-  boot.initrd.kernelModules = ["amdgpu"];
-
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-    extraPackages = with pkgs; [
-      amdvlk # AMD Vulkan driver
-      libva-vdpau-driver
-      libvdpau-va-gl
-      # rocmPackages.clr.icd  # OpenCL support - uncomment when build issues are resolved
-    ];
-    extraPackages32 = with pkgs.driversi686Linux; [
-      amdvlk
-      libva-vdpau-driver
-      libvdpau-va-gl
-    ];
-  };
-
-  # Explicitly configure AMD drivers
-  services.xserver.videoDrivers = ["amdgpu"];
-
-  # AMD-specific optimizations (let GNOME module handle generic Wayland vars)
+  # Desktop development environment variables (non-GPU related)
   environment.sessionVariables = {
-    # AMD-specific optimizations only
-    AMD_VULKAN_ICD = "RADV";
-    VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
-    VDPAU_DRIVER = "radeonsi";
-    RADV_PERFTEST = "gpl";
-
-    # Desktop development (moved from Home Manager)
     CHROME_EXECUTABLE = "${pkgs.google-chrome}/bin/google-chrome-stable";
   };
 
@@ -189,24 +215,14 @@
     "plugdev"
   ];
 
-  # Desktop-specific AMD boot configuration
+  # Desktop-specific boot configuration
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
     tmp.useTmpfs = true;
 
-    # AMD GPU kernel parameters for NixOS 25.05
+    # Basic kernel parameters (GPU-specific ones handled by AMD module)
     kernelParams = [
       "mitigations=off"
-      "amdgpu.ppfeaturemask=0xffffffff"
-      "radeon.si_support=0"
-      "amdgpu.si_support=1"
-      "radeon.cik_support=0"
-      "amdgpu.cik_support=1"
-      "radeon.audio=1"
-      "amdgpu.audio=1"
-      # Additional Wayland optimizations
-      "amdgpu.dc=1"
-      "amdgpu.dpm=1"
     ];
   };
 
@@ -233,15 +249,6 @@
     dedicatedServer.openFirewall = true;
   };
 
-  # LACT daemon service for AMD GPU control - temporarily disabled due to conflicts
-  # systemd.packages = with pkgs; [lact];
-  # systemd.services.lactd.wantedBy = ["multi-user.target"];
-
-  # AMD GPU power management - alternative to hardware.amdgpu.overdrive
-  environment.etc."modprobe.d/amdgpu.conf".text = ''
-    options amdgpu ppfeaturemask=0xffffffff
-  '';
-
   # CoreCtrl sudo configuration
   security.sudo.extraRules = [
     {
@@ -261,7 +268,11 @@
     pkgs.openocd
   ];
 
+  # Desktop-specific system configuration (GPU optimization handled by AMD module)
+
   # Desktop-specific services
   services.ollama.enable = false;
   services.tailscale.enable = false;
+
+  # Additional desktop-specific optimizations (GPU optimization handled by AMD module)
 }
