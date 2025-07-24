@@ -1,5 +1,6 @@
 # ~/NixOS/shells/JavaScript.nix
-{pkgs ? import <nixpkgs> {}}: let
+# Use NixOS 25 stable for all packages
+{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {}}: let
   centralizedStore = "$HOME/.nix-js-environments";
 
   # Helper function to create a tagged package group
