@@ -57,29 +57,53 @@ in {
       );
     };
 
-    # Wayland-specific environment variables for NixOS 25.05
-    environment.sessionVariables = mkIf cfg.displayManager.wayland {
-      # Essential Wayland variables
-      XDG_SESSION_TYPE = "wayland";
-      WAYLAND_DISPLAY = "wayland-0";
+    # Display protocol specific environment variables for NixOS 25.05
+    environment.sessionVariables = mkMerge [
+      # Wayland-specific environment variables
+      (mkIf cfg.displayManager.wayland {
+        # Essential Wayland variables
+        XDG_SESSION_TYPE = "wayland";
+        WAYLAND_DISPLAY = "wayland-0";
 
-      # Application compatibility
-      QT_QPA_PLATFORM = "wayland;xcb";
-      GDK_BACKEND = "wayland,x11";
-      SDL_VIDEODRIVER = "wayland";
-      CLUTTER_BACKEND = "wayland";
-      MOZ_ENABLE_WAYLAND = "1";
-      NIXOS_OZONE_WL = "1";
+        # Application compatibility
+        QT_QPA_PLATFORM = "wayland;xcb";
+        GDK_BACKEND = "wayland,x11";
+        SDL_VIDEODRIVER = "wayland";
+        CLUTTER_BACKEND = "wayland";
+        MOZ_ENABLE_WAYLAND = "1";
+        NIXOS_OZONE_WL = "1";
 
-      # Force Wayland for specific applications
-      QT_WAYLAND_FORCE_DPI = "physical";
+        # Force Wayland for specific applications
+        QT_WAYLAND_FORCE_DPI = "physical";
 
-      # GNOME specific variables
-      GNOME_WAYLAND = mkIf (cfg.environment == "gnome") "1";
+        # GNOME specific variables
+        GNOME_WAYLAND = mkIf (cfg.environment == "gnome") "1";
 
-      # KDE specific variables
-      QT_WAYLAND_DISABLE_WINDOWDECORATION = mkIf (cfg.environment == "kde") "1";
-    };
+        # KDE specific variables
+        QT_WAYLAND_DISABLE_WINDOWDECORATION = mkIf (cfg.environment == "kde") "1";
+      })
+
+      # X11-specific environment variables
+      (mkIf (!cfg.displayManager.wayland) {
+        # Essential X11 variables
+        XDG_SESSION_TYPE = "x11";
+        WAYLAND_DISPLAY = "";
+
+        # Application compatibility
+        QT_QPA_PLATFORM = "xcb";
+        GDK_BACKEND = "x11";
+        SDL_VIDEODRIVER = "x11";
+        CLUTTER_BACKEND = "x11";
+        MOZ_ENABLE_WAYLAND = "0";
+        NIXOS_OZONE_WL = "0";
+
+        # Disable Wayland for applications
+        QT_WAYLAND_FORCE_DPI = "";
+
+        # GNOME specific variables
+        GNOME_WAYLAND = mkIf (cfg.environment == "gnome") "0";
+      })
+    ];
 
     # Accessibility support
     services.gnome.at-spi2-core.enable = mkIf cfg.accessibility.enable true;
@@ -127,7 +151,10 @@ in {
       # Printing support
       printing = mkIf cfg.hardware.enablePrinting {
         enable = true;
-        drivers = with pkgs; [hplip epson-escpr];
+        drivers = with pkgs; [
+          hplip
+          epson-escpr
+        ];
       };
 
       # Bluetooth support
