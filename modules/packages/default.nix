@@ -107,6 +107,9 @@ in {
           nmap # Network scanner
           wireshark # Network protocol analyzer
           tcpdump # Network packet analyzer
+
+          # Audio/Video development tools
+          audacity # Audio editor
         ];
         description = "List of development packages to install";
       };
