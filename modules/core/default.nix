@@ -8,9 +8,11 @@
   pkgs-unstable,
   system,
   ...
-}: let
+}:
+let
   cfg = config.modules.core;
-in {
+in
+{
   imports = [
     ./fonts.nix
     ./gaming.nix
@@ -46,7 +48,7 @@ in {
 
     extraSystemPackages = mkOption {
       type = with types; listOf package;
-      default = [];
+      default = [ ];
       description = "Additional system-wide packages to install";
     };
 
@@ -152,14 +154,20 @@ in {
     nix = {
       settings = {
         auto-optimise-store = true;
-        experimental-features = ["nix-command" "flakes"];
+        experimental-features = [
+          "nix-command"
+          "flakes"
+        ];
         timeout = 14400; # 4 hours
         # Performance optimizations
         cores = 0; # Use all available cores
         max-jobs = "auto"; # Auto-detect optimal parallel jobs
         # Reliability improvements
         require-sigs = true;
-        trusted-users = ["root" "@wheel"];
+        trusted-users = [
+          "root"
+          "@wheel"
+        ];
         # Optimize builds
         builders-use-substitutes = true;
         # Cache configuration
@@ -184,7 +192,8 @@ in {
     # Security configuration
     security = {
       sudo.wheelNeedsPassword = true;
-      auditd.enable = true;
+      # Disable auditd to prevent massive log files (162GB issue)
+      # auditd.enable = true;
       apparmor = {
         enable = true;
         killUnconfinedConfinables = true;
@@ -227,7 +236,7 @@ in {
         "net.ipv4.conf.default.send_redirects" = 0;
       };
       # Enable ZRAM for better memory management
-      kernelModules = ["zram"];
+      kernelModules = [ "zram" ];
     };
 
     # ZRAM configuration for improved performance
@@ -259,7 +268,11 @@ in {
     # Basic systemd-resolved configuration (Docker DNS will depend on this)
     services.resolved = {
       enable = true;
-      fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
+      fallbackDns = [
+        "8.8.8.8"
+        "8.8.4.4"
+        "1.1.1.1"
+      ];
     };
 
     # Virtualization configuration
@@ -271,13 +284,14 @@ in {
       };
       oci-containers = {
         backend = "podman";
-        containers = {};
+        containers = { };
       };
       waydroid.enable = false;
     };
 
     # Common system packages
-    environment.systemPackages = with pkgs;
+    environment.systemPackages =
+      with pkgs;
       [
         # System Utilities
         wget
@@ -288,10 +302,6 @@ in {
         zip
         unzip
         tree
-        eza
-        zoxide
-        ripgrep
-        fd
         aria2
         parted
         openssl
@@ -311,6 +321,25 @@ in {
         just
         infisical
 
+        # Rust System Utilities (Modern replacements for Unix tools)
+        eza # Modern replacement for ls
+        zoxide # Smarter cd command
+        ripgrep # Fast grep alternative
+        fd # Simple, fast alternative to find
+        dust # Intuitive du alternative for disk usage
+        dua # Interactive disk usage analyzer
+        bat # Cat clone with syntax highlighting
+        procs # Modern replacement for ps
+        bottom # Cross-platform system monitor (btm command)
+        tokei # Count lines of code
+        hyperfine # Command-line benchmarking tool
+        bandwhich # Terminal bandwidth utilization tool
+        broot # New way to see and navigate directory trees
+        sd # Intuitive find & replace CLI (sed alternative)
+        tealdeer # Fast tldr client (tldr command)
+        choose # Human-friendly cut alternative
+        dog # Command-line DNS lookup tool (dig alternative)
+
         # System Monitoring
         neofetch
         htop
@@ -323,6 +352,9 @@ in {
         stow
         xclip
         lazygit
+
+        # Remote Desktop & Network Tools
+        remmina
 
         # Terminals and Shells
         kitty

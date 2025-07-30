@@ -1,14 +1,11 @@
 # ~/NixOS/hosts/default/configuration.nix
 {
-  config,
   pkgs,
   lib,
-  inputs,
   hostname,
-  systemVersion,
-  pkgs-unstable,
   ...
-}: {
+}:
+{
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -208,7 +205,7 @@
   networking.networkmanager.dns = lib.mkForce "default";
 
   # Desktop-specific user groups
-  users.groups.plugdev = {};
+  users.groups.plugdev = { };
   users.users.notroot.extraGroups = [
     "dialout"
     "libvirtd"
@@ -252,11 +249,11 @@
   # CoreCtrl sudo configuration
   security.sudo.extraRules = [
     {
-      groups = ["wheel"];
+      groups = [ "wheel" ];
       commands = [
         {
           command = "${pkgs.corectrl}/bin/corectrl";
-          options = ["NOPASSWD"];
+          options = [ "NOPASSWD" ];
         }
       ];
     }
