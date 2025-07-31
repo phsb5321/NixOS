@@ -27,19 +27,19 @@
     fsType = "ext4";
   };
 
-  swapDevices = [];
+  # Swap configuration - ZRAM removed, using file swap only
+  swapDevices = [
+    {
+      device = "/var/swap/swapfile";
+      size = 16384; # 16GB swap file
+      priority = 5; # Standard file swap priority
+    }
+  ];
 
-  # zramSwap configuration added by user:
-  # Enables compressed RAM swap using zram-generator under the hood.
-  zramSwap.enable = true;
-  # Limit total uncompressed memory in zram to 25% (≈16 GiB of 64 GiB)
-  zramSwap.memoryPercent = 25;
-  # Use high-ratio, fast ZSTD (kernel ≥5.5)
-  zramSwap.algorithm = "zstd";
-  # Ensure zram is preferred over disk swap
-  zramSwap.priority = 10;
-  # Number of zram devices (default 1)
-  zramSwap.swapDevices = 1;
+  # Create swap file directory
+  systemd.tmpfiles.rules = [
+    "d /var/swap 0700 root root -"
+  ];
 
   # Enables DHCP on each ethernet and wireless interface.
   networking.useDHCP = lib.mkDefault true;

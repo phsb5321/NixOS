@@ -33,7 +33,7 @@ in {
     ];
 
     # Core audio configuration
-    services.pulseaudio.enable = lib.mkForce false;
+    services.pulseaudio.enable = false;
 
     # PipeWire configuration for HDMI/DP audio
     services.pipewire = {

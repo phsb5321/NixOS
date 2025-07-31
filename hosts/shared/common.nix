@@ -1,6 +1,4 @@
 # ~/NixOS/hosts/shared/common.nix
-# This configuration is now primarily for desktop hosts
-# The laptop has its own integrated configuration
 {
   pkgs,
   lib,
@@ -8,26 +6,9 @@
   systemVersion,
   ...
 }: {
-  # Common configuration shared between desktop hosts (not laptop)
+  # Shared configuration for desktop hosts
 
-  # Override gnome-session to fix Wayland wrapper bug
-  nixpkgs.overlays = [
-    (final: prev: {
-      gnome-session = prev.gnome-session.overrideAttrs (oldAttrs: {
-        postInstall =
-          (oldAttrs.postInstall or "")
-          + ''
-            # Fix the Wayland session wrapper to properly handle the -l flag
-            substitute $out/bin/gnome-session $out/bin/gnome-session.tmp \
-              --replace "'exec \$0 -l \$*'" "'exec \$0 \$*'"
-            mv $out/bin/gnome-session.tmp $out/bin/gnome-session
-            chmod +x $out/bin/gnome-session
-          '';
-      });
-    })
-  ];
-
-  # Enable shared packages module with common categories
+  # Enable shared packages
   modules.packages = {
     enable = true;
     browsers.enable = true;
@@ -35,76 +16,40 @@
     media.enable = true;
     utilities.enable = true;
     audioVideo.enable = true;
-    terminal.enable = true; # Enable terminal tools (migrated from home-manager)
+    terminal.enable = true;
     python = {
       enable = true;
-      withGTK = true; # Enable GTK support by default
+      withGTK = true;
     };
   };
 
-  # Enable dotfiles management with chezmoi
+  # Enable dotfiles management
   modules.dotfiles = {
     enable = true;
     enableHelperScripts = true;
   };
 
-  # Common core module configuration
+  # Core configuration
   modules.core = {
     enable = true;
     stateVersion = systemVersion;
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
     extraSystemPackages = with pkgs; [
-      # Bluetooth GUI manager
       blueman
-
-      # System information tools
       pciutils
       usbutils
-
-      # Additional Tools
       speechd
     ];
   };
 
-  # Desktop environment configuration with GDM and GNOME
-  modules.desktop = {
-    enable = true;
-    environment = "gnome";
+  # Desktop environment configuration moved to individual hosts
+  # Each host now configures its own desktop environment based on GPU requirements
 
-    # Use X11 for now to troubleshoot graphics issues
-    displayManager = {
-      wayland = false;
-      autoSuspend = true;
-    };
-
-    # Enhanced theming
-    theming = {
-      preferDark = true;
-      accentColor = "blue";
-    };
-
-    # Hardware integration
-    hardware = {
-      enableTouchpad = true;
-      enableBluetooth = true;
-      enablePrinting = true;
-      enableScanning = false; # Keep disabled for now
-    };
-
-    autoLogin = {
-      enable = false;
-      user = "notroot";
-    };
-  };
-
-  # Use the GNOME X11 session since Wayland is disabled
-  services.displayManager.defaultSession = lib.mkForce "gnome-xorg";
-
-  # Common networking configuration
+  # Networking configuration
   modules.networking = {
     enable = true;
-    hostName = lib.mkDefault "nixos"; # Can be overridden per host
+    hostName = lib.mkDefault "nixos";
     optimizeTCP = true;
     enableNetworkManager = true;
     dns = {
@@ -115,56 +60,70 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [22]; # SSH by default, can be extended per host
+      openPorts = [22];
       trustedInterfaces = [];
     };
   };
 
-  # Console keymap configuration
+  # Console configuration
   console = {
     font = "Lat2-Terminus16";
-    useXkbConfig = true; # Use X keyboard configuration in console
+    useXkbConfig = true;
   };
 
-  # X11/Wayland keyboard configuration
+  # Keyboard configuration
   services.xserver.xkb = {
-    layout = lib.mkForce "br";
-    variant = lib.mkForce ",abnt2";
-    options = lib.mkForce "grp:alt_shift_toggle,compose:ralt"; # Alt+Shift to switch, Right Alt as compose key
+    layout = "br";
+    variant = ",abnt2";
+    options = "grp:alt_shift_toggle,compose:ralt";
   };
 
-  # Input method configuration
+  # Input method
   i18n.inputMethod = {
     enable = true;
     type = "ibus";
   };
 
-  # GNOME-specific keyboard integration fixes
-  services.gnome.gnome-settings-daemon.enable = lib.mkForce true;
-
-  # 🚨 CRITICAL: Configure dconf/gsettings for GNOME keyboard integration
+  # GNOME keyboard integration
   services.desktopManager.gnome.extraGSettingsOverrides = ''
-    # Input Sources Configuration
     [org.gnome.desktop.input-sources]
     sources=[('xkb', 'br+abnt2')]
     xkb-options=['grp:alt_shift_toggle', 'compose:ralt']
 
-    # Ensure consistent keyboard settings
     [org.gnome.desktop.peripherals.keyboard]
     numlock-state=true
     remember-numlock-state=true
 
-    # Interface consistency
     [org.gnome.desktop.interface]
     show-battery-percentage=true
   '';
+
+  # GNOME services configuration - shared across all GNOME hosts
+  services.gnome = {
+    core-shell.enable = lib.mkDefault true;
+    core-os-services.enable = lib.mkDefault true;
+    core-apps.enable = lib.mkDefault true;
+    gnome-keyring.enable = lib.mkDefault true;
+    gnome-settings-daemon.enable = lib.mkDefault true;
+    evolution-data-server.enable = lib.mkDefault true;
+    glib-networking.enable = lib.mkDefault true;
+    sushi.enable = lib.mkDefault true;
+    gnome-remote-desktop.enable = lib.mkForce false;
+    gnome-user-share.enable = lib.mkDefault true;
+    rygel.enable = lib.mkDefault true;
+  };
+
+  # Essential services for GNOME - shared configuration
+  services.geoclue2.enable = lib.mkDefault true;
+  services.upower.enable = lib.mkDefault true;
+  services.power-profiles-daemon.enable = lib.mkDefault true;
 
   services.desktopManager.gnome.extraGSettingsOverridePackages = [
     pkgs.gsettings-desktop-schemas
     pkgs.gnome-settings-daemon
   ];
 
-  # Enhanced locale settings with keyboard integration
+  # Locale settings
   i18n = {
     defaultLocale = "en_US.UTF-8";
     extraLocaleSettings = {
@@ -180,19 +139,29 @@
     };
   };
 
-  # Enhanced boot configuration to fix early keyboard issues
+  # Boot parameters
   boot.kernelParams = [
-    "consoleblank=0" # Prevent console blanking
-    "rd.systemd.show_status=true" # Show systemd status during boot
+    "consoleblank=0"
+    "rd.systemd.show_status=true"
   ];
 
-  # System-level environment variables (migrated from home-manager)
+  # Environment variables
   environment.variables = {
     EDITOR = "nvim";
     SHELL = "${pkgs.zsh}/bin/zsh";
   };
 
-  # Common user configuration
+  # GNOME-specific environment variables - shared configuration
+  environment.sessionVariables = {
+    # UI and theming for GNOME
+    XCURSOR_THEME = lib.mkDefault "Adwaita";
+    XCURSOR_SIZE = lib.mkDefault "24";
+    GSK_RENDERER = lib.mkDefault "gl";
+    GNOME_SHELL_SLOWDOWN_FACTOR = lib.mkDefault "1";
+    GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = lib.mkDefault "0";
+  };
+
+  # User configuration
   users = {
     defaultUserShell = pkgs.zsh;
     users.notroot = {
@@ -214,7 +183,7 @@
     };
   };
 
-  # Common hardware configuration
+  # Hardware configuration
   hardware = {
     enableRedistributableFirmware = true;
     bluetooth = {
@@ -235,10 +204,28 @@
     };
   };
 
-  # Common services
+  # GNOME hardware support - shared configuration
+  services.blueman.enable = lib.mkDefault true;
+  services.printing.enable = lib.mkDefault true;
+  services.printing.drivers = lib.mkDefault (with pkgs; [gutenprint hplip epson-escpr]);
+  services.avahi = {
+    enable = lib.mkDefault true;
+    nssmdns4 = lib.mkDefault true;
+    openFirewall = lib.mkDefault true;
+  };
+
+  # Services
   services = {
-    pipewire.enable = true;
-    pulseaudio.enable = lib.mkForce false;
+    # Audio system - comprehensive PipeWire setup for GNOME
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      wireplumber.enable = true;
+      jack.enable = true;
+    };
+    pulseaudio.enable = false;
 
     syncthing = {
       enable = true;
@@ -262,7 +249,7 @@
     thermald.enable = true;
   };
 
-  # Common programs
+  # Programs
   programs = {
     zsh.enable = true;
     nix-ld.enable = true;
@@ -270,12 +257,10 @@
     thunderbird.enable = true;
   };
 
-  # Common security configuration
+  # Security
   security = {
     sudo.wheelNeedsPassword = true;
     polkit.enable = true;
     rtkit.enable = true;
   };
-
-  # Keyboard configuration is now handled by the core module
 }
