@@ -225,7 +225,7 @@
     # Completely disable Wayland
     WAYLAND_DISPLAY = "";
     MOZ_ENABLE_WAYLAND = "0";
-    NIXOS_OZONE_WL = "0";
+    # NIXOS_OZONE_WL unset to prevent VS Code from adding Wayland flags
     ELECTRON_OZONE_PLATFORM_HINT = "x11";
 
     # NVIDIA-specific settings
@@ -250,7 +250,6 @@
     QT_QPA_PLATFORM=xcb
     WAYLAND_DISPLAY=
     MOZ_ENABLE_WAYLAND=0
-    ELECTRON_OZONE_PLATFORM_HINT=x11
   '';
 
   # GNOME autologin workaround
