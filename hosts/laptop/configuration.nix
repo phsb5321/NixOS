@@ -115,17 +115,19 @@
     variant = ",abnt2";
   };
 
-  # NVIDIA GPU configuration for laptop
-  modules.hardware.nvidia = {
-    enable = true;
-    intelBusId = "PCI:0:2:0"; # Intel UHD Graphics
-    nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
-    prime.mode = "sync"; # Use sync mode for better GNOME compatibility
-    driver.version = "stable";
-    driver.openSource = false; # Use proprietary drivers for GTX 1650
-    powerManagement.enable = false; # Disabled for sync mode
-    powerManagement.finegrained = false; # Disabled for sync mode
-    performance.forceFullCompositionPipeline = true; # Reduce tearing
+  # Simple NVIDIA GPU support for laptop
+  services.xserver.videoDrivers = ["nvidia"];
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = false;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    prime = {
+      sync.enable = true;
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
+    };
   };
 
   # Direct GNOME configuration for NVIDIA GPU laptop
