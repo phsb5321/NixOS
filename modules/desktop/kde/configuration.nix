@@ -129,7 +129,7 @@
     ];
   };
 
-  networking.networkmanager.dns = lib.mkForce "default";
+  networking.networkmanager.dns = "default";
 
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "pt_BR.UTF-8";
