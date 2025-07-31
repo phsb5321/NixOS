@@ -1,5 +1,4 @@
 # ~/NixOS/hosts/laptop/configuration.nix
-# Independent laptop configuration without problematic shared module
 {
   pkgs,
   lib,
@@ -10,9 +9,10 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../shared/common.nix
   ];
 
-  # Core system configuration
+  # Core system configuration using modules
   modules.core = {
     enable = true;
     stateVersion = systemVersion;
@@ -20,39 +20,7 @@
     defaultLocale = "en_US.UTF-8";
   };
 
-  # Simple desktop configuration - prefer X11 for stability on laptop
-  modules.desktop = {
-    enable = true;
-    environment = "gnome";
-
-    # Force X11 to avoid Wayland issues
-    displayManager = {
-      wayland = false;
-      autoSuspend = true;
-    };
-
-    # Minimal theming to avoid conflicts
-    theming = {
-      preferDark = true;
-      accentColor = "blue";
-    };
-
-    # Essential hardware support
-    hardware = {
-      enableTouchpad = true;
-      enableBluetooth = true;
-      enablePrinting = false; # Disable to reduce conflicts
-      enableScanning = false;
-    };
-
-    # Auto-login for convenience
-    autoLogin = {
-      enable = true;
-      user = "notroot";
-    };
-  };
-
-  # Simple networking without aggressive optimizations
+  # Networking configuration
   modules.networking = {
     enable = true;
     hostName = "nixos-laptop";
@@ -60,185 +28,186 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [ 22 ];
+      openPorts = [ 22 ]; # SSH only for laptop
     };
   };
 
-  # Essential packages only - no gaming, minimal extras
+  # Package configuration - disable gaming to save battery
   modules.packages = {
     enable = true;
     browsers.enable = true;
     development.enable = true;
     utilities.enable = true;
     terminal.enable = true;
-    # Disable resource-heavy categories
-    gaming.enable = false;
-    media.enable = false;
-    audioVideo.enable = false;
+    media.enable = true;
+    audioVideo.enable = true;
+    gaming.enable = false; # Disabled for laptop to save battery
+
+    # Laptop-specific extra packages
+    extraPackages = with pkgs; [
+      # Laptop-specific utilities
+      powertop
+      tlp
+      acpi
+      brightnessctl
+
+      # GNOME utilities for extensions
+      gnome-tweaks
+      gnome-extension-manager
+      dconf-editor
+
+      # Essential GNOME extensions - Core requested ones
+      gnomeExtensions.caffeine # Prevent sleep/screen lock
+      gnomeExtensions.vitals # System monitoring (CPU, temp, memory, etc.)
+      gnomeExtensions.forge # Tiling window manager
+      gnomeExtensions.arc-menu # Application menu replacement
+      gnomeExtensions.fuzzy-app-search # Better app search
+      gnomeExtensions.launch-new-instance # Always launch new app instances
+      gnomeExtensions.auto-move-windows # Remember window positions per workspace
+      gnomeExtensions.clipboard-indicator # Clipboard history manager
+
+      # Additional useful extensions for laptop
+      gnomeExtensions.tophat # Elegant system resource monitor in top bar
+      gnomeExtensions.appindicator # System tray support
+      gnomeExtensions.dash-to-dock # Enhanced dock
+      gnomeExtensions.blur-my-shell # Blur effects
+      gnomeExtensions.gsconnect # Phone integration
+      gnomeExtensions.workspace-indicator # Better workspace management
+      gnomeExtensions.sound-output-device-chooser # Audio device switching
+      gnomeExtensions.removable-drive-menu # USB drive management
+      gnomeExtensions.battery-health-charging # Battery charge limiting
+      gnomeExtensions.quick-settings-audio-panel # Audio quick settings
+      gnomeExtensions.paperwm # Advanced tiling (alternative to forge)
+      gnomeExtensions.pop-shell # Pop!_OS tiling features
+      gnomeExtensions.places-status-indicator # Quick access to bookmarks
+      gnomeExtensions.night-theme-switcher # Auto dark/light theme switching
+      gnomeExtensions.battery-time # Show battery time remaining
+      gnomeExtensions.user-themes # Theme support
+      gnomeExtensions.just-perfection # Customize GNOME interface
+
+      # Fun desktop extensions - The cat you requested!
+      gnomeExtensions.runcat # Running cat in top bar shows CPU usage
+
+      # System performance extensions
+      gnomeExtensions.system-monitor-next # Classic system monitor with graphs
+      gnomeExtensions.resource-monitor # Real-time monitoring in top bar
+
+      # Productivity extensions
+      gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
+      gnomeExtensions.clipboard-history # Enhanced clipboard manager
+      gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
+
+      # Development tools for mobile work
+      git
+      vim
+      curl
+      wget
+    ];
   };
 
-  # Disable dotfiles to avoid conflicts
-  modules.dotfiles.enable = false;
-
-  # Force GNOME X11 session
-  services.displayManager.defaultSession = lib.mkForce "gnome-xorg";
-
-  # Override any Wayland environment variables
-  environment.sessionVariables = {
-    XDG_SESSION_TYPE = lib.mkForce "x11";
-    WAYLAND_DISPLAY = lib.mkForce "";
-    QT_QPA_PLATFORM = lib.mkForce "xcb";
-    GDK_BACKEND = lib.mkForce "x11";
-    SDL_VIDEODRIVER = lib.mkForce "x11";
-    MOZ_ENABLE_WAYLAND = lib.mkForce "0";
-    NIXOS_OZONE_WL = lib.mkForce "0";
+  # Laptop-specific core module additions
+  modules.core.documentTools = {
+    enable = true;
+    latex.enable = false; # Disabled for laptop to save space
   };
 
-  # Simple console configuration
-  console = {
-    font = "Lat2-Terminus16";
-    useXkbConfig = true;
+  # Enable explicit keyboard configuration for laptop (ABNT2)
+  modules.core.keyboard = {
+    enable = true;
+    variant = ",abnt2";
   };
 
-  # Basic keyboard configuration
-  services.xserver.xkb = {
-    layout = "br";
-    variant = "abnt2";
-    options = "grp:alt_shift_toggle";
+  # NVIDIA GPU configuration for laptop
+  modules.hardware.nvidia = {
+    enable = true;
+    intelBusId = "PCI:0:2:0"; # Intel UHD Graphics
+    nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
+    prime.mode = "sync"; # Use sync mode for better GNOME compatibility
+    driver.version = "stable";
+    driver.openSource = false; # Use proprietary drivers for GTX 1650
+    powerManagement.enable = false; # Disabled for sync mode
+    powerManagement.finegrained = false; # Disabled for sync mode
+    performance.forceFullCompositionPipeline = true; # Reduce tearing
   };
 
-  # Basic locale settings
-  i18n = {
-    defaultLocale = "en_US.UTF-8";
-    extraLocaleSettings = {
-      LC_ADDRESS = "pt_BR.UTF-8";
-      LC_IDENTIFICATION = "pt_BR.UTF-8";
-      LC_MEASUREMENT = "pt_BR.UTF-8";
-      LC_MONETARY = "pt_BR.UTF-8";
-      LC_NAME = "pt_BR.UTF-8";
-      LC_NUMERIC = "pt_BR.UTF-8";
-      LC_PAPER = "pt_BR.UTF-8";
-      LC_TELEPHONE = "pt_BR.UTF-8";
-      LC_TIME = "pt_BR.UTF-8";
-    };
+  # Direct GNOME configuration for NVIDIA GPU laptop
+  # Force X11 session for NVIDIA GPU compatibility
+  services.xserver.enable = true;
+
+  # Display manager configuration for NVIDIA
+  services.displayManager.gdm = {
+    enable = true;
+    wayland = false; # Force X11 only for NVIDIA
+    autoSuspend = false; # Keep laptop awake
   };
 
-  # User configuration
-  users = {
-    defaultUserShell = pkgs.zsh;
-    users.notroot = {
-      isNormalUser = true;
-      description = "Pedro Balbino";
-      extraGroups = [
-        "networkmanager"
-        "wheel"
-        "audio"
-        "video"
-        "input"
-        "bluetooth"
-      ];
-    };
+  # Desktop manager configuration
+  services.desktopManager.gnome.enable = true;
+
+  # Auto-login for laptop convenience
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "notroot";
   };
 
-  # Laptop-specific packages
-  environment.systemPackages = with pkgs; [
-    # Laptop essentials
-    powertop
-    acpi
-    brightnessctl
+  # Ensure only GDM is enabled
+  services.displayManager.sddm.enable = false;
 
-    # Basic tools
-    firefox
-    kitty
-    git
-    vim
-    htop
-
-    # GNOME utilities for extensions
-    gnome-tweaks
-    gnome-extension-manager
-    dconf-editor
-
-    # Essential GNOME extensions - Core requested ones
-    gnomeExtensions.caffeine # Prevent sleep/screen lock
-    gnomeExtensions.vitals # System monitoring (CPU, temp, memory, etc.)
-    gnomeExtensions.forge # Tiling window manager
-    gnomeExtensions.arc-menu # Application menu replacement
-    gnomeExtensions.fuzzy-app-search # Better app search
-    gnomeExtensions.launch-new-instance # Always launch new app instances
-    gnomeExtensions.auto-move-windows # Remember window positions per workspace
-    gnomeExtensions.clipboard-indicator # Clipboard history manager
-
-    # Additional useful extensions for laptop
-    gnomeExtensions.tophat # Elegant system resource monitor in top bar
-    gnomeExtensions.appindicator # System tray support
-    gnomeExtensions.dash-to-dock # Enhanced dock
-    gnomeExtensions.blur-my-shell # Blur effects
-    gnomeExtensions.gsconnect # Phone integration
-    gnomeExtensions.workspace-indicator # Better workspace management
-    gnomeExtensions.sound-output-device-chooser # Audio device switching
-    gnomeExtensions.removable-drive-menu # USB drive management
-    gnomeExtensions.battery-health-charging # Battery charge limiting
-    gnomeExtensions.quick-settings-audio-panel # Audio quick settings
-    gnomeExtensions.paperwm # Advanced tiling (alternative to forge)
-    gnomeExtensions.pop-shell # Pop!_OS tiling features
-    gnomeExtensions.places-status-indicator # Quick access to bookmarks
-    gnomeExtensions.night-theme-switcher # Auto dark/light theme switching
-    gnomeExtensions.battery-time # Show battery time remaining
-    gnomeExtensions.user-themes # Theme support
-    gnomeExtensions.just-perfection # Customize GNOME interface
-
-    # Fun desktop extensions - The cat you requested!
-    gnomeExtensions.runcat # Running cat in top bar shows CPU usage
-
-    # System performance extensions
-    gnomeExtensions.system-monitor-next # Classic system monitor with graphs
-    gnomeExtensions.resource-monitor # Real-time monitoring in top bar
-
-    # Productivity extensions
-    gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
-    gnomeExtensions.clipboard-history # Enhanced clipboard manager
-    gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
-  ];
-
-  # Basic hardware configuration
-  hardware = {
-    enableRedistributableFirmware = true;
-    bluetooth = {
-      enable = true;
-      powerOnBoot = true;
-    };
-    graphics = {
-      enable = true;
-    };
+  # GNOME services for laptop
+  services.gnome = {
+    core-shell.enable = true;
+    core-os-services.enable = true;
+    core-apps.enable = true;
+    gnome-keyring.enable = true;
+    gnome-settings-daemon.enable = true;
+    evolution-data-server.enable = true;
+    glib-networking.enable = true;
+    sushi.enable = true;
+    gnome-remote-desktop.enable = false;
+    gnome-user-share.enable = true;
+    rygel.enable = true;
+    tinysparql.enable = false;
+    localsearch.enable = false;
   };
 
-  # Audio configuration
+  # Essential services for GNOME
+  services.geoclue2.enable = true;
+  services.upower.enable = true;
+  services.power-profiles-daemon.enable = false; # Disabled for TLP
+  services.thermald.enable = true;
+
+  # Audio system
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
+    alsa.support32Bit = true;
     pulse.enable = true;
+    wireplumber.enable = true;
+    jack.enable = true;
   };
-  services.pulseaudio.enable = lib.mkForce false;
 
-  # Laptop-specific services
-  services = {
-    libinput.enable = true; # Touchpad support
-    upower.enable = true; # Battery management
-    thermald.enable = true;
-    fstrim.enable = true;
+  # Hardware support
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;
+  services.printing.enable = true;
+  services.printing.drivers = with pkgs; [
+    gutenprint
+    hplip
+    epson-escpr
+  ];
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
 
-    # Power management
-    power-profiles-daemon.enable = true;
-
-    # SSH
-    openssh = {
-      enable = true;
-      settings = {
-        PermitRootLogin = "no";
-        PasswordAuthentication = true;
-      };
+  # Laptop-specific power management
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
     };
   };
 
@@ -248,26 +217,56 @@
     lidSwitchExternalPower = "lock";
   };
 
-  # Programs
-  programs = {
-    zsh.enable = true;
-    dconf.enable = true;
+  # Force X11 environment variables for NVIDIA laptop
+  environment.sessionVariables = {
+    # Force X11 session - no Wayland for NVIDIA
+    XDG_SESSION_TYPE = "x11";
+    GDK_BACKEND = "x11";
+    QT_QPA_PLATFORM = "xcb";
+
+    # Completely disable Wayland
+    WAYLAND_DISPLAY = "";
+    MOZ_ENABLE_WAYLAND = "0";
+    NIXOS_OZONE_WL = "0";
+    ELECTRON_OZONE_PLATFORM_HINT = "x11";
+
+    # NVIDIA-specific settings
+    __GL_SYNC_TO_VBLANK = "1";
+    __GL_VRR_ALLOWED = "0";
+    MUTTER_DEBUG_FORCE_KMS_MODE = "simple";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    __VK_LAYER_NV_optimus = "NVIDIA_only";
+
+    # UI and cursor
+    XCURSOR_THEME = "Adwaita";
+    XCURSOR_SIZE = "24";
+    GSK_RENDERER = "gl";
+    GNOME_SHELL_SLOWDOWN_FACTOR = "1";
+    GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
   };
 
-  # Bootloader
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  # Security
-  security = {
-    sudo.wheelNeedsPassword = true;
-    polkit.enable = true;
-  };
+  # Force applications to use X11 - system-wide
+  environment.etc."environment".text = ''
+    XDG_SESSION_TYPE=x11
+    GDK_BACKEND=x11
+    QT_QPA_PLATFORM=xcb
+    WAYLAND_DISPLAY=
+    MOZ_ENABLE_WAYLAND=0
+    ELECTRON_OZONE_PLATFORM_HINT=x11
+  '';
 
   # GNOME autologin workaround
   systemd.services."getty@tty1".enable = false;
   systemd.services."autovt@tty1".enable = false;
 
-  # Disable problematic overlays by ensuring clean nixpkgs
-  nixpkgs.overlays = lib.mkForce [ ];
+  # Force NVIDIA as primary GPU for GNOME
+  services.xserver.screenSection = ''
+    Option "metamodes" "nvidia-auto-select +0+0 {ForceFullCompositionPipeline=On}"
+    Option "AllowIndirectGLXProtocol" "off"
+    Option "TripleBuffer" "on"
+  '';
+
+  # Laptop-specific bootloader configuration
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 }

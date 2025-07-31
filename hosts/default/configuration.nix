@@ -1,12 +1,8 @@
 # ~/NixOS/hosts/default/configuration.nix
 {
-  config,
   pkgs,
   lib,
-  inputs,
   hostname,
-  systemVersion,
-  pkgs-unstable,
   ...
 }: {
   imports = [
@@ -17,15 +13,90 @@
 
   # Host-specific metadata
   networking.hostName = hostname;
-
-  # Override shared configuration as needed
   modules.networking.hostName = hostname;
 
-  # Desktop-specific configuration
-  # Enable gaming packages for desktop
+  # GNOME configuration for AMD GPU - Force X11 for compatibility
+  services.xserver.enable = true;
+
+  # Display manager configuration - Force X11 only
+  services.displayManager.gdm = {
+    enable = true;
+    wayland = false; # Force X11 only for AMD GPU compatibility
+    autoSuspend = true;
+  };
+
+  # Disable Wayland compositor packages
+  environment.gnome.excludePackages = with pkgs; [
+    mutter # GNOME's Wayland compositor
+  ];
+
+  # Desktop manager configuration
+  services.desktopManager.gnome.enable = true;
+
+  # Ensure only GDM is enabled
+  services.displayManager.sddm.enable = false;
+
+  # Host-specific X11 configuration for AMD GPU compatibility
+  services.thermald.enable = true;
+
+  # Force X11 environment variables for AMD GPU
+  environment.sessionVariables = {
+    # Force X11 session - no Wayland for better compatibility
+    XDG_SESSION_TYPE = "x11";
+    GDK_BACKEND = "x11";
+    QT_QPA_PLATFORM = "xcb";
+
+    # Completely disable Wayland - use /dev/null to prevent connection attempts
+    WAYLAND_DISPLAY = "/dev/null";
+    MOZ_ENABLE_WAYLAND = "0";
+    NIXOS_OZONE_WL = "0";
+    ELECTRON_OZONE_PLATFORM_HINT = "x11";
+
+    # Additional Wayland disabling
+    SDL_VIDEODRIVER = "x11";
+    CLUTTER_BACKEND = "x11";
+
+    # AMD GPU configuration - Fixed deprecated MESA variables
+    AMD_VULKAN_ICD = "RADV";
+    VDPAU_DRIVER = "radeonsi";
+    GALLIUM_DRIVER = "radeonsi";
+    MESA_SHADER_CACHE_MAX_SIZE = "2G";
+    MESA_DISK_CACHE_MAX_SIZE = "4G";
+
+    # Force GLFW to use X11 backend - prevents Wayland connection attempts
+    GLFW_BACKEND = "x11";
+  };
+
+  # Force applications to use X11 - system-wide
+  environment.etc."environment".text = ''
+    XDG_SESSION_TYPE=x11
+    GDK_BACKEND=x11
+    QT_QPA_PLATFORM=xcb
+    WAYLAND_DISPLAY=/dev/null
+    MOZ_ENABLE_WAYLAND=0
+    ELECTRON_OZONE_PLATFORM_HINT=x11
+    SDL_VIDEODRIVER=x11
+    CLUTTER_BACKEND=x11
+    GLFW_BACKEND=x11
+  '';
+
+  # Additional Wayland disabling in systemd environment
+  systemd.user.extraConfig = ''
+    DefaultEnvironment="WAYLAND_DISPLAY="
+    DefaultEnvironment="XDG_SESSION_TYPE=x11"
+    DefaultEnvironment="GDK_BACKEND=x11"
+    DefaultEnvironment="GLFW_BACKEND=x11"
+  '';
+
+  # Ensure GLFW uses X11 backend - create profile script
+  environment.etc."profile.d/glfw-x11.sh".text = ''
+    export GLFW_BACKEND=x11
+  '';
+
+  # Host-specific features
   modules.packages.gaming.enable = true;
 
-  # Desktop-specific core module additions
+  # Development tools for desktop
   modules.core.java = {
     enable = true;
     androidTools.enable = true;
@@ -43,82 +114,48 @@
     };
   };
 
-  # Enable comprehensive AMD GPU support with extensive VRAM management
+  # AMD GPU configuration using hardware module
   modules.hardware.amd = {
     enable = true;
-
-    # Use performance profile for desktop workstation
-    vram.profile = "performance";
-
-    # Enable all GPU features
     gpu = {
+      driver = "amdgpu";
       enableOpenCL = true;
       enableROCm = true;
       enableVulkan = true;
     };
-
-    # Advanced VRAM configuration
     vram = {
-      vmFragmentSize = 10;
-      vmBlockSize = 10;
-      gttSize = 32768;
+      profile = "performance";
       enableLargePages = true;
-      hugePages = {
-        enable = true;
-        count = 4096;
-      };
+      gttSize = 16384;
     };
-
-    # Performance optimizations
     performance = {
       powerProfile = "high";
       enableMemoryBandwidthOptimization = true;
-      pcie.disableASPM = true;
-    };
-
-    # Enhanced monitoring and debugging
-    monitoring = {
-      enable = true;
-      enableProfiling = true;
-      enableBenchmarking = true;
-      tools = [
-        "radeontop"
-        "nvtop"
-        "amdgpu_top"
-        "umr"
-        "gpu-viewer"
-      ];
-    };
-
-    # Gaming optimizations
-    environment.gaming = {
-      enableDXVKHUD = true;
-      dxvkHudElements = "memory,gpuload,fps,frametime,version";
-    };
-
-    # Development support
-    development = {
-      enableCMake = true;
-      enableMLFrameworks = true;
+      pcie = {
+        disableASPM = true;
+      };
+      thermal = {
+        enableThrottling = true;
+        enableFanControl = true;
+      };
     };
   };
 
-  # Desktop-specific extra packages (non-GPU related)
+  # Additional AMD GPU packages
   modules.packages.extraPackages = with pkgs; [
-    # Additional GPU monitoring and benchmarking tools not in AMD module
+    # GPU tools
     vulkan-tools
     vulkan-loader
     vulkan-validation-layers
     libva-utils
     vdpauinfo
     glxinfo
-    ffmpeg-full
     mesa-demos
     vulkan-caps-viewer
     clinfo
-    renderdoc # Graphics debugging with memory analysis
+    renderdoc
 
-    # Development tools specific to desktop
+    # Development tools
     calibre
     anydesk
     postman
@@ -126,7 +163,7 @@
     android-studio
     android-tools
 
-    # Media and Graphics - Desktop workstation
+    # Media and Graphics
     gimp
     inkscape
     blender
@@ -135,31 +172,50 @@
     obs-studio
 
     # Music streaming
-    spotify # Official Spotify client
-    spot # Native GNOME Spotify client (lightweight)
-    ncspot # Terminal-based Spotify client (minimal resources)
+    spotify
+    spot
+    ncspot
 
     # Communication
     telegram-desktop
-    vesktop # Better Discord client with Vencord built-in
+    vesktop
     slack
     zoom-us
 
-    # Gaming (desktop only)
+    # Gaming
     steam
     lutris
     wine
     winetricks
 
-    # Productivity - Desktop
+    # Productivity
     obsidian
     notion-app-enhanced
 
     # System monitoring
     htop
     btop
+    iotop
+    atop
+    smem
+    numactl
+    stress-ng
+    memtester
 
-    # Core development tools
+    # Memory analysis
+    valgrind
+    heaptrack
+    massif-visualizer
+
+    # Disk utilities
+    ncdu
+    duf
+
+    # Process management
+    psmisc
+    lsof
+
+    # Development
     gh
     git-crypt
     gnupg
@@ -178,34 +234,8 @@
     noto-fonts-cjk-sans
   ];
 
-  # Desktop-specific networking ports
-  modules.networking.firewall.openPorts = [
-    22
-    3000
-  ];
-
-  # CPU microcode updates
-  hardware.cpu.intel.updateMicrocode = true;
-
-  # Desktop development environment variables (non-GPU related)
-  environment.sessionVariables = {
-    CHROME_EXECUTABLE = "${pkgs.google-chrome}/bin/google-chrome-stable";
-  };
-
-  # GDM and session fixes
-  services.xserver = {
-    enable = true;
-    xkb = {
-      layout = "br";
-      variant = "";
-    };
-  };
-
-  # Explicitly disable conflicting display managers
-  services.displayManager.sddm.enable = lib.mkForce false;
-
-  # Additional networking overrides if needed
-  networking.networkmanager.dns = lib.mkForce "default";
+  # Network ports specific to desktop
+  modules.networking.firewall.openPorts = [3000]; # Additional to shared SSH
 
   # Desktop-specific user groups
   users.groups.plugdev = {};
@@ -215,41 +245,14 @@
     "plugdev"
   ];
 
-  # Desktop-specific boot configuration
-  boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
-    tmp.useTmpfs = true;
-
-    # Basic kernel parameters (GPU-specific ones handled by AMD module)
-    kernelParams = [
-      "mitigations=off"
-    ];
-  };
-
-  # Desktop-specific security configuration
-  security.auditd.enable = true;
-  security.audit = {
-    enable = true;
-    backlogLimit = 8192;
-    failureMode = "printk";
-    rules = [
-      "-a exit,always -F arch=b64 -S execve"
-    ];
-  };
-
-  security.apparmor = {
-    enable = true;
-    killUnconfinedConfinables = true;
-  };
-
-  # Desktop-specific gaming programs
+  # Gaming programs
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
   };
 
-  # CoreCtrl sudo configuration
+  # CoreCtrl sudo access
   security.sudo.extraRules = [
     {
       groups = ["wheel"];
@@ -262,17 +265,34 @@
     }
   ];
 
-  # ESP32 Development
-  services.udev.packages = [
-    pkgs.platformio-core
-    pkgs.openocd
-  ];
+  # Intel microcode
+  hardware.cpu.intel.updateMicrocode = true;
 
-  # Desktop-specific system configuration (GPU optimization handled by AMD module)
+  # Security
+  security.auditd.enable = true;
+  security.audit = {
+    enable = true;
+    backlogLimit = 8192;
+    failureMode = "printk";
+    rules = ["-a exit,always -F arch=b64 -S execve"];
+  };
 
-  # Desktop-specific services
+  security.apparmor = {
+    enable = true;
+    killUnconfinedConfinables = true;
+  };
+
+  # Boot configuration
+  boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
+    tmp.useTmpfs = true;
+    # AMD GPU kernel parameters are now handled by the hardware module
+  };
+
+  # Memory optimization - reduced swappiness for better performance
+  boot.kernel.sysctl."vm.swappiness" = 10;
+
+  # Disable unnecessary services for this host
   services.ollama.enable = false;
   services.tailscale.enable = false;
-
-  # Additional desktop-specific optimizations (GPU optimization handled by AMD module)
 }
