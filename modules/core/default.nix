@@ -8,11 +8,9 @@
   pkgs-unstable,
   system,
   ...
-}:
-let
+}: let
   cfg = config.modules.core;
-in
-{
+in {
   imports = [
     ./fonts.nix
     ./gaming.nix
@@ -48,7 +46,7 @@ in
 
     extraSystemPackages = mkOption {
       type = with types; listOf package;
-      default = [ ];
+      default = [];
       description = "Additional system-wide packages to install";
     };
 
@@ -117,12 +115,12 @@ in
       preferMonitorAudio = false; # Set to true if you want monitors to be the preferred audio output
     };
 
-    # Enable document tools module with LaTeX support
+    # Enable document tools module with LaTeX support (can be overridden by hosts)
     modules.core.documentTools = {
       enable = true;
       latex = {
-        enable = true;
-        minimal = false; # Set to true for minimal installation
+        enable = lib.mkDefault true;
+        minimal = lib.mkDefault false; # Set to true for minimal installation
       };
     };
 
@@ -217,15 +215,15 @@ in
       tmp.useTmpfs = lib.mkDefault true;
       # Performance kernel parameters
       kernel.sysctl = {
-        # VM optimizations
-        "vm.swappiness" = 10;
+        # VM optimizations (can be overridden by host-specific configs)
+        "vm.swappiness" = lib.mkDefault 10;
         "vm.dirty_ratio" = 15;
         "vm.dirty_background_ratio" = 5;
         "vm.vfs_cache_pressure" = 50;
-        # Network performance
-        "net.core.rmem_max" = 268435456;
-        "net.core.wmem_max" = 268435456;
-        "net.core.netdev_max_backlog" = 5000;
+        # Network performance (can be overridden by networking module)
+        "net.core.rmem_max" = lib.mkDefault 268435456;
+        "net.core.wmem_max" = lib.mkDefault 268435456;
+        "net.core.netdev_max_backlog" = lib.mkDefault 5000;
         # Security hardening
         "kernel.dmesg_restrict" = 1;
         "kernel.kptr_restrict" = 2;
@@ -236,14 +234,14 @@ in
         "net.ipv4.conf.default.send_redirects" = 0;
       };
       # Enable ZRAM for better memory management
-      kernelModules = [ "zram" ];
+      kernelModules = ["zram"];
     };
 
-    # ZRAM configuration for improved performance
+    # ZRAM configuration for improved performance (can be overridden by hosts)
     zramSwap = {
       enable = true;
       algorithm = "zstd";
-      memoryPercent = 25;
+      memoryPercent = lib.mkDefault 25;
     };
 
     # Core system services
@@ -253,8 +251,7 @@ in
       printing.enable = true;
     };
 
-    # 🎯 KEYBOARD LAYOUT: Configure console and X11 keyboard layout (only if enabled)
-    console.keyMap = lib.mkIf cfg.keyboard.enable "br"; # Default to standard Brazilian keymap
+    # 🎯 KEYBOARD LAYOUT: Console keymap will be automatically derived from xserver.xkb configuration
 
     # Configure X11 keyboard layout if X11 is available and keyboard config is enabled
     services.xserver = lib.mkIf (config.services.xserver.enable && cfg.keyboard.enable) {
@@ -284,14 +281,13 @@ in
       };
       oci-containers = {
         backend = "podman";
-        containers = { };
+        containers = {};
       };
       waydroid.enable = false;
     };
 
     # Common system packages
-    environment.systemPackages =
-      with pkgs;
+    environment.systemPackages = with pkgs;
       [
         # System Utilities
         wget

@@ -4,8 +4,7 @@
   lib,
   hostname,
   ...
-}:
-{
+}: {
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -14,15 +13,15 @@
 
   # Host-specific metadata
   networking.hostName = hostname;
-
-  # Override shared configuration as needed
   modules.networking.hostName = hostname;
 
-  # Desktop-specific configuration
-  # Enable gaming packages for desktop
+  # Desktop configuration - override shared Wayland to use X11
+  modules.desktop.displayManager.wayland = false;
+
+  # Host-specific features
   modules.packages.gaming.enable = true;
 
-  # Desktop-specific core module additions
+  # Development tools for desktop
   modules.core.java = {
     enable = true;
     androidTools.enable = true;
@@ -40,40 +39,20 @@
     };
   };
 
-  # Enable comprehensive AMD GPU support with extensive VRAM management
+  # AMD GPU configuration
   modules.hardware.amd = {
     enable = true;
-
-    # Use performance profile for desktop workstation
     vram.profile = "performance";
-
-    # Enable all GPU features
     gpu = {
       enableOpenCL = true;
       enableROCm = true;
       enableVulkan = true;
     };
-
-    # Advanced VRAM configuration
-    vram = {
-      vmFragmentSize = 10;
-      vmBlockSize = 10;
-      gttSize = 32768;
-      enableLargePages = true;
-      hugePages = {
-        enable = true;
-        count = 4096;
-      };
-    };
-
-    # Performance optimizations
     performance = {
       powerProfile = "high";
       enableMemoryBandwidthOptimization = true;
       pcie.disableASPM = true;
     };
-
-    # Enhanced monitoring and debugging
     monitoring = {
       enable = true;
       enableProfiling = true;
@@ -86,36 +65,27 @@
         "gpu-viewer"
       ];
     };
-
-    # Gaming optimizations
-    environment.gaming = {
-      enableDXVKHUD = true;
-      dxvkHudElements = "memory,gpuload,fps,frametime,version";
-    };
-
-    # Development support
     development = {
       enableCMake = true;
       enableMLFrameworks = true;
     };
   };
 
-  # Desktop-specific extra packages (non-GPU related)
+  # Desktop-specific packages
   modules.packages.extraPackages = with pkgs; [
-    # Additional GPU monitoring and benchmarking tools not in AMD module
+    # GPU tools
     vulkan-tools
     vulkan-loader
     vulkan-validation-layers
     libva-utils
     vdpauinfo
     glxinfo
-    ffmpeg-full
     mesa-demos
     vulkan-caps-viewer
     clinfo
-    renderdoc # Graphics debugging with memory analysis
+    renderdoc
 
-    # Development tools specific to desktop
+    # Development tools
     calibre
     anydesk
     postman
@@ -123,7 +93,7 @@
     android-studio
     android-tools
 
-    # Media and Graphics - Desktop workstation
+    # Media and Graphics
     gimp
     inkscape
     blender
@@ -132,31 +102,50 @@
     obs-studio
 
     # Music streaming
-    spotify # Official Spotify client
-    spot # Native GNOME Spotify client (lightweight)
-    ncspot # Terminal-based Spotify client (minimal resources)
+    spotify
+    spot
+    ncspot
 
     # Communication
     telegram-desktop
-    vesktop # Better Discord client with Vencord built-in
+    vesktop
     slack
     zoom-us
 
-    # Gaming (desktop only)
+    # Gaming
     steam
     lutris
     wine
     winetricks
 
-    # Productivity - Desktop
+    # Productivity
     obsidian
     notion-app-enhanced
 
     # System monitoring
     htop
     btop
+    iotop
+    atop
+    smem
+    numactl
+    stress-ng
+    memtester
 
-    # Core development tools
+    # Memory analysis
+    valgrind
+    heaptrack
+    massif-visualizer
+
+    # Disk utilities
+    ncdu
+    duf
+
+    # Process management
+    psmisc
+    lsof
+
+    # Development
     gh
     git-crypt
     gnupg
@@ -175,63 +164,47 @@
     noto-fonts-cjk-sans
   ];
 
-  # Desktop-specific networking ports
-  modules.networking.firewall.openPorts = [
-    22
-    3000
-  ];
-
-  # CPU microcode updates
-  hardware.cpu.intel.updateMicrocode = true;
-
-  # Desktop development environment variables (non-GPU related)
-  environment.sessionVariables = {
-    CHROME_EXECUTABLE = "${pkgs.google-chrome}/bin/google-chrome-stable";
-  };
-
-  # GDM and session fixes
-  services.xserver = {
-    enable = true;
-    xkb = {
-      layout = "br";
-      variant = "";
-    };
-  };
-
-  # Explicitly disable conflicting display managers
-  services.displayManager.sddm.enable = lib.mkForce false;
-
-  # Additional networking overrides if needed
-  networking.networkmanager.dns = lib.mkForce "default";
+  # Network ports specific to desktop
+  modules.networking.firewall.openPorts = [3000]; # Additional to shared SSH
 
   # Desktop-specific user groups
-  users.groups.plugdev = { };
+  users.groups.plugdev = {};
   users.users.notroot.extraGroups = [
     "dialout"
     "libvirtd"
     "plugdev"
   ];
 
-  # Desktop-specific boot configuration
-  boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
-    tmp.useTmpfs = true;
-
-    # Basic kernel parameters (GPU-specific ones handled by AMD module)
-    kernelParams = [
-      "mitigations=off"
-    ];
+  # Gaming programs
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
   };
 
-  # Desktop-specific security configuration
+  # CoreCtrl sudo access
+  security.sudo.extraRules = [
+    {
+      groups = ["wheel"];
+      commands = [
+        {
+          command = "${pkgs.corectrl}/bin/corectrl";
+          options = ["NOPASSWD"];
+        }
+      ];
+    }
+  ];
+
+  # Intel microcode
+  hardware.cpu.intel.updateMicrocode = true;
+
+  # Security
   security.auditd.enable = true;
   security.audit = {
     enable = true;
     backlogLimit = 8192;
     failureMode = "printk";
-    rules = [
-      "-a exit,always -F arch=b64 -S execve"
-    ];
+    rules = ["-a exit,always -F arch=b64 -S execve"];
   };
 
   security.apparmor = {
@@ -239,37 +212,27 @@
     killUnconfinedConfinables = true;
   };
 
-  # Desktop-specific gaming programs
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
+  # Boot configuration
+  boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
+    tmp.useTmpfs = true;
+    kernelParams = ["mitigations=off"];
   };
 
-  # CoreCtrl sudo configuration
-  security.sudo.extraRules = [
-    {
-      groups = [ "wheel" ];
-      commands = [
-        {
-          command = "${pkgs.corectrl}/bin/corectrl";
-          options = [ "NOPASSWD" ];
-        }
-      ];
-    }
-  ];
+  # Memory optimization - enhance core module ZRAM settings
+  zramSwap = {
+    memoryPercent = 50; # Use more ZRAM than core default (25%)
+    priority = 32767; # Higher priority than file swap
+    swapDevices = 7; # Multiple devices for better parallelism
+  };
 
-  # ESP32 Development
-  services.udev.packages = [
-    pkgs.platformio-core
-    pkgs.openocd
-  ];
+  # Enhanced swappiness for better ZRAM usage
+  boot.kernel.sysctl."vm.swappiness" = 80;
 
-  # Desktop-specific system configuration (GPU optimization handled by AMD module)
+  # Early OOM killer for memory pressure (disabled due to startup issues)
+  # services.earlyoom.enable = false;
 
-  # Desktop-specific services
+  # Disable unnecessary services for this host
   services.ollama.enable = false;
   services.tailscale.enable = false;
-
-  # Additional desktop-specific optimizations (GPU optimization handled by AMD module)
 }

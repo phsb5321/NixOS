@@ -24,7 +24,7 @@
 
   # Enable auto-login for laptop convenience
   modules.desktop.autoLogin = {
-    enable = lib.mkForce true;
+    enable = true;
     user = "notroot";
   };
 
@@ -35,9 +35,7 @@
   # Laptop-specific core module additions
   modules.core.documentTools = {
     enable = true;
-    latex = {
-      enable = lib.mkForce false; # Disabled for laptop to save space
-    };
+    latex.enable = false; # Disabled for laptop to save space
   };
 
   # Laptop-specific package preferences (disabled gaming to save battery)
@@ -57,7 +55,7 @@
   ];
 
   # Laptop-specific power management
-  services.power-profiles-daemon.enable = lib.mkForce false; # Disable to use TLP instead
+  services.power-profiles-daemon.enable = false; # Use TLP instead
   services.tlp = {
     enable = true;
     settings = {
@@ -70,16 +68,10 @@
   modules.networking.firewall.openPorts = [22]; # SSH only
 
   # Enable explicit keyboard configuration for laptop (ABNT2)
-  modules.core.keyboard.enable = true;
-
-  # Laptop-specific keyboard configuration - use ABNT2 variant
-  services.xserver.xkb = {
-    layout = "br";
-    variant = lib.mkForce ",abnt2"; # Aligned with shared configuration
+  modules.core.keyboard = {
+    enable = true;
+    variant = ",abnt2";
   };
-
-  # Console keymap for laptop
-  console.keyMap = lib.mkForce "br-abnt2";
 
   # NVIDIA GPU configuration for laptop
   modules.hardware.nvidia = {
@@ -98,104 +90,28 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # --- GNOME FIXES ---
-  # Override desktop module settings for laptop
-  modules.desktop = {
-    enable = lib.mkForce true;
-    environment = lib.mkForce "gnome";
-    displayManager = {
-      wayland = lib.mkForce false; # Force X11 for NVIDIA compatibility
-      autoSuspend = lib.mkForce false; # Disable auto-suspend for laptop
-    };
+  # Desktop configuration - NVIDIA requires X11
+  modules.desktop.displayManager = {
+    wayland = false; # X11 for NVIDIA compatibility
+    autoSuspend = false; # Keep laptop awake
   };
-
-  # Force GNOME services to be enabled
-  services.xserver = {
-    enable = lib.mkForce true;
-  };
-
-  services.desktopManager.gnome.enable = lib.mkForce true;
-
-  services.displayManager = {
-    gdm = {
-      enable = lib.mkForce true;
-      wayland = lib.mkForce false; # Force X11 for NVIDIA compatibility
-      autoSuspend = lib.mkForce false;
-    };
-    sddm.enable = lib.mkForce false;
-  };
-
-  # Ensure defaultSession is set to X11
-  services.displayManager.defaultSession = lib.mkForce "gnome-xorg"; # Explicitly force X11 session
-  services.gnome = {
-    core-shell.enable = lib.mkForce true;
-    core-os-services.enable = lib.mkForce true;
-    core-apps.enable = lib.mkForce true;
-    gnome-keyring.enable = lib.mkForce true;
-    gnome-settings-daemon.enable = lib.mkForce true;
-    evolution-data-server.enable = lib.mkForce true;
-    glib-networking.enable = lib.mkForce true;
-    sushi.enable = lib.mkForce true;
-    gnome-remote-desktop.enable = lib.mkForce true;
-    gnome-user-share.enable = lib.mkForce true;
-    rygel.enable = lib.mkForce true;
-  };
-  security.rtkit.enable = lib.mkForce true;
-  services.pipewire = {
-    enable = lib.mkForce true;
-    alsa.enable = lib.mkForce true;
-    alsa.support32Bit = lib.mkForce true;
-    pulse.enable = lib.mkForce true;
-    wireplumber.enable = lib.mkForce true;
-    jack.enable = lib.mkForce true;
-  };
+  # Disable problematic GNOME services for NVIDIA
+  services.gnome.tinysparql.enable = false;
+  services.gnome.localsearch.enable = false;
+  # NVIDIA-specific X11 environment variables
   environment.sessionVariables = {
-    # Force X11 backend for all applications
-    XDG_SESSION_TYPE = lib.mkForce "x11";
-    GDK_BACKEND = lib.mkForce "x11";
-    QT_QPA_PLATFORM = lib.mkForce "xcb";
-    SDL_VIDEODRIVER = lib.mkForce "x11";
-    CLUTTER_BACKEND = lib.mkForce "x11";
+    # Force X11 for NVIDIA compatibility
+    XDG_SESSION_TYPE = "x11";
+    GDK_BACKEND = "x11";
+    QT_QPA_PLATFORM = "xcb";
 
-    # Disable Wayland for all applications
-    WAYLAND_DISPLAY = lib.mkForce "";
-    NIXOS_OZONE_WL = lib.mkForce "0";
-    MOZ_ENABLE_WAYLAND = lib.mkForce "0";
-    QT_WAYLAND_FORCE_DPI = lib.mkForce "";
-
-    # GNOME X11 optimizations
-    GSK_RENDERER = "gl";
-    GNOME_SHELL_SLOWDOWN_FACTOR = "1";
-    GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
-    GNOME_WAYLAND = lib.mkForce "0";
-
-    # NVIDIA-specific GNOME fixes
+    # NVIDIA optimizations
     __GL_SYNC_TO_VBLANK = "1";
     __GL_VRR_ALLOWED = "0";
-    CLUTTER_PAINT = "disable-clipped-redraws:disable-culling";
     MUTTER_DEBUG_FORCE_KMS_MODE = "simple";
   };
 
-  # Additional GNOME fixes
-  programs.dconf.enable = lib.mkForce true;
-  services.gvfs.enable = lib.mkForce true;
-  services.udisks2.enable = lib.mkForce true;
-  services.upower.enable = lib.mkForce true;
-  services.accounts-daemon.enable = lib.mkForce true;
-  services.gnome.at-spi2-core.enable = lib.mkForce true;
-
-  # XDG desktop portal for GNOME
-  xdg.portal = {
-    enable = lib.mkForce true;
-    extraPortals = lib.mkForce [pkgs.xdg-desktop-portal-gnome];
-    config.common.default = lib.mkForce "gnome";
-  };
-
-  # Additional X11 enforcement and NVIDIA fixes
-  hardware.graphics = {
-    enable = lib.mkForce true;
-    enable32Bit = lib.mkForce true;
-  };
+  # Additional laptop-specific NVIDIA fixes
 
   # Force NVIDIA as primary GPU for GNOME
   services.xserver.screenSection = ''
@@ -203,8 +119,4 @@
     Option "AllowIndirectGLXProtocol" "off"
     Option "TripleBuffer" "on"
   '';
-
-  # Disable problematic GNOME features that conflict with NVIDIA
-  services.gnome.tinysparql.enable = lib.mkForce false;
-  services.gnome.localsearch.enable = lib.mkForce false;
 }

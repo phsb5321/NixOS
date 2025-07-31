@@ -104,7 +104,7 @@ in {
     };
 
     # Explicitly disable PulseAudio
-    services.pulseaudio.enable = lib.mkForce false;
+    services.pulseaudio.enable = false;
 
     # Enable realtime scheduling for audio applications
     security.rtkit.enable = true;

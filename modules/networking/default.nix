@@ -209,11 +209,11 @@ in {
       "net.ipv4.tcp_fastopen" = 3;
       "net.ipv4.tcp_slow_start_after_idle" = 0;
       "net.ipv4.tcp_mtu_probing" = 1;
-      # Use mkForce for network-specific parameters to override core module
-      "net.core.netdev_max_backlog" = mkForce 16384;
+      # Network-specific parameters (enhanced from core module)
+      "net.core.netdev_max_backlog" = 16384;
       "net.core.somaxconn" = 8192;
-      "net.core.rmem_max" = mkForce 16777216;
-      "net.core.wmem_max" = mkForce 16777216;
+      "net.core.rmem_max" = 16777216;
+      "net.core.wmem_max" = 16777216;
     };
 
     # ———————————————————————————————————————
