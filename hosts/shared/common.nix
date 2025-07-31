@@ -2,10 +2,10 @@
 {
   pkgs,
   lib,
-  inputs,
   systemVersion,
   ...
-}: {
+}:
+{
   # Shared configuration for desktop hosts
 
   # Enable shared packages
@@ -60,8 +60,8 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [22];
-      trustedInterfaces = [];
+      openPorts = [ 22 ];
+      trustedInterfaces = [ ];
     };
   };
 
@@ -189,7 +189,7 @@
     bluetooth = {
       enable = true;
       powerOnBoot = true;
-      disabledPlugins = ["sap"];
+      disabledPlugins = [ "sap" ];
       settings = {
         General = {
           AutoEnable = "true";
@@ -207,7 +207,14 @@
   # GNOME hardware support - shared configuration
   services.blueman.enable = lib.mkDefault true;
   services.printing.enable = lib.mkDefault true;
-  services.printing.drivers = lib.mkDefault (with pkgs; [gutenprint hplip epson-escpr]);
+  services.printing.drivers = lib.mkDefault (
+    with pkgs;
+    [
+      gutenprint
+      hplip
+      epson-escpr
+    ]
+  );
   services.avahi = {
     enable = lib.mkDefault true;
     nssmdns4 = lib.mkDefault true;

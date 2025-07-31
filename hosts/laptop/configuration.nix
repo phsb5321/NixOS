@@ -1,7 +1,6 @@
 # ~/NixOS/hosts/laptop/configuration.nix
 {
   pkgs,
-  lib,
   systemVersion,
   ...
 }:
