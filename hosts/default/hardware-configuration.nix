@@ -27,16 +27,14 @@
     fsType = "ext4";
   };
 
-  # Swap configuration with both ZRAM and swap file
+  # Swap configuration - ZRAM removed, using file swap only
   swapDevices = [
     {
       device = "/var/swap/swapfile";
       size = 16384; # 16GB swap file
-      priority = 5; # Lower priority than ZRAM
+      priority = 5; # Standard file swap priority
     }
   ];
-
-  # ZRAM configuration is now handled by core module and host-specific overrides
 
   # Create swap file directory
   systemd.tmpfiles.rules = [

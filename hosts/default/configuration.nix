@@ -15,8 +15,112 @@
   networking.hostName = hostname;
   modules.networking.hostName = hostname;
 
-  # Desktop configuration - override shared Wayland to use X11
-  modules.desktop.displayManager.wayland = false;
+  # Direct GNOME configuration - no desktop module
+  # Force X11 session for AMD GPU compatibility
+  services.xserver.enable = true;
+
+  # Display manager configuration - Force X11 completely
+  services.displayManager.gdm = {
+    enable = true;
+    wayland = false; # Force X11 only
+    autoSuspend = true;
+  };
+
+  # Completely disable Wayland at system level
+  environment.sessionVariables.WLR_NO_HARDWARE_CURSORS = "1";
+
+  # Force applications to use X11
+  environment.etc."environment".text = ''
+    XDG_SESSION_TYPE=x11
+    GDK_BACKEND=x11
+    QT_QPA_PLATFORM=xcb
+    WAYLAND_DISPLAY=
+    MOZ_ENABLE_WAYLAND=0
+    ELECTRON_OZONE_PLATFORM_HINT=x11
+  '';
+
+  # Desktop manager configuration
+  services.desktopManager.gnome.enable = true;
+
+  # Ensure only GDM is enabled
+  services.displayManager.sddm.enable = false;
+
+  # GNOME services - disable Wayland-specific services
+  services.gnome = {
+    core-shell.enable = true;
+    core-os-services.enable = true;
+    core-apps.enable = true;
+    gnome-keyring.enable = true;
+    gnome-settings-daemon.enable = true;
+    evolution-data-server.enable = true;
+    glib-networking.enable = true;
+    sushi.enable = true;
+    gnome-remote-desktop.enable = false; # Disable Wayland remote desktop
+    gnome-user-share.enable = true;
+    rygel.enable = true;
+  };
+
+  # Explicitly disable GNOME Wayland session
+  services.desktopManager.gnome.sessionPath = [];
+  environment.gnome.excludePackages = with pkgs; [
+    gnome-shell-extensions
+  ];
+
+  # Essential services for GNOME
+  services.geoclue2.enable = true;
+  services.upower.enable = true;
+  services.power-profiles-daemon.enable = true;
+  services.thermald.enable = true;
+
+  # Audio system
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    wireplumber.enable = true;
+    jack.enable = true;
+  };
+
+  # Hardware support
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;
+  services.printing.enable = true;
+  services.printing.drivers = with pkgs; [gutenprint hplip epson-escpr];
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
+  # Combined environment variables - Force X11, disable Wayland completely
+  environment.sessionVariables = {
+    # Force X11 session - NO WAYLAND
+    XDG_SESSION_TYPE = "x11";
+    GDK_BACKEND = "x11";
+    QT_QPA_PLATFORM = "xcb";
+
+    # Completely disable Wayland to prevent connection attempts
+    WAYLAND_DISPLAY = "";
+    MOZ_ENABLE_WAYLAND = "0";
+    NIXOS_OZONE_WL = "0";
+    ELECTRON_OZONE_PLATFORM_HINT = "x11";
+
+    # AMD GPU configuration
+    AMD_VULKAN_ICD = "RADV";
+    VDPAU_DRIVER = "radeonsi";
+    GALLIUM_DRIVER = "radeonsi";
+    MESA_SHADER_CACHE_MAX_SIZE = "2G";
+    MESA_DISK_CACHE_MAX_SIZE = "4G";
+
+    # UI and theming
+    XCURSOR_THEME = "Adwaita";
+    XCURSOR_SIZE = "24";
+    GSK_RENDERER = "gl";
+    GNOME_SHELL_SLOWDOWN_FACTOR = "1";
+    GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
+  };
 
   # Host-specific features
   modules.packages.gaming.enable = true;
@@ -39,37 +143,34 @@
     };
   };
 
-  # AMD GPU configuration
-  modules.hardware.amd = {
+  # Direct AMD GPU configuration without module
+  hardware.graphics = {
     enable = true;
-    vram.profile = "performance";
-    gpu = {
-      enableOpenCL = true;
-      enableROCm = true;
-      enableVulkan = true;
-    };
-    performance = {
-      powerProfile = "high";
-      enableMemoryBandwidthOptimization = true;
-      pcie.disableASPM = true;
-    };
-    monitoring = {
-      enable = true;
-      enableProfiling = true;
-      enableBenchmarking = true;
-      tools = [
-        "radeontop"
-        "nvtop"
-        "amdgpu_top"
-        "umr"
-        "gpu-viewer"
-      ];
-    };
-    development = {
-      enableCMake = true;
-      enableMLFrameworks = true;
-    };
+    enable32Bit = true;
+    extraPackages = with pkgs; [
+      mesa
+      amdvlk
+      vulkan-tools
+      vulkan-loader
+      vulkan-validation-layers
+      libva-vdpau-driver
+      libvdpau-va-gl
+    ];
+    extraPackages32 = with pkgs.driversi686Linux; [
+      mesa
+      amdvlk
+    ];
   };
+
+  # AMD GPU driver
+  services.xserver.videoDrivers = ["amdgpu"];
+
+  # AMD GPU kernel modules
+  boot.initrd.kernelModules = ["amdgpu"];
+
+  # AMD GPU kernel parameters (will be merged with boot config below)
+
+  # Environment variables will be merged below
 
   # Desktop-specific packages
   modules.packages.extraPackages = with pkgs; [
@@ -212,22 +313,27 @@
     killUnconfinedConfinables = true;
   };
 
-  # Boot configuration
+  # Boot configuration with AMD GPU parameters
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
     tmp.useTmpfs = true;
-    kernelParams = ["mitigations=off"];
+    kernelParams = [
+      "mitigations=off"
+      # AMD GPU parameters
+      "amdgpu.ppfeaturemask=0xffffffff"
+      "amdgpu.si_support=1"
+      "amdgpu.cik_support=1"
+      "amdgpu.audio=1"
+      "amdgpu.dc=1"
+      "amdgpu.dpm=1"
+    ];
   };
 
-  # Memory optimization - enhance core module ZRAM settings
-  zramSwap = {
-    memoryPercent = 50; # Use more ZRAM than core default (25%)
-    priority = 32767; # Higher priority than file swap
-    swapDevices = 7; # Multiple devices for better parallelism
-  };
+  # Memory optimization - ZRAM completely removed due to application issues
+  # zramSwap disabled - was causing application crashes and OOM issues
 
-  # Enhanced swappiness for better ZRAM usage
-  boot.kernel.sysctl."vm.swappiness" = 80;
+  # Reduced swappiness without ZRAM
+  boot.kernel.sysctl."vm.swappiness" = 10;
 
   # Early OOM killer for memory pressure (disabled due to startup issues)
   # services.earlyoom.enable = false;

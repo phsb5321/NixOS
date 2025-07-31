@@ -22,11 +22,109 @@
   modules.networking.hostName = hostname;
   # Note: Home Manager removed - packages are now managed at system level
 
-  # Enable auto-login for laptop convenience
-  modules.desktop.autoLogin = {
+  # Direct GNOME configuration for NVIDIA GPU laptop
+  # Force X11 session for NVIDIA GPU compatibility
+  services.xserver.enable = true;
+
+  # Display manager configuration for NVIDIA
+  services.displayManager.gdm = {
+    enable = true;
+    wayland = false; # Force X11 only for NVIDIA
+    autoSuspend = false; # Keep laptop awake
+  };
+
+  # Desktop manager configuration
+  services.desktopManager.gnome.enable = true;
+
+  # Auto-login for laptop convenience
+  services.displayManager.autoLogin = {
     enable = true;
     user = "notroot";
   };
+
+  # Ensure only GDM is enabled
+  services.displayManager.sddm.enable = false;
+
+  # GNOME services for laptop
+  services.gnome = {
+    core-shell.enable = true;
+    core-os-services.enable = true;
+    core-apps.enable = true;
+    gnome-keyring.enable = true;
+    gnome-settings-daemon.enable = true;
+    evolution-data-server.enable = true;
+    glib-networking.enable = true;
+    sushi.enable = true;
+    gnome-remote-desktop.enable = false;
+    gnome-user-share.enable = true;
+    rygel.enable = true;
+  };
+
+  # Essential services for GNOME
+  services.geoclue2.enable = true;
+  services.upower.enable = true;
+  services.power-profiles-daemon.enable = false; # Disabled for TLP
+  services.thermald.enable = true;
+
+  # Audio system
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    wireplumber.enable = true;
+    jack.enable = true;
+  };
+
+  # Hardware support
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;
+  services.printing.enable = true;
+  services.printing.drivers = with pkgs; [gutenprint hplip epson-escpr];
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
+  # Force X11 environment variables for NVIDIA laptop
+  environment.sessionVariables = {
+    # Force X11 session - no Wayland for NVIDIA
+    XDG_SESSION_TYPE = "x11";
+    GDK_BACKEND = "x11";
+    QT_QPA_PLATFORM = "xcb";
+
+    # Completely disable Wayland
+    WAYLAND_DISPLAY = "";
+    MOZ_ENABLE_WAYLAND = "0";
+    NIXOS_OZONE_WL = "0";
+    ELECTRON_OZONE_PLATFORM_HINT = "x11";
+
+    # NVIDIA-specific settings
+    __GL_SYNC_TO_VBLANK = "1";
+    __GL_VRR_ALLOWED = "0";
+    MUTTER_DEBUG_FORCE_KMS_MODE = "simple";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    __VK_LAYER_NV_optimus = "NVIDIA_only";
+
+    # UI and cursor
+    XCURSOR_THEME = "Adwaita";
+    XCURSOR_SIZE = "24";
+    GSK_RENDERER = "gl";
+    GNOME_SHELL_SLOWDOWN_FACTOR = "1";
+    GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
+  };
+
+  # Force applications to use X11 - system-wide
+  environment.etc."environment".text = ''
+    XDG_SESSION_TYPE=x11
+    GDK_BACKEND=x11
+    QT_QPA_PLATFORM=xcb
+    WAYLAND_DISPLAY=
+    MOZ_ENABLE_WAYLAND=0
+    ELECTRON_OZONE_PLATFORM_HINT=x11
+  '';
 
   # GNOME autologin workaround
   systemd.services."getty@tty1".enable = false;
@@ -54,8 +152,7 @@
     wget
   ];
 
-  # Laptop-specific power management
-  services.power-profiles-daemon.enable = false; # Use TLP instead
+  # Laptop-specific power management (handled above in GNOME section)
   services.tlp = {
     enable = true;
     settings = {
@@ -90,26 +187,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Desktop configuration - NVIDIA requires X11
-  modules.desktop.displayManager = {
-    wayland = false; # X11 for NVIDIA compatibility
-    autoSuspend = false; # Keep laptop awake
-  };
-  # Disable problematic GNOME services for NVIDIA
+  # Desktop configuration already handled above - NVIDIA specific services
   services.gnome.tinysparql.enable = false;
   services.gnome.localsearch.enable = false;
-  # NVIDIA-specific X11 environment variables
-  environment.sessionVariables = {
-    # Force X11 for NVIDIA compatibility
-    XDG_SESSION_TYPE = "x11";
-    GDK_BACKEND = "x11";
-    QT_QPA_PLATFORM = "xcb";
-
-    # NVIDIA optimizations
-    __GL_SYNC_TO_VBLANK = "1";
-    __GL_VRR_ALLOWED = "0";
-    MUTTER_DEBUG_FORCE_KMS_MODE = "simple";
-  };
 
   # Additional laptop-specific NVIDIA fixes
 
