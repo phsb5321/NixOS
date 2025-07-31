@@ -3,8 +3,7 @@
   pkgs,
   systemVersion,
   ...
-}:
-{
+}: {
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -27,7 +26,7 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [ 22 ]; # SSH only for laptop
+      openPorts = [22]; # SSH only for laptop
     };
   };
 
