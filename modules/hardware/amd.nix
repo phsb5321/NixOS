@@ -50,6 +50,7 @@ in {
           "balanced"
           "performance"
           "extreme"
+          "extreme-memory"
           "custom"
         ];
         default = "balanced";
@@ -386,6 +387,25 @@ in {
         monitoring.enableBenchmarking = mkDefault true;
         development.enableMLFrameworks = mkDefault true;
       })
+
+      # Extreme Memory profile - optimized for systems with limited RAM
+      (mkIf (cfg.vram.profile == "extreme-memory") {
+        vram.vmFragmentSize = mkDefault 4; # Smaller fragments for better memory efficiency
+        vram.vmBlockSize = mkDefault 4;
+        vram.gttSize = mkDefault 8192; # Reduced GTT size to save system RAM
+        vram.vramLimit = mkDefault 6144; # Limit VRAM usage to 6GB
+        vram.hugePages.enable = mkDefault false; # Disable huge pages to save RAM
+        vram.hugePages.count = mkDefault 0;
+        vram.enableMemoryRetry = mkDefault false; # Reduce retry overhead
+        vram.lockupTimeout = mkDefault 5000; # Shorter timeout
+        performance.powerProfile = mkDefault "balanced";
+        monitoring.enableProfiling = mkDefault false;
+        monitoring.enableBenchmarking = mkDefault false;
+        # Add aggressive swappiness and memory pressure settings
+        system.swappiness = mkDefault 10; # Very aggressive swapping
+        system.vfsCachePressure = mkDefault 200; # Aggressive cache reclaim
+        system.dirtyRatio = mkDefault 5; # Write pages more aggressively
+      })
     ];
 
     # Enable graphics support
@@ -556,7 +576,7 @@ in {
       AMD_DEBUG = cfg.environment.amdDebug;
       RADV_DEBUG = cfg.environment.radvDebug;
       MESA_VK_MEMORY_TYPES = cfg.environment.mesa.memoryTypes;
-      MESA_GLSL_CACHE_MAX_SIZE = cfg.environment.mesa.glslCacheSize;
+      MESA_SHADER_CACHE_MAX_SIZE = cfg.environment.mesa.glslCacheSize;
       MESA_DISK_CACHE_MAX_SIZE = cfg.environment.mesa.diskCacheSize;
       GALLIUM_DRIVER = "radeonsi";
 

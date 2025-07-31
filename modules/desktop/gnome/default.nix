@@ -31,8 +31,8 @@ in {
       # Ensure proper session packages for GDM (critical fix for login issue)
       services.displayManager.sessionPackages = [pkgs.gnome-session.sessions];
 
-      # Ensure only GDM is enabled
-      services.displayManager.sddm.enable = lib.mkForce false;
+      # Ensure only GDM is enabled (disable SDDM by default)
+      services.displayManager.sddm.enable = lib.mkDefault false;
 
       # Complete GNOME services suite
       services.gnome = {
@@ -43,8 +43,8 @@ in {
         gnome-settings-daemon.enable = true;
         evolution-data-server.enable = true;
         glib-networking.enable = true;
-        tinysparql.enable = true;
-        localsearch.enable = true;
+        tinysparql.enable = lib.mkDefault true;
+        localsearch.enable = lib.mkDefault true;
         sushi.enable = true; # File previews
         gnome-remote-desktop.enable = true;
         gnome-user-share.enable = true;
@@ -55,7 +55,7 @@ in {
       services = {
         geoclue2.enable = true;
         upower.enable = true;
-        power-profiles-daemon.enable = true;
+        power-profiles-daemon.enable = lib.mkDefault true;
         thermald.enable = true;
 
         # Hardware support
@@ -255,7 +255,7 @@ in {
       xdg.portal = {
         enable = true;
         wlr.enable = false; # We're using GNOME, not wlroots
-        extraPortals = lib.mkForce [
+        extraPortals = [
           pkgs.xdg-desktop-portal-gnome # Primary for GNOME with accent color support
           pkgs.xdg-desktop-portal-gtk # Fallback for compatibility
         ];

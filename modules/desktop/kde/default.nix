@@ -186,7 +186,7 @@ in {
     };
 
     # Ensure PulseAudio is disabled
-    services.pulseaudio.enable = lib.mkForce false;
+    services.pulseaudio.enable = false;
 
     security = {
       polkit.enable = true;
