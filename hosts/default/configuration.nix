@@ -48,7 +48,7 @@
     # Completely disable Wayland - use /dev/null to prevent connection attempts
     WAYLAND_DISPLAY = "/dev/null";
     MOZ_ENABLE_WAYLAND = "0";
-    # NIXOS_OZONE_WL unset to prevent VS Code from adding Wayland flags
+    NIXOS_OZONE_WL = "0";
     ELECTRON_OZONE_PLATFORM_HINT = "x11";
 
     # Additional Wayland disabling
@@ -73,6 +73,7 @@
     QT_QPA_PLATFORM=xcb
     WAYLAND_DISPLAY=/dev/null
     MOZ_ENABLE_WAYLAND=0
+    ELECTRON_OZONE_PLATFORM_HINT=x11
     SDL_VIDEODRIVER=x11
     CLUTTER_BACKEND=x11
     GLFW_BACKEND=x11
@@ -112,32 +113,9 @@
     };
   };
 
-  # AMD GPU configuration using hardware module
-  modules.hardware.amd = {
-    enable = true;
-    gpu = {
-      driver = "amdgpu";
-      enableOpenCL = true;
-      enableROCm = true;
-      enableVulkan = true;
-    };
-    vram = {
-      profile = "performance";
-      enableLargePages = true;
-      gttSize = 16384;
-    };
-    performance = {
-      powerProfile = "high";
-      enableMemoryBandwidthOptimization = true;
-      pcie = {
-        disableASPM = true;
-      };
-      thermal = {
-        enableThrottling = true;
-        enableFanControl = true;
-      };
-    };
-  };
+  # Simple AMD GPU support
+  boot.initrd.kernelModules = ["amdgpu"];
+  services.xserver.videoDrivers = ["amdgpu"];
 
   # Additional AMD GPU packages
   modules.packages.extraPackages = with pkgs; [

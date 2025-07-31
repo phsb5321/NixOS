@@ -19,9 +19,6 @@ in {
     ./pipewire.nix
     ./monitor-audio.nix
     ./document-tools.nix
-    ./version-sync.nix
-    ./flatpak.nix
-    ./gui-app-deps.nix
   ];
 
   options.modules.core = with lib; {
@@ -122,20 +119,6 @@ in {
         enable = lib.mkDefault true;
         minimal = lib.mkDefault false; # Set to true for minimal installation
       };
-    };
-
-    # Enable Flatpak module
-    modules.core.flatpak = {
-      enable = true;
-      packages = [
-        # Add any Flatpak packages you want to install system-wide
-        # "com.spotify.Client"
-        # "org.mozilla.firefox"
-        # "com.discordapp.Discord"
-      ];
-      enablePortals = true;
-      enableFontconfig = true;
-      enableThemes = true;
     };
 
     # Enable proper time synchronization for time-sensitive tokens

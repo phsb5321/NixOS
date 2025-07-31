@@ -4,7 +4,6 @@
     ./networking
     ./core
     ./packages
-    ./hardware
     ./dotfiles
   ];
 }
