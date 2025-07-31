@@ -48,7 +48,7 @@
     # Completely disable Wayland - use /dev/null to prevent connection attempts
     WAYLAND_DISPLAY = "/dev/null";
     MOZ_ENABLE_WAYLAND = "0";
-    NIXOS_OZONE_WL = "0";
+    # NIXOS_OZONE_WL unset to prevent VS Code from adding Wayland flags
     ELECTRON_OZONE_PLATFORM_HINT = "x11";
 
     # Additional Wayland disabling
@@ -73,7 +73,6 @@
     QT_QPA_PLATFORM=xcb
     WAYLAND_DISPLAY=/dev/null
     MOZ_ENABLE_WAYLAND=0
-    ELECTRON_OZONE_PLATFORM_HINT=x11
     SDL_VIDEODRIVER=x11
     CLUTTER_BACKEND=x11
     GLFW_BACKEND=x11
