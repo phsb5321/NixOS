@@ -576,6 +576,7 @@ in {
       AMD_DEBUG = cfg.environment.amdDebug;
       RADV_DEBUG = cfg.environment.radvDebug;
       MESA_VK_MEMORY_TYPES = cfg.environment.mesa.memoryTypes;
+      # Mesa cache configuration using current variable names
       MESA_SHADER_CACHE_MAX_SIZE = cfg.environment.mesa.glslCacheSize;
       MESA_DISK_CACHE_MAX_SIZE = cfg.environment.mesa.diskCacheSize;
       GALLIUM_DRIVER = "radeonsi";

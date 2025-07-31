@@ -233,15 +233,8 @@ in {
         "net.ipv4.conf.all.send_redirects" = 0;
         "net.ipv4.conf.default.send_redirects" = 0;
       };
-      # Enable ZRAM for better memory management
-      kernelModules = ["zram"];
-    };
-
-    # ZRAM configuration for improved performance (can be overridden by hosts)
-    zramSwap = {
-      enable = true;
-      algorithm = "zstd";
-      memoryPercent = lib.mkDefault 25;
+      # ZRAM removed - causing application compatibility issues
+      # kernelModules = ["zram"];  # Disabled
     };
 
     # Core system services
