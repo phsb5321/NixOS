@@ -346,7 +346,6 @@ in {
         remmina
 
         # Terminals and Shells
-        kitty
         zellij
         sshfs
 

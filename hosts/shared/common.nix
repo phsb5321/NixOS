@@ -98,6 +98,26 @@
     show-battery-percentage=true
   '';
 
+  # GNOME services configuration - shared across all GNOME hosts
+  services.gnome = {
+    core-shell.enable = lib.mkDefault true;
+    core-os-services.enable = lib.mkDefault true;
+    core-apps.enable = lib.mkDefault true;
+    gnome-keyring.enable = lib.mkDefault true;
+    gnome-settings-daemon.enable = lib.mkDefault true;
+    evolution-data-server.enable = lib.mkDefault true;
+    glib-networking.enable = lib.mkDefault true;
+    sushi.enable = lib.mkDefault true;
+    gnome-remote-desktop.enable = lib.mkForce false;
+    gnome-user-share.enable = lib.mkDefault true;
+    rygel.enable = lib.mkDefault true;
+  };
+
+  # Essential services for GNOME - shared configuration
+  services.geoclue2.enable = lib.mkDefault true;
+  services.upower.enable = lib.mkDefault true;
+  services.power-profiles-daemon.enable = lib.mkDefault true;
+
   services.desktopManager.gnome.extraGSettingsOverridePackages = [
     pkgs.gsettings-desktop-schemas
     pkgs.gnome-settings-daemon
@@ -129,6 +149,16 @@
   environment.variables = {
     EDITOR = "nvim";
     SHELL = "${pkgs.zsh}/bin/zsh";
+  };
+
+  # GNOME-specific environment variables - shared configuration
+  environment.sessionVariables = {
+    # UI and theming for GNOME
+    XCURSOR_THEME = lib.mkDefault "Adwaita";
+    XCURSOR_SIZE = lib.mkDefault "24";
+    GSK_RENDERER = lib.mkDefault "gl";
+    GNOME_SHELL_SLOWDOWN_FACTOR = lib.mkDefault "1";
+    GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = lib.mkDefault "0";
   };
 
   # User configuration
@@ -174,9 +204,27 @@
     };
   };
 
+  # GNOME hardware support - shared configuration
+  services.blueman.enable = lib.mkDefault true;
+  services.printing.enable = lib.mkDefault true;
+  services.printing.drivers = lib.mkDefault (with pkgs; [gutenprint hplip epson-escpr]);
+  services.avahi = {
+    enable = lib.mkDefault true;
+    nssmdns4 = lib.mkDefault true;
+    openFirewall = lib.mkDefault true;
+  };
+
   # Services
   services = {
-    pipewire.enable = true;
+    # Audio system - comprehensive PipeWire setup for GNOME
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      wireplumber.enable = true;
+      jack.enable = true;
+    };
     pulseaudio.enable = false;
 
     syncthing = {
