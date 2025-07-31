@@ -111,7 +111,7 @@ in
           tcpdump # Network packet analyzer
 
           # Audio/Video development tools
-          audacity # Audio editor
+          # audacity # Audio editor - temporarily disabled due to build issues
         ];
         description = "List of development packages to install";
       };

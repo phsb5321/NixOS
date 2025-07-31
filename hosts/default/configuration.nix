@@ -3,8 +3,7 @@
   pkgs,
   hostname,
   ...
-}:
-{
+}: {
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -235,10 +234,10 @@
   ];
 
   # Network ports specific to desktop
-  modules.networking.firewall.openPorts = [ 3000 ]; # Additional to shared SSH
+  modules.networking.firewall.openPorts = [3000]; # Additional to shared SSH
 
   # Desktop-specific user groups
-  users.groups.plugdev = { };
+  users.groups.plugdev = {};
   users.users.notroot.extraGroups = [
     "dialout"
     "libvirtd"
@@ -255,11 +254,11 @@
   # CoreCtrl sudo access
   security.sudo.extraRules = [
     {
-      groups = [ "wheel" ];
+      groups = ["wheel"];
       commands = [
         {
           command = "${pkgs.corectrl}/bin/corectrl";
-          options = [ "NOPASSWD" ];
+          options = ["NOPASSWD"];
         }
       ];
     }
@@ -274,7 +273,7 @@
     enable = true;
     backlogLimit = 8192;
     failureMode = "printk";
-    rules = [ "-a exit,always -F arch=b64 -S execve" ];
+    rules = ["-a exit,always -F arch=b64 -S execve"];
   };
 
   security.apparmor = {
