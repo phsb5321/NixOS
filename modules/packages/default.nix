@@ -7,9 +7,11 @@
   inputs,
   ...
 }:
-with lib; let
+with lib;
+let
   cfg = config.modules.packages;
-in {
+in
+{
   options.modules.packages = {
     enable = mkEnableOption "shared packages module";
 
@@ -36,7 +38,7 @@ in {
         default = with pkgs; [
           # Code editors - use unstable for latest VS Code
           pkgs-unstable.vscode
-          code-cursor  # Temporarily disabled due to download issues
+          code-cursor # Temporarily disabled due to download issues
 
           # API testing and development
           bruno # Open-source API client (Postman alternative)
@@ -107,6 +109,9 @@ in {
           nmap # Network scanner
           wireshark # Network protocol analyzer
           tcpdump # Network packet analyzer
+
+          # Audio/Video development tools
+          audacity # Audio editor
         ];
         description = "List of development packages to install";
       };
@@ -207,16 +212,17 @@ in {
       package = mkOption {
         type = types.package;
         default =
-          if cfg.python.withGTK
-          then
-            pkgs.python3.withPackages (ps:
-              with ps; [
+          if cfg.python.withGTK then
+            pkgs.python3.withPackages (
+              ps: with ps; [
                 pygobject3
                 pycairo
                 dbus-python
                 python-dbusmock
-              ])
-          else pkgs.python3;
+              ]
+            )
+          else
+            pkgs.python3;
         description = "Python package with optional GTK support";
       };
     };
@@ -238,7 +244,6 @@ in {
           oh-my-zsh # ZSH framework
           zsh-powerlevel10k # Powerlevel10k theme
           starship # Cross-shell prompt (alternative)
-          kitty
           grc # Generic colorizer
           eza # Modern ls replacement
           bat # Modern cat replacement
@@ -272,13 +277,14 @@ in {
     # Additional packages that can be enabled per host
     extraPackages = mkOption {
       type = types.listOf types.package;
-      default = [];
+      default = [ ];
       description = "Additional packages specific to this host";
     };
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = with cfg;
+    environment.systemPackages =
+      with cfg;
       (optionals browsers.enable browsers.packages)
       ++ (optionals development.enable development.packages)
       ++ (optionals media.enable media.packages)
@@ -286,7 +292,7 @@ in {
       ++ (optionals gaming.enable gaming.packages)
       ++ (optionals audioVideo.enable audioVideo.packages)
       ++ (optionals terminal.enable terminal.packages)
-      ++ (optionals python.enable [python.package])
+      ++ (optionals python.enable [ python.package ])
       ++ extraPackages;
   };
 }

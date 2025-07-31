@@ -115,12 +115,12 @@ in {
       preferMonitorAudio = false; # Set to true if you want monitors to be the preferred audio output
     };
 
-    # Enable document tools module with LaTeX support
+    # Enable document tools module with LaTeX support (can be overridden by hosts)
     modules.core.documentTools = {
       enable = true;
       latex = {
-        enable = true;
-        minimal = false; # Set to true for minimal installation
+        enable = lib.mkDefault true;
+        minimal = lib.mkDefault false; # Set to true for minimal installation
       };
     };
 
@@ -152,14 +152,20 @@ in {
     nix = {
       settings = {
         auto-optimise-store = true;
-        experimental-features = ["nix-command" "flakes"];
+        experimental-features = [
+          "nix-command"
+          "flakes"
+        ];
         timeout = 14400; # 4 hours
         # Performance optimizations
         cores = 0; # Use all available cores
         max-jobs = "auto"; # Auto-detect optimal parallel jobs
         # Reliability improvements
         require-sigs = true;
-        trusted-users = ["root" "@wheel"];
+        trusted-users = [
+          "root"
+          "@wheel"
+        ];
         # Optimize builds
         builders-use-substitutes = true;
         # Cache configuration
@@ -184,7 +190,8 @@ in {
     # Security configuration
     security = {
       sudo.wheelNeedsPassword = true;
-      auditd.enable = true;
+      # Disable auditd to prevent massive log files (162GB issue)
+      # auditd.enable = true;
       apparmor = {
         enable = true;
         killUnconfinedConfinables = true;
@@ -208,15 +215,15 @@ in {
       tmp.useTmpfs = lib.mkDefault true;
       # Performance kernel parameters
       kernel.sysctl = {
-        # VM optimizations
-        "vm.swappiness" = 10;
+        # VM optimizations (can be overridden by host-specific configs)
+        "vm.swappiness" = lib.mkDefault 10;
         "vm.dirty_ratio" = 15;
         "vm.dirty_background_ratio" = 5;
         "vm.vfs_cache_pressure" = 50;
-        # Network performance
-        "net.core.rmem_max" = 268435456;
-        "net.core.wmem_max" = 268435456;
-        "net.core.netdev_max_backlog" = 5000;
+        # Network performance (can be overridden by networking module)
+        "net.core.rmem_max" = lib.mkDefault 268435456;
+        "net.core.wmem_max" = lib.mkDefault 268435456;
+        "net.core.netdev_max_backlog" = lib.mkDefault 5000;
         # Security hardening
         "kernel.dmesg_restrict" = 1;
         "kernel.kptr_restrict" = 2;
@@ -226,15 +233,8 @@ in {
         "net.ipv4.conf.all.send_redirects" = 0;
         "net.ipv4.conf.default.send_redirects" = 0;
       };
-      # Enable ZRAM for better memory management
-      kernelModules = ["zram"];
-    };
-
-    # ZRAM configuration for improved performance
-    zramSwap = {
-      enable = true;
-      algorithm = "zstd";
-      memoryPercent = 25;
+      # ZRAM removed - causing application compatibility issues
+      # kernelModules = ["zram"];  # Disabled
     };
 
     # Core system services
@@ -244,8 +244,7 @@ in {
       printing.enable = true;
     };
 
-    # 🎯 KEYBOARD LAYOUT: Configure console and X11 keyboard layout (only if enabled)
-    console.keyMap = lib.mkIf cfg.keyboard.enable "br"; # Default to standard Brazilian keymap
+    # 🎯 KEYBOARD LAYOUT: Console keymap will be automatically derived from xserver.xkb configuration
 
     # Configure X11 keyboard layout if X11 is available and keyboard config is enabled
     services.xserver = lib.mkIf (config.services.xserver.enable && cfg.keyboard.enable) {
@@ -259,7 +258,11 @@ in {
     # Basic systemd-resolved configuration (Docker DNS will depend on this)
     services.resolved = {
       enable = true;
-      fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
+      fallbackDns = [
+        "8.8.8.8"
+        "8.8.4.4"
+        "1.1.1.1"
+      ];
     };
 
     # Virtualization configuration
@@ -288,10 +291,6 @@ in {
         zip
         unzip
         tree
-        eza
-        zoxide
-        ripgrep
-        fd
         aria2
         parted
         openssl
@@ -311,6 +310,25 @@ in {
         just
         infisical
 
+        # Rust System Utilities (Modern replacements for Unix tools)
+        eza # Modern replacement for ls
+        zoxide # Smarter cd command
+        ripgrep # Fast grep alternative
+        fd # Simple, fast alternative to find
+        dust # Intuitive du alternative for disk usage
+        dua # Interactive disk usage analyzer
+        bat # Cat clone with syntax highlighting
+        procs # Modern replacement for ps
+        bottom # Cross-platform system monitor (btm command)
+        tokei # Count lines of code
+        hyperfine # Command-line benchmarking tool
+        bandwhich # Terminal bandwidth utilization tool
+        broot # New way to see and navigate directory trees
+        sd # Intuitive find & replace CLI (sed alternative)
+        tealdeer # Fast tldr client (tldr command)
+        choose # Human-friendly cut alternative
+        dog # Command-line DNS lookup tool (dig alternative)
+
         # System Monitoring
         neofetch
         htop
@@ -324,8 +342,10 @@ in {
         xclip
         lazygit
 
+        # Remote Desktop & Network Tools
+        remmina
+
         # Terminals and Shells
-        kitty
         zellij
         sshfs
 
