@@ -118,6 +118,7 @@
 
     # Define all your hosts here
     hosts = {
+      # Primary desktop system (default)
       default = {
         system = "x86_64-linux";
         hostname = "nixos-desktop";
@@ -125,35 +126,13 @@
         # Uses stable nixpkgs by default
       };
 
+      # Laptop system
       laptop = {
         system = "x86_64-linux";
         hostname = "nixos-laptop";
         configPath = "laptop"; # Maps to hosts/laptop/
         # Uses stable nixpkgs by default
       };
-
-      # Unstable variants - for latest packages and features
-      default-unstable = {
-        system = "x86_64-linux";
-        hostname = "nixos-desktop";
-        configPath = "default"; # Maps to hosts/default/
-        nixpkgsInput = nixpkgs-unstable; # Latest packages
-      };
-
-      laptop-unstable = {
-        system = "x86_64-linux";
-        hostname = "nixos-laptop";
-        configPath = "laptop"; # Maps to hosts/laptop/
-        nixpkgsInput = nixpkgs-unstable; # Latest packages
-      };
-
-      # Example: server using stable for reliability
-      # server = {
-      #   system = "x86_64-linux";
-      #   hostname = "nixos-server";
-      #   configPath = "server";
-      #   nixpkgsInput = nixpkgs;  # Explicitly stable
-      # };
     };
   in {
     # NixOS Configurations - Generated from hosts definition
