@@ -43,34 +43,8 @@
     ];
   };
 
-  # Desktop environment configuration
-  modules.desktop = {
-    enable = true;
-    environment = "gnome";
-
-    # Default to Wayland (can be overridden per host)
-    displayManager = {
-      wayland = lib.mkDefault true;
-      autoSuspend = lib.mkDefault true;
-    };
-
-    theming = {
-      preferDark = true;
-      accentColor = "blue";
-    };
-
-    hardware = {
-      enableTouchpad = true;
-      enableBluetooth = true;
-      enablePrinting = true;
-      enableScanning = false;
-    };
-
-    autoLogin = {
-      enable = lib.mkDefault false;
-      user = "notroot";
-    };
-  };
+  # Desktop environment configuration moved to individual hosts
+  # Each host now configures its own desktop environment based on GPU requirements
 
   # Networking configuration
   modules.networking = {
