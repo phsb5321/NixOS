@@ -15,29 +15,20 @@
   networking.hostName = hostname;
   modules.networking.hostName = hostname;
 
-  # Direct GNOME configuration - no desktop module
-  # Force X11 session for AMD GPU compatibility
+  # GNOME configuration for AMD GPU - Force X11 for compatibility
   services.xserver.enable = true;
 
-  # Display manager configuration - Force X11 completely
+  # Display manager configuration - Force X11 only
   services.displayManager.gdm = {
     enable = true;
-    wayland = false; # Force X11 only
+    wayland = false; # Force X11 only for AMD GPU compatibility
     autoSuspend = true;
   };
 
-  # Completely disable Wayland at system level
-  environment.sessionVariables.WLR_NO_HARDWARE_CURSORS = "1";
-
-  # Force applications to use X11
-  environment.etc."environment".text = ''
-    XDG_SESSION_TYPE=x11
-    GDK_BACKEND=x11
-    QT_QPA_PLATFORM=xcb
-    WAYLAND_DISPLAY=
-    MOZ_ENABLE_WAYLAND=0
-    ELECTRON_OZONE_PLATFORM_HINT=x11
-  '';
+  # Disable Wayland compositor packages
+  environment.gnome.excludePackages = with pkgs; [
+    mutter # GNOME's Wayland compositor
+  ];
 
   # Desktop manager configuration
   services.desktopManager.gnome.enable = true;
@@ -45,82 +36,62 @@
   # Ensure only GDM is enabled
   services.displayManager.sddm.enable = false;
 
-  # GNOME services - disable Wayland-specific services
-  services.gnome = {
-    core-shell.enable = true;
-    core-os-services.enable = true;
-    core-apps.enable = true;
-    gnome-keyring.enable = true;
-    gnome-settings-daemon.enable = true;
-    evolution-data-server.enable = true;
-    glib-networking.enable = true;
-    sushi.enable = true;
-    gnome-remote-desktop.enable = false; # Disable Wayland remote desktop
-    gnome-user-share.enable = true;
-    rygel.enable = true;
-  };
-
-  # Explicitly disable GNOME Wayland session
-  services.desktopManager.gnome.sessionPath = [];
-  environment.gnome.excludePackages = with pkgs; [
-    gnome-shell-extensions
-  ];
-
-  # Essential services for GNOME
-  services.geoclue2.enable = true;
-  services.upower.enable = true;
-  services.power-profiles-daemon.enable = true;
+  # Host-specific X11 configuration for AMD GPU compatibility
   services.thermald.enable = true;
 
-  # Audio system
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    wireplumber.enable = true;
-    jack.enable = true;
-  };
-
-  # Hardware support
-  hardware.bluetooth.enable = true;
-  services.blueman.enable = true;
-  services.printing.enable = true;
-  services.printing.drivers = with pkgs; [gutenprint hplip epson-escpr];
-  services.avahi = {
-    enable = true;
-    nssmdns4 = true;
-    openFirewall = true;
-  };
-
-  # Combined environment variables - Force X11, disable Wayland completely
+  # Force X11 environment variables for AMD GPU
   environment.sessionVariables = {
-    # Force X11 session - NO WAYLAND
+    # Force X11 session - no Wayland for better compatibility
     XDG_SESSION_TYPE = "x11";
     GDK_BACKEND = "x11";
     QT_QPA_PLATFORM = "xcb";
 
-    # Completely disable Wayland to prevent connection attempts
-    WAYLAND_DISPLAY = "";
+    # Completely disable Wayland - use /dev/null to prevent connection attempts
+    WAYLAND_DISPLAY = "/dev/null";
     MOZ_ENABLE_WAYLAND = "0";
     NIXOS_OZONE_WL = "0";
     ELECTRON_OZONE_PLATFORM_HINT = "x11";
 
-    # AMD GPU configuration
+    # Additional Wayland disabling
+    SDL_VIDEODRIVER = "x11";
+    CLUTTER_BACKEND = "x11";
+
+    # AMD GPU configuration - Fixed deprecated MESA variables
     AMD_VULKAN_ICD = "RADV";
     VDPAU_DRIVER = "radeonsi";
     GALLIUM_DRIVER = "radeonsi";
     MESA_SHADER_CACHE_MAX_SIZE = "2G";
     MESA_DISK_CACHE_MAX_SIZE = "4G";
 
-    # UI and theming
-    XCURSOR_THEME = "Adwaita";
-    XCURSOR_SIZE = "24";
-    GSK_RENDERER = "gl";
-    GNOME_SHELL_SLOWDOWN_FACTOR = "1";
-    GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = "0";
+    # Force GLFW to use X11 backend - prevents Wayland connection attempts
+    GLFW_BACKEND = "x11";
   };
+
+  # Force applications to use X11 - system-wide
+  environment.etc."environment".text = ''
+    XDG_SESSION_TYPE=x11
+    GDK_BACKEND=x11
+    QT_QPA_PLATFORM=xcb
+    WAYLAND_DISPLAY=/dev/null
+    MOZ_ENABLE_WAYLAND=0
+    ELECTRON_OZONE_PLATFORM_HINT=x11
+    SDL_VIDEODRIVER=x11
+    CLUTTER_BACKEND=x11
+    GLFW_BACKEND=x11
+  '';
+
+  # Additional Wayland disabling in systemd environment
+  systemd.user.extraConfig = ''
+    DefaultEnvironment="WAYLAND_DISPLAY="
+    DefaultEnvironment="XDG_SESSION_TYPE=x11"
+    DefaultEnvironment="GDK_BACKEND=x11"
+    DefaultEnvironment="GLFW_BACKEND=x11"
+  '';
+
+  # Ensure GLFW uses X11 backend - create profile script
+  environment.etc."profile.d/glfw-x11.sh".text = ''
+    export GLFW_BACKEND=x11
+  '';
 
   # Host-specific features
   modules.packages.gaming.enable = true;
@@ -143,36 +114,34 @@
     };
   };
 
-  # Direct AMD GPU configuration without module
-  hardware.graphics = {
+  # AMD GPU configuration using hardware module
+  modules.hardware.amd = {
     enable = true;
-    enable32Bit = true;
-    extraPackages = with pkgs; [
-      mesa
-      amdvlk
-      vulkan-tools
-      vulkan-loader
-      vulkan-validation-layers
-      libva-vdpau-driver
-      libvdpau-va-gl
-    ];
-    extraPackages32 = with pkgs.driversi686Linux; [
-      mesa
-      amdvlk
-    ];
+    gpu = {
+      driver = "amdgpu";
+      enableOpenCL = true;
+      enableROCm = true;
+      enableVulkan = true;
+    };
+    vram = {
+      profile = "performance";
+      enableLargePages = true;
+      gttSize = 16384;
+    };
+    performance = {
+      powerProfile = "high";
+      enableMemoryBandwidthOptimization = true;
+      pcie = {
+        disableASPM = true;
+      };
+      thermal = {
+        enableThrottling = true;
+        enableFanControl = true;
+      };
+    };
   };
 
-  # AMD GPU driver
-  services.xserver.videoDrivers = ["amdgpu"];
-
-  # AMD GPU kernel modules
-  boot.initrd.kernelModules = ["amdgpu"];
-
-  # AMD GPU kernel parameters (will be merged with boot config below)
-
-  # Environment variables will be merged below
-
-  # Desktop-specific packages
+  # Additional AMD GPU packages
   modules.packages.extraPackages = with pkgs; [
     # GPU tools
     vulkan-tools
@@ -313,30 +282,15 @@
     killUnconfinedConfinables = true;
   };
 
-  # Boot configuration with AMD GPU parameters
+  # Boot configuration
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
     tmp.useTmpfs = true;
-    kernelParams = [
-      "mitigations=off"
-      # AMD GPU parameters
-      "amdgpu.ppfeaturemask=0xffffffff"
-      "amdgpu.si_support=1"
-      "amdgpu.cik_support=1"
-      "amdgpu.audio=1"
-      "amdgpu.dc=1"
-      "amdgpu.dpm=1"
-    ];
+    # AMD GPU kernel parameters are now handled by the hardware module
   };
 
-  # Memory optimization - ZRAM completely removed due to application issues
-  # zramSwap disabled - was causing application crashes and OOM issues
-
-  # Reduced swappiness without ZRAM
+  # Memory optimization - reduced swappiness for better performance
   boot.kernel.sysctl."vm.swappiness" = 10;
-
-  # Early OOM killer for memory pressure (disabled due to startup issues)
-  # services.earlyoom.enable = false;
 
   # Disable unnecessary services for this host
   services.ollama.enable = false;
