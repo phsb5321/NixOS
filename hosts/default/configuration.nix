@@ -14,83 +14,89 @@
   networking.hostName = hostname;
   modules.networking.hostName = hostname;
 
-  # GNOME configuration for AMD GPU - Force X11 for compatibility
-  services.xserver.enable = true;
-
-  # Display manager configuration - Force X11 only
-  services.displayManager.gdm = {
-    enable = true;
-    wayland = false; # Force X11 only for AMD GPU compatibility
-    autoSuspend = true;
-  };
-
-  # Disable Wayland compositor packages
-  environment.gnome.excludePackages = with pkgs; [
-    mutter # GNOME's Wayland compositor
-  ];
-
-  # Desktop manager configuration
+  # Minimal GNOME setup following NixOS wiki recommendations
+  services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
 
-  # Ensure only GDM is enabled
-  services.displayManager.sddm.enable = false;
+  # Simple AMD GPU support
+  boot.initrd.kernelModules = ["amdgpu"];
+  services.xserver.videoDrivers = ["amdgpu"];
 
-  # Host-specific X11 configuration for AMD GPU compatibility
-  services.thermald.enable = true;
+  # Comprehensive GNOME extensions and applications
+  environment.systemPackages = with pkgs; [
+    # Core GNOME applications
+    gnome-text-editor
+    gnome-calculator
+    gnome-calendar
+    gnome-contacts
+    gnome-maps
+    gnome-weather
+    gnome-music
+    gnome-photos
+    simple-scan
+    seahorse # Keyring management
 
-  # Force X11 environment variables for AMD GPU
-  environment.sessionVariables = {
-    # Force X11 session - no Wayland for better compatibility
-    XDG_SESSION_TYPE = "x11";
-    GDK_BACKEND = "x11";
-    QT_QPA_PLATFORM = "xcb";
+    # GNOME utilities
+    gnome-tweaks
+    gnome-extension-manager
+    dconf-editor
 
-    # Completely disable Wayland - use /dev/null to prevent connection attempts
-    WAYLAND_DISPLAY = "/dev/null";
-    MOZ_ENABLE_WAYLAND = "0";
-    NIXOS_OZONE_WL = "0";
-    ELECTRON_OZONE_PLATFORM_HINT = "x11";
+    # File management
+    file-roller # Archive manager
 
-    # Additional Wayland disabling
-    SDL_VIDEODRIVER = "x11";
-    CLUTTER_BACKEND = "x11";
+    # Multimedia
+    celluloid # Modern video player
 
-    # AMD GPU configuration - Fixed deprecated MESA variables
-    AMD_VULKAN_ICD = "RADV";
-    VDPAU_DRIVER = "radeonsi";
-    GALLIUM_DRIVER = "radeonsi";
-    MESA_SHADER_CACHE_MAX_SIZE = "2G";
-    MESA_DISK_CACHE_MAX_SIZE = "4G";
+    # Essential GNOME extensions - Core functionality
+    gnomeExtensions.dash-to-dock
+    gnomeExtensions.user-themes
+    gnomeExtensions.just-perfection
 
-    # Force GLFW to use X11 backend - prevents Wayland connection attempts
-    GLFW_BACKEND = "x11";
-  };
+    # System monitoring extensions - Multiple options for comprehensive monitoring
+    gnomeExtensions.vitals # Temperature, voltage, fan speed, memory, CPU, network, storage
+    gnomeExtensions.system-monitor-next # Classic system monitor with graphs
+    gnomeExtensions.tophat # Elegant system resource monitor
+    gnomeExtensions.resource-monitor # Real-time monitoring in top bar
 
-  # Force applications to use X11 - system-wide
-  environment.etc."environment".text = ''
-    XDG_SESSION_TYPE=x11
-    GDK_BACKEND=x11
-    QT_QPA_PLATFORM=xcb
-    WAYLAND_DISPLAY=/dev/null
-    MOZ_ENABLE_WAYLAND=0
-    ELECTRON_OZONE_PLATFORM_HINT=x11
-    SDL_VIDEODRIVER=x11
-    CLUTTER_BACKEND=x11
-    GLFW_BACKEND=x11
-  '';
+    # Productivity and customization extensions
+    gnomeExtensions.caffeine # Prevent screen lock
+    gnomeExtensions.appindicator # System tray support
+    gnomeExtensions.blur-my-shell # Blur effects for shell elements
+    gnomeExtensions.clipboard-indicator # Clipboard manager
+    gnomeExtensions.night-theme-switcher # Automatic dark/light theme switching
+    gnomeExtensions.gsconnect # Phone integration (KDE Connect)
+    
+    # Workspace and window management
+    gnomeExtensions.workspace-indicator # Better workspace indicator
+    gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
+    
+    # Quick access and navigation
+    gnomeExtensions.places-status-indicator # Quick access to bookmarks
+    gnomeExtensions.removable-drive-menu # USB drive management
+    gnomeExtensions.sound-output-device-chooser # Audio device switching
+    
+    # Visual enhancements
+    gnomeExtensions.weather-or-not # Weather in top panel
+    
+    # Additional useful extensions
+    gnomeExtensions.clipboard-history # Enhanced clipboard manager
+    gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
 
-  # Additional Wayland disabling in systemd environment
-  systemd.user.extraConfig = ''
-    DefaultEnvironment="WAYLAND_DISPLAY="
-    DefaultEnvironment="XDG_SESSION_TYPE=x11"
-    DefaultEnvironment="GDK_BACKEND=x11"
-    DefaultEnvironment="GLFW_BACKEND=x11"
-  '';
+    # Essential system packages for desktop functionality
+    xdg-utils
+    glib
+    gsettings-desktop-schemas
 
-  # Ensure GLFW uses X11 backend - create profile script
-  environment.etc."profile.d/glfw-x11.sh".text = ''
-    export GLFW_BACKEND=x11
-  '';
+    # AMD GPU tools
+    vulkan-tools
+    vulkan-loader
+    vulkan-validation-layers
+    libva-utils
+    vdpauinfo
+    glxinfo
+    mesa-demos
+    clinfo
+  ];
 
   # Host-specific features
   modules.packages.gaming.enable = true;
@@ -113,24 +119,8 @@
     };
   };
 
-  # Simple AMD GPU support
-  boot.initrd.kernelModules = ["amdgpu"];
-  services.xserver.videoDrivers = ["amdgpu"];
-
-  # Additional AMD GPU packages
+  # Additional development and media packages
   modules.packages.extraPackages = with pkgs; [
-    # GPU tools
-    vulkan-tools
-    vulkan-loader
-    vulkan-validation-layers
-    libva-utils
-    vdpauinfo
-    glxinfo
-    mesa-demos
-    vulkan-caps-viewer
-    clinfo
-    renderdoc
-
     # Development tools
     calibre
     anydesk
