@@ -49,35 +49,16 @@
       acpi
       brightnessctl
 
-      # GNOME utilities for extensions
-      gnome-tweaks
-      gnome-extension-manager
-      dconf-editor
-
-      # Essential GNOME extensions - Core requested ones
-      gnomeExtensions.caffeine # Prevent sleep/screen lock
-      gnomeExtensions.vitals # System monitoring (CPU, temp, memory, etc.)
+      # Laptop-specific GNOME extensions (not in shared config)
       gnomeExtensions.forge # Tiling window manager
       gnomeExtensions.arc-menu # Application menu replacement
       gnomeExtensions.fuzzy-app-search # Better app search
       gnomeExtensions.launch-new-instance # Always launch new app instances
       gnomeExtensions.auto-move-windows # Remember window positions per workspace
-      gnomeExtensions.clipboard-indicator # Clipboard history manager
-
-      # Additional useful extensions for laptop
-      gnomeExtensions.tophat # Elegant system resource monitor in top bar
-      gnomeExtensions.appindicator # System tray support
-      gnomeExtensions.dash-to-dock # Enhanced dock
-      gnomeExtensions.blur-my-shell # Blur effects
-      gnomeExtensions.gsconnect # Phone integration
-      gnomeExtensions.workspace-indicator # Better workspace management
-      gnomeExtensions.sound-output-device-chooser # Audio device switching
-      gnomeExtensions.removable-drive-menu # USB drive management
-      gnomeExtensions.battery-health-charging # Battery charge limiting
+      gnomeExtensions.battery-health-charging # Battery charge limiting for laptops
       gnomeExtensions.quick-settings-audio-panel # Audio quick settings
       gnomeExtensions.paperwm # Advanced tiling (alternative to forge)
       gnomeExtensions.pop-shell # Pop!_OS tiling features
-      gnomeExtensions.places-status-indicator # Quick access to bookmarks
       gnomeExtensions.night-theme-switcher # Auto dark/light theme switching
       gnomeExtensions.battery-time # Show battery time remaining
       gnomeExtensions.user-themes # Theme support
