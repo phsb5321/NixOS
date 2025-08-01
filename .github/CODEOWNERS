@@ -1,0 +1,22 @@
+# Global owners for all files
+* @phsb5321
+
+# Core modules require careful review
+/modules/ @phsb5321
+/hosts/shared/ @phsb5321
+
+# Host-specific configurations
+/hosts/default/ @phsb5321
+/hosts/laptop/ @phsb5321
+
+# Critical system files
+/flake.nix @phsb5321
+/flake.lock @phsb5321
+
+# Branch strategy documentation
+/BRANCH_STRATEGY.md @phsb5321
+
+# Documentation and scripts
+/*.md @phsb5321
+/scripts/ @phsb5321
+/user-scripts/ @phsb5321
