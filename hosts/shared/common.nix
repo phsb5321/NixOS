@@ -82,22 +82,28 @@
       gnomeExtensions.clipboard-indicator # Clipboard manager
       gnomeExtensions.night-theme-switcher # Automatic dark/light theme switching
       gnomeExtensions.gsconnect # Phone integration (KDE Connect)
-      
+
       # Workspace and window management
       gnomeExtensions.workspace-indicator # Better workspace indicator
       gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
-      
+
       # Quick access and navigation
       gnomeExtensions.places-status-indicator # Quick access to bookmarks
       gnomeExtensions.removable-drive-menu # USB drive management
       gnomeExtensions.sound-output-device-chooser # Audio device switching
-      
+
       # Visual enhancements
       gnomeExtensions.weather-or-not # Weather in top panel
-      
+
       # Additional useful extensions
       gnomeExtensions.clipboard-history # Enhanced clipboard manager
       gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
+
+      # Recently requested extensions
+      gnomeExtensions.runcat # Cat animation showing CPU usage
+      gnomeExtensions.launch-new-instance # Always launch new app instances
+      gnomeExtensions.auto-move-windows # Remember window positions per workspace
+      gnomeExtensions.lock-keys # Show Caps Lock and Num Lock status
 
       # Essential system packages for desktop functionality
       xdg-utils
@@ -325,6 +331,58 @@
     dconf.enable = true;
     thunderbird.enable = true;
   };
+
+  # Enable and configure GNOME extensions via dconf
+  programs.dconf.profiles.user.databases = [
+    {
+      settings = {
+        "org/gnome/shell" = {
+          enabled-extensions = [
+            # Core functionality extensions
+            "dash-to-dock@micxgx.gmail.com"
+            "user-theme@gnome-shell-extensions.gcampax.github.com"
+            "just-perfection-desktop@just-perfection"
+
+            # System monitoring extensions
+            "Vitals@CoreCoding.com"
+            "system-monitor-next@paradoxxx.zero.gmail.com"
+            "tophat@fflewddur.github.io"
+            "Resource_Monitor@Ory0n"
+
+            # Productivity and customization extensions
+            "caffeine@patapon.info"
+            "appindicatorsupport@rgcjonas.gmail.com"
+            "blur-my-shell@aunetx"
+            "clipboard-indicator@tudmotu.com"
+            "nightthemeswitcher@romainvigier.fr"
+            "gsconnect@andyholmes.github.io"
+
+            # Workspace and window management
+            "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
+            "advanced-alt-tab@G-dH.github.com"
+
+            # Quick access and navigation
+            "places-menu@gnome-shell-extensions.gcampax.github.com"
+            "drive-menu@gnome-shell-extensions.gcampax.github.com"
+            "sound-output-device-chooser@kgshank.net"
+
+            # Visual enhancements
+            "weatherornot@somepaulo.github.io"
+
+            # Additional useful extensions
+            "clipboard-history@alexsaveau.dev"
+            "panel-workspace-scroll@polymeilex.github.io"
+            
+            # Recently requested extensions
+            "runcat@kolesnikov.se"
+            "launch-new-instance@gnome-shell-extensions.gcampax.github.com"
+            "auto-move-windows@gnome-shell-extensions.gcampax.github.com"
+            "lockkeys@vaina.lt"
+          ];
+        };
+      };
+    }
+  ];
 
   # Security
   security = {
