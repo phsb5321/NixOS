@@ -22,71 +22,8 @@
   boot.initrd.kernelModules = ["amdgpu"];
   services.xserver.videoDrivers = ["amdgpu"];
 
-  # Comprehensive GNOME extensions and applications
+  # Desktop-specific packages (AMD GPU system)
   environment.systemPackages = with pkgs; [
-    # Core GNOME applications
-    gnome-text-editor
-    gnome-calculator
-    gnome-calendar
-    gnome-contacts
-    gnome-maps
-    gnome-weather
-    gnome-music
-    gnome-photos
-    simple-scan
-    seahorse # Keyring management
-
-    # GNOME utilities
-    gnome-tweaks
-    gnome-extension-manager
-    dconf-editor
-
-    # File management
-    file-roller # Archive manager
-
-    # Multimedia
-    celluloid # Modern video player
-
-    # Essential GNOME extensions - Core functionality
-    gnomeExtensions.dash-to-dock
-    gnomeExtensions.user-themes
-    gnomeExtensions.just-perfection
-
-    # System monitoring extensions - Multiple options for comprehensive monitoring
-    gnomeExtensions.vitals # Temperature, voltage, fan speed, memory, CPU, network, storage
-    gnomeExtensions.system-monitor-next # Classic system monitor with graphs
-    gnomeExtensions.tophat # Elegant system resource monitor
-    gnomeExtensions.resource-monitor # Real-time monitoring in top bar
-
-    # Productivity and customization extensions
-    gnomeExtensions.caffeine # Prevent screen lock
-    gnomeExtensions.appindicator # System tray support
-    gnomeExtensions.blur-my-shell # Blur effects for shell elements
-    gnomeExtensions.clipboard-indicator # Clipboard manager
-    gnomeExtensions.night-theme-switcher # Automatic dark/light theme switching
-    gnomeExtensions.gsconnect # Phone integration (KDE Connect)
-    
-    # Workspace and window management
-    gnomeExtensions.workspace-indicator # Better workspace indicator
-    gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
-    
-    # Quick access and navigation
-    gnomeExtensions.places-status-indicator # Quick access to bookmarks
-    gnomeExtensions.removable-drive-menu # USB drive management
-    gnomeExtensions.sound-output-device-chooser # Audio device switching
-    
-    # Visual enhancements
-    gnomeExtensions.weather-or-not # Weather in top panel
-    
-    # Additional useful extensions
-    gnomeExtensions.clipboard-history # Enhanced clipboard manager
-    gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
-
-    # Essential system packages for desktop functionality
-    xdg-utils
-    glib
-    gsettings-desktop-schemas
-
     # AMD GPU tools
     vulkan-tools
     vulkan-loader
