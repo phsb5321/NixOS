@@ -6,12 +6,26 @@
 
 #### `main` 🔒
 - **Purpose**: Production-ready, stable configuration
-- **Protection**: ✅ Requires PR approval before merge
-- **Access**: No direct pushes allowed
+- **Protection**: 🛡️ **MAXIMUM SECURITY**
+  - ✅ Requires PR approval before merge (1 reviewer minimum)
+  - ✅ Requires code owner review (@phsb5321)
+  - ✅ Requires approval of most recent push
+  - ✅ Linear history enforced (no merge commits)
+  - ✅ Conversation resolution required
+  - ✅ Admin enforcement enabled
+  - ❌ No force pushes allowed
+  - ❌ No deletions allowed
+- **Access**: No direct pushes allowed - **ZERO EXCEPTIONS**
 - **Merges from**: `develop` via Pull Request only
 
 #### `develop` 🔧  
 - **Purpose**: Integration branch for new features and shared changes
+- **Protection**: 🛡️ **HIGH SECURITY**
+  - ✅ Requires PR approval before merge (1 reviewer minimum)
+  - ✅ Conversation resolution required
+  - ✅ Admin enforcement enabled
+  - ❌ No force pushes allowed
+  - ❌ No deletions allowed
 - **Use case**: Changes that affect multiple hosts or shared modules
 - **Merges to**: `main` via Pull Request
 
@@ -88,7 +102,21 @@ git push origin develop
 
 ## 🔧 Current Status
 
-- ✅ Main branch protection enabled (requires PR approval)
+- ✅ **Main branch protection enabled**: Maximum security with code owner review
+- ✅ **Develop branch protection enabled**: High security with PR approval
+- ✅ **CODEOWNERS file created**: Ensures @phsb5321 reviews all changes
 - ✅ Host-specific branches created and pushed
 - ✅ Clean module structure (removed hardware abstraction, flatpak, etc.)
 - ✅ Simplified GPU configurations per host
+- ✅ **GNOME extensions shared between hosts**: 21 comprehensive extensions in shared config
+
+## ⚠️ **IMPORTANT: Workflow Compliance Required**
+
+**The repository now enforces strict branch protection. You MUST:**
+
+1. **Never push directly** to `main` or `develop` branches
+2. **Always create feature branches** for any changes
+3. **Use Pull Requests** for all merges to protected branches
+4. **Get approval** from code owner (@phsb5321) for main branch changes
+5. **Resolve all conversations** before merging
+6. **Follow linear history** on main branch (no merge commits)
