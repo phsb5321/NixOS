@@ -7,9 +7,11 @@
   inputs,
   ...
 }:
-with lib; let
+with lib;
+let
   cfg = config.modules.packages;
-in {
+in
+{
   options.modules.packages = {
     enable = mkEnableOption "shared packages module";
 
@@ -59,6 +61,24 @@ in {
           cmake # Cross-platform build system
           ninja # Small build system with focus on speed
           pkg-config # Package configuration tool
+
+          # Language servers for Zed Editor
+          nixd # Nix language server
+          nil # Alternative Nix language server
+          nodePackages.typescript-language-server # TypeScript/JavaScript LSP
+          nodePackages.eslint # JavaScript/TypeScript linter
+          nodePackages.prettier # Code formatter
+          marksman # Markdown language server
+          taplo # TOML language server
+          yaml-language-server # YAML language server
+          vscode-langservers-extracted # HTML, CSS, JSON language servers
+          bash-language-server # Bash language server
+          shfmt # Shell script formatter
+          rust-analyzer # Rust language server
+          gopls # Go language server
+          pyright # Python language server
+          ruff # Python linter and formatter
+          black # Python code formatter
 
           # Dotfiles management
           chezmoi # Manage your dotfiles across multiple machines
@@ -181,6 +201,7 @@ in {
           steam-run # Run non-Steam games with Steam runtime
           wine-staging # Latest Wine with staging patches
           dxvk # DirectX to Vulkan
+          prismlauncher # Prism Launcher for Minecraft
         ];
         description = "List of gaming packages to install";
       };
@@ -210,18 +231,17 @@ in {
       package = mkOption {
         type = types.package;
         default =
-          if cfg.python.withGTK
-          then
+          if cfg.python.withGTK then
             pkgs.python3.withPackages (
-              ps:
-                with ps; [
-                  pygobject3
-                  pycairo
-                  dbus-python
-                  python-dbusmock
-                ]
+              ps: with ps; [
+                pygobject3
+                pycairo
+                dbus-python
+                python-dbusmock
+              ]
             )
-          else pkgs.python3;
+          else
+            pkgs.python3;
         description = "Python package with optional GTK support";
       };
     };
@@ -276,13 +296,14 @@ in {
     # Additional packages that can be enabled per host
     extraPackages = mkOption {
       type = types.listOf types.package;
-      default = [];
+      default = [ ];
       description = "Additional packages specific to this host";
     };
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = with cfg;
+    environment.systemPackages =
+      with cfg;
       (optionals browsers.enable browsers.packages)
       ++ (optionals development.enable development.packages)
       ++ (optionals media.enable media.packages)
@@ -290,7 +311,7 @@ in {
       ++ (optionals gaming.enable gaming.packages)
       ++ (optionals audioVideo.enable audioVideo.packages)
       ++ (optionals terminal.enable terminal.packages)
-      ++ (optionals python.enable [python.package])
+      ++ (optionals python.enable [ python.package ])
       ++ extraPackages;
   };
 }
