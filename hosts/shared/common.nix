@@ -82,6 +82,9 @@
       gnomeExtensions.clipboard-indicator # Clipboard manager
       gnomeExtensions.night-theme-switcher # Automatic dark/light theme switching
       gnomeExtensions.gsconnect # Phone integration (KDE Connect)
+      gnomeExtensions.launch-new-instance
+      gnomeExtensions.runcat
+      gnomeExtensions.smart-auto-move-ng
 
       # Workspace and window management
       gnomeExtensions.workspace-indicator # Better workspace indicator
@@ -372,7 +375,7 @@
             # Additional useful extensions
             "clipboard-history@alexsaveau.dev"
             "panel-workspace-scroll@polymeilex.github.io"
-            
+
             # Recently requested extensions
             "runcat@kolesnikov.se"
             "launch-new-instance@gnome-shell-extensions.gcampax.github.com"

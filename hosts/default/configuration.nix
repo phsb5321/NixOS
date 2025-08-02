@@ -7,29 +7,28 @@
   hostname,
   ...
 }:
-
 let
   # Configuration variants for different scenarios
   variants = {
     # Normal operation with hardware acceleration
     hardware = {
       kernelParams = [
-        "amdgpu.runpm=0"           # Disable runtime power management (prevents flickering)
-        "amdgpu.dpm=1"             # Enable dynamic power management
-        "amdgpu.dc=1"              # Enable display core
-        "consoleblank=0"           # Disable console blanking
+        "amdgpu.runpm=0" # Disable runtime power management (prevents flickering)
+        "amdgpu.dpm=1" # Enable dynamic power management
+        "amdgpu.dc=1" # Enable display core
+        "consoleblank=0" # Disable console blanking
         "rd.systemd.show_status=true"
         "quiet"
       ];
       videoDrivers = [ "amdgpu" ];
       enableHardwareAccel = true;
     };
-    
+
     # Conservative fallback for GPU issues
     conservative = {
       kernelParams = [
         "amdgpu.runpm=0"
-        "amdgpu.dpm=1" 
+        "amdgpu.dpm=1"
         "amdgpu.dc=1"
         "consoleblank=0"
         "rd.systemd.show_status=true"
@@ -38,7 +37,7 @@ let
       enableHardwareAccel = true;
       forceTearFree = true;
     };
-    
+
     # Emergency software rendering fallback
     software = {
       kernelParams = [
@@ -49,16 +48,23 @@ let
         "consoleblank=0"
         "iommu=soft"
       ];
-      videoDrivers = [ "vesa" "fbdev" ];
+      videoDrivers = [
+        "vesa"
+        "fbdev"
+      ];
       enableHardwareAccel = false;
-      blacklistModules = [ "amdgpu" "radeon" "nouveau" ];
+      blacklistModules = [
+        "amdgpu"
+        "radeon"
+        "nouveau"
+      ];
     };
   };
-  
+
   # Select active variant (change this to switch modes)
   activeVariant = variants.hardware; # Change to: conservative, software
-  
-in {
+in
+{
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -72,15 +78,22 @@ in {
   boot = {
     # Use LTS kernel for maximum stability
     kernelPackages = pkgs.linuxPackages_6_6;
-    
+
     # Dynamic kernel parameters based on variant
     kernelParams = activeVariant.kernelParams;
-    
+
     # Conditional kernel module handling
-    initrd.kernelModules = if activeVariant.enableHardwareAccel then [ "amdgpu" ] else [];
-    kernelModules = if activeVariant.enableHardwareAccel then [ "kvm-intel" "amdgpu" ] else [];
-    blacklistedKernelModules = activeVariant.blacklistModules or [];
-    
+    initrd.kernelModules = if activeVariant.enableHardwareAccel then [ "amdgpu" ] else [ ];
+    kernelModules =
+      if activeVariant.enableHardwareAccel then
+        [
+          "kvm-intel"
+          "amdgpu"
+        ]
+      else
+        [ ];
+    blacklistedKernelModules = activeVariant.blacklistModules or [ ];
+
     # Temporary filesystem in RAM for better performance
     tmp.useTmpfs = true;
   };
@@ -99,44 +112,48 @@ in {
   services.xserver = {
     enable = true;
     videoDrivers = lib.mkForce activeVariant.videoDrivers;
-    
+
     # Conditional X11 configuration
-    config = if activeVariant.enableHardwareAccel then ''
-      Section "Device"
-        Identifier "AMD Graphics"
-        Driver "amdgpu"
-        Option "DRI" "3"
-        Option "TearFree" "${if activeVariant.forceTearFree or false then "true" else "true"}"
-        Option "AccelMethod" "glamor"
-        ${lib.optionalString (activeVariant ? forceTearFree && activeVariant.forceTearFree) ''
-        Option "VariableRefresh" "true"
-        ''}
-      EndSection
-    '' else ''
-      Section "Device"
-        Identifier "Software Graphics"
-        Driver "vesa"
-        Option "AccelMethod" "none"
-        Option "ShadowFB" "true"
-      EndSection
-      
-      Section "Screen"
-        Identifier "Software Screen"
-        DefaultDepth 24
-        SubSection "Display"
-          Depth 24
-          Modes "1024x768" "800x600"
-        EndSubSection
-      EndSection
-    '';
+    config =
+      if activeVariant.enableHardwareAccel then
+        ''
+          Section "Device"
+            Identifier "AMD Graphics"
+            Driver "amdgpu"
+            Option "DRI" "3"
+            Option "TearFree" "${if activeVariant.forceTearFree or false then "true" else "true"}"
+            Option "AccelMethod" "glamor"
+            ${lib.optionalString (activeVariant ? forceTearFree && activeVariant.forceTearFree) ''
+              Option "VariableRefresh" "true"
+            ''}
+          EndSection
+        ''
+      else
+        ''
+          Section "Device"
+            Identifier "Software Graphics"
+            Driver "vesa"
+            Option "AccelMethod" "none"
+            Option "ShadowFB" "true"
+          EndSection
+
+          Section "Screen"
+            Identifier "Software Screen"
+            DefaultDepth 24
+            SubSection "Display"
+              Depth 24
+              Modes "1024x768" "800x600"
+            EndSubSection
+          EndSection
+        '';
   };
 
   # Display manager and desktop environment
   services.displayManager.gdm = {
     enable = true;
-    wayland = lib.mkForce false;  # Force X11 for AMD GPU stability
+    wayland = lib.mkForce false; # Force X11 for AMD GPU stability
   };
-  
+
   services.desktopManager.gnome.enable = lib.mkForce true;
 
   # GNOME configuration optimized for AMD GPU
@@ -178,13 +195,18 @@ in {
       RemainAfterExit = true;
       ExecStart = pkgs.writeShellScript "amd-gpu-optimization" ''
         # Set performance level based on variant
-        ${if activeVariant == variants.conservative then ''
-        echo "high" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
-        echo "1" > /sys/class/drm/card0/device/pp_power_profile_mode 2>/dev/null || true
-        '' else ''
-        echo "auto" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
-        echo "1" > /sys/class/drm/card0/device/power_dpm_state 2>/dev/null || true
-        ''}
+        ${
+          if activeVariant == variants.conservative then
+            ''
+              echo "high" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
+              echo "1" > /sys/class/drm/card0/device/pp_power_profile_mode 2>/dev/null || true
+            ''
+          else
+            ''
+              echo "auto" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
+              echo "1" > /sys/class/drm/card0/device/power_dpm_state 2>/dev/null || true
+            ''
+        }
       '';
     };
   };
@@ -204,53 +226,56 @@ in {
     };
   };
 
-  # Additional user groups for desktop functionality
+  # Host-specific user groups (additional to shared config)
   users.groups.plugdev = { };
   users.users.notroot.extraGroups = [
-    "dialout"
-    "libvirtd"
-    "plugdev"
-    "input"
+    "dialout" # Serial device access for development
+    "libvirtd" # Virtualization access
+    "plugdev" # USB device access
+    "input" # Input device access
   ];
 
-  # Desktop-specific system packages
-  environment.systemPackages = with pkgs; [
-    # GPU tools and monitoring (conditional)
-    vulkan-tools
-    vulkan-loader
-    vulkan-validation-layers
-    libva-utils
-    vdpauinfo
-    glxinfo
-    mesa-demos
-    clinfo
-    radeontop
+  # Host-specific desktop packages (essential for GNOME desktop functionality)
+  environment.systemPackages =
+    with pkgs;
+    [
+      # GPU-specific tools for AMD hardware debugging
+      vulkan-tools
+      vulkan-loader
+      vulkan-validation-layers
+      libva-utils
+      vdpauinfo
+      glxinfo
+      mesa-demos
+      clinfo
+      radeontop
 
-    # Development tools
-    gcc
-    gnumake
-    python3
-    nodejs
+      # Essential development tools for desktop host
+      gcc
+      gnumake
+      python3
+      nodejs
 
-    # System monitoring
-    neofetch
-    lm_sensors
-    
-    # Session management
-    gnome-session
-    xorg.xf86inputlibinput
-    libinput
-    evtest
-  ] ++ lib.optionals (!activeVariant.enableHardwareAccel) [
-    # Minimal packages for software rendering mode
-    firefox
-    gnome-text-editor
-    gnome-terminal
-    nano
-    htop
-  ];
+      # System monitoring
+      neofetch
+      lm_sensors
 
-  # Enable additional modules
+      # Critical session management and input handling
+      gnome-session
+      xorg.xf86inputlibinput
+      libinput
+      evtest
+    ]
+    ++ lib.optionals (!activeVariant.enableHardwareAccel) [
+      # Essential packages for software rendering mode
+      firefox
+      gnome-text-editor
+      gnome-terminal
+      nano
+      htop
+    ];
+
+  # Enable modules based on hardware capabilities
   modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
   modules.core.java = {
     enable = true;
@@ -263,96 +288,101 @@ in {
     latex = {
       enable = activeVariant.enableHardwareAccel;
       minimal = false;
-      extraPackages = lib.optionals activeVariant.enableHardwareAccel (with pkgs; [
-        biber
-        texlive.combined.scheme-context
-      ]);
+      extraPackages = lib.optionals activeVariant.enableHardwareAccel (
+        with pkgs;
+        [
+          biber
+          texlive.combined.scheme-context
+        ]
+      );
     };
   };
 
-  # Comprehensive package collection (conditional based on hardware capabilities)
-  modules.packages.extraPackages = with pkgs; lib.optionals activeVariant.enableHardwareAccel [
-    # Development tools
-    calibre
-    anydesk
-    postman
-    dbeaver-bin
-    android-studio
-    android-tools
+  # Host-specific extra packages (desktop-specific applications)
+  modules.packages.extraPackages =
+    with pkgs;
+    lib.optionals activeVariant.enableHardwareAccel [
+      # Development tools
+      calibre
+      anydesk
+      postman
+      dbeaver-bin
+      android-studio
+      android-tools
 
-    # Media and Graphics
-    gimp
-    inkscape
-    blender
-    krita
-    kdePackages.kdenlive
-    obs-studio
+      # Media and Graphics (GPU-accelerated)
+      gimp
+      inkscape
+      blender
+      krita
+      kdePackages.kdenlive
+      obs-studio
 
-    # Music streaming
-    spotify
-    spot
-    ncspot
+      # Music streaming
+      spotify
+      spot
+      ncspot
 
-    # Communication
-    telegram-desktop
-    vesktop
-    slack
-    zoom-us
+      # Communication
+      telegram-desktop
+      vesktop
+      slack
+      zoom-us
 
-    # Gaming
-    steam
-    lutris
-    wine
-    winetricks
+      # Gaming
+      steam
+      lutris
+      wine
+      winetricks
 
-    # Productivity
-    obsidian
-    notion-app-enhanced
+      # Productivity
+      obsidian
+      notion-app-enhanced
 
-    # System monitoring
-    htop
-    btop
-    iotop
-    atop
-    smem
-    numactl
-    stress-ng
-    memtester
+      # System monitoring
+      htop
+      btop
+      iotop
+      atop
+      smem
+      numactl
+      stress-ng
+      memtester
 
-    # Memory analysis
-    valgrind
-    heaptrack
-    massif-visualizer
+      # Memory analysis
+      valgrind
+      heaptrack
+      massif-visualizer
 
-    # Disk utilities
-    ncdu
-    duf
+      # Disk utilities
+      ncdu
+      duf
 
-    # Process management
-    psmisc
-    lsof
+      # Process management
+      psmisc
+      lsof
 
-    # Development
-    gh
-    git-crypt
-    gnupg
-    ripgrep
-    fd
-    jq
-    yq
-    unzip
-    zip
-    p7zip
+      # Development
+      gh
+      git-crypt
+      gnupg
+      ripgrep
+      fd
+      jq
+      yq
+      unzip
+      zip
+      p7zip
 
-    # Fonts
-    nerd-fonts.jetbrains-mono
-    noto-fonts-emoji
-    noto-fonts
-    noto-fonts-cjk-sans
-  ];
+      # Fonts
+      nerd-fonts.jetbrains-mono
+      noto-fonts-emoji
+      noto-fonts
+      noto-fonts-cjk-sans
+    ];
 
-  # Network configuration
-  modules.networking.firewall.openPorts = [ 3000 ];
+  # Host-specific network configuration
+  modules.networking.firewall.openPorts = [ 3000 ]; # Development server port
 
   # Programs (conditional)
   programs.steam = lib.mkIf activeVariant.enableHardwareAccel {
@@ -374,7 +404,7 @@ in {
         ];
       }
     ];
-    
+
     auditd.enable = activeVariant.enableHardwareAccel;
     audit = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
@@ -389,16 +419,16 @@ in {
     };
   };
 
-  # Audio configuration (conditional)
-  hardware.pulseaudio.enable = lib.mkIf (!activeVariant.enableHardwareAccel) true;
-  services.pipewire.enable = lib.mkIf (!activeVariant.enableHardwareAccel) (lib.mkForce false);
+  # Audio configuration is handled by core modules (pipewire.nix and monitor-audio.nix)
+  # No host-specific audio overrides needed
 
-  # Disable conflicting power management services for desktop
+  # Host-specific service configuration
+  # Disable conflicting power management services for desktop workstation
   services.power-profiles-daemon.enable = lib.mkForce false;
   services.thermald.enable = lib.mkForce false;
   services.tlp.enable = lib.mkForce false;
 
-  # Service defaults
+  # Optional services (disabled by default for this desktop)
   services.ollama.enable = lib.mkDefault false;
   services.tailscale.enable = lib.mkDefault false;
 
