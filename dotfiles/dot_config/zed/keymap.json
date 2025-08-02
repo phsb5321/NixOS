@@ -1,10 +1,8 @@
 [
   {
-    "context": "Global",
+    "context": "Workspace",
     "bindings": {
-      "ctrl-o": "file_finder::Toggle",
-      "ctrl-shift-t": "workspace::NewTerminal",
-      "f12": "editor::GoToDefinition"
+      "ctrl-shift-p": "file_finder::Toggle"
     }
   }
 ]

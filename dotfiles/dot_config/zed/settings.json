@@ -1,217 +1,15 @@
 {
-  // ===== USER INTERFACE & APPEARANCE =====
   "theme": "Gruvbox Dark Hard",
   "ui_font_size": 18,
   "buffer_font_size": 18,
   "buffer_font_family": "JetBrainsMono Nerd Font Mono",
-  "buffer_font_fallbacks": ["FiraCode Nerd Font Mono"],
-  "buffer_font_features": {
-    "calt": true,
-    "liga": true
-  },
-
   "base_keymap": "VSCode",
   "vim_mode": false,
-
-  // ===== EDITOR BEHAVIOR =====
   "auto_save": "on_focus_change",
-  "auto_save_delay": 1000,
   "format_on_save": "on",
-  "ensure_final_newline_on_save": true,
-  "remove_trailing_whitespace_on_save": true,
-  "show_whitespaces": "selection",
-  "soft_wrap": "editor_width",
-  "wrap_guides": [80, 100, 120],
-  "preferred_line_length": 100,
-  "hard_tabs": false,
   "tab_size": 2,
-  "cursor_blink": true,
-  "show_inline_completions": true,
-
-  // ===== VISUAL ENHANCEMENTS =====
-  "indent_guides": {
-    "enabled": true,
-    "coloring": "indent_aware"
-  },
-  "inlay_hints": {
-    "enabled": true,
-    "show_type_hints": true,
-    "show_parameter_hints": true,
-    "show_other_hints": true
-  },
-  "relative_line_numbers": false,
-  "gutter": {
-    "line_numbers": true,
-    "code_actions": true,
-    "runnables": true,
-    "folds": true
-  },
-  "scrollbar": {
-    "show": "auto",
-    "cursors": true,
-    "symbols": true,
-    "selected_symbol": true,
-    "search_results": true,
-    "diagnostics": true,
-    "git_diff": true
-  },
-
-  // ===== PANEL CONFIGURATION =====
-  "project_panel": {
-    "button": true,
-    "dock": "right",
-    "git_status": true,
-    "auto_fold_dirs": false,
-    "auto_reveal_entries": true,
-    "default_width": 300
-  },
-  "outline_panel": {
-    "dock": "right",
-    "button": true,
-    "default_width": 300
-  },
-  "collaboration_panel": {
-    "dock": "left",
-    "button": false
-  },
-  "chat_panel": {
-    "dock": "right",
-    "button": true
-  },
-  "notification_panel": {
-    "dock": "right",
-    "button": true
-  },
-
-  // ===== TAB SETTINGS =====
-  "tabs": {
-    "file_icons": true,
-    "git_status": true,
-    "close_position": "right"
-  },
-
-  // ===== GIT INTEGRATION =====
-  "git": {
-    "enabled": true,
-    "git_gutter": "tracked_files",
-    "status_bar": true,
-    "inline_blame": {
-      "enabled": true,
-      "delay_ms": 600
-    }
-  },
-
-  // ===== SEARCH & FIND =====
-  "search": {
-    "whole_word": false,
-    "case_sensitive": false,
-    "include_ignored": false,
-    "regex": false
-  },
-
-  // ===== TERMINAL CONFIGURATION =====
-  "terminal": {
-    "font_family": "JetBrainsMono Nerd Font Mono",
-    "font_size": 16,
-    "copy_on_select": true,
-    "dock": "bottom",
-    "default_width": 640,
-    "default_height": 320,
-    "working_directory": "current_project_directory",
-    "shell": {
-      "program": "zsh"
-    },
-    "toolbar": {
-      "title": true
-    }
-  },
-
-  // ===== COPILOT & AI INTEGRATION =====
-  "features": {
-    "copilot": true,
-    "inline_completion_provider": "copilot",
-    "edit_prediction_provider": "zed"
-  },
-  "show_copilot_suggestions": true,
-  "copilot": {
-    "disabled_globs": [
-      ".env*",
-      "*.key",
-      "*.pem",
-      "*.cert",
-      "secrets/**",
-      "**/secrets/**"
-    ]
-  },
-
-  // ===== EDIT PREDICTIONS (Your existing config) =====
-  "edit_predictions": {
-    "mode": "eager",
-    "copilot": {
-      "proxy": null,
-      "proxy_no_verify": null
-    },
-    "enabled_in_text_threads": false
-  },
-
-  // ===== AGENT CONFIGURATION (Your existing config) =====
-  "agent": {
-    "play_sound_when_agent_done": true,
-    "profiles": {
-      "write": {
-        "name": "Write",
-        "tools": {
-          "copy_path": true,
-          "create_directory": true,
-          "create_file": true,
-          "delete_path": true,
-          "diagnostics": true,
-          "edit_file": true,
-          "fetch": true,
-          "list_directory": true,
-          "move_path": true,
-          "now": true,
-          "find_path": true,
-          "read_file": true,
-          "grep": true,
-          "terminal": true,
-          "thinking": true,
-          "web_search": true,
-          "open": true
-        },
-        "enable_all_context_servers": true,
-        "context_servers": {}
-      }
-    },
-    "dock": "left",
-    "always_allow_tool_actions": true,
-    "default_model": {
-      "provider": "copilot_chat",
-      "model": "claude-sonnet-4"
-    }
-  },
-
-  // ===== ASSISTANT CONFIGURATION =====
-  "assistant": {
-    "enabled": true,
-    "version": "2",
-    "default_model": {
-      "provider": "copilot_chat",
-      "model": "gpt-4"
-    },
-    "dock": "right",
-    "default_width": 400,
-    "button": true
-  },
-
-  // ===== LANGUAGE SERVER PROTOCOL (GLOBAL) =====
+  "hard_tabs": false,
   "lsp": {
-    "enable_workspace_suggestions": true,
-    "enable_completion_documentation": true,
-    "enable_hover": true,
-    "enable_signature_help": true,
-
-    // ===== ENHANCED NIX LANGUAGE SERVER CONFIG =====
     "nixd": {
       "initialization_options": {
         "nixpkgs": {
@@ -219,14 +17,6 @@
         },
         "formatting": {
           "command": ["alejandra"]
-        },
-        "options": {
-          "nixos": {
-            "expr": "(builtins.getFlake \"/home/notroot/NixOS\").nixosConfigurations.default.options"
-          },
-          "home-manager": {
-            "expr": "(builtins.getFlake \"/home/notroot/NixOS\").homeConfigurations.\"notroot@nixos\".options"
-          }
         }
       }
     },
@@ -234,29 +24,16 @@
       "initialization_options": {
         "formatting": {
           "command": ["alejandra"]
-        },
-        "nix": {
-          "flake": {
-            "autoArchive": true,
-            "autoEvalInputs": true
-          }
         }
       }
     }
   },
-
-  // ===== DIAGNOSTICS =====
-  "diagnostics": {
-    "include_warnings": true
-  },
-
-  // ===== LANGUAGE-SPECIFIC SETTINGS =====
   "languages": {
     "Nix": {
       "format_on_save": "on",
       "tab_size": 2,
       "hard_tabs": false,
-      "language_servers": ["nixd", "!nil"],
+      "language_servers": ["nixd"],
       "formatter": {
         "external": {
           "command": "alejandra",
@@ -266,204 +43,22 @@
     },
     "JavaScript": {
       "tab_size": 2,
-      "language_servers": ["typescript-language-server", "eslint"],
-      "format_on_save": "on",
-      "formatter": "prettier"
+      "language_servers": ["typescript-language-server"],
+      "format_on_save": "on"
     },
     "TypeScript": {
       "tab_size": 2,
-      "language_servers": ["typescript-language-server", "eslint"],
-      "format_on_save": "on",
-      "formatter": "prettier"
-    },
-    "TSX": {
-      "tab_size": 2,
-      "language_servers": ["typescript-language-server", "eslint"],
-      "format_on_save": "on",
-      "formatter": "prettier"
-    },
-    "JSX": {
-      "tab_size": 2,
-      "language_servers": ["typescript-language-server", "eslint"],
-      "format_on_save": "on",
-      "formatter": "prettier"
+      "language_servers": ["typescript-language-server"],
+      "format_on_save": "on"
     },
     "JSON": {
       "tab_size": 2,
       "language_servers": ["json-language-server"],
-      "format_on_save": "on",
-      "formatter": "prettier"
-    },
-    "JSONC": {
-      "tab_size": 2,
-      "language_servers": ["json-language-server"],
-      "format_on_save": "on",
-      "formatter": "prettier"
-    },
-    "YAML": {
-      "tab_size": 2,
-      "language_servers": ["yaml-language-server"],
       "format_on_save": "on"
-    },
-    "TOML": {
-      "tab_size": 2,
-      "language_servers": ["taplo"],
-      "format_on_save": "on"
-    },
-    "Rust": {
-      "tab_size": 4,
-      "language_servers": ["rust-analyzer"],
-      "format_on_save": "on",
-      "formatter": "language_server"
-    },
-    "Go": {
-      "tab_size": 4,
-      "hard_tabs": true,
-      "language_servers": ["gopls"],
-      "format_on_save": "on",
-      "formatter": "language_server"
-    },
-    "Python": {
-      "tab_size": 4,
-      "language_servers": ["pyright", "ruff"],
-      "format_on_save": "on",
-      "formatter": {
-        "external": {
-          "command": "black",
-          "arguments": ["--stdin-filename", "{buffer_path}", "-"]
-        }
-      }
-    },
-    "Elixir": {
-      "tab_size": 2,
-      "language_servers": ["elixir-ls", "!lexical"],
-      "format_on_save": "on",
-      "formatter": {
-        "external": {
-          "command": "mix",
-          "arguments": ["format", "--stdin-filename", "{buffer_path}", "-"]
-        }
-      }
-    },
-    "Bash": {
-      "tab_size": 2,
-      "language_servers": ["bash-language-server"],
-      "format_on_save": "on",
-      "formatter": {
-        "external": {
-          "command": "shfmt",
-          "arguments": ["-i", "2", "-ci"]
-        }
-      }
-    },
-    "Shell": {
-      "tab_size": 2,
-      "language_servers": ["bash-language-server"],
-      "format_on_save": "on",
-      "formatter": {
-        "external": {
-          "command": "shfmt",
-          "arguments": ["-i", "2", "-ci"]
-        }
-      }
-    },
-    "HTML": {
-      "tab_size": 2,
-      "language_servers": ["html-language-server"],
-      "format_on_save": "on",
-      "formatter": "prettier"
-    },
-    "CSS": {
-      "tab_size": 2,
-      "language_servers": ["css-language-server"],
-      "format_on_save": "on",
-      "formatter": "prettier"
-    },
-    "SCSS": {
-      "tab_size": 2,
-      "language_servers": ["css-language-server"],
-      "format_on_save": "on",
-      "formatter": "prettier"
-    },
-    "Markdown": {
-      "tab_size": 2,
-      "language_servers": ["marksman"],
-      "format_on_save": "off",
-      "soft_wrap": "preferred_line_length",
-      "preferred_line_length": 80,
-      "show_whitespaces": "none"
     }
   },
-
-  // ===== WORKSPACE SETTINGS =====
-  "file_scan_exclusions": [
-    "**/.git",
-    "**/.svn",
-    "**/.hg",
-    "**/CVS",
-    "**/.DS_Store",
-    "**/Thumbs.db",
-    "**/.classpath",
-    "**/.settings",
-    "**/node_modules",
-    "**/.vscode",
-    "**/.idea",
-    "**/target",
-    "**/build",
-    "**/dist",
-    "**/.next",
-    "**/.nuxt",
-    "**/coverage",
-    "**/*.log",
-    "**/result",
-    "**/result-*"
-  ],
-
-  // ===== TELEMETRY & PRIVACY =====
   "telemetry": {
     "diagnostics": false,
     "metrics": false
-  },
-
-  // ===== SSH CONNECTIONS (Your existing config) =====
-  "ssh_connections": [
-    {
-      "host": "AvellComputer",
-      "projects": [
-        {
-          "paths": ["/root"]
-        },
-        {
-          "paths": ["~/NixOS"]
-        }
-      ]
-    },
-    {
-      "host": "ProxMox.GlobalSysVM",
-      "projects": [
-        {
-          "paths": ["~/Documents"]
-        },
-        {
-          "paths": ["~/Documents/Programming"]
-        }
-      ]
-    },
-    {
-      "host": "ProxMox.Hyprland",
-      "projects": []
-    },
-    {
-      "host": "RaspberryPi",
-      "projects": [
-        {
-          "paths": ["~/Documents/Code/PiOrchestrator"]
-        }
-      ]
-    },
-    {
-      "host": "ProxMox.Home301Server",
-      "projects": []
-    }
-  ]
+  }
 }
