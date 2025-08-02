@@ -5,7 +5,11 @@
   "buffer_font_size": 18,
   "buffer_font_family": "JetBrainsMono Nerd Font Mono",
   "buffer_font_fallbacks": ["FiraCode Nerd Font Mono"],
-  "buffer_font_weight": 600,
+  "buffer_font_features": {
+    "calt": true,
+    "liga": true
+  },
+
   "base_keymap": "VSCode",
   "vim_mode": false,
 
@@ -247,220 +251,148 @@
   },
 
   // ===== LANGUAGE-SPECIFIC SETTINGS =====
-
-  // ===== NIX (Enhanced with Alejandra) =====
-  "[nix]": {
-    "language_servers": ["nixd", "!nil"],
-    "formatter": {
-      "external": {
-        "command": "alejandra",
-        "arguments": ["--quiet"]
-      }
-    },
-    "format_on_save": "on",
-    "tab_size": 2,
-    "hard_tabs": false,
-    "lsp": {
-      "enabled": true,
-      "server": "nil",
-      "server_command": ["nil"],
-      "settings": {
-        "nix.nixFlake.autoArchive": true
-      }
-    }
-  },
-
-  // ===== JAVASCRIPT/TYPESCRIPT (Enhanced) =====
-  "[javascript]": {
-    "tab_size": 2,
-    "language_servers": ["typescript-language-server", "eslint"],
-    "format_on_save": "on",
-    "formatter": "prettier",
-    "lsp": {
-      "enabled": true,
-      "server": "typescript-language-server",
-      "server_command": ["typescript-language-server", "--stdio"]
-    }
-  },
-  "[typescript]": {
-    "tab_size": 2,
-    "language_servers": ["typescript-language-server", "eslint"],
-    "format_on_save": "on",
-    "formatter": "prettier",
-    "lsp": {
-      "enabled": true,
-      "server": "typescript-language-server",
-      "server_command": ["typescript-language-server", "--stdio"]
-    }
-  },
-  "[tsx]": {
-    "tab_size": 2,
-    "language_servers": ["typescript-language-server", "eslint"],
-    "format_on_save": "on",
-    "formatter": "prettier"
-  },
-  "[jsx]": {
-    "tab_size": 2,
-    "language_servers": ["typescript-language-server", "eslint"],
-    "format_on_save": "on",
-    "formatter": "prettier"
-  },
-
-  // ===== JSON =====
-  "[json]": {
-    "tab_size": 2,
-    "language_servers": ["json-language-server"],
-    "format_on_save": "on",
-    "formatter": "prettier"
-  },
-  "[jsonc]": {
-    "tab_size": 2,
-    "language_servers": ["json-language-server"],
-    "format_on_save": "on",
-    "formatter": "prettier"
-  },
-
-  // ===== YAML =====
-  "[yaml]": {
-    "tab_size": 2,
-    "language_servers": ["yaml-language-server"],
-    "format_on_save": "on"
-  },
-
-  // ===== TOML =====
-  "[toml]": {
-    "tab_size": 2,
-    "language_servers": ["taplo"],
-    "format_on_save": "on"
-  },
-
-  // ===== RUST (Enhanced) =====
-  "[rust]": {
-    "tab_size": 4,
-    "language_servers": ["rust-analyzer"],
-    "format_on_save": "on",
-    "formatter": "language_server",
-    "lsp": {
-      "enabled": true,
-      "server": "rust-analyzer",
-      "server_command": ["rust-analyzer"]
-    }
-  },
-
-  // ===== GO (Enhanced) =====
-  "[go]": {
-    "tab_size": 4,
-    "hard_tabs": true,
-    "language_servers": ["gopls"],
-    "format_on_save": "on",
-    "formatter": "language_server",
-    "lsp": {
-      "enabled": true,
-      "server": "gopls",
-      "server_command": ["gopls"]
-    }
-  },
-
-  // ===== PYTHON (Enhanced) =====
-  "[python]": {
-    "tab_size": 4,
-    "language_servers": ["pyright", "ruff"],
-    "format_on_save": "on",
-    "formatter": {
-      "external": {
-        "command": "black",
-        "arguments": ["--stdin-filename", "{buffer_path}", "-"]
-      }
-    },
-    "lsp": {
-      "enabled": true,
-      "server": "pyright",
-      "server_command": ["pyright-langserver", "--stdio"],
-      "pyright": {
-        "settings": {
-          "python": {
-            "pythonPath": ".venv/bin/python"
-          }
+  "languages": {
+    "Nix": {
+      "format_on_save": "on",
+      "tab_size": 2,
+      "hard_tabs": false,
+      "language_servers": ["nixd", "!nil"],
+      "formatter": {
+        "external": {
+          "command": "alejandra",
+          "arguments": ["--quiet"]
         }
       }
-    }
-  },
-
-  // ===== ELIXIR (Enhanced) =====
-  "[elixir]": {
-    "tab_size": 2,
-    "language_servers": ["elixir-ls", "!lexical"],
-    "format_on_save": "on",
-    "formatter": {
-      "external": {
-        "command": "mix",
-        "arguments": ["format", "--stdin-filename", "{buffer_path}", "-"]
+    },
+    "JavaScript": {
+      "tab_size": 2,
+      "language_servers": ["typescript-language-server", "eslint"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "TypeScript": {
+      "tab_size": 2,
+      "language_servers": ["typescript-language-server", "eslint"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "TSX": {
+      "tab_size": 2,
+      "language_servers": ["typescript-language-server", "eslint"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "JSX": {
+      "tab_size": 2,
+      "language_servers": ["typescript-language-server", "eslint"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "JSON": {
+      "tab_size": 2,
+      "language_servers": ["json-language-server"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "JSONC": {
+      "tab_size": 2,
+      "language_servers": ["json-language-server"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "YAML": {
+      "tab_size": 2,
+      "language_servers": ["yaml-language-server"],
+      "format_on_save": "on"
+    },
+    "TOML": {
+      "tab_size": 2,
+      "language_servers": ["taplo"],
+      "format_on_save": "on"
+    },
+    "Rust": {
+      "tab_size": 4,
+      "language_servers": ["rust-analyzer"],
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+    "Go": {
+      "tab_size": 4,
+      "hard_tabs": true,
+      "language_servers": ["gopls"],
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+    "Python": {
+      "tab_size": 4,
+      "language_servers": ["pyright", "ruff"],
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "black",
+          "arguments": ["--stdin-filename", "{buffer_path}", "-"]
+        }
       }
     },
-    "lsp": {
-      "enabled": true,
-      "server": "elixir-ls",
-      "server_command": ["elixir-ls"]
-    }
-  },
-
-  // ===== BASH/SHELL (Enhanced) =====
-  "[bash]": {
-    "tab_size": 2,
-    "language_servers": ["bash-language-server"],
-    "format_on_save": "on",
-    "formatter": {
-      "external": {
-        "command": "shfmt",
-        "arguments": ["-i", "2", "-ci"]
+    "Elixir": {
+      "tab_size": 2,
+      "language_servers": ["elixir-ls", "!lexical"],
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "mix",
+          "arguments": ["format", "--stdin-filename", "{buffer_path}", "-"]
+        }
       }
     },
-    "lsp": {
-      "enabled": true,
-      "server": "bash-language-server",
-      "server_command": ["bash-language-server", "start"]
-    }
-  },
-  "[sh]": {
-    "tab_size": 2,
-    "language_servers": ["bash-language-server"],
-    "format_on_save": "on",
-    "formatter": {
-      "external": {
-        "command": "shfmt",
-        "arguments": ["-i", "2", "-ci"]
+    "Bash": {
+      "tab_size": 2,
+      "language_servers": ["bash-language-server"],
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "shfmt",
+          "arguments": ["-i", "2", "-ci"]
+        }
       }
+    },
+    "Shell": {
+      "tab_size": 2,
+      "language_servers": ["bash-language-server"],
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "shfmt",
+          "arguments": ["-i", "2", "-ci"]
+        }
+      }
+    },
+    "HTML": {
+      "tab_size": 2,
+      "language_servers": ["html-language-server"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "CSS": {
+      "tab_size": 2,
+      "language_servers": ["css-language-server"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "SCSS": {
+      "tab_size": 2,
+      "language_servers": ["css-language-server"],
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "Markdown": {
+      "tab_size": 2,
+      "language_servers": ["marksman"],
+      "format_on_save": "off",
+      "soft_wrap": "preferred_line_length",
+      "preferred_line_length": 80,
+      "show_whitespaces": "none"
     }
-  },
-
-  // ===== HTML/CSS =====
-  "[html]": {
-    "tab_size": 2,
-    "language_servers": ["html-language-server"],
-    "format_on_save": "on",
-    "formatter": "prettier"
-  },
-  "[css]": {
-    "tab_size": 2,
-    "language_servers": ["css-language-server"],
-    "format_on_save": "on",
-    "formatter": "prettier"
-  },
-  "[scss]": {
-    "tab_size": 2,
-    "language_servers": ["css-language-server"],
-    "format_on_save": "on",
-    "formatter": "prettier"
-  },
-
-  // ===== MARKDOWN =====
-  "[markdown]": {
-    "tab_size": 2,
-    "language_servers": ["marksman"],
-    "format_on_save": "off",
-    "soft_wrap": "preferred_line_length",
-    "preferred_line_length": 80,
-    "show_whitespaces": "none"
   },
 
   // ===== WORKSPACE SETTINGS =====
