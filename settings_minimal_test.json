@@ -1,0 +1,33 @@
+{
+  "theme": "Gruvbox Dark Hard",
+  "ui_font_size": 18,
+  "buffer_font_size": 18,
+  "buffer_font_family": "JetBrainsMono Nerd Font Mono",
+  "base_keymap": "VSCode",
+  "vim_mode": false,
+  "lsp": {
+    "nixd": {
+      "initialization_options": {
+        "nixpkgs": {
+          "expr": "import <nixpkgs> { }"
+        },
+        "formatting": {
+          "command": ["alejandra"]
+        }
+      }
+    }
+  },
+  "languages": {
+    "Nix": {
+      "format_on_save": "on",
+      "tab_size": 2,
+      "language_servers": ["nixd"],
+      "formatter": {
+        "external": {
+          "command": "alejandra",
+          "arguments": ["--quiet"]
+        }
+      }
+    }
+  }
+}
