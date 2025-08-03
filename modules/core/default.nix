@@ -292,6 +292,7 @@ in {
         wrangler
         just
         infisical
+        httpx
 
         # Rust System Utilities (Modern replacements for Unix tools)
         eza # Modern replacement for ls
