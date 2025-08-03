@@ -74,7 +74,6 @@
       "ctrl-space": "editor::ShowCompletions",
       "ctrl-:": "editor::ToggleInlayHints",
       "ctrl-shift-i": "editor::Format",
-      "ctrl-k ctrl-f": "editor::Format",
       "ctrl-shift-k": "editor::DeleteLine",
       "ctrl-enter": "editor::NewlineBelow",
       "ctrl-shift-enter": "editor::NewlineAbove",
@@ -84,8 +83,7 @@
       "ctrl-}": "editor::UnfoldLines",
       "ctrl-k ctrl-0": "editor::FoldAll",
       "ctrl-k ctrl-j": "editor::UnfoldAll",
-      "ctrl-/": ["editor::ToggleComments", {"advance_downwards": false}],
-      "shift-alt-a": ["editor::ToggleComments", {"advance_downwards": false}]
+      "ctrl-/": ["editor::ToggleComments", {"advance_downwards": false}]
     }
   },
   {
