@@ -69,22 +69,16 @@
       gnomeExtensions.user-themes
       gnomeExtensions.just-perfection
 
-      # System monitoring extensions - Multiple options for comprehensive monitoring
-      gnomeExtensions.vitals # Temperature, voltage, fan speed, memory, CPU, network, storage
-      gnomeExtensions.system-monitor-next # Classic system monitor with graphs
-      gnomeExtensions.tophat # Elegant system resource monitor
-      gnomeExtensions.resource-monitor # Real-time monitoring in top bar
+      # System monitoring extensions
+      gnomeExtensions.vitals # Primary system monitor with temperature, CPU, network, storage
+      gnomeExtensions.system-monitor-next # Additional system monitor with graphs
 
       # Productivity and customization extensions
       gnomeExtensions.caffeine # Prevent screen lock
-      gnomeExtensions.appindicator # System tray support
-      gnomeExtensions.blur-my-shell # Blur effects for shell elements
+      gnomeExtensions.appindicator # System tray support - required for many apps
+      gnomeExtensions.blur-my-shell # Modern blur effects
       gnomeExtensions.clipboard-indicator # Clipboard manager
-      gnomeExtensions.night-theme-switcher # Automatic dark/light theme switching
       gnomeExtensions.gsconnect # Phone integration (KDE Connect)
-      gnomeExtensions.launch-new-instance
-      gnomeExtensions.runcat
-      gnomeExtensions.smart-auto-move-ng
 
       # Workspace and window management
       gnomeExtensions.workspace-indicator # Better workspace indicator
@@ -95,18 +89,9 @@
       gnomeExtensions.removable-drive-menu # USB drive management
       gnomeExtensions.sound-output-device-chooser # Audio device switching
 
-      # Visual enhancements
-      gnomeExtensions.weather-or-not # Weather in top panel
-
       # Additional useful extensions
-      gnomeExtensions.clipboard-history # Enhanced clipboard manager
       gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
-
-      # Recently requested extensions
-      gnomeExtensions.runcat # Cat animation showing CPU usage
-      gnomeExtensions.launch-new-instance # Always launch new app instances
       gnomeExtensions.auto-move-windows # Remember window positions per workspace
-      gnomeExtensions.lock-keys # Show Caps Lock and Num Lock status
 
       # Essential system packages for desktop functionality
       xdg-utils
@@ -115,8 +100,8 @@
     ];
   };
 
-  # Desktop environment configuration moved to individual hosts
-  # Each host now configures its own desktop environment based on GPU requirements
+  # Desktop environment base configuration
+  # Host-specific GNOME config is in individual host files
 
   # Networking configuration
   modules.networking = {
@@ -181,14 +166,16 @@
     glib-networking.enable = lib.mkDefault true;
     sushi.enable = lib.mkDefault true;
     gnome-remote-desktop.enable = lib.mkForce false;
-    gnome-user-share.enable = lib.mkDefault true;
-    rygel.enable = lib.mkDefault true;
+    gnome-user-share.enable = lib.mkForce false; # Disable for security
+    rygel.enable = lib.mkForce false; # Media sharing - disable by default
+    tinysparql.enable = lib.mkDefault true; # File indexing (renamed from tracker)
+    localsearch.enable = lib.mkDefault true; # File indexing miners (renamed from tracker-miners)
   };
 
   # Essential services for GNOME - shared configuration
   services.geoclue2.enable = lib.mkDefault true;
   services.upower.enable = lib.mkDefault true;
-  services.power-profiles-daemon.enable = lib.mkDefault true;
+  # Power management is configured per-host based on hardware type
 
   services.desktopManager.gnome.extraGSettingsOverridePackages = [
     pkgs.gsettings-desktop-schemas
@@ -335,53 +322,34 @@
     thunderbird.enable = true;
   };
 
-  # Enable and configure GNOME extensions via dconf
+  # Base GNOME dconf configuration - shared settings
+  # Extension-specific configuration is handled in individual host files
   programs.dconf.profiles.user.databases = [
     {
       settings = {
-        "org/gnome/shell" = {
-          enabled-extensions = [
-            # Core functionality extensions
-            "dash-to-dock@micxgx.gmail.com"
-            "user-theme@gnome-shell-extensions.gcampax.github.com"
-            "just-perfection-desktop@just-perfection"
+        # Base GNOME interface settings
+        "org/gnome/desktop/interface" = {
+          show-battery-percentage = true;
+          clock-show-weekday = true;
+          clock-show-seconds = false;
+          locate-pointer = true;
+        };
 
-            # System monitoring extensions
-            "Vitals@CoreCoding.com"
-            "system-monitor-next@paradoxxx.zero.gmail.com"
-            "tophat@fflewddur.github.io"
-            "Resource_Monitor@Ory0n"
+        # Base input configuration
+        "org/gnome/desktop/peripherals/keyboard" = {
+          numlock-state = true;
+          remember-numlock-state = true;
+        };
 
-            # Productivity and customization extensions
-            "caffeine@patapon.info"
-            "appindicatorsupport@rgcjonas.gmail.com"
-            "blur-my-shell@aunetx"
-            "clipboard-indicator@tudmotu.com"
-            "nightthemeswitcher@romainvigier.fr"
-            "gsconnect@andyholmes.github.io"
+        # Base privacy settings
+        "org/gnome/desktop/privacy" = {
+          report-technical-problems = false;
+          send-software-usage-stats = false;
+        };
 
-            # Workspace and window management
-            "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
-            "advanced-alt-tab@G-dH.github.com"
-
-            # Quick access and navigation
-            "places-menu@gnome-shell-extensions.gcampax.github.com"
-            "drive-menu@gnome-shell-extensions.gcampax.github.com"
-            "sound-output-device-chooser@kgshank.net"
-
-            # Visual enhancements
-            "weatherornot@somepaulo.github.io"
-
-            # Additional useful extensions
-            "clipboard-history@alexsaveau.dev"
-            "panel-workspace-scroll@polymeilex.github.io"
-
-            # Recently requested extensions
-            "runcat@kolesnikov.se"
-            "launch-new-instance@gnome-shell-extensions.gcampax.github.com"
-            "auto-move-windows@gnome-shell-extensions.gcampax.github.com"
-            "lockkeys@vaina.lt"
-          ];
+        # Base search settings
+        "org/gnome/desktop/search-providers" = {
+          disable-external = false;
         };
       };
     }
