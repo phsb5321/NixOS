@@ -1,13 +1,11 @@
 # NixOS Desktop Configuration - Unified and Organized
 # Combines all working configurations with proper module structure
 {
-  config,
   pkgs,
   lib,
   hostname,
   ...
-}:
-let
+}: let
   # Configuration variants for different scenarios
   variants = {
     # Normal operation with hardware acceleration
@@ -20,7 +18,7 @@ let
         "rd.systemd.show_status=true"
         "quiet"
       ];
-      videoDrivers = [ "amdgpu" ];
+      videoDrivers = ["amdgpu"];
       enableHardwareAccel = true;
     };
 
@@ -33,7 +31,7 @@ let
         "consoleblank=0"
         "rd.systemd.show_status=true"
       ];
-      videoDrivers = [ "amdgpu" ];
+      videoDrivers = ["amdgpu"];
       enableHardwareAccel = true;
       forceTearFree = true;
     };
@@ -63,8 +61,7 @@ let
 
   # Select active variant (change this to switch modes)
   activeVariant = variants.hardware; # Change to: conservative, software
-in
-{
+in {
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -83,16 +80,18 @@ in
     kernelParams = activeVariant.kernelParams;
 
     # Conditional kernel module handling
-    initrd.kernelModules = if activeVariant.enableHardwareAccel then [ "amdgpu" ] else [ ];
+    initrd.kernelModules =
+      if activeVariant.enableHardwareAccel
+      then ["amdgpu"]
+      else [];
     kernelModules =
-      if activeVariant.enableHardwareAccel then
-        [
-          "kvm-intel"
-          "amdgpu"
-        ]
-      else
-        [ ];
-    blacklistedKernelModules = activeVariant.blacklistModules or [ ];
+      if activeVariant.enableHardwareAccel
+      then [
+        "kvm-intel"
+        "amdgpu"
+      ]
+      else [];
+    blacklistedKernelModules = activeVariant.blacklistModules or [];
 
     # Temporary filesystem in RAM for better performance
     tmp.useTmpfs = true;
@@ -102,110 +101,140 @@ in
   hardware = {
     graphics = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
-      extraPackages = with pkgs; [ amdvlk ];
-      extraPackages32 = with pkgs; [ driversi686Linux.amdvlk ];
+      extraPackages = with pkgs; [amdvlk];
+      extraPackages32 = with pkgs; [driversi686Linux.amdvlk];
     };
     cpu.intel.updateMicrocode = true;
   };
 
-  # Display system configuration
+  # X11 server configuration for compatibility (Wayland is primary)
   services.xserver = {
     enable = true;
     videoDrivers = lib.mkForce activeVariant.videoDrivers;
+    # X11 config only needed for software rendering fallback
+    config = lib.mkIf (!activeVariant.enableHardwareAccel) ''
+      Section "Device"
+        Identifier "Software Graphics"
+        Driver "vesa"
+        Option "AccelMethod" "none"
+        Option "ShadowFB" "true"
+      EndSection
 
-    # Conditional X11 configuration
-    config =
-      if activeVariant.enableHardwareAccel then
-        ''
-          Section "Device"
-            Identifier "AMD Graphics"
-            Driver "amdgpu"
-            Option "DRI" "3"
-            Option "TearFree" "${if activeVariant.forceTearFree or false then "true" else "true"}"
-            Option "AccelMethod" "glamor"
-            ${lib.optionalString (activeVariant ? forceTearFree && activeVariant.forceTearFree) ''
-              Option "VariableRefresh" "true"
-            ''}
-          EndSection
-        ''
-      else
-        ''
-          Section "Device"
-            Identifier "Software Graphics"
-            Driver "vesa"
-            Option "AccelMethod" "none"
-            Option "ShadowFB" "true"
-          EndSection
-
-          Section "Screen"
-            Identifier "Software Screen"
-            DefaultDepth 24
-            SubSection "Display"
-              Depth 24
-              Modes "1024x768" "800x600"
-            EndSubSection
-          EndSection
-        '';
+      Section "Screen"
+        Identifier "Software Screen"
+        DefaultDepth 24
+        SubSection "Display"
+          Depth 24
+          Modes "1024x768" "800x600"
+        EndSubSection
+      EndSection
+    '';
   };
 
-  # Display manager and desktop environment
+  # Modern NixOS 25.11 display manager and desktop environment configuration
   services.displayManager.gdm = {
     enable = true;
-    wayland = lib.mkForce false; # Force X11 for AMD GPU stability
+    # Enable Wayland by default for better performance with AMD GPU
+    wayland = lib.mkIf activeVariant.enableHardwareAccel true;
   };
 
-  services.desktopManager.gnome.enable = lib.mkForce true;
+  services.desktopManager.gnome = {
+    enable = lib.mkForce true;
 
-  # GNOME configuration optimized for AMD GPU
-  services.desktopManager.gnome.extraGSettingsOverrides = lib.mkAfter ''
-    [org.gnome.mutter]
-    experimental-features=[]
+    # Modern GNOME configuration
+    extraGSettingsOverrides = lib.mkAfter ''
+      [org.gnome.mutter]
+      experimental-features=['scale-monitor-framebuffer', 'variable-refresh-rate', 'xwayland-native-scaling']
 
-    [org.gnome.desktop.interface]
-    enable-animations=${if activeVariant.enableHardwareAccel then "true" else "false"}
-    enable-hot-corners=false
+      [org.gnome.desktop.interface]
+      enable-animations=${
+        if activeVariant.enableHardwareAccel
+        then "true"
+        else "false"
+      }
+      enable-hot-corners=false
+      color-scheme='prefer-dark'
+      accent-color='blue'
+      show-battery-percentage=true
 
-    [org.gnome.desktop.wm.preferences]
-    button-layout='appmenu:minimize,maximize,close'
+      [org.gnome.desktop.wm.preferences]
+      button-layout='appmenu:minimize,maximize,close'
+      theme='Adwaita-dark'
 
-    [org.gnome.settings-daemon.plugins.power]
-    sleep-inactive-ac-type='nothing'
-    sleep-inactive-battery-type='suspend'
-  '';
+      [org.gnome.settings-daemon.plugins.power]
+      sleep-inactive-ac-type='nothing'
+      sleep-inactive-battery-type='suspend'
 
-  # Environment variables for software rendering mode
-  environment.variables = lib.mkIf (!activeVariant.enableHardwareAccel) {
-    "LIBGL_ALWAYS_SOFTWARE" = "1";
-    "MESA_LOADER_DRIVER_OVERRIDE" = "swrast";
-    "GALLIUM_DRIVER" = "llvmpipe";
-    "GSK_RENDERER" = "cairo";
-    "CLUTTER_BACKEND" = "x11";
-    "GDK_BACKEND" = "x11";
-    "QT_XCB_GL_INTEGRATION" = "none";
-    "WEBKIT_DISABLE_COMPOSITING_MODE" = "1";
+      [org.gnome.desktop.session]
+      idle-delay=uint32 900
+
+      [org.gnome.desktop.screensaver]
+      lock-enabled=true
+      lock-delay=uint32 0
+
+      [org.gnome.shell]
+      favorite-apps=['org.gnome.Nautilus.desktop', 'firefox.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.TextEditor.desktop']
+    '';
+  };
+
+  # System tray support for GNOME
+  services.udev.packages = with pkgs; [
+    gnome-settings-daemon
+  ];
+
+  # Environment variables for optimal GNOME experience
+  environment = {
+    variables = lib.mkMerge [
+      # Software rendering fallback
+      (lib.mkIf (!activeVariant.enableHardwareAccel) {
+        "LIBGL_ALWAYS_SOFTWARE" = "1";
+        "MESA_LOADER_DRIVER_OVERRIDE" = "swrast";
+        "GALLIUM_DRIVER" = "llvmpipe";
+        "GSK_RENDERER" = "cairo";
+        "GDK_BACKEND" = "x11";
+        "QT_XCB_GL_INTEGRATION" = "none";
+      })
+
+      # Hardware acceleration with Wayland optimizations
+      (lib.mkIf activeVariant.enableHardwareAccel {
+        "MOZ_ENABLE_WAYLAND" = "1";
+        "QT_QPA_PLATFORM" = "wayland;xcb";
+        "SDL_VIDEODRIVER" = "wayland";
+        "CLUTTER_BACKEND" = "wayland";
+        "GDK_BACKEND" = "wayland,x11";
+        "AMD_VULKAN_ICD" = "RADV";
+        "RADV_PERFTEST" = "gpl";
+      })
+    ];
+
+    # Session variables for all users
+    sessionVariables = {
+      NIXOS_OZONE_WL = "1"; # Enable Wayland for Electron apps
+      XCURSOR_THEME = "Adwaita";
+      XCURSOR_SIZE = "24";
+    };
   };
 
   # SystemD service for AMD GPU optimization (only when hardware accel enabled)
   systemd.services.amd-gpu-optimization = lib.mkIf activeVariant.enableHardwareAccel {
     description = "AMD GPU Performance Optimization";
-    after = [ "graphical-session.target" ];
-    wantedBy = [ "multi-user.target" ];
+    after = ["graphical-session.target"];
+    wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       ExecStart = pkgs.writeShellScript "amd-gpu-optimization" ''
         # Set performance level based on variant
         ${
-          if activeVariant == variants.conservative then
-            ''
-              echo "high" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
-              echo "1" > /sys/class/drm/card0/device/pp_power_profile_mode 2>/dev/null || true
-            ''
-          else
-            ''
-              echo "auto" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
-              echo "1" > /sys/class/drm/card0/device/power_dpm_state 2>/dev/null || true
-            ''
+          if activeVariant == variants.conservative
+          then ''
+            echo "high" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
+            echo "1" > /sys/class/drm/card0/device/pp_power_profile_mode 2>/dev/null || true
+          ''
+          else ''
+            echo "auto" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
+            echo "1" > /sys/class/drm/card0/device/power_dpm_state 2>/dev/null || true
+          ''
         }
       '';
     };
@@ -227,7 +256,7 @@ in
   };
 
   # Host-specific user groups (additional to shared config)
-  users.groups.plugdev = { };
+  users.groups.plugdev = {};
   users.users.notroot.extraGroups = [
     "dialout" # Serial device access for development
     "libvirtd" # Virtualization access
@@ -236,8 +265,7 @@ in
   ];
 
   # Host-specific desktop packages (essential for GNOME desktop functionality)
-  environment.systemPackages =
-    with pkgs;
+  environment.systemPackages = with pkgs;
     [
       # GPU-specific tools for AMD hardware debugging
       vulkan-tools
@@ -265,6 +293,9 @@ in
       xorg.xf86inputlibinput
       libinput
       evtest
+
+      # System tray integration
+      gnomeExtensions.appindicator
     ]
     ++ lib.optionals (!activeVariant.enableHardwareAccel) [
       # Essential packages for software rendering mode
@@ -289,8 +320,7 @@ in
       enable = activeVariant.enableHardwareAccel;
       minimal = false;
       extraPackages = lib.optionals activeVariant.enableHardwareAccel (
-        with pkgs;
-        [
+        with pkgs; [
           biber
           texlive.combined.scheme-context
         ]
@@ -299,8 +329,7 @@ in
   };
 
   # Host-specific extra packages (desktop-specific applications)
-  modules.packages.extraPackages =
-    with pkgs;
+  modules.packages.extraPackages = with pkgs;
     lib.optionals activeVariant.enableHardwareAccel [
       # Development tools
       calibre
@@ -382,7 +411,7 @@ in
     ];
 
   # Host-specific network configuration
-  modules.networking.firewall.openPorts = [ 3000 ]; # Development server port
+  modules.networking.firewall.openPorts = [3000]; # Development server port
 
   # Programs (conditional)
   programs.steam = lib.mkIf activeVariant.enableHardwareAccel {
@@ -395,11 +424,11 @@ in
   security = {
     sudo.extraRules = [
       {
-        groups = [ "wheel" ];
+        groups = ["wheel"];
         commands = [
           {
             command = "${pkgs.corectrl}/bin/corectrl";
-            options = [ "NOPASSWD" ];
+            options = ["NOPASSWD"];
           }
         ];
       }
@@ -410,7 +439,7 @@ in
       enable = true;
       backlogLimit = 8192;
       failureMode = "printk";
-      rules = [ "-a exit,always -F arch=b64 -S execve" ];
+      rules = ["-a exit,always -F arch=b64 -S execve"];
     };
 
     apparmor = lib.mkIf activeVariant.enableHardwareAccel {
@@ -422,11 +451,153 @@ in
   # Audio configuration is handled by core modules (pipewire.nix and monitor-audio.nix)
   # No host-specific audio overrides needed
 
-  # Host-specific service configuration
-  # Disable conflicting power management services for desktop workstation
-  services.power-profiles-daemon.enable = lib.mkForce false;
-  services.thermald.enable = lib.mkForce false;
-  services.tlp.enable = lib.mkForce false;
+  # GNOME-optimized services configuration
+  services.power-profiles-daemon.enable = lib.mkDefault true;
+  services.thermald.enable = lib.mkDefault false; # Conflicts with power-profiles-daemon
+  services.tlp.enable = lib.mkForce false; # Use power-profiles-daemon instead
+
+  # Additional GNOME services
+  services.gnome = {
+    localsearch.enable = lib.mkDefault true; # Renamed from tracker-miners
+    tinysparql.enable = lib.mkDefault true; # Renamed from tracker
+    gnome-browser-connector.enable = lib.mkDefault true;
+    gnome-keyring.enable = lib.mkDefault true;
+    gnome-settings-daemon.enable = lib.mkDefault true;
+    evolution-data-server.enable = lib.mkDefault true;
+    glib-networking.enable = lib.mkDefault true;
+    sushi.enable = lib.mkDefault true; # File previews in Nautilus
+  };
+
+  # Hardware integration for GNOME
+  hardware.sensor.iio.enable = lib.mkDefault true; # For automatic screen rotation
+
+  # Additional GNOME hardware support
+  services.geoclue2.enable = lib.mkDefault true; # Location services
+  services.upower.enable = lib.mkDefault true; # Battery/power management
+
+  # Printing support
+  services.printing = {
+    enable = lib.mkDefault true;
+    drivers = with pkgs; [
+      gutenprint
+      hplip
+      epson-escpr
+    ];
+  };
+
+  # Network discovery for printers
+  services.avahi = {
+    enable = lib.mkDefault true;
+    nssmdns4 = lib.mkDefault true;
+    openFirewall = lib.mkDefault true;
+  };
+
+  # GNOME-specific dconf configuration for optimal desktop experience
+  programs.dconf.profiles.user.databases = [
+    {
+      lockAll = false;
+      settings = {
+        "org/gnome/shell" = {
+          enabled-extensions = [
+            "dash-to-dock@micxgx.gmail.com"
+            "user-theme@gnome-shell-extensions.gcampax.github.com"
+            "just-perfection-desktop@just-perfection"
+            "Vitals@CoreCoding.com"
+            "caffeine@patapon.info"
+            "appindicatorsupport@rgcjonas.gmail.com"
+            "blur-my-shell@aunetx"
+            "clipboard-indicator@tudmotu.com"
+            "gsconnect@andyholmes.github.io"
+            "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
+            "sound-output-device-chooser@kgshank.net"
+          ];
+        };
+
+        # Dash to Dock configuration
+        "org/gnome/shell/extensions/dash-to-dock" = {
+          dock-position = "BOTTOM";
+          extend-height = false;
+          dock-fixed = false;
+          autohide = true;
+          intellihide = true;
+          show-apps-at-top = true;
+        };
+
+        # Just Perfection configuration
+        "org/gnome/shell/extensions/just-perfection" = {
+          panel-in-overview = true;
+          activities-button = true;
+          app-menu = false;
+          clock-menu = true;
+          keyboard-layout = true;
+        };
+
+        # Blur My Shell configuration
+        "org/gnome/shell/extensions/blur-my-shell" = {
+          brightness = lib.gvariant.mkDouble 0.75;
+          noise-amount = lib.gvariant.mkInt32 0;
+        };
+
+        # Input sources
+        "org/gnome/desktop/input-sources" = {
+          sources = [["xkb" "br+abnt2"]];
+          xkb-options = ["grp:alt_shift_toggle" "compose:ralt"];
+        };
+
+        # Font and theming configuration
+        "org/gnome/desktop/interface" = {
+          gtk-theme = "Adwaita-dark";
+          icon-theme = "Adwaita";
+          cursor-theme = "Adwaita";
+          font-name = "Cantarell 11";
+          document-font-name = "Cantarell 11";
+          monospace-font-name = "Source Code Pro 10";
+          font-antialiasing = "grayscale";
+          font-hinting = "slight";
+        };
+
+        # Window manager theming
+        "org/gnome/desktop/wm/preferences" = {
+          theme = "Adwaita-dark";
+          titlebar-font = "Cantarell Bold 11";
+        };
+
+        # File manager preferences
+        "org/gnome/nautilus/preferences" = {
+          default-folder-viewer = "list-view";
+          search-filter-time-type = "last_modified";
+          show-hidden-files = false;
+        };
+      };
+    }
+  ];
+
+  # Qt theming integration for GNOME
+  qt = {
+    enable = true;
+    platformTheme = "gnome";
+    style = "adwaita-dark";
+  };
+
+  # Font configuration for GNOME
+  fonts = {
+    packages = with pkgs; [
+      cantarell-fonts
+      source-code-pro
+      noto-fonts
+      noto-fonts-emoji
+    ];
+    fontconfig = {
+      defaultFonts = {
+        serif = ["Noto Serif"];
+        sansSerif = ["Cantarell"];
+        monospace = ["Source Code Pro"];
+        emoji = ["Noto Color Emoji"];
+      };
+      hinting.enable = true;
+      antialias = true;
+    };
+  };
 
   # Optional services (disabled by default for this desktop)
   services.ollama.enable = lib.mkDefault false;
