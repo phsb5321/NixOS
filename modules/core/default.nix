@@ -119,6 +119,10 @@ in {
         enable = lib.mkDefault true;
         minimal = lib.mkDefault false; # Set to true for minimal installation
       };
+      typst = {
+        enable = lib.mkDefault true;
+        lsp = lib.mkDefault true; # Enable tinymist LSP by default
+      };
     };
 
     # Enable proper time synchronization for time-sensitive tokens
