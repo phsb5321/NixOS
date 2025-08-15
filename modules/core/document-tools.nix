@@ -30,6 +30,26 @@ in {
         description = "Additional LaTeX-related packages to install";
       };
     };
+
+    typst = {
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable Typst support";
+      };
+
+      lsp = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Install Typst LSP (tinymist)";
+      };
+
+      extraPackages = mkOption {
+        type = with types; listOf package;
+        default = [];
+        description = "Additional Typst-related packages to install";
+      };
+    };
   };
 
   config = mkIf cfg.enable {
@@ -43,6 +63,24 @@ in {
         # Document conversion
         pkgs.pandoc
       ]
+      # Add Typst packages if enabled
+      ++ (
+        if cfg.typst.enable
+        then
+          [
+            # Typst compiler and CLI
+            pkgs.typst
+          ]
+          ++ (
+            if cfg.typst.lsp
+            then [
+              # Typst language server
+              pkgs.tinymist
+            ]
+            else []
+          )
+        else []
+      )
       # Add LaTeX packages if enabled
       ++ (
         if cfg.latex.enable
@@ -63,6 +101,7 @@ in {
             ]
         else []
       )
-      ++ cfg.latex.extraPackages;
+      ++ cfg.latex.extraPackages
+      ++ cfg.typst.extraPackages;
   };
 }
