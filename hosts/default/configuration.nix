@@ -154,12 +154,27 @@ in {
       }
       enable-hot-corners=false
       color-scheme='prefer-dark'
+      gtk-theme='Adwaita-dark'
+      icon-theme='Adwaita'
+      cursor-theme='material_light_cursors'
       accent-color='blue'
       show-battery-percentage=true
+      font-name='Cantarell 11'
+      document-font-name='Cantarell 11'
+      monospace-font-name='Source Code Pro 10'
+      font-antialiasing='grayscale'
+      font-hinting='slight'
 
       [org.gnome.desktop.wm.preferences]
       button-layout='appmenu:minimize,maximize,close'
       theme='Adwaita-dark'
+      titlebar-font='Cantarell Bold 11'
+
+      [org.gnome.mutter]
+      edge-tiling=true
+      dynamic-workspaces=true
+      workspaces-only-on-primary=true
+      center-new-windows=false
 
       [org.gnome.settings-daemon.plugins.power]
       sleep-inactive-ac-type='nothing'
@@ -174,6 +189,21 @@ in {
 
       [org.gnome.shell]
       favorite-apps=['org.gnome.Nautilus.desktop', 'firefox.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.TextEditor.desktop']
+
+      [org.gnome.nautilus.preferences]
+      default-folder-viewer='list-view'
+      search-filter-time-type='last_modified'
+      show-hidden-files=false
+
+      [org.gnome.desktop.wm.keybindings]
+      maximize=['<Super>Up']
+      unmaximize=['<Super>Down', '<Alt>F5']
+      toggle-maximized=['<Alt>F10']
+      minimize=['<Super>h']
+      move-to-workspace-left=['<Super><Shift>Left']
+      move-to-workspace-right=['<Super><Shift>Right']
+      switch-to-workspace-left=['<Super>Left']
+      switch-to-workspace-right=['<Super>Right']
     '';
   };
 
@@ -204,14 +234,26 @@ in {
         "GDK_BACKEND" = "wayland,x11";
         "AMD_VULKAN_ICD" = "RADV";
         "RADV_PERFTEST" = "gpl";
+        # Firefox dark mode support
+        "MOZ_USE_XINPUT2" = "1";
+        "MOZ_WEBRENDER" = "1";
       })
+
+      # Common environment variables for all scenarios
+      {
+        "GTK_THEME" = "Adwaita:dark";
+      }
     ];
 
     # Session variables for all users
     sessionVariables = {
       NIXOS_OZONE_WL = "1"; # Enable Wayland for Electron apps
-      XCURSOR_THEME = "Adwaita";
+      XCURSOR_THEME = "material_light_cursors";
       XCURSOR_SIZE = "24";
+      # Force dark theme for all GTK applications
+      GTK_THEME = "Adwaita:dark";
+      # Firefox preferences for dark mode
+      MOZ_GTK_TITLEBAR_DECORATION = "client";
     };
   };
 
@@ -544,29 +586,44 @@ in {
           xkb-options = ["grp:alt_shift_toggle" "compose:ralt"];
         };
 
-        # Font and theming configuration
+        # Additional interface preferences
         "org/gnome/desktop/interface" = {
-          gtk-theme = "Adwaita-dark";
-          icon-theme = "Adwaita";
-          cursor-theme = "Adwaita";
-          font-name = "Cantarell 11";
-          document-font-name = "Cantarell 11";
-          monospace-font-name = "Source Code Pro 10";
-          font-antialiasing = "grayscale";
-          font-hinting = "slight";
+          color-scheme = "prefer-dark";
+          show-battery-percentage = true;
+          clock-show-weekday = true;
+          clock-show-seconds = false;
+          locate-pointer = true;
         };
 
-        # Window manager theming
-        "org/gnome/desktop/wm/preferences" = {
-          theme = "Adwaita-dark";
-          titlebar-font = "Cantarell Bold 11";
+        # Window tiling and workspace management
+        "org/gnome/mutter" = {
+          edge-tiling = true;
+          dynamic-workspaces = true;
+          workspaces-only-on-primary = true;
+          center-new-windows = false;
         };
 
-        # File manager preferences
-        "org/gnome/nautilus/preferences" = {
-          default-folder-viewer = "list-view";
-          search-filter-time-type = "last_modified";
-          show-hidden-files = false;
+        # Window management keybindings
+        "org/gnome/desktop/wm/keybindings" = {
+          maximize = ["<Super>Up"];
+          unmaximize = ["<Super>Down" "<Alt>F5"];
+          toggle-maximized = ["<Alt>F10"];
+          minimize = ["<Super>h"];
+          move-to-workspace-left = ["<Super><Shift>Left"];
+          move-to-workspace-right = ["<Super><Shift>Right"];
+          switch-to-workspace-left = ["<Super>Left"];
+          switch-to-workspace-right = ["<Super>Right"];
+        };
+
+        # Privacy settings
+        "org/gnome/desktop/privacy" = {
+          report-technical-problems = false;
+          send-software-usage-stats = false;
+        };
+
+        # Search settings
+        "org/gnome/desktop/search-providers" = {
+          disable-external = false;
         };
       };
     }
