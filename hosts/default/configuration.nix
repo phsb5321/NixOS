@@ -134,18 +134,12 @@ in {
   # Modern NixOS 25.11 display manager and desktop environment configuration
   services.displayManager.gdm = {
     enable = true;
-    # Enable Wayland by default for better performance with AMD GPU
-    wayland = lib.mkIf activeVariant.enableHardwareAccel true;
+    wayland = true;
   };
 
   services.desktopManager.gnome = {
-    enable = lib.mkForce true;
+    enable = true;
   };
-
-  # System tray support for GNOME
-  services.udev.packages = with pkgs; [
-    gnome-settings-daemon
-  ];
 
   # Environment variables for optimal GNOME experience
   environment = {
@@ -169,39 +163,28 @@ in {
         "GDK_BACKEND" = "wayland,x11";
         "AMD_VULKAN_ICD" = "RADV";
         "RADV_PERFTEST" = "gpl";
-        # Firefox dark mode support
         "MOZ_USE_XINPUT2" = "1";
         "MOZ_WEBRENDER" = "1";
       })
-
-      # Common environment variables for all scenarios
-      {
-        "GTK_THEME" = lib.mkForce "Arc-Dark";
-      }
     ];
 
-    # Session variables for all users
+    # Session variables for theming and functionality
     sessionVariables = {
-      NIXOS_OZONE_WL = "1"; # Enable Wayland for Electron apps
+      NIXOS_OZONE_WL = "1";
+      XDG_SESSION_TYPE = "wayland";
+      
+      # Theme variables
+      GTK_THEME = "Arc-Dark";
       XCURSOR_THEME = "Bibata-Modern-Ice";
       XCURSOR_SIZE = "24";
-      # Force beautiful dark theme for all GTK applications
-      GTK_THEME = "Arc-Dark";
-      GTK2_RC_FILES = "${pkgs.arc-theme}/share/themes/Arc-Dark/gtk-2.0/gtkrc";
-      # Qt theming to match GNOME
+      
+      # Qt integration
       QT_QPA_PLATFORMTHEME = "gnome";
-      # Firefox preferences for dark mode
-      MOZ_GTK_TITLEBAR_DECORATION = "client";
+      QT_STYLE_OVERRIDE = "adwaita-dark";
+      
+      # Wayland support for applications
       MOZ_ENABLE_WAYLAND = "1";
-      # GNOME theming variables
-      GNOME_DESKTOP_INTERFACE_GTK_THEME = "Arc-Dark";
-      GNOME_DESKTOP_INTERFACE_ICON_THEME = "Papirus-Dark";
-      GNOME_DESKTOP_INTERFACE_CURSOR_THEME = "Bibata-Modern-Ice";
-      # Color scheme
-      GNOME_DESKTOP_INTERFACE_COLOR_SCHEME = "prefer-dark";
-      # Additional theming
-      GTK_USE_PORTAL = "1";
-      GSETTINGS_SCHEMA_DIR = "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}/glib-2.0/schemas:${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}/glib-2.0/schemas";
+      ELECTRON_OZONE_PLATFORM_HINT = "wayland";
     };
   };
 
@@ -278,72 +261,37 @@ in {
       neofetch
       lm_sensors
 
-      # Critical session management and input handling
+      # Essential GNOME packages
       gnome-session
-      xorg.xf86inputlibinput
-      libinput
-      evtest
+      gnome-settings-daemon
+      gnome-control-center
+      gnome-tweaks
 
-      # System tray integration
+      # GNOME Extensions
       gnomeExtensions.appindicator
+      gnomeExtensions.dash-to-dock
+      gnomeExtensions.user-themes
+      gnomeExtensions.just-perfection
+      gnomeExtensions.vitals
+      gnomeExtensions.caffeine
+      gnomeExtensions.clipboard-indicator
+      gnomeExtensions.gsconnect
+      gnomeExtensions.workspace-indicator
+      gnomeExtensions.sound-output-device-chooser
 
-      # GNOME theming and appearance packages
-      adwaita-icon-theme
-      gnome-themes-extra
-      gtk-engine-murrine
-      gsettings-desktop-schemas
-
-      # Font packages for proper theming
-      cantarell-fonts
-      source-code-pro
-      noto-fonts
-      noto-fonts-emoji
-
-      # Cursor themes
-      adwaita-icon-theme
-
-      # GTK and Qt theming tools
-      libsForQt5.qtstyleplugin-kvantum
-      libsForQt5.qt5ct
-      adwaita-qt
-      adwaita-qt6
-
-      # GNOME wallpapers and theme support
-      gnome-backgrounds
-      gnome-themes-extra
-      vanilla-dmz
-
-      # Premium GTK Themes
+      # Theme packages
       arc-theme
-      orchis-theme
-      whitesur-gtk-theme
-      nordic
-      graphite-gtk-theme
-      catppuccin-gtk
-      yaru-theme
-      materia-theme
-      pop-gtk-theme
-
-      # Beautiful Icon Themes
       papirus-icon-theme
-      tela-icon-theme
-      whitesur-icon-theme
-      nordzy-icon-theme
-      catppuccin-papirus-folders
-      numix-icon-theme
-      fluent-icon-theme
-
-      # Modern Cursor Themes
       bibata-cursors
-      nordzy-cursor-theme
-      catppuccin-cursors
-      volantes-cursors
-
-      # Additional theming components
-      hicolor-icon-theme
+      adwaita-icon-theme
+      gnome-themes-extra
       gtk-engine-murrine
-      gtk_engines
-      sassc # Required for compiling some themes
+      
+      # Essential GNOME applications
+      gnome-terminal
+      gnome-text-editor
+      nautilus
+      firefox
     ]
     ++ lib.optionals (!activeVariant.enableHardwareAccel) [
       # Essential packages for software rendering mode
@@ -533,59 +481,37 @@ in {
   services.thermald.enable = lib.mkDefault false; # Conflicts with power-profiles-daemon
   services.tlp.enable = lib.mkForce false; # Use power-profiles-daemon instead
 
-  # Additional GNOME services
+  # Comprehensive GNOME services
   services.gnome = {
-    localsearch.enable = lib.mkDefault true; # Renamed from tracker-miners
-    tinysparql.enable = lib.mkDefault true; # Renamed from tracker
-    gnome-browser-connector.enable = lib.mkDefault true;
-    gnome-keyring.enable = lib.mkDefault true;
-    gnome-settings-daemon.enable = lib.mkDefault true;
-    evolution-data-server.enable = lib.mkDefault true;
-    glib-networking.enable = lib.mkDefault true;
-    sushi.enable = lib.mkDefault true; # File previews in Nautilus
+    gnome-keyring.enable = true;
+    gnome-settings-daemon.enable = true;
+    evolution-data-server.enable = true;
+    glib-networking.enable = true;
+    sushi.enable = true; # File previews in Nautilus
+    tinysparql.enable = true; # Search indexing
   };
 
-  # Hardware integration for GNOME
-  hardware.sensor.iio.enable = lib.mkDefault true; # For automatic screen rotation
+  # Additional services for GNOME functionality
+  services.geoclue2.enable = true; # Location services
+  services.upower.enable = true; # Power management
 
-  # Additional GNOME hardware support
-  services.geoclue2.enable = lib.mkDefault true; # Location services
-  services.upower.enable = lib.mkDefault true; # Battery/power management
-
-  # Printing support
-  services.printing = {
-    enable = lib.mkDefault true;
-    drivers = with pkgs; [
-      gutenprint
-      hplip
-      epson-escpr
-    ];
-  };
-
-  # Network discovery for printers
-  services.avahi = {
-    enable = lib.mkDefault true;
-    nssmdns4 = lib.mkDefault true;
-    openFirewall = lib.mkDefault true;
-  };
-
-  # GNOME-specific dconf configuration for optimal desktop experience
+  # GNOME dconf configuration
   programs.dconf.profiles.user.databases = [
     {
       lockAll = false;
       settings = {
+        # Enable extensions
         "org/gnome/shell" = {
           enabled-extensions = [
             "dash-to-dock@micxgx.gmail.com"
             "user-theme@gnome-shell-extensions.gcampax.github.com"
             "just-perfection-desktop@just-perfection"
+            "appindicatorsupport@rgcjonas.gmail.com"
+            "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
             "Vitals@CoreCoding.com"
             "caffeine@patapon.info"
-            "appindicatorsupport@rgcjonas.gmail.com"
-            "blur-my-shell@aunetx"
             "clipboard-indicator@tudmotu.com"
             "gsconnect@andyholmes.github.io"
-            "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
             "sound-output-device-chooser@kgshank.net"
           ];
           favorite-apps = [
@@ -596,170 +522,36 @@ in {
           ];
         };
 
-        # Experimental GNOME features
-        "org/gnome/mutter" = {
-          experimental-features = [
-            "scale-monitor-framebuffer"
-            "variable-refresh-rate"
-            "xwayland-native-scaling"
-          ];
-          edge-tiling = true;
-          dynamic-workspaces = true;
-          workspaces-only-on-primary = true;
-          center-new-windows = false;
-        };
-
-        # GNOME Interface and Theming - Multiple Options Available
+        # Interface theming
         "org/gnome/desktop/interface" = {
           color-scheme = "prefer-dark";
-          accent-color = "blue";
-          # Beautiful theme options (change as desired):
-          # gtk-theme = "Arc-Dark";           # Modern flat design
-          # gtk-theme = "Orchis-Dark";        # macOS-like elegance
-          # gtk-theme = "WhiteSur-Dark";      # Premium macOS look
-          # gtk-theme = "Nordic-darker";      # Nordic minimalism
-          # gtk-theme = "Graphite-dark";      # Material design
-          # gtk-theme = "Catppuccin-Mocha";   # Pastel colors
           gtk-theme = "Arc-Dark";
-
-          # Icon theme options (change as desired):
-          # icon-theme = "Papirus-Dark";      # Material design icons
-          # icon-theme = "Tela-dark";         # Rounded modern icons
-          # icon-theme = "WhiteSur-dark";     # macOS-style icons
-          # icon-theme = "Nordzy-dark";       # Nordic-themed icons
-          # icon-theme = "Fluent-dark";       # Microsoft Fluent icons
           icon-theme = "Papirus-Dark";
-
-          # Cursor theme options (change as desired):
-          # cursor-theme = "Bibata-Modern-Ice";    # Modern animated
-          # cursor-theme = "Nordzy-cursors";       # Nordic style
-          # cursor-theme = "Catppuccin-Mocha-Dark"; # Pastel cursors
-          # cursor-theme = "Volantes";             # Elegant cursors
           cursor-theme = "Bibata-Modern-Ice";
-
           cursor-size = lib.gvariant.mkInt32 24;
           font-name = "Cantarell 11";
           document-font-name = "Cantarell 11";
           monospace-font-name = "Source Code Pro 10";
-          font-antialiasing = "grayscale";
-          font-hinting = "slight";
-          text-scaling-factor = lib.gvariant.mkDouble 1.0;
-          enable-animations = lib.gvariant.mkBoolean (
-            if activeVariant.enableHardwareAccel
-            then true
-            else false
-          );
-          enable-hot-corners = lib.gvariant.mkBoolean false;
+          enable-animations = true;
+          enable-hot-corners = false;
           show-battery-percentage = true;
           clock-show-weekday = true;
-          clock-show-seconds = false;
-          locate-pointer = true;
-          gtk-enable-primary-paste = true;
-          overlay-scrolling = true;
-          gtk-key-theme = "Default";
         };
 
-        # Enhanced color and theming settings
-        "org/gnome/desktop/background" = {
-          color-shading-type = "solid";
-          picture-options = "zoom";
-          picture-uri = "file://${pkgs.gnome-backgrounds}/share/backgrounds/gnome/adwaita-l.webp";
-          picture-uri-dark = "file://${pkgs.gnome-backgrounds}/share/backgrounds/gnome/adwaita-d.webp";
-          primary-color = "#3071AE";
-          secondary-color = "#000000";
+        # Mutter window manager settings
+        "org/gnome/mutter" = {
+          edge-tiling = true;
+          dynamic-workspaces = true;
+          workspaces-only-on-primary = false;
+          center-new-windows = true;
         };
 
-        # GTK theme settings
-
-        # GNOME Shell theme (requires user-theme extension)
-        "org/gnome/shell/extensions/user-theme" = {
-          # Shell theme options (change as desired):
-          # name = "Arc-Dark";           # Matches Arc GTK theme
-          # name = "Orchis-Dark";        # Matches Orchis GTK theme
-          # name = "WhiteSur-Dark";      # Matches WhiteSur GTK theme
-          # name = "Nordic-darker";      # Matches Nordic GTK theme
-          # name = "Graphite-dark";      # Matches Graphite GTK theme
-          name = "Arc-Dark";
-        };
-
-        # Enhanced window decorations
+        # Window manager preferences
         "org/gnome/desktop/wm/preferences" = {
           button-layout = "appmenu:minimize,maximize,close";
-          theme = "Arc-Dark"; # Should match GTK theme
+          theme = "Arc-Dark";
           titlebar-font = "Cantarell Bold 11";
-          resize-with-right-button = true;
-          mouse-button-modifier = "<Super>";
           focus-mode = "click";
-          auto-raise = false;
-          raise-on-click = true;
-        };
-
-        # File manager (Nautilus) enhancements
-        "org/gnome/nautilus/preferences" = {
-          default-folder-viewer = "list-view";
-          search-filter-time-type = "last_modified";
-          show-hidden-files = false;
-          show-image-thumbnails = "always";
-          click-policy = "double";
-          executable-text-activation = "ask";
-          show-create-link = true;
-          show-delete-permanently = true;
-        };
-
-        # Enhanced file manager appearance
-        "org/gnome/nautilus/list-view" = {
-          default-column-order = ["name" "size" "type" "owner" "group" "permissions" "where" "date_modified" "date_modified_with_time" "recency"];
-          default-visible-columns = ["name" "size" "date_modified"];
-          use-tree-view = false;
-        };
-
-        # Sound theme
-        "org/gnome/desktop/sound" = {
-          theme-name = "freedesktop";
-          event-sounds = true;
-          input-feedback-sounds = false;
-        };
-
-        # Power Management
-        "org/gnome/settings-daemon/plugins/power" = {
-          sleep-inactive-ac-type = "nothing";
-          sleep-inactive-battery-type = "suspend";
-          power-button-action = "interactive";
-        };
-
-        # Session and Screen Lock
-        "org/gnome/desktop/session" = {
-          idle-delay = lib.gvariant.mkUint32 900;
-        };
-
-        "org/gnome/desktop/screensaver" = {
-          lock-enabled = lib.gvariant.mkBoolean true;
-          lock-delay = lib.gvariant.mkUint32 0;
-        };
-
-        # GNOME Terminal theming
-        "org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9" = {
-          background-color = "rgb(23,20,33)";
-          foreground-color = "rgb(208,207,204)";
-          use-theme-colors = false;
-          palette = [
-            "rgb(23,20,33)"
-            "rgb(192,28,40)"
-            "rgb(38,162,105)"
-            "rgb(162,115,76)"
-            "rgb(18,72,139)"
-            "rgb(163,71,186)"
-            "rgb(42,161,179)"
-            "rgb(208,207,204)"
-            "rgb(94,92,100)"
-            "rgb(246,97,81)"
-            "rgb(51,209,122)"
-            "rgb(233,173,12)"
-            "rgb(42,123,222)"
-            "rgb(192,97,203)"
-            "rgb(51,199,222)"
-            "rgb(255,255,255)"
-          ];
         };
 
         # Dash to Dock configuration
@@ -781,28 +573,9 @@ in {
           keyboard-layout = true;
         };
 
-        # Blur My Shell configuration
-        "org/gnome/shell/extensions/blur-my-shell" = {
-          brightness = lib.gvariant.mkDouble 0.75;
-          noise-amount = lib.gvariant.mkInt32 0;
-        };
-
-        # Input sources
-        "org/gnome/desktop/input-sources" = {
-          sources = [["xkb" "br+abnt2"]];
-          xkb-options = ["grp:alt_shift_toggle" "compose:ralt"];
-        };
-
-        # Window management keybindings
-        "org/gnome/desktop/wm/keybindings" = {
-          maximize = ["<Super>Up"];
-          unmaximize = ["<Super>Down" "<Alt>F5"];
-          toggle-maximized = ["<Alt>F10"];
-          minimize = ["<Super>h"];
-          move-to-workspace-left = ["<Super><Shift>Left"];
-          move-to-workspace-right = ["<Super><Shift>Right"];
-          switch-to-workspace-left = ["<Super>Left"];
-          switch-to-workspace-right = ["<Super>Right"];
+        # User theme extension
+        "org/gnome/shell/extensions/user-theme" = {
+          name = "Arc-Dark";
         };
 
         # Privacy settings
@@ -811,28 +584,37 @@ in {
           send-software-usage-stats = false;
         };
 
-        # Search settings
-        "org/gnome/desktop/search-providers" = {
-          disable-external = false;
+        # Session settings
+        "org/gnome/desktop/session" = {
+          idle-delay = lib.gvariant.mkUint32 900;
+        };
+
+        # Power settings
+        "org/gnome/settings-daemon/plugins/power" = {
+          sleep-inactive-ac-type = "nothing";
+          sleep-inactive-battery-type = "suspend";
+          power-button-action = "interactive";
         };
       };
     }
   ];
 
-  # Qt theming integration for GNOME
+  # Qt theming integration
   qt = {
     enable = true;
     platformTheme = "gnome";
-    style = lib.mkForce "adwaita-dark";
+    style = "adwaita-dark";
   };
 
-  # Font configuration for GNOME
+  # Enhanced font configuration
   fonts = {
     packages = with pkgs; [
       cantarell-fonts
       source-code-pro
       noto-fonts
       noto-fonts-emoji
+      noto-fonts-cjk-sans
+      nerd-fonts.jetbrains-mono
     ];
     fontconfig = {
       defaultFonts = {
