@@ -92,7 +92,7 @@
       # Additional useful extensions
       gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
       gnomeExtensions.auto-move-windows # Remember window positions per workspace
-
+      gnomeExtensions.launch-new-instance
       # Essential system packages for desktop functionality
       xdg-utils
       glib

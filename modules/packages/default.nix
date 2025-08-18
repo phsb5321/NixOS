@@ -59,6 +59,7 @@ in {
           cmake # Cross-platform build system
           ninja # Small build system with focus on speed
           pkg-config # Package configuration tool
+          mermaid-cli # Mermaid CLI for generating diagrams
 
           # Language servers for Zed Editor
           nixd # Nix language server

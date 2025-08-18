@@ -86,6 +86,7 @@ in {
         noto-fonts-cjk-sans
         noto-fonts-emoji
         liberation_ttf
+        cantarell-fonts
       ];
     };
 
@@ -122,6 +123,35 @@ in {
       typst = {
         enable = lib.mkDefault true;
         lsp = lib.mkDefault true; # Enable tinymist LSP by default
+      };
+      markdown = {
+        enable = lib.mkDefault true;
+        lsp = lib.mkDefault true;
+        linting = {
+          enable = lib.mkDefault true;
+          markdownlint = lib.mkDefault true;
+          vale = {
+            enable = lib.mkDefault false; # Disabled by default to save space
+            styles = lib.mkDefault [];
+          };
+          linkCheck = lib.mkDefault false; # Disabled by default to save space
+        };
+        formatting = {
+          enable = lib.mkDefault true;
+          mdformat = lib.mkDefault true;
+          prettier = lib.mkDefault false;
+        };
+        preview = {
+          enable = lib.mkDefault true;
+          glow = lib.mkDefault true;
+          grip = lib.mkDefault false;
+        };
+        utilities = {
+          enable = lib.mkDefault false; # Disabled by default to save space
+          doctoc = lib.mkDefault false;
+          mdbook = lib.mkDefault false;
+          mermaid = lib.mkDefault false;
+        };
       };
     };
 
@@ -349,6 +379,7 @@ in {
         supabase-cli
         pkgs-unstable.zed-editor
         pkgs-unstable.ghostty
+        pkgs-unstable.kitty
         stockfish
         chromium
 
