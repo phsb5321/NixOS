@@ -1,5 +1,6 @@
 # ~/NixOS/hosts/laptop/configuration.nix
 {
+  config,
   pkgs,
   systemVersion,
   ...
@@ -88,6 +89,35 @@
   modules.core.documentTools = {
     enable = true;
     latex.enable = false; # Disabled for laptop to save space
+    markdown = {
+      enable = true;
+      lsp = true;
+      linting = {
+        enable = true;
+        markdownlint = true;
+        vale = {
+          enable = false; # Disabled for laptop to save space
+          styles = [];
+        };
+        linkCheck = false; # Disabled for laptop to save space
+      };
+      formatting = {
+        enable = true;
+        mdformat = true;
+        prettier = false;
+      };
+      preview = {
+        enable = true;
+        glow = true;
+        grip = false;
+      };
+      utilities = {
+        enable = false; # Disabled for laptop to save space
+        doctoc = false;
+        mdbook = false;
+        mermaid = false;
+      };
+    };
   };
 
   # Enable explicit keyboard configuration for laptop (ABNT2)
