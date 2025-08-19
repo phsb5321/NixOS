@@ -1,5 +1,5 @@
-# NixOS Desktop Configuration - Unified and Organized
-# Combines all working configurations with proper module structure
+# NixOS Desktop Configuration - Host Specific
+# Contains only host-specific configuration, GNOME config is in shared modules
 {
   pkgs,
   lib,
@@ -71,7 +71,10 @@ in {
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;
 
-  # Conditional boot configuration based on variant
+  # Enable GNOME desktop environment (configured in shared modules)
+  modules.desktop.gnome.enable = true;
+
+  # Host-specific boot configuration
   boot = {
     # Use LTS kernel for maximum stability
     kernelPackages = pkgs.linuxPackages_6_6;
@@ -97,7 +100,7 @@ in {
     tmp.useTmpfs = true;
   };
 
-  # Hardware configuration - conditional based on variant
+  # Host-specific hardware configuration
   hardware = {
     graphics = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
@@ -131,64 +134,7 @@ in {
     '';
   };
 
-  # Modern NixOS 25.11 display manager and desktop environment configuration
-  services.displayManager.gdm = {
-    enable = true;
-    wayland = true;
-  };
-
-  services.desktopManager.gnome = {
-    enable = true;
-  };
-
-  # Environment variables for optimal GNOME experience
-  environment = {
-    variables = lib.mkMerge [
-      # Software rendering fallback
-      (lib.mkIf (!activeVariant.enableHardwareAccel) {
-        "LIBGL_ALWAYS_SOFTWARE" = "1";
-        "MESA_LOADER_DRIVER_OVERRIDE" = "swrast";
-        "GALLIUM_DRIVER" = "llvmpipe";
-        "GSK_RENDERER" = "cairo";
-        "GDK_BACKEND" = "x11";
-        "QT_XCB_GL_INTEGRATION" = "none";
-      })
-
-      # Hardware acceleration with Wayland optimizations
-      (lib.mkIf activeVariant.enableHardwareAccel {
-        "MOZ_ENABLE_WAYLAND" = "1";
-        "QT_QPA_PLATFORM" = "wayland;xcb";
-        "SDL_VIDEODRIVER" = "wayland";
-        "CLUTTER_BACKEND" = "wayland";
-        "GDK_BACKEND" = "wayland,x11";
-        "AMD_VULKAN_ICD" = "RADV";
-        "RADV_PERFTEST" = "gpl";
-        "MOZ_USE_XINPUT2" = "1";
-        "MOZ_WEBRENDER" = "1";
-      })
-    ];
-
-    # Session variables for theming and functionality
-    sessionVariables = {
-      NIXOS_OZONE_WL = "1";
-      XDG_SESSION_TYPE = "wayland";
-      
-      # Theme variables
-      GTK_THEME = "Arc-Dark";
-      XCURSOR_THEME = "Bibata-Modern-Ice";
-      XCURSOR_SIZE = "24";
-      
-      # Qt integration
-      QT_QPA_PLATFORMTHEME = "gnome";
-      QT_STYLE_OVERRIDE = "adwaita-dark";
-      
-      # Wayland support for applications
-      MOZ_ENABLE_WAYLAND = "1";
-      ELECTRON_OZONE_PLATFORM_HINT = "wayland";
-    };
-  };
-
-  # SystemD service for AMD GPU optimization (only when hardware accel enabled)
+  # Host-specific SystemD service for AMD GPU optimization
   systemd.services.amd-gpu-optimization = lib.mkIf activeVariant.enableHardwareAccel {
     description = "AMD GPU Performance Optimization";
     after = ["graphical-session.target"];
@@ -213,22 +159,7 @@ in {
     };
   };
 
-  # Input device management
-  services.libinput = {
-    enable = true;
-    mouse = {
-      accelProfile = "adaptive";
-      accelSpeed = "0";
-    };
-    touchpad = {
-      accelProfile = "adaptive";
-      accelSpeed = "0";
-      tapping = true;
-      naturalScrolling = false;
-    };
-  };
-
-  # Host-specific user groups (additional to shared config)
+  # Host-specific user groups
   users.groups.plugdev = {};
   users.users.notroot.extraGroups = [
     "dialout" # Serial device access for development
@@ -237,7 +168,7 @@ in {
     "input" # Input device access
   ];
 
-  # Host-specific desktop packages (essential for GNOME desktop functionality)
+  # Host-specific desktop packages (hardware-dependent applications)
   environment.systemPackages = with pkgs;
     [
       # GPU-specific tools for AMD hardware debugging
@@ -261,37 +192,8 @@ in {
       neofetch
       lm_sensors
 
-      # Essential GNOME packages
-      gnome-session
-      gnome-settings-daemon
-      gnome-control-center
-      gnome-tweaks
-
-      # GNOME Extensions
-      gnomeExtensions.appindicator
-      gnomeExtensions.dash-to-dock
-      gnomeExtensions.user-themes
-      gnomeExtensions.just-perfection
-      gnomeExtensions.vitals
-      gnomeExtensions.caffeine
-      gnomeExtensions.clipboard-indicator
-      gnomeExtensions.gsconnect
-      gnomeExtensions.workspace-indicator
-      gnomeExtensions.sound-output-device-chooser
-
-      # Theme packages
-      arc-theme
-      papirus-icon-theme
-      bibata-cursors
-      adwaita-icon-theme
-      gnome-themes-extra
-      gtk-engine-murrine
-      
-      # Essential GNOME applications
-      gnome-terminal
-      gnome-text-editor
-      nautilus
-      firefox
+      # Host-specific terminal (GPU-accelerated)
+      kitty
     ]
     ++ lib.optionals (!activeVariant.enableHardwareAccel) [
       # Essential packages for software rendering mode
@@ -302,14 +204,14 @@ in {
       htop
     ];
 
-  # Enable modules based on hardware capabilities
+  # Host-specific module configuration
   modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
   modules.core.java = {
     enable = true;
     androidTools.enable = activeVariant.enableHardwareAccel;
   };
 
-  # Document tools
+    # Document tools
   modules.core.documentTools = {
     enable = true;
     latex = {
@@ -352,6 +254,130 @@ in {
       };
     };
   };
+
+  # Host-specific extra packages (desktop-specific applications)
+  modules.packages.extraPackages = with pkgs;
+    lib.optionals activeVariant.enableHardwareAccel [
+      # Development tools
+      calibre
+      anydesk
+      postman
+      dbeaver-bin
+      android-studio
+      android-tools
+
+      # Media and Graphics (GPU-accelerated)
+      gimp
+      inkscape
+      blender
+      krita
+      kdePackages.kdenlive
+      obs-studio
+
+      # Music streaming
+      spotify
+      spot
+      ncspot
+
+      # Communication
+      telegram-desktop
+      vesktop
+      slack
+      zoom-us
+
+      # Gaming
+      steam
+      lutris
+      wine
+      winetricks
+
+      # Productivity
+      obsidian
+      notion-app-enhanced
+
+      # System monitoring
+      htop
+      btop
+      iotop
+      atop
+      smem
+      numactl
+      stress-ng
+      memtester
+
+      # Memory analysis
+      valgrind
+      heaptrack
+      massif-visualizer
+
+      # Disk utilities
+      ncdu
+      duf
+
+      # Process management
+      psmisc
+      lsof
+
+      # Development
+      gh
+      git-crypt
+      gnupg
+      ripgrep
+      fd
+      jq
+      yq
+      unzip
+      zip
+      p7zip
+
+      # Fonts
+      nerd-fonts.jetbrains-mono
+      noto-fonts-emoji
+      noto-fonts
+      noto-fonts-cjk-sans
+    ];
+
+  # Host-specific network configuration
+  modules.networking.firewall.openPorts = [3000]; # Development server port
+
+  # Programs (conditional)
+  programs.steam = lib.mkIf activeVariant.enableHardwareAccel {
+    enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+  };
+
+  # Security and sudo access
+  security = {
+    sudo.extraRules = [
+      {
+        groups = ["wheel"];
+        commands = [
+          {
+            command = "${pkgs.corectrl}/bin/corectrl";
+            options = ["NOPASSWD"];
+          }
+        ];
+      }
+    ];
+
+    auditd.enable = activeVariant.enableHardwareAccel;
+    audit = lib.mkIf activeVariant.enableHardwareAccel {
+      enable = true;
+      backlogLimit = 8192;
+      failureMode = "printk";
+      rules = ["-a exit,always -F arch=b64 -S execve"];
+    };
+
+    apparmor = lib.mkIf activeVariant.enableHardwareAccel {
+      enable = true;
+      killUnconfinedConfinables = true;
+    };
+  };
+
+  # System state version
+  system.stateVersion = "25.11";
+}
 
   # Host-specific extra packages (desktop-specific applications)
   modules.packages.extraPackages = with pkgs;
@@ -519,13 +545,13 @@ in {
             "firefox.desktop"
             "org.gnome.Terminal.desktop"
             "org.gnome.TextEditor.desktop"
+            "kitty.desktop"
           ];
         };
 
-        # Interface theming
+        # Interface theming (allow GNOME to handle GTK theme for accent color support)
         "org/gnome/desktop/interface" = {
           color-scheme = "prefer-dark";
-          gtk-theme = "Arc-Dark";
           icon-theme = "Papirus-Dark";
           cursor-theme = "Bibata-Modern-Ice";
           cursor-size = lib.gvariant.mkInt32 24;
@@ -538,18 +564,18 @@ in {
           clock-show-weekday = true;
         };
 
-        # Mutter window manager settings
+        # Mutter window manager settings for better scaling and spacing
         "org/gnome/mutter" = {
           edge-tiling = true;
           dynamic-workspaces = true;
           workspaces-only-on-primary = false;
           center-new-windows = true;
+          experimental-features = ["scale-monitor-framebuffer"];
         };
 
-        # Window manager preferences
+        # Window manager preferences (allow GNOME to handle theme)
         "org/gnome/desktop/wm/preferences" = {
           button-layout = "appmenu:minimize,maximize,close";
-          theme = "Arc-Dark";
           titlebar-font = "Cantarell Bold 11";
           focus-mode = "click";
         };
@@ -627,6 +653,11 @@ in {
       antialias = true;
     };
   };
+
+  # Electron applications configuration for Wayland (simplified)
+  environment.etc."electron-flags.conf".text = ''
+    --ozone-platform=wayland
+  '';
 
   # Optional services (disabled by default for this desktop)
   services.ollama.enable = lib.mkDefault false;
