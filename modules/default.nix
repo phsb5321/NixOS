@@ -5,5 +5,6 @@
     ./packages
     ./networking
     ./desktop
+    ./dotfiles
   ];
 }
