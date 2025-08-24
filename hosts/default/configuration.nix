@@ -1,7 +1,6 @@
 # NixOS Desktop Configuration - Host Specific
 # Contains only host-specific configuration, GNOME config is in shared modules
 {
-  config,
   pkgs,
   lib,
   hostname,
