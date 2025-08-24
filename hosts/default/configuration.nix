@@ -1,6 +1,7 @@
 # NixOS Desktop Configuration - Host Specific
 # Contains only host-specific configuration, GNOME config is in shared modules
 {
+  config,
   pkgs,
   lib,
   hostname,
@@ -59,8 +60,13 @@
     };
   };
 
-  # Select active variant (change this to switch modes)
-  activeVariant = variants.hardware; # Change to: conservative, software
+  # Select active variant based on module configuration
+  activeVariant = let
+    variantName = config.modules.desktop.gnome.variant or "hardware";
+  in
+    if builtins.hasAttr variantName variants
+    then variants.${variantName}
+    else throw "Invalid variant: ${variantName}. Valid options are: ${builtins.concatStringsSep ", " (builtins.attrNames variants)}";
 in {
   imports = [
     ./hardware-configuration.nix
