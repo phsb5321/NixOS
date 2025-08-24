@@ -59,14 +59,8 @@
       ];
     };
   };
-
-  # Select active variant based on module configuration
-  activeVariant = let
-    variantName = config.modules.desktop.gnome.variant or "hardware";
-  in
-    if builtins.hasAttr variantName variants
-    then variants.${variantName}
-    else throw "Invalid variant: ${variantName}. Valid options are: ${builtins.concatStringsSep ", " (builtins.attrNames variants)}";
+  # Simple default variant selection to avoid circular dependency
+  activeVariant = variants.hardware; # Default to hardware variant
 in {
   imports = [
     ./hardware-configuration.nix
@@ -77,12 +71,18 @@ in {
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;
 
-  # Enable GNOME desktop environment (configured in shared modules)
-  modules.desktop.gnome.enable = true;
+  # Enable GNOME desktop environment (configured in shared modules) with default variant
+  modules.desktop.gnome = {
+    enable = true;
+    variant = "hardware"; # Can be changed to "conservative" or "software" as needed
+  };
 
-  # Host-specific boot configuration
+  # Boot configuration with variants
   boot = {
-    # Use LTS kernel for maximum stability
+    # Temporary files and kernel optimization
+    tmp.useTmpfs = true;
+
+    # Kernel configuration
     kernelPackages = pkgs.linuxPackages_6_6;
 
     # Dynamic kernel parameters based on variant
@@ -101,12 +101,9 @@ in {
       ]
       else [];
     blacklistedKernelModules = activeVariant.blacklistModules or [];
-
-    # Temporary filesystem in RAM for better performance
-    tmp.useTmpfs = true;
   };
 
-  # Host-specific hardware configuration
+  # Hardware configuration based on variant
   hardware = {
     graphics = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
@@ -116,7 +113,7 @@ in {
     cpu.intel.updateMicrocode = true;
   };
 
-  # X11 server configuration for compatibility (Wayland is primary)
+  # X11 configuration (includes video drivers)
   services.xserver = {
     enable = true;
     videoDrivers = lib.mkForce activeVariant.videoDrivers;
@@ -130,7 +127,8 @@ in {
       EndSection
 
       Section "Screen"
-        Identifier "Software Screen"
+        Identifier "Default Screen"
+        Device "Software Graphics"
         DefaultDepth 24
         SubSection "Display"
           Depth 24
@@ -261,7 +259,6 @@ in {
     };
   };
 
-  # Host-specific extra packages (desktop-specific applications)
   modules.packages.extraPackages = with pkgs;
     lib.optionals activeVariant.enableHardwareAccel [
       # Development tools
@@ -351,21 +348,24 @@ in {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
+    gamescopeSession.enable = true;
   };
 
-  # Security and sudo access
+  # Host-specific shell configuration (optimized for desktop performance)
+  users.defaultUserShell = pkgs.zsh;
+  programs.zsh.enable = true;
+
+  # Host-specific security configuration
   security = {
-    sudo.extraRules = [
-      {
-        groups = ["wheel"];
-        commands = [
-          {
-            command = "${pkgs.corectrl}/bin/corectrl";
-            options = ["NOPASSWD"];
-          }
-        ];
-      }
-    ];
+    # Enable PAM for GNOME keyring and authentication
+    pam.services = {
+      gdm = {
+        enableGnomeKeyring = true;
+      };
+      gdm-password = {
+        enableGnomeKeyring = true;
+      };
+    };
 
     auditd.enable = activeVariant.enableHardwareAccel;
     audit = lib.mkIf activeVariant.enableHardwareAccel {

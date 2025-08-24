@@ -211,11 +211,16 @@ test_background() {
     fi
 
     # Check if background files exist
-    local bg_path="/nix/store"
-    if find $bg_path -name "*gnome-backgrounds*" -type d 2>/dev/null | head -1 | grep -q gnome-backgrounds; then
-        log_success "GNOME backgrounds package is available"
+    local bg_store_path=""
+    if command -v nix >/dev/null 2>&1; then
+        bg_store_path=$(nix eval --raw nixpkgs.gnome-backgrounds 2>/dev/null || echo "")
+        if [ -n "$bg_store_path" ] && [ -d "$bg_store_path" ]; then
+            log_success "GNOME backgrounds package is available at $bg_store_path"
+        else
+            log_warning "GNOME backgrounds package might not be available (could not find store path)"
+        fi
     else
-        log_warning "GNOME backgrounds package might not be available"
+        log_warning "nix command not available; cannot check GNOME backgrounds package reliably"
     fi
 }
 
