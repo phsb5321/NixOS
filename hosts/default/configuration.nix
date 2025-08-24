@@ -211,7 +211,7 @@ in {
     androidTools.enable = activeVariant.enableHardwareAccel;
   };
 
-    # Document tools
+  # Document tools
   modules.core.documentTools = {
     enable = true;
     latex = {
@@ -373,6 +373,25 @@ in {
       enable = true;
       killUnconfinedConfinables = true;
     };
+  };
+
+  # Wayland environment variables for better Electron/VS Code support
+  environment.sessionVariables = {
+    # Ensure Wayland session
+    XDG_SESSION_TYPE = "wayland";
+
+    # Enable Wayland for Qt apps
+    QT_QPA_PLATFORM = "wayland;xcb";
+
+    # Enable Wayland for GTK apps
+    GDK_BACKEND = "wayland,x11";
+
+    # Firefox Wayland
+    MOZ_ENABLE_WAYLAND = "1";
+
+    # VS Code/Electron Wayland support - FIXED FLAGS
+    NIXOS_OZONE_WL = "1";
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
   };
 
   # System state version
