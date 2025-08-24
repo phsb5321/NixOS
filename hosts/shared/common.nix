@@ -166,7 +166,7 @@
     glib-networking.enable = lib.mkDefault true;
     sushi.enable = lib.mkDefault true;
     gnome-remote-desktop.enable = lib.mkForce false;
-    gnome-user-share.enable = lib.mkForce false; # Disable for security
+    gnome-user-share.enable = lib.mkForce false; # Disable for security: disables GNOME file sharing over network (WebDAV, Bluetooth). Re-enable if you need network file sharing.
     rygel.enable = lib.mkForce false; # Media sharing - disable by default
     tinysparql.enable = lib.mkDefault true; # File indexing (renamed from tracker)
     localsearch.enable = lib.mkDefault true; # File indexing miners (renamed from tracker-miners)

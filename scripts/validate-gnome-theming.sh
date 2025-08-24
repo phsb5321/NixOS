@@ -257,26 +257,22 @@ main() {
     echo
 
     # Run all tests
-    local tests_passed=0
-    local total_tests=7
+    if ! check_gnome_session; then
+        log_error "GNOME session check failed - aborting remaining tests"
+        return 1
+    fi
 
-    if check_gnome_session; then ((tests_passed++)); fi
-    test_dconf_settings; ((tests_passed++))
-    test_fonts; ((tests_passed++))
-    test_qt_theming; ((tests_passed++))
-    test_extensions; ((tests_passed++))
-    test_background; ((tests_passed++))
-    test_display_server; ((tests_passed++))
+    test_dconf_settings
+    test_fonts
+    test_qt_theming
+    test_extensions
+    test_background
+    test_display_server
 
     echo
     echo "=================================="
     log_info "Validation completed"
-
-    if [ $tests_passed -eq $total_tests ]; then
-        log_success "All tests passed!"
-    else
-        log_warning "Some tests had warnings or errors"
-    fi
+    log_info "Review the output above for any warnings or errors"
 
     echo
     echo "If you see errors or warnings, you may need to:"
