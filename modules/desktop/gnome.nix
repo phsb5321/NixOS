@@ -55,6 +55,17 @@
         description = "Enable Wayland session";
       };
     };
+
+    variant = lib.mkOption {
+      type = lib.types.enum ["hardware" "conservative" "software"];
+      default = "hardware";
+      description = ''
+        Hardware acceleration variant:
+        - hardware: Normal operation with full hardware acceleration
+        - conservative: Conservative fallback for GPU issues with tear-free
+        - software: Emergency software rendering fallback
+      '';
+    };
   };
 
   config = lib.mkIf config.modules.desktop.gnome.enable {

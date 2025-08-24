@@ -201,9 +201,23 @@ in {
           steam-run # Run non-Steam games with Steam runtime
           wine-staging # Latest Wine with staging patches
           dxvk # DirectX to Vulkan
-          prismlauncher # Prism Launcher for Minecraft
         ];
         description = "List of gaming packages to install";
+      };
+
+      minecraftSupport = {
+        enable = mkOption {
+          type = types.bool;
+          default = false;
+          description = "Enable Minecraft support with Prism Launcher";
+        };
+        packages = mkOption {
+          type = types.listOf types.package;
+          default = with pkgs; [
+            prismlauncher # Prism Launcher for Minecraft
+          ];
+          description = "List of Minecraft-related packages to install";
+        };
       };
     };
 
@@ -309,6 +323,7 @@ in {
       ++ (optionals media.enable media.packages)
       ++ (optionals utilities.enable utilities.packages)
       ++ (optionals gaming.enable gaming.packages)
+      ++ (optionals gaming.minecraftSupport.enable gaming.minecraftSupport.packages)
       ++ (optionals audioVideo.enable audioVideo.packages)
       ++ (optionals terminal.enable terminal.packages)
       ++ (optionals python.enable [python.package])
