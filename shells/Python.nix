@@ -1,4 +1,4 @@
-{pkgs ? import <nixpkgs> {}}: let
+{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
   # Create a custom OpenCV package with GTK support
   opencvGtk = pkgs.opencv4.override {
     enableGtk3 = true;
