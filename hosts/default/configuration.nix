@@ -70,10 +70,11 @@ in {
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;
 
-  # Enable GNOME desktop environment (configured in shared modules) with default variant
+  # Clean GNOME configuration following NixOS Wiki recommendations
   modules.desktop.gnome = {
     enable = true;
-    variant = "hardware"; # Can be changed to "conservative" or "software" as needed
+    variant = "hardware"; # Back to default hardware variant
+    wayland.enable = true; # Re-enable Wayland
   };
 
   # Boot configuration with variants
@@ -380,24 +381,8 @@ in {
     };
   };
 
-  # Wayland environment variables for better Electron/VS Code support
-  environment.sessionVariables = {
-    # Ensure Wayland session
-    XDG_SESSION_TYPE = "wayland";
-
-    # Enable Wayland for Qt apps
-    QT_QPA_PLATFORM = "wayland;xcb";
-
-    # Enable Wayland for GTK apps
-    GDK_BACKEND = "wayland,x11";
-
-    # Firefox Wayland
-    MOZ_ENABLE_WAYLAND = "1";
-
-    # VS Code/Electron Wayland support - FIXED FLAGS
-    NIXOS_OZONE_WL = "1";
-    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
-  };
+  # Note: Wayland environment variables are now managed by the GNOME module
+  # to prevent conflicts and ensure consistency across all applications
 
   # System state version
   system.stateVersion = "25.11";
