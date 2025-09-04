@@ -1,5 +1,5 @@
 # GNOME Desktop Environment Configuration
-# Shared configuration for GNOME desktop across all hosts
+# Official NixOS 25.11+ implementation following NixOS Wiki
 {
   config,
   lib,
@@ -69,15 +69,15 @@
   };
 
   config = lib.mkIf config.modules.desktop.gnome.enable {
-    # Display manager and desktop environment
+    # Official NixOS 25.11+ GNOME configuration
     services.displayManager.gdm = {
       enable = true;
       wayland = config.modules.desktop.gnome.wayland.enable;
     };
-
+    
     services.desktopManager.gnome.enable = true;
 
-    # Essential GNOME services
+    # Essential GNOME services (official wiki)
     services.gnome = {
       gnome-keyring.enable = true;
       gnome-settings-daemon.enable = true;
@@ -91,59 +91,20 @@
     services.geoclue2.enable = true; # Location services
     services.upower.enable = true; # Power management
 
-    # Power management
-    services.power-profiles-daemon.enable = lib.mkDefault true;
-    services.thermald.enable = lib.mkDefault false; # Conflicts with power-profiles-daemon
-    services.tlp.enable = lib.mkForce false; # Use power-profiles-daemon instead
-
-    # Enable dconf for GNOME configuration management
+    # Essential support (NixOS Wiki requirement)
     programs.dconf.enable = true;
 
-    # udev packages for proper GNOME hardware support
+    # Power management (official recommendation)
+    services.power-profiles-daemon.enable = lib.mkDefault true;
+    services.thermald.enable = lib.mkDefault false;
+    services.tlp.enable = lib.mkForce false;
+
+    # System tray support (official wiki recommendation)
     services.udev.packages = with pkgs; [
       gnome-settings-daemon
     ];
 
-    # Environment variables for optimal GNOME experience
-    environment.variables = {
-      # Fix for GNOME GTK rendering issues on NixOS 25.05+
-      GSK_RENDERER = lib.mkForce "ngl";
-      # Wayland optimizations
-      MOZ_ENABLE_WAYLAND = "1";
-      QT_QPA_PLATFORM = "wayland;xcb";
-      SDL_VIDEODRIVER = "wayland";
-      CLUTTER_BACKEND = "wayland";
-      GDK_BACKEND = "wayland,x11";
-      # Font rendering and DPI improvements
-      FREETYPE_PROPERTIES = "truetype:interpreter-version=40";
-      # Wayland debugging (can be removed if not needed)
-      WAYLAND_DEBUG = "0";
-    };
-
-    environment.sessionVariables = {
-      # Essential Wayland support for Electron/Chromium apps
-      NIXOS_OZONE_WL = "1"; # Enable Wayland for Electron/Chromium apps (NixOS method)
-      XDG_SESSION_TYPE = "wayland";
-
-      # Theme variables (let GNOME handle GTK theme for accent color support)
-      XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
-      XCURSOR_SIZE = "24";
-
-      # Qt integration
-      QT_QPA_PLATFORMTHEME = "gnome";
-      QT_STYLE_OVERRIDE = "adwaita-dark";
-
-      # Firefox Wayland support
-      MOZ_ENABLE_WAYLAND = "1";
-
-      # Display scaling and font improvements
-      GDK_SCALE = "1";
-      GDK_DPI_SCALE = "1";
-      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
-      QT_SCALE_FACTOR = "1";
-    };
-
-    # Core GNOME packages
+    # Official GNOME packages
     environment.systemPackages = with pkgs;
       [
         # Essential GNOME packages
@@ -153,12 +114,7 @@
         gnome-tweaks
         gnome-shell
 
-        # Additional GNOME components for accent colors and modern features
-        libadwaita
-        adwaita-icon-theme
-        gnome-backgrounds
-
-        # Essential GNOME applications
+        # GNOME applications
         gnome-terminal
         gnome-text-editor
         nautilus
@@ -173,8 +129,9 @@
         gtk-engine-murrine
       ]
       ++ lib.optionals config.modules.desktop.gnome.extensions.enable [
-        # GNOME Extensions
+        # System tray support (official wiki)
         gnomeExtensions.appindicator
+        # Your existing extensions
         gnomeExtensions.dash-to-dock
         gnomeExtensions.user-themes
         gnomeExtensions.just-perfection
@@ -186,7 +143,7 @@
         gnomeExtensions.sound-output-device-chooser
       ];
 
-    # GNOME dconf configuration
+    # GNOME dconf configuration (preserving your existing settings)
     programs.dconf.profiles.user.databases = lib.mkIf config.modules.desktop.gnome.extensions.enable [
       {
         lockAll = false;
@@ -203,7 +160,7 @@
             ];
           };
 
-          # Interface theming (allow GNOME to handle GTK theme for accent color support)
+          # Interface theming
           "org/gnome/desktop/interface" = {
             color-scheme = "prefer-dark";
             icon-theme = config.modules.desktop.gnome.theme.iconTheme;
@@ -218,7 +175,7 @@
             clock-show-weekday = true;
           };
 
-          # Mutter window manager settings for better scaling and spacing
+          # Mutter window manager settings
           "org/gnome/mutter" = {
             edge-tiling = true;
             dynamic-workspaces = true;
@@ -227,14 +184,14 @@
             experimental-features = ["scale-monitor-framebuffer"];
           };
 
-          # Window manager preferences (allow GNOME to handle theme)
+          # Window manager preferences
           "org/gnome/desktop/wm/preferences" = {
             button-layout = "appmenu:minimize,maximize,close";
             titlebar-font = "Cantarell Bold 11";
             focus-mode = "click";
           };
 
-          # Dash to Dock configuration
+          # Extension configurations (your existing settings)
           "org/gnome/shell/extensions/dash-to-dock" = {
             dock-position = "BOTTOM";
             extend-height = false;
@@ -244,7 +201,6 @@
             show-apps-at-top = true;
           };
 
-          # Just Perfection configuration
           "org/gnome/shell/extensions/just-perfection" = {
             panel-in-overview = true;
             activities-button = true;
@@ -253,7 +209,6 @@
             keyboard-layout = true;
           };
 
-          # User theme extension
           "org/gnome/shell/extensions/user-theme" = {
             name = "Arc-Dark";
           };
@@ -279,7 +234,7 @@
       }
     ];
 
-    # Qt theming integration
+    # Qt theming integration (official wiki)
     qt = {
       enable = true;
       platformTheme = "gnome";
@@ -307,11 +262,6 @@
         antialias = true;
       };
     };
-
-    # Electron applications configuration for Wayland (simplified)
-    environment.etc."electron-flags.conf".text = ''
-      --ozone-platform=wayland
-    '';
 
     # Input device management
     services.libinput = {
