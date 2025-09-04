@@ -39,8 +39,7 @@ in {
           pkgs-unstable.vscode
           code-cursor # Temporarily disabled due to download issues
 
-          # API testing and development
-          bruno # Open-source API client (Postman alternative)
+          # API testing and development (bruno moved to Flatpak)
           bruno-cli # Bruno command-line interface
 
           # Language runtimes and package managers
