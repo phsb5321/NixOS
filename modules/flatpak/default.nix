@@ -29,7 +29,8 @@
       packages = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [
-          "com.usebruno.Bruno" # Bruno API Client (better portal integration than Nix package)
+          # Bruno removed due to persistent D-Bus portal issues
+          # Will be installed via AppImage instead
         ];
         description = "List of development Flatpak applications";
       };
@@ -72,13 +73,37 @@
       };
     };
 
-    # Environment setup for Flatpak
+    # Environment setup for Flatpak and AppImage support
     environment.systemPackages = with pkgs; [
       flatpak # Ensure flatpak CLI is available
+      fuse # Required for AppImage support
       
-      # Create wrapper script for Bruno Flatpak
+      # Create wrapper script for Bruno AppImage (extracted version)
       (writeShellScriptBin "bruno" ''
-        exec flatpak run com.usebruno.Bruno "$@"
+        BRUNO_APPIMAGE="$HOME/.local/bin/bruno.AppImage"
+        BRUNO_EXTRACTED="$HOME/.local/share/bruno-extracted"
+        BRUNO_URL="https://github.com/usebruno/bruno/releases/download/v2.10.0/bruno_2.10.0_x86_64_linux.AppImage"
+        
+        # Download and extract AppImage if not exists
+        if [ ! -d "$BRUNO_EXTRACTED" ]; then
+          echo "Setting up Bruno AppImage..."
+          mkdir -p "$(dirname "$BRUNO_APPIMAGE")" "$BRUNO_EXTRACTED"
+          
+          # Download if needed
+          if [ ! -f "$BRUNO_APPIMAGE" ]; then
+            ${pkgs.curl}/bin/curl -L -o "$BRUNO_APPIMAGE" "$BRUNO_URL"
+            chmod +x "$BRUNO_APPIMAGE"
+          fi
+          
+          # Extract AppImage contents
+          cd "$BRUNO_EXTRACTED"
+          "$BRUNO_APPIMAGE" --appimage-extract >/dev/null
+          mv squashfs-root/* .
+          rmdir squashfs-root
+        fi
+        
+        # Run extracted Bruno binary
+        exec "$BRUNO_EXTRACTED/bruno" "$@"
       '')
     ];
 
@@ -88,13 +113,13 @@
       "$HOME/.local/share/flatpak/exports"
     ];
 
-    # Shell aliases for convenient access to Flatpak apps
+    # Shell aliases for AppImage apps
     programs.bash.shellAliases = lib.mkIf config.modules.flatpak.development.enable {
-      bruno-flatpak = "flatpak run com.usebruno.Bruno";
+      bruno-appimage = "$HOME/.local/bin/bruno.AppImage";
     };
     
     programs.zsh.shellAliases = lib.mkIf config.modules.flatpak.development.enable {
-      bruno-flatpak = "flatpak run com.usebruno.Bruno";
+      bruno-appimage = "$HOME/.local/bin/bruno.AppImage";
     };
   };
 }
