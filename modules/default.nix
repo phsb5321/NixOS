@@ -6,5 +6,7 @@
     ./networking
     ./desktop
     ./dotfiles
+    ./hardware
+    ./profiles
   ];
 }
