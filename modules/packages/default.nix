@@ -39,7 +39,8 @@ in {
           pkgs-unstable.vscode
           code-cursor # Temporarily disabled due to download issues
 
-          # API testing and development (bruno moved to Flatpak)
+          # API testing and development
+          bruno # Bruno API client - portal errors are cosmetic, app functions normally
           bruno-cli # Bruno command-line interface
 
           # Language runtimes and package managers
