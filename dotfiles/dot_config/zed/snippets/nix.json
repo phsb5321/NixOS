@@ -1,0 +1,343 @@
+{
+  "nixos_module": {
+    "prefix": "nixmodule",
+    "body": [
+      "{",
+      "  config,",
+      "  lib,",
+      "  pkgs,",
+      "  ...",
+      "}:",
+      "with lib; let",
+      "  cfg = config.modules.${1:moduleName};",
+      "in {",
+      "  options.modules.${1:moduleName} = {",
+      "    enable = mkEnableOption \"${2:Module description}\";",
+      "    $3",
+      "  };",
+      "",
+      "  config = mkIf cfg.enable {",
+      "    $0",
+      "  };",
+      "}"
+    ],
+    "description": "Create a NixOS module template"
+  },
+
+  "nixos_option": {
+    "prefix": "nixoption",
+    "body": [
+      "${1:optionName} = mkOption {",
+      "  type = types.${2:str};",
+      "  default = ${3:defaultValue};",
+      "  description = \"${4:Option description}\";",
+      "};"
+    ],
+    "description": "Create a NixOS option"
+  },
+
+  "nixos_service": {
+    "prefix": "nixservice",
+    "body": [
+      "systemd.services.${1:serviceName} = {",
+      "  description = \"${2:Service description}\";",
+      "  after = [ \"${3:network.target}\" ];",
+      "  wantedBy = [ \"multi-user.target\" ];",
+      "  serviceConfig = {",
+      "    Type = \"${4:simple}\";",
+      "    ExecStart = \"${5:/path/to/executable}\";",
+      "    Restart = \"always\";",
+      "    RestartSec = \"${6:10}\";",
+      "    User = \"${7:user}\";",
+      "    Group = \"${8:group}\";",
+      "  };",
+      "};"
+    ],
+    "description": "Create a systemd service configuration"
+  },
+
+  "nix_derivation": {
+    "prefix": "nixdrv",
+    "body": [
+      "pkgs.stdenv.mkDerivation rec {",
+      "  pname = \"${1:package-name}\";",
+      "  version = \"${2:1.0.0}\";",
+      "",
+      "  src = fetchurl {",
+      "    url = \"${3:https://example.com/archive.tar.gz}\";",
+      "    sha256 = \"${4:sha256}\";",
+      "  };",
+      "",
+      "  nativeBuildInputs = with pkgs; [",
+      "    ${5:cmake}",
+      "  ];",
+      "",
+      "  buildInputs = with pkgs; [",
+      "    ${6:dependencies}",
+      "  ];",
+      "",
+      "  meta = with lib; {",
+      "    description = \"${7:Package description}\";",
+      "    homepage = \"${8:https://example.com}\";",
+      "    license = licenses.${9:mit};",
+      "    maintainers = with maintainers; [ ${10:maintainer} ];",
+      "  };",
+      "}"
+    ],
+    "description": "Create a Nix derivation"
+  },
+
+  "nix_shell": {
+    "prefix": "nixshell",
+    "body": [
+      "pkgs.mkShell {",
+      "  buildInputs = with pkgs; [",
+      "    ${1:packages}",
+      "  ];",
+      "",
+      "  shellHook = ''",
+      "    ${2:shell commands}",
+      "  '';",
+      "}"
+    ],
+    "description": "Create a Nix shell environment"
+  },
+
+  "flake_template": {
+    "prefix": "flaketemplate",
+    "body": [
+      "{",
+      "  description = \"${1:Flake description}\";",
+      "",
+      "  inputs = {",
+      "    nixpkgs.url = \"github:nixos/nixpkgs/nixos-unstable\";",
+      "    ${2:# Additional inputs}",
+      "  };",
+      "",
+      "  outputs = { self, nixpkgs, ... } @ inputs: {",
+      "    nixosConfigurations.${3:hostname} = nixpkgs.lib.nixosSystem {",
+      "      system = \"${4:x86_64-linux}\";",
+      "      modules = [",
+      "        ${5:./configuration.nix}",
+      "      ];",
+      "    };",
+      "  };",
+      "}"
+    ],
+    "description": "Create a flake.nix template"
+  },
+
+  "overlay": {
+    "prefix": "nixoverlay",
+    "body": [
+      "final: prev: {",
+      "  ${1:packageName} = prev.${1:packageName}.overrideAttrs (oldAttrs: {",
+      "    ${2:# Override attributes}",
+      "  });",
+      "}"
+    ],
+    "description": "Create a Nix overlay"
+  },
+
+  "environment_packages": {
+    "prefix": "envpkgs",
+    "body": [
+      "environment.systemPackages = with pkgs; [",
+      "  ${1:packages}",
+      "];"
+    ],
+    "description": "Add system packages"
+  },
+
+  "user_configuration": {
+    "prefix": "nixuser",
+    "body": [
+      "users.users.${1:username} = {",
+      "  isNormalUser = true;",
+      "  description = \"${2:Full Name}\";",
+      "  extraGroups = [",
+      "    \"wheel\"",
+      "    \"networkmanager\"",
+      "    ${3:# Additional groups}",
+      "  ];",
+      "  shell = pkgs.${4:zsh};",
+      "};"
+    ],
+    "description": "Create user configuration"
+  },
+
+  "let_in": {
+    "prefix": "letin",
+    "body": [
+      "let",
+      "  ${1:variable} = ${2:value};",
+      "in",
+      "${0:expression}"
+    ],
+    "description": "Create let-in expression"
+  },
+
+  "with_expression": {
+    "prefix": "withexpr",
+    "body": [
+      "with ${1:pkgs}; [",
+      "  ${2:items}",
+      "]"
+    ],
+    "description": "Create with expression"
+  },
+
+  "if_then_else": {
+    "prefix": "ifthen",
+    "body": [
+      "if ${1:condition}",
+      "then ${2:trueValue}",
+      "else ${3:falseValue}"
+    ],
+    "description": "Create if-then-else expression"
+  },
+
+  "mkif": {
+    "prefix": "mkif",
+    "body": [
+      "mkIf ${1:condition} {",
+      "  ${0:configuration}",
+      "}"
+    ],
+    "description": "Create mkIf conditional"
+  },
+
+  "language_server": {
+    "prefix": "nixlsp",
+    "body": [
+      "\"[${1:language}]\" = {",
+      "  language_servers = [\"${2:server-name}\"];",
+      "  format_on_save = \"on\";",
+      "  formatter = {",
+      "    external = {",
+      "      command = \"${3:formatter-command}\";",
+      "      arguments = [${4:\"--arg1\" \"--arg2\"}];",
+      "    };",
+      "  };",
+      "};"
+    ],
+    "description": "Language server configuration"
+  },
+
+  "home_manager": {
+    "prefix": "homemanager",
+    "body": [
+      "home-manager.users.${1:username} = { pkgs, ... }: {",
+      "  home.packages = with pkgs; [",
+      "    ${2:packages}",
+      "  ];",
+      "",
+      "  programs.${3:program} = {",
+      "    enable = true;",
+      "    ${4:# Configuration}",
+      "  };",
+      "",
+      "  home.stateVersion = \"${5:23.11}\";",
+      "};"
+    ],
+    "description": "Home Manager user configuration"
+  },
+
+  "boot_loader": {
+    "prefix": "bootloader",
+    "body": [
+      "boot.loader = {",
+      "  systemd-boot.enable = true;",
+      "  efi.canTouchEfiVariables = true;",
+      "  timeout = ${1:5};",
+      "};"
+    ],
+    "description": "Boot loader configuration"
+  },
+
+  "networking": {
+    "prefix": "nixnetwork",
+    "body": [
+      "networking = {",
+      "  hostName = \"${1:hostname}\";",
+      "  networkmanager.enable = true;",
+      "  firewall = {",
+      "    enable = true;",
+      "    allowedTCPPorts = [ ${2:22 80 443} ];",
+      "  };",
+      "};"
+    ],
+    "description": "Basic networking configuration"
+  },
+
+  "fonts": {
+    "prefix": "nixfonts",
+    "body": [
+      "fonts = {",
+      "  enableDefaultPackages = true;",
+      "  packages = with pkgs; [",
+      "    nerd-fonts.${1:jetbrains-mono}",
+      "    ${2:additional-fonts}",
+      "  ];",
+      "  fontconfig = {",
+      "    defaultFonts = {",
+      "      monospace = [ \"${3:JetBrainsMono Nerd Font}\" ];",
+      "    };",
+      "  };",
+      "};"
+    ],
+    "description": "Font configuration"
+  },
+
+  "import_statement": {
+    "prefix": "niximport",
+    "body": [
+      "imports = [",
+      "  ${1:./module.nix}",
+      "];"
+    ],
+    "description": "Import statement"
+  },
+
+  "fetchfromgithub": {
+    "prefix": "fetchgithub",
+    "body": [
+      "fetchFromGitHub {",
+      "  owner = \"${1:owner}\";",
+      "  repo = \"${2:repo}\";",
+      "  rev = \"${3:revision}\";",
+      "  sha256 = \"${4:sha256}\";",
+      "}"
+    ],
+    "description": "Fetch from GitHub"
+  },
+
+  "package_override": {
+    "prefix": "pkgoverride",
+    "body": [
+      "${1:packageName} = pkgs.${1:packageName}.override {",
+      "  ${2:attribute} = ${3:value};",
+      "};"
+    ],
+    "description": "Package override"
+  },
+
+  "lib_function": {
+    "prefix": "libfunc",
+    "body": [
+      "${1:functionName} = ${2:args}: ${3:body};"
+    ],
+    "description": "Library function definition"
+  },
+
+  "recursive_attr": {
+    "prefix": "recattr",
+    "body": [
+      "rec {",
+      "  ${1:attribute} = ${2:value};",
+      "  ${3:reference} = ${1:attribute};",
+      "}"
+    ],
+    "description": "Recursive attribute set"
+  }
+}
