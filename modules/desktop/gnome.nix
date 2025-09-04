@@ -104,6 +104,21 @@
       gnome-settings-daemon
     ];
 
+    # D-Bus configuration for proper Flatpak integration
+    services.dbus = {
+      enable = true;
+      packages = with pkgs; [
+        gnome-settings-daemon
+        glib
+      ];
+    };
+
+    # XDG environment variables for Flatpak support
+    environment.extraInit = ''
+      # Add Flatpak exports to XDG_DATA_DIRS
+      export XDG_DATA_DIRS="$XDG_DATA_DIRS''${XDG_DATA_DIRS:+:}/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share"
+    '';
+
     # Official GNOME packages
     environment.systemPackages = with pkgs;
       [
