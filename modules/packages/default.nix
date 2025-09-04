@@ -9,6 +9,7 @@
 }:
 with lib; let
   cfg = config.modules.packages;
+  
 in {
   options.modules.packages = {
     enable = mkEnableOption "shared packages module";
@@ -88,7 +89,7 @@ in {
           gh # GitHub CLI
           glab # GitLab CLI
           lazygit # Simple terminal UI for git commands
-          gitui # Terminal UI for git
+          # gitui # Terminal UI for git - temporarily disabled due to compilation issues
           delta # Syntax-highlighting pager for git
 
           # Modern development utilities
