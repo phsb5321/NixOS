@@ -1,6 +1,8 @@
 # ~/NixOS/shells/JavaScript.nix
 # Use NixOS 25 stable for all packages
-{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {}}: let
+{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {
+  config.allowUnfree = true;
+}}: let
   centralizedStore = "$HOME/.nix-js-environments";
 
   # Helper function to create a tagged package group
@@ -48,6 +50,7 @@
       pkgs.yq
       pkgs.openssl
       pkgs.nodePackages.nodemon
+      pkgs.claude-code
     ])
     (mkPackageGroup "Browser Tools" [
       pkgs.chromium

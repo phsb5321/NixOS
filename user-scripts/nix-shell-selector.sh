@@ -107,7 +107,7 @@ else
 
   # Generate the combined shell content
   cat >"${temp_shell}" <<EOF
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import <nixpkgs> {config.allowUnfree = true;} }:
 
 pkgs.mkShell {
   # Import all selected shells and combine their inputs
