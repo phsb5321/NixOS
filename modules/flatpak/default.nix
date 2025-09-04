@@ -57,8 +57,8 @@
       };
 
       # Install development packages if enabled
-      packages = lib.mkIf config.modules.flatpak.development.enable 
-        config.modules.flatpak.development.packages
+      packages = 
+        (lib.optionals config.modules.flatpak.development.enable config.modules.flatpak.development.packages)
         ++ config.modules.flatpak.extraPackages;
     };
 
@@ -75,6 +75,11 @@
     # Environment setup for Flatpak
     environment.systemPackages = with pkgs; [
       flatpak # Ensure flatpak CLI is available
+      
+      # Create wrapper script for Bruno Flatpak
+      (writeShellScriptBin "bruno" ''
+        exec flatpak run com.usebruno.Bruno "$@"
+      '')
     ];
 
     # Add Flatpak applications to PATH
@@ -82,5 +87,14 @@
       "/var/lib/flatpak/exports"
       "$HOME/.local/share/flatpak/exports"
     ];
+
+    # Shell aliases for convenient access to Flatpak apps
+    programs.bash.shellAliases = lib.mkIf config.modules.flatpak.development.enable {
+      bruno-flatpak = "flatpak run com.usebruno.Bruno";
+    };
+    
+    programs.zsh.shellAliases = lib.mkIf config.modules.flatpak.development.enable {
+      bruno-flatpak = "flatpak run com.usebruno.Bruno";
+    };
   };
 }
