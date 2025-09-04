@@ -238,7 +238,7 @@ in {
               # LaTeX build tools and processors
               pkgs.biber # Modern bibliography processor
               pkgs.texlab # LaTeX language server
-              pkgs.tectonic # Modern LaTeX engine
+              # pkgs.tectonic # Modern LaTeX engine - temporarily disabled due to compilation issues
 
               # LaTeX editors and IDEs
               pkgs.texstudio # Comprehensive LaTeX IDE

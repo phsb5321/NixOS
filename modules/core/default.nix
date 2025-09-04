@@ -317,12 +317,13 @@ in {
         jq
         popsicle
         stablePkgs.awscli2
-        azure-cli
+        # azure-cli # Temporarily disabled due to compilation issues
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
         vdhcoapp
         inkscape
         claude-code
+        codex
         wrangler
         just
         infisical
