@@ -50,7 +50,6 @@
       pkgs.yq
       pkgs.openssl
       pkgs.nodePackages.nodemon
-      pkgs.claude-code
     ])
     (mkPackageGroup "Browser Tools" [
       pkgs.chromium
