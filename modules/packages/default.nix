@@ -9,7 +9,6 @@
 }:
 with lib; let
   cfg = config.modules.packages;
-  
 in {
   options.modules.packages = {
     enable = mkEnableOption "shared packages module";
