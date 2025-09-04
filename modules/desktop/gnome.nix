@@ -74,7 +74,7 @@
       enable = true;
       wayland = config.modules.desktop.gnome.wayland.enable;
     };
-    
+
     services.desktopManager.gnome.enable = true;
 
     # Essential GNOME services (official wiki)

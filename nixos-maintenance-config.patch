@@ -1,0 +1,36 @@
+--- a/etc/nixos/configuration.nix
++++ b/etc/nixos/configuration.nix
+@@ -137,6 +137,29 @@
+   # Or disable the firewall altogether.
+   # networking.firewall.enable = false;
+ 
++  # Automatic system maintenance
++  system.autoUpgrade = {
++    enable = true;
++    dates = "03:00";
++    allowReboot = false; # Set to true if you want automatic reboots
++    flags = [ "--print-build-logs" ];
++  };
++
++  # Automatic garbage collection
++  nix.gc = {
++    automatic = true;
++    dates = "weekly";
++    options = "--delete-older-than 30d";
++  };
++
++  # Optimize Nix store automatically
++  nix.settings.auto-optimise-store = true;
++
++  # Limit boot entries to save space
++  boot.loader.systemd-boot.configurationLimit = 10;
++
++  # Free up disk space automatically when low
++  nix.extraOptions = ''
++    min-free = ${toString (100 * 1024 * 1024)}
++    max-free = ${toString (1024 * 1024 * 1024)}
++  '';
++
+   # This value determines the NixOS release from which the default
+   # settings for stateful data, like file locations and database versions
+   # on your system were taken. It's perfectly fine and recommended to leave
