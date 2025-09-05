@@ -6,6 +6,5 @@
     ./networking
     ./desktop
     ./dotfiles
-    ./flatpak
   ];
 }
