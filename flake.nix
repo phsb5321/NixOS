@@ -23,8 +23,6 @@
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
 
-    # Declarative Flatpak management
-    nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=v0.4.1";
   };
 
   outputs = {
@@ -32,7 +30,6 @@
     nixpkgs,
     nixpkgs-unstable,
     flake-utils,
-    nix-flatpak,
     ...
   } @ inputs: let
     # Supported systems
@@ -99,9 +96,6 @@
           [
             # Host-specific configuration
             ./hosts/${configPath}/configuration.nix
-
-            # nix-flatpak module for declarative Flatpak management
-            nix-flatpak.nixosModules.nix-flatpak
 
             # Base system configuration
             {

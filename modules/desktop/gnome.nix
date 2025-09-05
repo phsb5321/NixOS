@@ -94,6 +94,20 @@
     # Essential support (NixOS Wiki requirement)
     programs.dconf.enable = true;
 
+    # XDG Desktop Portal configuration for file dialogs (fixes Bruno import)
+    xdg.portal = {
+      enable = true;
+      extraPortals = with pkgs; [
+        xdg-desktop-portal-gtk # Required for FileChooser interface
+      ];
+      config = {
+        common = {
+          default = [ "gnome" ];
+          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+        };
+      };
+    };
+
     # Power management (official recommendation)
     services.power-profiles-daemon.enable = lib.mkDefault true;
     services.thermald.enable = lib.mkDefault false;
@@ -104,20 +118,15 @@
       gnome-settings-daemon
     ];
 
-    # D-Bus configuration for proper Flatpak integration
-    services.dbus = {
-      enable = true;
-      packages = with pkgs; [
-        gnome-settings-daemon
-        glib
-      ];
+    # 2025 Electron and portal configuration for file dialogs
+    environment.sessionVariables = {
+      # Enable Electron Wayland support (latest 2025 approach)
+      NIXOS_OZONE_WL = "1";
+      # Enable portal file dialogs for Electron apps
+      GTK_USE_PORTAL = "1";
+      XDG_CURRENT_DESKTOP = "GNOME";
+      XDG_SESSION_TYPE = "wayland";
     };
-
-    # XDG environment variables for Flatpak support
-    environment.extraInit = ''
-      # Add Flatpak exports to XDG_DATA_DIRS
-      export XDG_DATA_DIRS="$XDG_DATA_DIRS''${XDG_DATA_DIRS:+:}/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share"
-    '';
 
     # Official GNOME packages
     environment.systemPackages = with pkgs;

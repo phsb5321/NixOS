@@ -215,12 +215,6 @@ in {
     androidTools.enable = activeVariant.enableHardwareAccel;
   };
 
-  # Flatpak configuration (disabled - Bruno reverted to NixOS package)
-  # modules.flatpak = {
-  #   enable = true;
-  #   development.enable = true;
-  #   autoUpdate.enable = true;
-  # };
 
   # Document tools
   modules.core.documentTools = {
