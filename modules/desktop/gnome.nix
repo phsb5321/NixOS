@@ -140,6 +140,23 @@
         WAYLAND_DISPLAY = "";
         MOZ_ENABLE_WAYLAND = "0";
         ELECTRON_OZONE_PLATFORM_HINT = "x11";
+        
+        # X11 graphics and theme configuration
+        GSK_RENDERER = "gl"; # Use OpenGL renderer for X11 compatibility
+        GTK_THEME = "Adwaita:dark"; # Force dark theme in X11
+        QT_STYLE_OVERRIDE = "adwaita-dark"; # Qt dark theme
+        
+        # X11 visual improvements to fix artifacts
+        FREETYPE_PROPERTIES = "truetype:interpreter-version=40";
+        GDK_SCALE = "1";
+        GDK_DPI_SCALE = "1";
+        QT_AUTO_SCREEN_SCALE_FACTOR = "0";
+        QT_SCALE_FACTOR = "1";
+        QT_FONT_DPI = "96";
+        
+        # Anti-aliasing and rendering fixes for X11
+        XCURSOR_THEME = "Adwaita";
+        XCURSOR_SIZE = "24";
       })
     ];
 
