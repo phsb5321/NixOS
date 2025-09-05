@@ -118,15 +118,30 @@
       gnome-settings-daemon
     ];
 
-    # 2025 Electron and portal configuration for file dialogs
-    environment.sessionVariables = {
-      # Enable Electron Wayland support (latest 2025 approach)
-      NIXOS_OZONE_WL = "1";
-      # Enable portal file dialogs for Electron apps
-      GTK_USE_PORTAL = "1";
-      XDG_CURRENT_DESKTOP = "GNOME";
-      XDG_SESSION_TYPE = "wayland";
-    };
+    # 2025 Electron configuration - conditional based on Wayland/X11
+    environment.sessionVariables = lib.mkMerge [
+      # Base GNOME session variables
+      {
+        XDG_CURRENT_DESKTOP = "GNOME";
+        GTK_USE_PORTAL = "1";
+      }
+      # Wayland-specific variables (only if Wayland enabled)
+      (lib.mkIf config.modules.desktop.gnome.wayland.enable {
+        NIXOS_OZONE_WL = "1";
+        XDG_SESSION_TYPE = "wayland";
+        GDK_BACKEND = "wayland,x11";
+      })
+      # X11-specific variables (if Wayland disabled)
+      (lib.mkIf (!config.modules.desktop.gnome.wayland.enable) {
+        # Disable Wayland completely for X11 mode
+        XDG_SESSION_TYPE = "x11";
+        GDK_BACKEND = "x11";
+        QT_QPA_PLATFORM = "xcb";
+        WAYLAND_DISPLAY = "";
+        MOZ_ENABLE_WAYLAND = "0";
+        ELECTRON_OZONE_PLATFORM_HINT = "x11";
+      })
+    ];
 
     # Official GNOME packages
     environment.systemPackages = with pkgs;

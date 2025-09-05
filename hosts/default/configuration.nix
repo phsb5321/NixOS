@@ -70,11 +70,11 @@ in {
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;
 
-  # Clean GNOME configuration following NixOS Wiki recommendations
+  # GNOME configuration - testing X11 mode to fix Bruno file dialogs (like laptop)
   modules.desktop.gnome = {
     enable = true;
-    variant = "hardware"; # Back to default hardware variant
-    wayland.enable = true; # Re-enable Wayland
+    variant = "hardware";
+    wayland.enable = false; # Disable Wayland to fix Bruno file imports
   };
 
   # Boot configuration with variants
