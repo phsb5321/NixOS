@@ -238,7 +238,8 @@ in {
       enableAllFirmware = true;
     };
 
-    # WiFi rfkill fix for Intel CNVi cards
+    # WiFi rfkill fix for Intel CNVi cards (8086:06f0)
+    # SOLUTION: Hardware WiFi toggle is F4 key on this laptop
     boot.kernelParams = [
       "rfkill.default_state=1" # Unblock WiFi by default
       "iwlwifi.power_save=0"   # Disable power saving for stability
