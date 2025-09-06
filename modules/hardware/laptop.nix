@@ -233,25 +233,55 @@ in {
         enable32Bit = true;
       };
 
-      # NVIDIA configuration for hybrid laptops
-      nvidia = lib.mkIf cfg.graphics.hybridGraphics {
-        modesetting.enable = true;
-        powerManagement.enable = true;
-        powerManagement.finegrained = true;
-        open = false; # Use proprietary drivers for GTX 1650
-        nvidiaSettings = true;
-        package = config.boot.kernelPackages.nvidiaPackages.production;
+      # Enable firmware updates and latest Intel WiFi firmware
+      enableRedistributableFirmware = true;
+      enableAllFirmware = true;
+    };
 
-        prime = {
-          offload = {
-            enable = true;
-            enableOffloadCmd = true;
-          };
-          intelBusId = cfg.graphics.intelBusId;
-          nvidiaBusId = cfg.graphics.nvidiaBusId;
-        };
+    # WiFi rfkill fix for Intel CNVi cards
+    boot.kernelParams = [
+      "rfkill.default_state=1" # Unblock WiFi by default
+      "iwlwifi.power_save=0"   # Disable power saving for stability
+      "iwlwifi.bt_coex_active=0" # Disable Bluetooth coexistence if problematic
+    ];
+
+    # Ensure latest Intel WiFi firmware is available
+    hardware.firmware = with pkgs; [
+      linux-firmware # Latest firmware
+      wireless-regdb # WiFi regulatory database
+    ];
+
+    # Create systemd service to unblock WiFi on boot
+    systemd.services.wifi-unblock = {
+      description = "Unblock WiFi on boot";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "systemd-rfkill@rfkill0.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.util-linux}/bin/rfkill unblock wifi";
       };
     };
+
+    # NVIDIA configuration for hybrid laptops (temporarily disabled for WiFi testing)
+    # hardware.nvidia = lib.mkIf cfg.graphics.hybridGraphics {
+    #     modesetting.enable = true;
+    #     powerManagement.enable = true;
+    #     powerManagement.finegrained = true;
+    #     open = false; # Use proprietary drivers for GTX 1650
+    #     nvidiaSettings = true;
+    #     package = config.boot.kernelPackages.nvidiaPackages.production;
+
+    #     prime = {
+    #       offload = {
+    #         enable = true;
+    #         enableOffloadCmd = true;
+    #       };
+    #       intelBusId = cfg.graphics.intelBusId;
+    #       nvidiaBusId = cfg.graphics.nvidiaBusId;
+    #     };
+    #   };
+    # };
 
     # Video drivers
     services.xserver.videoDrivers = lib.mkIf cfg.graphics.hybridGraphics [
