@@ -1,6 +1,11 @@
 # ~/NixOS/shells/JavaScript.nix
 # Use NixOS 25 stable for all packages
-{pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {}}: let
+{
+  pkgs ?
+    import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {
+      config.allowUnfree = true;
+    },
+}: let
   centralizedStore = "$HOME/.nix-js-environments";
 
   # Helper function to create a tagged package group
@@ -29,6 +34,7 @@
     (mkPackageGroup "Code Quality Tools" [
       pkgs.nodePackages.eslint
       pkgs.nodePackages.prettier
+      pkgs.biome # Alternative to ESLint/Prettier - configure to avoid conflicts
       pkgs.nodePackages.typescript
       pkgs.nodePackages.typescript-language-server
     ])
@@ -107,7 +113,7 @@ in
       echo "🚀 ✨ JavaScript/TypeScript Development Environment ✨ 🚀"
       echo ""
       echo "📦 Node.js • pnpm • yarn • bun • 🦕 deno"
-      echo "🔧 TypeScript • ESLint • Prettier • Webpack • Nodemon"
+      echo "🔧 TypeScript • ESLint • Prettier • Biome.js • Webpack • Nodemon"
       echo "🧪 Playwright • Cypress • Testing Ready"
       echo "🗄️  Prisma • PostgreSQL • Database Tools"
       echo "🏗️  NestJS CLI • Vercel CLI • Build Tools"

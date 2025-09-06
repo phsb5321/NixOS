@@ -1,4 +1,4 @@
-{pkgs ? import <nixpkgs> {}}: let
+{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
   # Helper function to create a tagged package group
   mkPackageGroup = name: packages: {
     inherit name packages;

@@ -24,6 +24,7 @@ in {
         noto-fonts-cjk-sans
         noto-fonts-emoji
         liberation_ttf
+        cantarell-fonts
 
         # Additional fonts
         dejavu_fonts

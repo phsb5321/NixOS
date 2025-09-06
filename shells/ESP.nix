@@ -1,4 +1,4 @@
-{pkgs ? import <nixpkgs> {}}: let
+{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
   # All packages for the shell must come from the stable branch (pkgs)
   pythonEnv = pkgs.python3.withPackages (
     ps:

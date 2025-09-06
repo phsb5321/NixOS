@@ -35,15 +35,73 @@
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
     extraSystemPackages = with pkgs; [
+      # Basic system utilities
       blueman
       pciutils
       usbutils
       speechd
+
+      # Shared GNOME applications for all hosts
+      gnome-text-editor
+      gnome-calculator
+      gnome-calendar
+      gnome-contacts
+      gnome-maps
+      gnome-weather
+      gnome-music
+      gnome-photos
+      simple-scan
+      seahorse # Keyring management
+
+      # GNOME utilities
+      gnome-tweaks
+      gnome-extension-manager
+      dconf-editor
+
+      # File management
+      file-roller # Archive manager
+
+      # Multimedia
+      celluloid # Modern video player
+
+      # Essential GNOME extensions - Core functionality
+      gnomeExtensions.dash-to-dock
+      gnomeExtensions.user-themes
+      gnomeExtensions.just-perfection
+
+      # System monitoring extensions
+      gnomeExtensions.vitals # Primary system monitor with temperature, CPU, network, storage
+      gnomeExtensions.system-monitor-next # Additional system monitor with graphs
+
+      # Productivity and customization extensions
+      gnomeExtensions.caffeine # Prevent screen lock
+      gnomeExtensions.appindicator # System tray support - required for many apps
+      gnomeExtensions.blur-my-shell # Modern blur effects
+      gnomeExtensions.clipboard-indicator # Clipboard manager
+      gnomeExtensions.gsconnect # Phone integration (KDE Connect)
+
+      # Workspace and window management
+      gnomeExtensions.workspace-indicator # Better workspace indicator
+      gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
+
+      # Quick access and navigation
+      gnomeExtensions.places-status-indicator # Quick access to bookmarks
+      gnomeExtensions.removable-drive-menu # USB drive management
+      gnomeExtensions.sound-output-device-chooser # Audio device switching
+
+      # Additional useful extensions
+      gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
+      gnomeExtensions.auto-move-windows # Remember window positions per workspace
+      gnomeExtensions.launch-new-instance
+      # Essential system packages for desktop functionality
+      xdg-utils
+      glib
+      gsettings-desktop-schemas
     ];
   };
 
-  # Desktop environment configuration moved to individual hosts
-  # Each host now configures its own desktop environment based on GPU requirements
+  # Desktop environment base configuration
+  # Host-specific GNOME config is in individual host files
 
   # Networking configuration
   modules.networking = {
@@ -108,14 +166,16 @@
     glib-networking.enable = lib.mkDefault true;
     sushi.enable = lib.mkDefault true;
     gnome-remote-desktop.enable = lib.mkForce false;
-    gnome-user-share.enable = lib.mkDefault true;
-    rygel.enable = lib.mkDefault true;
+    gnome-user-share.enable = lib.mkForce false; # Disable for security: disables GNOME file sharing over network (WebDAV, Bluetooth). Re-enable if you need network file sharing.
+    rygel.enable = lib.mkForce false; # Media sharing - disable by default
+    tinysparql.enable = lib.mkDefault true; # File indexing (renamed from tracker)
+    localsearch.enable = lib.mkDefault true; # File indexing miners (renamed from tracker-miners)
   };
 
   # Essential services for GNOME - shared configuration
   services.geoclue2.enable = lib.mkDefault true;
   services.upower.enable = lib.mkDefault true;
-  services.power-profiles-daemon.enable = lib.mkDefault true;
+  # Power management is configured per-host based on hardware type
 
   services.desktopManager.gnome.extraGSettingsOverridePackages = [
     pkgs.gsettings-desktop-schemas
@@ -261,6 +321,39 @@
     dconf.enable = true;
     thunderbird.enable = true;
   };
+
+  # Base GNOME dconf configuration - shared settings
+  # Extension-specific configuration is handled in individual host files
+  programs.dconf.profiles.user.databases = [
+    {
+      settings = {
+        # Base GNOME interface settings
+        "org/gnome/desktop/interface" = {
+          show-battery-percentage = true;
+          clock-show-weekday = true;
+          clock-show-seconds = false;
+          locate-pointer = true;
+        };
+
+        # Base input configuration
+        "org/gnome/desktop/peripherals/keyboard" = {
+          numlock-state = true;
+          remember-numlock-state = true;
+        };
+
+        # Base privacy settings
+        "org/gnome/desktop/privacy" = {
+          report-technical-problems = false;
+          send-software-usage-stats = false;
+        };
+
+        # Base search settings
+        "org/gnome/desktop/search-providers" = {
+          disable-external = false;
+        };
+      };
+    }
+  ];
 
   # Security
   security = {

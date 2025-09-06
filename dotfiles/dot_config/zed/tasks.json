@@ -1,0 +1,335 @@
+{
+  // ===== NIXOS DEVELOPMENT TASKS =====
+  "tasks": [
+    {
+      "label": "NixOS: Rebuild Switch",
+      "command": "sudo",
+      "args": ["nixos-rebuild", "switch", "--flake", ".#default"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "NixOS: Rebuild Test",
+      "command": "sudo",
+      "args": ["nixos-rebuild", "test", "--flake", ".#default"],
+      "cwd": "${workspaceFolder}",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "NixOS: Build Only",
+      "command": "nixos-rebuild",
+      "args": ["build", "--flake", ".#default"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Nix: Check Flake",
+      "command": "nix",
+      "args": ["flake", "check"],
+      "cwd": "${workspaceFolder}",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Nix: Update Flake",
+      "command": "nix",
+      "args": ["flake", "update"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Nix: Show Flake Info",
+      "command": "nix",
+      "args": ["flake", "show"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Format: Alejandra (Current File)",
+      "command": "alejandra",
+      "args": ["${file}"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Format: Alejandra (All Nix Files)",
+      "command": "find",
+      "args": [".", "-name", "*.nix", "-exec", "alejandra", "{}", "+"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Lint: Statix Check",
+      "command": "statix",
+      "args": ["check", "."],
+      "cwd": "${workspaceFolder}",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Lint: Deadnix Check",
+      "command": "deadnix",
+      "args": ["."],
+      "cwd": "${workspaceFolder}",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Git: Commit Changes",
+      "command": "git",
+      "args": ["commit", "-m", "${input:commitMessage}"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Git: Add All and Commit",
+      "command": "bash",
+      "args": ["-c", "git add . && git commit -m '${input:commitMessage}'"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Dotfiles: Apply Chezmoi",
+      "command": "chezmoi",
+      "args": ["apply"],
+      "cwd": "${workspaceFolder}/dotfiles",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Dotfiles: Chezmoi Diff",
+      "command": "chezmoi",
+      "args": ["diff"],
+      "cwd": "${workspaceFolder}/dotfiles",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "System: Garbage Collect",
+      "command": "sudo",
+      "args": ["nix-collect-garbage", "-d"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "System: Optimize Store",
+      "command": "sudo",
+      "args": ["nix", "store", "optimise"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Development: Enter Dev Shell",
+      "command": "nix",
+      "args": ["develop"],
+      "cwd": "${workspaceFolder}",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "Logs: View System Journal",
+      "command": "journalctl",
+      "args": ["-xe", "--no-pager"],
+      "cwd": "${workspaceFolder}",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "GPU: Monitor with radeontop",
+      "command": "sudo",
+      "args": ["radeontop"],
+      "cwd": "${workspaceFolder}",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problem_matcher": []
+    },
+    {
+      "label": "System: Monitor with htop",
+      "command": "htop",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "new",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problem_matcher": []
+    }
+  ],
+
+  // ===== INPUT PROMPTS =====
+  "inputs": [
+    {
+      "id": "commitMessage",
+      "description": "Enter commit message",
+      "default": "Update configuration",
+      "type": "promptString"
+    }
+  ]
+}
