@@ -208,6 +208,10 @@ in {
       htop
     ];
 
+  # GNOME login fixes (NixOS Wiki solution for session registration failures)
+  systemd.services."getty@tty1".enable = false;
+  systemd.services."autovt@tty1".enable = false;
+
   # Host-specific module configuration
   modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
   modules.core.java = {
