@@ -106,6 +106,15 @@
 
   # Hardware-specific overrides
   modules.hardware.laptop = {
+    enable = true;
+    
+    # Enable hybrid graphics support for Intel + NVIDIA
+    graphics = {
+      hybridGraphics = true;
+      intelBusId = "PCI:0:2:0";  # Intel UHD Graphics
+      nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
+    };
+
     batteryManagement.chargeThreshold = 85; # Preserve battery health
 
     powerManagement = {
@@ -124,21 +133,7 @@
     ];
   };
 
-  # NVIDIA Configuration (if applicable)
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = true; # Important for laptops!
-    powerManagement.finegrained = false;
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-
-    prime = {
-      sync.enable = true;
-      intelBusId = "PCI:0:2:0";
-      nvidiaBusId = "PCI:1:0:0";
-    };
-  };
+  # NVIDIA Configuration is now handled by modules.hardware.laptop
 
   # Boot configuration optimized for laptops
   boot = {
