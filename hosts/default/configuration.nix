@@ -70,10 +70,10 @@ in {
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;
 
-  # GNOME configuration - testing X11 mode to fix Bruno file dialogs (like laptop)
+  # GNOME configuration - software rendering to fix session registration failures
   modules.desktop.gnome = {
     enable = true;
-    variant = "hardware";
+    variant = "software"; # Use software rendering to bypass acceleration check failures
     wayland.enable = false; # Disable Wayland to fix Bruno file imports
   };
 
