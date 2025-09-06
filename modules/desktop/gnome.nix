@@ -69,16 +69,21 @@
   };
 
   config = lib.mkIf config.modules.desktop.gnome.enable {
-    # Official NixOS 25.11+ GNOME configuration
+    # Use GDM with strict X11-only configuration for NVIDIA compatibility
     services.displayManager.gdm = {
       enable = true;
-      wayland = config.modules.desktop.gnome.wayland.enable;
-      
-      # NVIDIA compatibility fixes
+      wayland = false; # Force disable Wayland completely
       settings = {
         daemon = {
-          # Fix for hybrid NVIDIA graphics
-          WaylandEnable = lib.mkIf (!config.modules.desktop.gnome.wayland.enable) false;
+          # Completely disable Wayland in GDM
+          WaylandEnable = false;
+          # Force X11 session selection
+          DefaultSession = "gnome-xorg.desktop";
+        };
+        security = {
+          # Disable user switching to prevent session conflicts
+          AllowGuestAccount = false;
+          AllowUserList = true;
         };
       };
     };
@@ -88,14 +93,22 @@
     # NVIDIA compatibility fixes
     services.xserver.enable = true;
 
-    # Environment variables for NVIDIA hybrid graphics
-    environment.sessionVariables = lib.mkIf (!config.modules.desktop.gnome.wayland.enable) {
+    # Environment variables for NVIDIA hybrid graphics (always applied now)
+    environment.sessionVariables = {
       # Force GNOME to use X11
       GDK_BACKEND = "x11";
-      # Disable Wayland for Firefox and other apps
+      # Disable Wayland for all applications
       MOZ_ENABLE_WAYLAND = "0";
+      ELECTRON_OZONE_PLATFORM_HINT = "auto";
       # Set renderer for GTK apps
       GSK_RENDERER = "gl"; # Use GL renderer instead of cairo
+      # Explicitly disable Wayland
+      QT_QPA_PLATFORM = "xcb";
+      # Force X11 for session
+      XDG_SESSION_TYPE = "x11";
+      # NVIDIA specific
+      LIBVA_DRIVER_NAME = "nvidia";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
     };
 
     # Essential GNOME services (official wiki)
