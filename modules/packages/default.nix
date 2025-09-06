@@ -89,6 +89,7 @@ in {
           glab # GitLab CLI
           lazygit # Simple terminal UI for git commands
           # gitui # Terminal UI for git - temporarily disabled due to compilation issues
+          # TODO: Re-enable when https://github.com/extrawurst/gitui/issues/2212 is resolved
           delta # Syntax-highlighting pager for git
 
           # Modern development utilities

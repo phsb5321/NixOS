@@ -34,7 +34,7 @@
     (mkPackageGroup "Code Quality Tools" [
       pkgs.nodePackages.eslint
       pkgs.nodePackages.prettier
-      pkgs.biome
+      pkgs.biome # Alternative to ESLint/Prettier - configure to avoid conflicts
       pkgs.nodePackages.typescript
       pkgs.nodePackages.typescript-language-server
     ])
