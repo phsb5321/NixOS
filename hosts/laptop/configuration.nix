@@ -108,9 +108,9 @@
   modules.hardware.laptop = {
     enable = true;
     
-    # Enable hybrid graphics support for Intel + NVIDIA
+    # Temporarily disable hybrid graphics to test Intel-only
     graphics = {
-      hybridGraphics = true;
+      hybridGraphics = false;
       intelBusId = "PCI:0:2:0";  # Intel UHD Graphics
       nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
     };
