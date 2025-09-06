@@ -70,11 +70,11 @@ in {
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;
 
-  # GNOME configuration - software rendering to fix session registration failures
+  # GNOME configuration - NixOS 25.11+ Wayland-only (X11 sessions removed in 25.11+)
   modules.desktop.gnome = {
     enable = true;
-    variant = "software"; # Use software rendering to bypass acceleration check failures
-    wayland.enable = false; # Disable Wayland to fix Bruno file imports
+    variant = "hardware"; # Back to hardware acceleration 
+    wayland.enable = true; # NixOS 25.11+ only supports Wayland
   };
 
   # Boot configuration with variants
