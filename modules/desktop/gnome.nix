@@ -51,8 +51,8 @@
     wayland = {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = true;
-        description = "Enable Wayland session";
+        default = false; # Disabled by default for NVIDIA compatibility
+        description = "Enable Wayland session (disable for NVIDIA hybrid graphics)";
       };
     };
 
@@ -73,9 +73,30 @@
     services.displayManager.gdm = {
       enable = true;
       wayland = config.modules.desktop.gnome.wayland.enable;
+      
+      # NVIDIA compatibility fixes
+      settings = {
+        daemon = {
+          # Fix for hybrid NVIDIA graphics
+          WaylandEnable = lib.mkIf (!config.modules.desktop.gnome.wayland.enable) false;
+        };
+      };
     };
 
     services.desktopManager.gnome.enable = true;
+
+    # NVIDIA compatibility fixes
+    services.xserver.enable = true;
+
+    # Environment variables for NVIDIA hybrid graphics
+    environment.sessionVariables = lib.mkIf (!config.modules.desktop.gnome.wayland.enable) {
+      # Force GNOME to use X11
+      GDK_BACKEND = "x11";
+      # Disable Wayland for Firefox and other apps
+      MOZ_ENABLE_WAYLAND = "0";
+      # Set renderer for GTK apps
+      GSK_RENDERER = "gl"; # Use GL renderer instead of cairo
+    };
 
     # Essential GNOME services (official wiki)
     services.gnome = {
@@ -274,7 +295,7 @@
         accelProfile = "adaptive";
         accelSpeed = "0";
         tapping = true;
-        naturalScrolling = false;
+        naturalScrolling = lib.mkDefault false;
       };
     };
   };
