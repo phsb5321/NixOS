@@ -13,9 +13,10 @@
     ../shared/common.nix
   ];
 
-  # Allow insecure packages (required for ventoy)
+  # Allow insecure packages for USB boot creation tool
+  # TODO: Monitor for secure ventoy releases and remove this exception
   nixpkgs.config.permittedInsecurePackages = [
-    "ventoy-1.1.05"
+    "ventoy-1.1.05" # Required for ventoy-full package - bootable USB creation
   ];
 
   # Use the laptop profile for automatic configuration
