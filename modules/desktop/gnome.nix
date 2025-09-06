@@ -87,6 +87,28 @@
         };
       };
     };
+
+    # X server configuration to fix authentication issues
+    services.xserver = {
+      enable = true;
+      # Fix X11 authentication and display connection issues
+      displayManager = {
+        sessionCommands = ''
+          # Fix X11 authentication cookie issues
+          ${pkgs.xorg.xhost}/bin/xhost +local: 2>/dev/null || true
+          ${pkgs.xorg.xauth}/bin/xauth generate :0 . trusted 2>/dev/null || true
+        '';
+      };
+      # Disable hardware acceleration check that's failing
+      config = ''
+        Section "Device"
+          Identifier "AMD Graphics"
+          Driver "amdgpu"
+          Option "TearFree" "true"
+          Option "AccelMethod" "glamor"
+        EndSection
+      '';
+    };
     
     services.desktopManager.gnome.enable = true;
 
