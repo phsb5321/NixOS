@@ -322,7 +322,6 @@ in {
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
         vdhcoapp
         inkscape
-        claude-code
         codex
         wrangler
         just
