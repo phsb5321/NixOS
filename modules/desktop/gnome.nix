@@ -69,10 +69,23 @@
   };
 
   config = lib.mkIf config.modules.desktop.gnome.enable {
-    # Official NixOS 25.11+ GNOME configuration
+    # GDM with strict X11-only configuration (laptop working pattern)
     services.displayManager.gdm = {
       enable = true;
-      wayland = config.modules.desktop.gnome.wayland.enable;
+      wayland = false; # Force disable Wayland completely
+      settings = {
+        daemon = {
+          # Completely disable Wayland in GDM
+          WaylandEnable = false;
+          # Force X11 session selection
+          DefaultSession = "gnome-xorg.desktop";
+        };
+        security = {
+          # Disable user switching to prevent session conflicts
+          AllowGuestAccount = false;
+          AllowUserList = true;
+        };
+      };
     };
     
     services.desktopManager.gnome.enable = true;
