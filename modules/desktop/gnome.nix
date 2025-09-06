@@ -1,5 +1,5 @@
-# GNOME Desktop Environment Configuration
-# Official NixOS 25.11+ implementation following NixOS Wiki
+# GNOME Desktop Environment Configuration  
+# NixOS 25.11+ Wayland-only implementation (X11 sessions removed in 25.11+)
 {
   config,
   lib,
@@ -52,7 +52,7 @@
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = "Enable Wayland session";
+        description = "Enable Wayland session (only option in NixOS 25.11+)";
       };
     };
 
@@ -69,137 +69,58 @@
   };
 
   config = lib.mkIf config.modules.desktop.gnome.enable {
-    # GDM with strict X11-only configuration (laptop working pattern)
+    # NixOS 25.11+ GNOME configuration (Wayland-only)
     services.displayManager.gdm = {
       enable = true;
-      wayland = false; # Force disable Wayland completely
-      settings = {
-        daemon = {
-          # Completely disable Wayland in GDM
-          WaylandEnable = false;
-          # Force X11 session selection
-          DefaultSession = "gnome-xorg.desktop";
-        };
-        security = {
-          # Disable user switching to prevent session conflicts
-          AllowGuestAccount = false;
-          AllowUserList = true;
-        };
-      };
-    };
-
-    # X server configuration to fix authentication issues
-    services.xserver = {
-      enable = true;
-      # Fix X11 authentication and display connection issues
-      displayManager = {
-        sessionCommands = ''
-          # Fix X11 authentication cookie issues
-          ${pkgs.xorg.xhost}/bin/xhost +local: 2>/dev/null || true
-          ${pkgs.xorg.xauth}/bin/xauth generate :0 . trusted 2>/dev/null || true
-        '';
-      };
-      # Disable hardware acceleration check that's failing
-      config = ''
-        Section "Device"
-          Identifier "AMD Graphics"
-          Driver "amdgpu"
-          Option "TearFree" "true"
-          Option "AccelMethod" "glamor"
-        EndSection
-      '';
+      wayland = true; # Only supported mode in NixOS 25.11+
     };
     
     services.desktopManager.gnome.enable = true;
 
-    # Essential GNOME services (official wiki)
+    # Essential GNOME services
     services.gnome = {
       gnome-keyring.enable = true;
       gnome-settings-daemon.enable = true;
       evolution-data-server.enable = true;
       glib-networking.enable = true;
-      sushi.enable = true; # File previews in Nautilus
-      tinysparql.enable = true; # Search indexing
+      sushi.enable = true;
+      tinysparql.enable = true;
     };
 
-    # Additional services for GNOME functionality
-    services.geoclue2.enable = true; # Location services
-    services.upower.enable = true; # Power management
+    # Additional services
+    services.geoclue2.enable = true;
+    services.upower.enable = true;
 
-    # Essential support (NixOS Wiki requirement)
+    # Essential support
     programs.dconf.enable = true;
 
-    # XDG Desktop Portal configuration for file dialogs (fixes Bruno import)
-    xdg.portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal-gtk # Required for FileChooser interface
-      ];
-      config = {
-        common = {
-          default = [ "gnome" ];
-          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-        };
-      };
-    };
-
-    # Power management (official recommendation)
+    # Power management
     services.power-profiles-daemon.enable = lib.mkDefault true;
     services.thermald.enable = lib.mkDefault false;
     services.tlp.enable = lib.mkForce false;
 
-    # System tray support (official wiki recommendation)
+    # System support
     services.udev.packages = with pkgs; [
       gnome-settings-daemon
     ];
 
-    # 2025 Electron configuration - conditional based on Wayland/X11
-    environment.sessionVariables = lib.mkMerge [
-      # Base GNOME session variables
-      {
-        XDG_CURRENT_DESKTOP = "GNOME";
-        GTK_USE_PORTAL = "1";
-      }
-      # Wayland-specific variables (only if Wayland enabled)
-      (lib.mkIf config.modules.desktop.gnome.wayland.enable {
-        NIXOS_OZONE_WL = "1";
-        XDG_SESSION_TYPE = "wayland";
-        GDK_BACKEND = "wayland,x11";
-      })
-      # X11-specific variables (if Wayland disabled)
-      (lib.mkIf (!config.modules.desktop.gnome.wayland.enable) {
-        # Disable Wayland completely for X11 mode
-        XDG_SESSION_TYPE = "x11";
-        GDK_BACKEND = "x11";
-        QT_QPA_PLATFORM = "xcb";
-        WAYLAND_DISPLAY = "";
-        MOZ_ENABLE_WAYLAND = "0";
-        ELECTRON_OZONE_PLATFORM_HINT = "x11";
-        
-        # X11 graphics and theme configuration
-        GSK_RENDERER = "gl"; # Use OpenGL renderer for X11 compatibility
-        GTK_THEME = "Adwaita:dark"; # Force dark theme in X11
-        QT_STYLE_OVERRIDE = "adwaita-dark"; # Qt dark theme
-        
-        # X11 visual improvements to fix artifacts
-        FREETYPE_PROPERTIES = "truetype:interpreter-version=40";
-        GDK_SCALE = "1";
-        GDK_DPI_SCALE = "1";
-        QT_AUTO_SCREEN_SCALE_FACTOR = "0";
-        QT_SCALE_FACTOR = "1";
-        QT_FONT_DPI = "96";
-        
-        # Anti-aliasing and rendering fixes for X11
-        XCURSOR_THEME = "Adwaita";
-        XCURSOR_SIZE = "24";
-        
-        # Terminal-specific fixes for X11 mode
-        KITTY_DISABLE_WAYLAND = "1"; # Force Kitty to use X11
-        DISPLAY = ":0"; # Ensure DISPLAY is set for X11 terminals
-      })
-    ];
+    # Wayland environment configuration for NixOS 25.11+
+    environment.sessionVariables = {
+      # Enable Electron Wayland support
+      NIXOS_OZONE_WL = "1";
+      # Ensure Wayland session
+      XDG_SESSION_TYPE = "wayland";
+      XDG_CURRENT_DESKTOP = "GNOME";
+      # Basic Wayland support
+      GDK_BACKEND = "wayland,x11";
+      QT_QPA_PLATFORM = "wayland;xcb";
+      MOZ_ENABLE_WAYLAND = "1";
+      # Cursor theme
+      XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
+      XCURSOR_SIZE = "24";
+    };
 
-    # Official GNOME packages
+    # Core GNOME packages
     environment.systemPackages = with pkgs;
       [
         # Essential GNOME packages
@@ -224,9 +145,9 @@
         gtk-engine-murrine
       ]
       ++ lib.optionals config.modules.desktop.gnome.extensions.enable [
-        # System tray support (official wiki)
+        # System tray support
         gnomeExtensions.appindicator
-        # Your existing extensions
+        # Extensions
         gnomeExtensions.dash-to-dock
         gnomeExtensions.user-themes
         gnomeExtensions.just-perfection
@@ -238,12 +159,11 @@
         gnomeExtensions.sound-output-device-chooser
       ];
 
-    # GNOME dconf configuration (preserving your existing settings)
+    # Extension configuration
     programs.dconf.profiles.user.databases = lib.mkIf config.modules.desktop.gnome.extensions.enable [
       {
         lockAll = false;
         settings = {
-          # Enable extensions
           "org/gnome/shell" = {
             enabled-extensions = config.modules.desktop.gnome.extensions.list;
             favorite-apps = [
@@ -255,7 +175,6 @@
             ];
           };
 
-          # Interface theming
           "org/gnome/desktop/interface" = {
             color-scheme = "prefer-dark";
             icon-theme = config.modules.desktop.gnome.theme.iconTheme;
@@ -270,7 +189,6 @@
             clock-show-weekday = true;
           };
 
-          # Mutter window manager settings
           "org/gnome/mutter" = {
             edge-tiling = true;
             dynamic-workspaces = true;
@@ -279,14 +197,12 @@
             experimental-features = ["scale-monitor-framebuffer"];
           };
 
-          # Window manager preferences
           "org/gnome/desktop/wm/preferences" = {
             button-layout = "appmenu:minimize,maximize,close";
             titlebar-font = "Cantarell Bold 11";
             focus-mode = "click";
           };
 
-          # Extension configurations (your existing settings)
           "org/gnome/shell/extensions/dash-to-dock" = {
             dock-position = "BOTTOM";
             extend-height = false;
@@ -308,18 +224,15 @@
             name = "Arc-Dark";
           };
 
-          # Privacy settings
           "org/gnome/desktop/privacy" = {
             report-technical-problems = false;
             send-software-usage-stats = false;
           };
 
-          # Session settings
           "org/gnome/desktop/session" = {
             idle-delay = lib.gvariant.mkUint32 900;
           };
 
-          # Power settings
           "org/gnome/settings-daemon/plugins/power" = {
             sleep-inactive-ac-type = "nothing";
             sleep-inactive-battery-type = "suspend";
@@ -329,7 +242,7 @@
       }
     ];
 
-    # Qt theming integration (official wiki)
+    # Qt theming integration
     qt = {
       enable = true;
       platformTheme = "gnome";
