@@ -157,6 +157,10 @@
         # Anti-aliasing and rendering fixes for X11
         XCURSOR_THEME = "Adwaita";
         XCURSOR_SIZE = "24";
+        
+        # Terminal-specific fixes for X11 mode
+        KITTY_DISABLE_WAYLAND = "1"; # Force Kitty to use X11
+        DISPLAY = ":0"; # Ensure DISPLAY is set for X11 terminals
       })
     ];
 
