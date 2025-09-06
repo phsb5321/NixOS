@@ -1,5 +1,5 @@
-# GNOME Desktop Environment Configuration  
-# NixOS 25.11+ Wayland-only implementation (X11 sessions removed in 25.11+)
+# GNOME Desktop Environment Configuration
+# NixOS 25.11+ Wayland implementation with enhanced portal support for Bruno
 {
   config,
   lib,
@@ -52,7 +52,7 @@
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = "Enable Wayland session (only option in NixOS 25.11+)";
+        description = "Enable Wayland session (NixOS 25.11+ default)";
       };
     };
 
@@ -69,13 +69,34 @@
   };
 
   config = lib.mkIf config.modules.desktop.gnome.enable {
-    # NixOS 25.11+ GNOME configuration (Wayland-only)
+    # NixOS 25.11+ GNOME Wayland configuration
     services.displayManager.gdm = {
       enable = true;
-      wayland = true; # Only supported mode in NixOS 25.11+
+      wayland = config.modules.desktop.gnome.wayland.enable;
     };
     
     services.desktopManager.gnome.enable = true;
+
+    # Comprehensive XDG Desktop Portal configuration for Bruno file dialogs
+    xdg.portal = {
+      enable = true;
+      extraPortals = with pkgs; [
+        xdg-desktop-portal-gnome
+        xdg-desktop-portal-gtk # Essential for FileChooser interface
+      ];
+      config = {
+        common = {
+          default = [ "gnome" ];
+          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+          "org.freedesktop.impl.portal.Print" = [ "gtk" ];
+        };
+        gnome = {
+          default = [ "gnome" "gtk" ];
+          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+          "org.freedesktop.impl.portal.Print" = [ "gtk" ];
+        };
+      };
+    };
 
     # Essential GNOME services
     services.gnome = {
@@ -104,21 +125,32 @@
       gnome-settings-daemon
     ];
 
-    # Wayland environment configuration for NixOS 25.11+
+    # Optimized Wayland environment for Electron file dialogs
     environment.sessionVariables = {
-      # Enable Electron Wayland support
+      # Electron Wayland support
       NIXOS_OZONE_WL = "1";
-      # Ensure Wayland session
       XDG_SESSION_TYPE = "wayland";
       XDG_CURRENT_DESKTOP = "GNOME";
-      # Basic Wayland support
+      
+      # Portal support for file dialogs (crucial for Bruno)
+      GTK_USE_PORTAL = "1";
+      
+      # Wayland display configuration
       GDK_BACKEND = "wayland,x11";
       QT_QPA_PLATFORM = "wayland;xcb";
       MOZ_ENABLE_WAYLAND = "1";
-      # Cursor theme
+      
+      # Theme configuration
       XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
       XCURSOR_SIZE = "24";
     };
+
+    # Portal service initialization
+    environment.extraInit = ''
+      # Ensure portal services start properly
+      systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP GTK_USE_PORTAL 2>/dev/null || true
+      dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP GTK_USE_PORTAL 2>/dev/null || true
+    '';
 
     # Core GNOME packages
     environment.systemPackages = with pkgs;
