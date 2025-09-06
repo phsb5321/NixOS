@@ -103,13 +103,26 @@ The desktop host supports multiple GPU configurations:
 - Laptop uses Intel graphics with power management
 - GPU variant system allows fallback configurations for desktop
 
+### NixOS 25.11+ GNOME Configuration
+- **Wayland-only**: NixOS 25.11+ removes X11 session support entirely
+- **Portal Integration**: Comprehensive XDG desktop portal configuration for file dialogs
+- **Electron Support**: Proper NIXOS_OZONE_WL and GTK_USE_PORTAL configuration
+- **Multi-host**: Desktop (Wayland), Laptop (X11 for NVIDIA compatibility)
+
+### Bruno API Client
+- Desktop: Wayland mode with enhanced portal configuration for file dialogs
+- Laptop: X11 mode for better file picker compatibility
+- Portal backend: GTK FileChooser interface for Electron applications
+
 ### Dotfiles Integration
 - Project-local dotfiles using chezmoi stored in `~/NixOS/dotfiles/`
 - Independent of NixOS rebuilds for instant configuration changes
 - Git-managed with helper scripts for common operations
+- Zed Editor configured with Claude Code integration
 
 ### Development Workflow
 - Use `nixswitch` for system rebuilds (handles validation, cleanup, error recovery)
 - Use `nix-shell-selector.sh` for development environments
 - Dotfiles changes apply immediately without rebuilds
 - Language servers and tools are pre-configured for modern development
+- Zed Editor with Claude Code ACP agent integration
