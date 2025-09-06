@@ -378,7 +378,7 @@ in {
         deno
         postgresql
         supabase-cli
-        pkgs-unstable.zed-editor
+        # pkgs-unstable.zed-editor # Disabled due to hash mismatch - will re-enable after fix
         pkgs-unstable.ghostty
         pkgs-unstable.kitty
         stockfish
