@@ -36,7 +36,9 @@
       "ctrl-b": "workspace::ToggleLeftDock",
       "ctrl-=": ["zed::IncreaseBufferFontSize", {"persist": false}],
       "ctrl--": ["zed::DecreaseBufferFontSize", {"persist": false}],
-      "ctrl-0": ["zed::ResetBufferFontSize", {"persist": false}]
+      "ctrl-0": ["zed::ResetBufferFontSize", {"persist": false}],
+      "ctrl-alt-c": ["agent::NewExternalAgentThread", {"agent": "claude_code"}],
+      "ctrl-?": "agent_panel::ToggleFocus"
     }
   },
   {
