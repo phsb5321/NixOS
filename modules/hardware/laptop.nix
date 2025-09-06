@@ -243,6 +243,23 @@ in {
       "rfkill.default_state=1" # Unblock WiFi by default
       "iwlwifi.power_save=0"   # Disable power saving for stability
       "iwlwifi.bt_coex_active=0" # Disable Bluetooth coexistence if problematic
+      "pcie_aspm=off"          # Disable PCIe power management (helps with CNVi)
+      "acpi_osi=Linux"         # ACPI compatibility for WiFi
+      "acpi_backlight=vendor"  # Fix ACPI conflicts
+    ];
+
+    # Module configuration for Intel CNVi WiFi (device 8086:06f0)
+    boot.extraModprobeConfig = ''
+      # Intel CNVi WiFi specific configuration
+      options iwlwifi swcrypto=1 11n_disable=1
+      options iwlwifi power_save=0
+      options iwlwifi d0i3_disable=1
+      options iwlwifi uapsd_disable=1
+    '';
+
+    # Blacklist problematic modules that can cause rfkill issues
+    boot.blacklistedKernelModules = [
+      "ideapad_laptop" # Can cause rfkill issues on some laptops
     ];
 
     # Ensure latest Intel WiFi firmware is available
@@ -251,15 +268,32 @@ in {
       wireless-regdb # WiFi regulatory database
     ];
 
-    # Create systemd service to unblock WiFi on boot
+    # Create aggressive systemd service to unblock WiFi on boot
     systemd.services.wifi-unblock = {
-      description = "Unblock WiFi on boot";
+      description = "Aggressively unblock WiFi on boot";
       wantedBy = [ "multi-user.target" ];
-      after = [ "systemd-rfkill@rfkill0.service" ];
+      after = [ "systemd-modules-load.service" ];
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
-        ExecStart = "${pkgs.util-linux}/bin/rfkill unblock wifi";
+        ExecStart = pkgs.writeShellScript "wifi-unblock" ''
+          # Multiple attempts to unblock WiFi
+          ${pkgs.util-linux}/bin/rfkill unblock wifi
+          ${pkgs.util-linux}/bin/rfkill unblock all
+          
+          # Try direct sysfs approach if available
+          if [ -w /sys/class/rfkill/rfkill1/soft ]; then
+            echo 0 > /sys/class/rfkill/rfkill1/soft
+          fi
+          
+          # Reload iwlwifi module
+          ${pkgs.kmod}/bin/modprobe -r iwlwifi || true
+          sleep 2
+          ${pkgs.kmod}/bin/modprobe iwlwifi
+          
+          # Final unblock attempt
+          ${pkgs.util-linux}/bin/rfkill unblock wifi
+        '';
       };
     };
 
