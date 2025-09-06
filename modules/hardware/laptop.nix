@@ -97,6 +97,26 @@ in {
       };
     };
 
+    graphics = {
+      hybridGraphics = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable hybrid Intel/NVIDIA graphics support";
+      };
+
+      intelBusId = lib.mkOption {
+        type = lib.types.str;
+        default = "PCI:0:2:0";
+        description = "Intel GPU bus ID";
+      };
+
+      nvidiaBusId = lib.mkOption {
+        type = lib.types.str;
+        default = "PCI:1:0:0";
+        description = "NVIDIA GPU bus ID";
+      };
+    };
+
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [];
@@ -206,7 +226,38 @@ in {
     hardware = {
       bluetooth.enable = true;
       bluetooth.powerOnBoot = true;
+
+      # Graphics configuration
+      graphics = {
+        enable = true;
+        enable32Bit = true;
+      };
+
+      # NVIDIA configuration for hybrid laptops
+      nvidia = lib.mkIf cfg.graphics.hybridGraphics {
+        modesetting.enable = true;
+        powerManagement.enable = true;
+        powerManagement.finegrained = true;
+        open = false; # Use proprietary drivers for GTX 1650
+        nvidiaSettings = true;
+        package = config.boot.kernelPackages.nvidiaPackages.production;
+
+        prime = {
+          offload = {
+            enable = true;
+            enableOffloadCmd = true;
+          };
+          intelBusId = cfg.graphics.intelBusId;
+          nvidiaBusId = cfg.graphics.nvidiaBusId;
+        };
+      };
     };
+
+    # Video drivers
+    services.xserver.videoDrivers = lib.mkIf cfg.graphics.hybridGraphics [
+      "modesetting" # Intel
+      "nvidia"      # NVIDIA
+    ];
 
     # Enable firmware updates
     services.fwupd.enable = true;
