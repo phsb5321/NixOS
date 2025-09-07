@@ -58,7 +58,7 @@
       ];
     };
   };
-  # Simple default variant selection to avoid circular dependency
+  # Simple default variant selection (hardcoded to hardware for stability)
   activeVariant = variants.hardware; # Default to hardware variant
 in {
   imports = [
@@ -348,15 +348,15 @@ in {
   # Host-specific network configuration
   modules.networking.firewall.openPorts = [3000]; # Development server port
   
-  # Tailscale for remote access (optional - can be enabled when needed)
-  # modules.networking.tailscale = {
-  #   enable = true;
-  #   useRoutingFeatures = "both"; # Can serve as exit node
-  #   extraUpFlags = [
-  #     "--advertise-exit-node" 
-  #     "--accept-routes"
-  #   ];
-  # };
+  # Tailscale for remote access and mesh networking
+  modules.networking.tailscale = {
+    enable = true;
+    useRoutingFeatures = "both"; # Can serve as exit node and use routes
+    extraUpFlags = [
+      "--advertise-exit-node" 
+      "--accept-routes"
+    ];
+  };
 
   # Programs (conditional)
   programs.steam = lib.mkIf activeVariant.enableHardwareAccel {
