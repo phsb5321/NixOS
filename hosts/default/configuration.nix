@@ -347,6 +347,16 @@ in {
 
   # Host-specific network configuration
   modules.networking.firewall.openPorts = [3000]; # Development server port
+  
+  # Tailscale for remote access (optional - can be enabled when needed)
+  # modules.networking.tailscale = {
+  #   enable = true;
+  #   useRoutingFeatures = "both"; # Can serve as exit node
+  #   extraUpFlags = [
+  #     "--advertise-exit-node" 
+  #     "--accept-routes"
+  #   ];
+  # };
 
   # Programs (conditional)
   programs.steam = lib.mkIf activeVariant.enableHardwareAccel {

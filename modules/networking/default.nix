@@ -4,7 +4,13 @@
   lib,
   pkgs,
   ...
-}:
+}: {
+  imports = [
+    ./tailscale.nix
+  ];
+}
+//
+(
 with lib; let
   cfg = config.modules.networking;
 
@@ -168,7 +174,7 @@ in {
     networking.firewall = mkIf cfg.firewall.enable {
       enable = true;
       allowedTCPPorts = cfg.firewall.openPorts;
-      allowPing = cfg.firewall.allowPing;
+      allowPing = lib.mkDefault cfg.firewall.allowPing;
       trustedInterfaces = cfg.firewall.trustedInterfaces;
       # Enhanced connection tracking for reliability
       connectionTrackingModules = mkIf cfg.monitoring.connectionTracking [
@@ -221,10 +227,11 @@ in {
     # ———————————————————————————————————————
     environment.systemPackages = with pkgs; [
       networkmanager
-      networkmanagerapplet # correct attribute name for the GNOME applet :contentReference[oaicite:0]{index=0}
+      networkmanagerapplet # correct attribute name for the GNOME applet
       bind
       openssl
       curl
     ];
   };
 }
+)
