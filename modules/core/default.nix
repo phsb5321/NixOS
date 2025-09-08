@@ -86,6 +86,7 @@ in {
         noto-fonts-cjk-sans
         noto-fonts-emoji
         liberation_ttf
+        cantarell-fonts
       ];
     };
 
@@ -118,6 +119,39 @@ in {
       latex = {
         enable = lib.mkDefault true;
         minimal = lib.mkDefault false; # Set to true for minimal installation
+      };
+      typst = {
+        enable = lib.mkDefault true;
+        lsp = lib.mkDefault true; # Enable tinymist LSP by default
+      };
+      markdown = {
+        enable = lib.mkDefault true;
+        lsp = lib.mkDefault true;
+        linting = {
+          enable = lib.mkDefault true;
+          markdownlint = lib.mkDefault true;
+          vale = {
+            enable = lib.mkDefault false; # Disabled by default to save space
+            styles = lib.mkDefault [];
+          };
+          linkCheck = lib.mkDefault false; # Disabled by default to save space
+        };
+        formatting = {
+          enable = lib.mkDefault true;
+          mdformat = lib.mkDefault true;
+          prettier = lib.mkDefault false;
+        };
+        preview = {
+          enable = lib.mkDefault true;
+          glow = lib.mkDefault true;
+          grip = lib.mkDefault false;
+        };
+        utilities = {
+          enable = lib.mkDefault false; # Disabled by default to save space
+          doctoc = lib.mkDefault false;
+          mdbook = lib.mkDefault false;
+          mermaid = lib.mkDefault false;
+        };
       };
     };
 
@@ -283,15 +317,17 @@ in {
         jq
         popsicle
         stablePkgs.awscli2
-        azure-cli
+        # azure-cli # Temporarily disabled due to compilation issues
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
         vdhcoapp
         inkscape
         claude-code
+        codex
         wrangler
         just
         infisical
+        httpx
 
         # Rust System Utilities (Modern replacements for Unix tools)
         eza # Modern replacement for ls
@@ -342,8 +378,9 @@ in {
         deno
         postgresql
         supabase-cli
-        pkgs-unstable.zed-editor
+        # pkgs-unstable.zed-editor # Disabled due to hash mismatch - will re-enable after fix
         pkgs-unstable.ghostty
+        pkgs-unstable.kitty
         stockfish
         chromium
 
