@@ -38,7 +38,7 @@ in {
           # Code editors - use unstable for latest VS Code
           pkgs-unstable.vscode
           code-cursor # Temporarily disabled due to download issues
-          # zed-editor # Temporarily disabled due to hash mismatch
+          pkgs-unstable.zed-editor # Testing with updated flake inputs
 
           # API testing and development
           bruno # Bruno API client - portal errors are cosmetic, app functions normally
