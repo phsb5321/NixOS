@@ -1,9 +1,66 @@
-# ~/NixOS/hosts/default/configuration.nix
+# NixOS Desktop Configuration - Host Specific
+# Contains only host-specific configuration, GNOME config is in shared modules
 {
   pkgs,
+  lib,
   hostname,
   ...
-}: {
+}: let
+  # Configuration variants for different scenarios
+  variants = {
+    # Normal operation with hardware acceleration
+    hardware = {
+      kernelParams = [
+        "amdgpu.runpm=0" # Disable runtime power management (prevents flickering)
+        "amdgpu.dpm=1" # Enable dynamic power management
+        "amdgpu.dc=1" # Enable display core
+        "consoleblank=0" # Disable console blanking
+        "rd.systemd.show_status=true"
+        "quiet"
+      ];
+      videoDrivers = ["amdgpu"];
+      enableHardwareAccel = true;
+    };
+
+    # Conservative fallback for GPU issues
+    conservative = {
+      kernelParams = [
+        "amdgpu.runpm=0"
+        "amdgpu.dpm=1"
+        "amdgpu.dc=1"
+        "consoleblank=0"
+        "rd.systemd.show_status=true"
+      ];
+      videoDrivers = ["amdgpu"];
+      enableHardwareAccel = true;
+      forceTearFree = true;
+    };
+
+    # Emergency software rendering fallback
+    software = {
+      kernelParams = [
+        "nomodeset"
+        "amdgpu.modeset=0"
+        "radeon.modeset=0"
+        "video=1024x768@60"
+        "consoleblank=0"
+        "iommu=soft"
+      ];
+      videoDrivers = [
+        "vesa"
+        "fbdev"
+      ];
+      enableHardwareAccel = false;
+      blacklistModules = [
+        "amdgpu"
+        "radeon"
+        "nouveau"
+      ];
+    };
+  };
+  # Simple default variant selection (hardcoded to hardware for stability)
+  activeVariant = variants.hardware; # Default to hardware variant
+in {
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -11,264 +68,337 @@
   ];
 
   # Host-specific metadata
-  networking.hostName = hostname;
-  modules.networking.hostName = hostname;
+  modules.networking.hostName = lib.mkForce hostname;
 
-  # GNOME configuration for AMD GPU - Force X11 for compatibility
-  services.xserver.enable = true;
-
-  # Display manager configuration - Force X11 only
-  services.displayManager.gdm = {
+  # GNOME configuration - NixOS 25.11+ Wayland-only (X11 sessions removed in 25.11+)
+  modules.desktop.gnome = {
     enable = true;
-    wayland = false; # Force X11 only for AMD GPU compatibility
-    autoSuspend = true;
+    variant = "hardware"; # Back to hardware acceleration 
+    wayland.enable = true; # NixOS 25.11+ only supports Wayland
   };
 
-  # Disable Wayland compositor packages
-  environment.gnome.excludePackages = with pkgs; [
-    mutter # GNOME's Wayland compositor
-  ];
+  # Boot configuration with variants
+  boot = {
+    # Temporary files and kernel optimization
+    tmp.useTmpfs = true;
 
-  # Desktop manager configuration
-  services.desktopManager.gnome.enable = true;
+    # Kernel configuration
+    kernelPackages = pkgs.linuxPackages_6_6;
 
-  # Ensure only GDM is enabled
-  services.displayManager.sddm.enable = false;
+    # Dynamic kernel parameters based on variant
+    kernelParams = activeVariant.kernelParams;
 
-  # Host-specific X11 configuration for AMD GPU compatibility
-  services.thermald.enable = true;
-
-  # Force X11 environment variables for AMD GPU
-  environment.sessionVariables = {
-    # Force X11 session - no Wayland for better compatibility
-    XDG_SESSION_TYPE = "x11";
-    GDK_BACKEND = "x11";
-    QT_QPA_PLATFORM = "xcb";
-
-    # Completely disable Wayland - use /dev/null to prevent connection attempts
-    WAYLAND_DISPLAY = "/dev/null";
-    MOZ_ENABLE_WAYLAND = "0";
-    NIXOS_OZONE_WL = "0";
-    ELECTRON_OZONE_PLATFORM_HINT = "x11";
-
-    # Additional Wayland disabling
-    SDL_VIDEODRIVER = "x11";
-    CLUTTER_BACKEND = "x11";
-
-    # AMD GPU configuration - Fixed deprecated MESA variables
-    AMD_VULKAN_ICD = "RADV";
-    VDPAU_DRIVER = "radeonsi";
-    GALLIUM_DRIVER = "radeonsi";
-    MESA_SHADER_CACHE_MAX_SIZE = "2G";
-    MESA_DISK_CACHE_MAX_SIZE = "4G";
-
-    # Force GLFW to use X11 backend - prevents Wayland connection attempts
-    GLFW_BACKEND = "x11";
+    # Conditional kernel module handling
+    initrd.kernelModules =
+      if activeVariant.enableHardwareAccel
+      then ["amdgpu"]
+      else [];
+    kernelModules =
+      if activeVariant.enableHardwareAccel
+      then [
+        "kvm-intel"
+        "amdgpu"
+      ]
+      else [];
+    blacklistedKernelModules = activeVariant.blacklistModules or [];
   };
 
-  # Force applications to use X11 - system-wide
-  environment.etc."environment".text = ''
-    XDG_SESSION_TYPE=x11
-    GDK_BACKEND=x11
-    QT_QPA_PLATFORM=xcb
-    WAYLAND_DISPLAY=/dev/null
-    MOZ_ENABLE_WAYLAND=0
-    ELECTRON_OZONE_PLATFORM_HINT=x11
-    SDL_VIDEODRIVER=x11
-    CLUTTER_BACKEND=x11
-    GLFW_BACKEND=x11
-  '';
-
-  # Additional Wayland disabling in systemd environment
-  systemd.user.extraConfig = ''
-    DefaultEnvironment="WAYLAND_DISPLAY="
-    DefaultEnvironment="XDG_SESSION_TYPE=x11"
-    DefaultEnvironment="GDK_BACKEND=x11"
-    DefaultEnvironment="GLFW_BACKEND=x11"
-  '';
-
-  # Ensure GLFW uses X11 backend - create profile script
-  environment.etc."profile.d/glfw-x11.sh".text = ''
-    export GLFW_BACKEND=x11
-  '';
-
-  # Host-specific features
-  modules.packages.gaming.enable = true;
-
-  # Development tools for desktop
-  modules.core.java = {
-    enable = true;
-    androidTools.enable = true;
-  };
-
-  modules.core.documentTools = {
-    enable = true;
-    latex = {
+  # Hardware configuration based on variant
+  hardware = {
+    graphics = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
-      minimal = false;
-      extraPackages = with pkgs; [
-        biber
-        texlive.combined.scheme-context
-      ];
+      extraPackages = with pkgs; [amdvlk];
+      extraPackages32 = with pkgs; [driversi686Linux.amdvlk];
+    };
+    cpu.intel.updateMicrocode = true;
+  };
+
+  # X11 configuration (includes video drivers)
+  services.xserver = {
+    enable = true;
+    videoDrivers = lib.mkForce activeVariant.videoDrivers;
+    # X11 config only needed for software rendering fallback
+    config = lib.mkIf (!activeVariant.enableHardwareAccel) ''
+      Section "Device"
+        Identifier "Software Graphics"
+        Driver "vesa"
+        Option "AccelMethod" "none"
+        Option "ShadowFB" "true"
+      EndSection
+
+      Section "Screen"
+        Identifier "Default Screen"
+        Device "Software Graphics"
+        DefaultDepth 24
+        SubSection "Display"
+          Depth 24
+          Modes "1024x768" "800x600"
+        EndSubSection
+      EndSection
+    '';
+  };
+
+  # Host-specific SystemD service for AMD GPU optimization
+  systemd.services.amd-gpu-optimization = lib.mkIf activeVariant.enableHardwareAccel {
+    description = "AMD GPU Performance Optimization";
+    after = ["graphical-session.target"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "amd-gpu-optimization" ''
+        # Set performance level based on variant
+        ${
+          if activeVariant == variants.conservative
+          then ''
+            echo "high" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
+            echo "1" > /sys/class/drm/card0/device/pp_power_profile_mode 2>/dev/null || true
+          ''
+          else ''
+            echo "auto" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
+            echo "1" > /sys/class/drm/card0/device/power_dpm_state 2>/dev/null || true
+          ''
+        }
+      '';
     };
   };
 
-  # Simple AMD GPU support
-  boot.initrd.kernelModules = ["amdgpu"];
-  services.xserver.videoDrivers = ["amdgpu"];
-
-  # Additional AMD GPU packages
-  modules.packages.extraPackages = with pkgs; [
-    # GPU tools
-    vulkan-tools
-    vulkan-loader
-    vulkan-validation-layers
-    libva-utils
-    vdpauinfo
-    glxinfo
-    mesa-demos
-    vulkan-caps-viewer
-    clinfo
-    renderdoc
-
-    # Development tools
-    calibre
-    anydesk
-    postman
-    dbeaver-bin
-    android-studio
-    android-tools
-
-    # Media and Graphics
-    gimp
-    inkscape
-    blender
-    krita
-    kdePackages.kdenlive
-    obs-studio
-
-    # Music streaming
-    spotify
-    spot
-    ncspot
-
-    # Communication
-    telegram-desktop
-    vesktop
-    slack
-    zoom-us
-
-    # Gaming
-    steam
-    lutris
-    wine
-    winetricks
-
-    # Productivity
-    obsidian
-    notion-app-enhanced
-
-    # System monitoring
-    htop
-    btop
-    iotop
-    atop
-    smem
-    numactl
-    stress-ng
-    memtester
-
-    # Memory analysis
-    valgrind
-    heaptrack
-    massif-visualizer
-
-    # Disk utilities
-    ncdu
-    duf
-
-    # Process management
-    psmisc
-    lsof
-
-    # Development
-    gh
-    git-crypt
-    gnupg
-    ripgrep
-    fd
-    jq
-    yq
-    unzip
-    zip
-    p7zip
-
-    # Fonts
-    nerd-fonts.jetbrains-mono
-    noto-fonts-emoji
-    noto-fonts
-    noto-fonts-cjk-sans
-  ];
-
-  # Network ports specific to desktop
-  modules.networking.firewall.openPorts = [3000]; # Additional to shared SSH
-
-  # Desktop-specific user groups
+  # Host-specific user groups
   users.groups.plugdev = {};
   users.users.notroot.extraGroups = [
-    "dialout"
-    "libvirtd"
-    "plugdev"
+    "dialout" # Serial device access for development
+    "libvirtd" # Virtualization access
+    "plugdev" # USB device access
+    "input" # Input device access
   ];
 
-  # Gaming programs
-  programs.steam = {
+  # Host-specific desktop packages (hardware-dependent applications)
+  environment.systemPackages = with pkgs;
+    [
+      # GPU-specific tools for AMD hardware debugging
+      vulkan-tools
+      vulkan-loader
+      vulkan-validation-layers
+      libva-utils
+      vdpauinfo
+      glxinfo
+      mesa-demos
+      clinfo
+      radeontop
+
+      # Essential development tools for desktop host
+      gcc
+      gnumake
+      python3
+      nodejs
+
+      # System monitoring
+      neofetch
+      lm_sensors
+
+      # Host-specific terminal (GPU-accelerated)
+      kitty
+    ]
+    ++ lib.optionals (!activeVariant.enableHardwareAccel) [
+      # Essential packages for software rendering mode
+      firefox
+      gnome-text-editor
+      gnome-terminal
+      nano
+      htop
+    ];
+
+  # GNOME login fixes (NixOS Wiki solution for session registration failures)
+  systemd.services."getty@tty1".enable = false;
+  systemd.services."autovt@tty1".enable = false;
+
+  # Host-specific module configuration
+  modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
+  modules.core.java = {
+    enable = true;
+    androidTools.enable = activeVariant.enableHardwareAccel;
+  };
+
+
+  # Document tools
+  modules.core.documentTools = {
+    enable = true;
+    latex = {
+      enable = activeVariant.enableHardwareAccel;
+      minimal = false;
+      extraPackages = lib.optionals activeVariant.enableHardwareAccel (
+        with pkgs; [
+          biber
+          texlive.combined.scheme-context
+        ]
+      );
+    };
+    markdown = {
+      enable = true;
+      lsp = true;
+      linting = {
+        enable = true;
+        markdownlint = true;
+        vale = {
+          enable = true;
+          styles = ["google" "write-good"];
+        };
+        linkCheck = true;
+      };
+      formatting = {
+        enable = true;
+        mdformat = true;
+        prettier = false;
+      };
+      preview = {
+        enable = true;
+        glow = true;
+        grip = false;
+      };
+      utilities = {
+        enable = true;
+        doctoc = true;
+        mdbook = activeVariant.enableHardwareAccel;
+        mermaid = true;
+      };
+    };
+  };
+
+  modules.packages.extraPackages = with pkgs;
+    lib.optionals activeVariant.enableHardwareAccel [
+      # Development tools
+      calibre
+      anydesk
+      postman
+      dbeaver-bin
+      android-studio
+      android-tools
+
+      # Media and Graphics (GPU-accelerated)
+      gimp
+      inkscape
+      blender
+      krita
+      kdePackages.kdenlive
+      obs-studio
+
+      # Music streaming
+      spotify
+      spot
+      ncspot
+
+      # Communication
+      telegram-desktop
+      vesktop
+      slack
+      zoom-us
+
+      # Gaming
+      steam
+      lutris
+      wine
+      winetricks
+
+      # Productivity
+      obsidian
+      notion-app-enhanced
+
+      # System monitoring
+      htop
+      btop
+      iotop
+      atop
+      smem
+      numactl
+      stress-ng
+      memtester
+
+      # Memory analysis
+      valgrind
+      heaptrack
+      massif-visualizer
+
+      # Disk utilities
+      ncdu
+      duf
+
+      # Process management
+      psmisc
+      lsof
+
+      # Development
+      gh
+      git-crypt
+      gnupg
+      ripgrep
+      fd
+      jq
+      yq
+      unzip
+      zip
+      p7zip
+
+      # Fonts
+      nerd-fonts.jetbrains-mono
+      noto-fonts-emoji
+      noto-fonts
+      noto-fonts-cjk-sans
+    ];
+
+  # Host-specific network configuration
+  modules.networking.firewall.openPorts = [3000]; # Development server port
+  
+  # Tailscale for remote access and mesh networking
+  modules.networking.tailscale = {
+    enable = true;
+    useRoutingFeatures = "both"; # Can serve as exit node and use routes
+    extraUpFlags = [
+      "--advertise-exit-node" 
+      "--accept-routes"
+    ];
+  };
+
+  # Programs (conditional)
+  programs.steam = lib.mkIf activeVariant.enableHardwareAccel {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
+    gamescopeSession.enable = true;
   };
 
-  # CoreCtrl sudo access
-  security.sudo.extraRules = [
-    {
-      groups = ["wheel"];
-      commands = [
-        {
-          command = "${pkgs.corectrl}/bin/corectrl";
-          options = ["NOPASSWD"];
-        }
-      ];
-    }
-  ];
+  # Host-specific shell configuration (optimized for desktop performance)
+  users.defaultUserShell = pkgs.zsh;
+  programs.zsh.enable = true;
 
-  # Intel microcode
-  hardware.cpu.intel.updateMicrocode = true;
+  # Host-specific security configuration
+  security = {
+    # Enable PAM for GNOME keyring and authentication
+    pam.services = {
+      gdm = {
+        enableGnomeKeyring = true;
+      };
+      gdm-password = {
+        enableGnomeKeyring = true;
+      };
+    };
 
-  # Security
-  security.auditd.enable = true;
-  security.audit = {
-    enable = true;
-    backlogLimit = 8192;
-    failureMode = "printk";
-    rules = ["-a exit,always -F arch=b64 -S execve"];
+    auditd.enable = activeVariant.enableHardwareAccel;
+    audit = lib.mkIf activeVariant.enableHardwareAccel {
+      enable = true;
+      backlogLimit = 8192;
+      failureMode = "printk";
+      rules = ["-a exit,always -F arch=b64 -S execve"];
+    };
+
+    apparmor = lib.mkIf activeVariant.enableHardwareAccel {
+      enable = true;
+      killUnconfinedConfinables = true;
+    };
   };
 
-  security.apparmor = {
-    enable = true;
-    killUnconfinedConfinables = true;
-  };
+  # Note: Wayland environment variables are now managed by the GNOME module
+  # to prevent conflicts and ensure consistency across all applications
 
-  # Boot configuration
-  boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
-    tmp.useTmpfs = true;
-    # AMD GPU kernel parameters are now handled by the hardware module
-  };
-
-  # Memory optimization - reduced swappiness for better performance
-  boot.kernel.sysctl."vm.swappiness" = 10;
-
-  # Disable unnecessary services for this host
-  services.ollama.enable = false;
-  services.tailscale.enable = false;
+  # System state version
+  system.stateVersion = "25.11";
 }

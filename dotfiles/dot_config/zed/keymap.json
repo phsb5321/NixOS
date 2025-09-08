@@ -1,0 +1,112 @@
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-shift-p": "command_palette::Toggle",
+      "ctrl-p": "file_finder::Toggle",
+      "ctrl-shift-o": "outline::Toggle",
+      "ctrl-shift-f": "pane::DeploySearch",
+      "ctrl-shift-h": ["pane::DeploySearch", {"replace_enabled": true}],
+      "ctrl-shift-e": "project_panel::ToggleFocus",
+      "ctrl-shift-x": "zed::Extensions",
+      "ctrl-shift-g": "git_panel::ToggleFocus",
+      "ctrl-shift-d": "debug_panel::ToggleFocus",
+      "ctrl-n": "workspace::NewFile",
+      "ctrl-o": "workspace::Open",
+      "ctrl-s": "workspace::Save",
+      "ctrl-shift-s": "workspace::SaveAs",
+      "ctrl-w": ["pane::CloseActiveItem", {"close_pinned": false}],
+      "ctrl-shift-w": "workspace::CloseWindow",
+      "ctrl-k ctrl-w": ["pane::CloseAllItems", {"close_pinned": false}],
+      "ctrl-shift-t": "pane::ReopenClosedItem",
+      "ctrl-g": "go_to_line::Toggle",
+      "ctrl-\\": "pane::SplitRight",
+      "ctrl-j": "workspace::ToggleBottomDock",
+      "alt-1": ["workspace::ActivatePane", 0],
+      "alt-2": ["workspace::ActivatePane", 1],
+      "alt-3": ["workspace::ActivatePane", 2],
+      "alt-4": ["workspace::ActivatePane", 3],
+      "alt-5": ["workspace::ActivatePane", 4],
+      "alt-6": ["workspace::ActivatePane", 5],
+      "alt-7": ["workspace::ActivatePane", 6],
+      "alt-8": ["workspace::ActivatePane", 7],
+      "alt-9": ["workspace::ActivatePane", 8],
+      "ctrl-`": "terminal_panel::ToggleFocus",
+      "ctrl-~": "workspace::NewTerminal",
+      "ctrl-b": "workspace::ToggleLeftDock",
+      "ctrl-=": ["zed::IncreaseBufferFontSize", {"persist": false}],
+      "ctrl--": ["zed::DecreaseBufferFontSize", {"persist": false}],
+      "ctrl-0": ["zed::ResetBufferFontSize", {"persist": false}],
+      "ctrl-alt-c": ["agent::NewExternalAgentThread", {"agent": "claude_code"}],
+      "ctrl-?": "agent_panel::ToggleFocus"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "ctrl-a": "editor::SelectAll",
+      "ctrl-l": "editor::SelectLine",
+      "ctrl-d": ["editor::SelectNext", {"replace_newest": false}],
+      "ctrl-shift-l": "editor::SelectAllMatches",
+      "ctrl-u": "editor::UndoSelection",
+      "shift-alt-down": "editor::AddSelectionBelow",
+      "shift-alt-up": "editor::AddSelectionAbove",
+      "ctrl-alt-shift-down": "editor::DuplicateLineDown",
+      "ctrl-alt-shift-up": "editor::DuplicateLineUp",
+      "alt-down": "editor::MoveLineDown",
+      "alt-up": "editor::MoveLineUp",
+      "ctrl-c": "editor::Copy",
+      "ctrl-x": "editor::Cut",
+      "ctrl-v": "editor::Paste",
+      "ctrl-z": "editor::Undo",
+      "ctrl-y": "editor::Redo",
+      "ctrl-shift-z": "editor::Redo",
+      "f12": "editor::GoToDefinition",
+      "ctrl-f12": "editor::GoToTypeDefinition",
+      "shift-f12": "editor::GoToImplementation",
+      "alt-shift-f12": "editor::FindAllReferences",
+      "f2": "editor::Rename",
+      "ctrl-k ctrl-i": "editor::Hover",
+      "ctrl-f": "buffer_search::Deploy",
+      "ctrl-h": "buffer_search::DeployReplace",
+      "f3": "search::SelectNextMatch",
+      "shift-f3": "search::SelectPreviousMatch",
+      "escape": "buffer_search::Dismiss",
+      "ctrl-.": "editor::ToggleCodeActions",
+      "ctrl-space": "editor::ShowCompletions",
+      "ctrl-:": "editor::ToggleInlayHints",
+      "ctrl-shift-i": "editor::Format",
+      "ctrl-shift-k": "editor::DeleteLine",
+      "ctrl-enter": "editor::NewlineBelow",
+      "ctrl-shift-enter": "editor::NewlineAbove",
+      "ctrl-]": "editor::Indent",
+      "ctrl-[": "editor::Outdent",
+      "ctrl-{": "editor::Fold",
+      "ctrl-}": "editor::UnfoldLines",
+      "ctrl-k ctrl-0": "editor::FoldAll",
+      "ctrl-k ctrl-j": "editor::UnfoldAll",
+      "ctrl-/": ["editor::ToggleComments", {"advance_downwards": false}]
+    }
+  },
+  {
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      "space": "project_panel::Open"
+    }
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "ctrl-v": "terminal::Paste",
+      "ctrl-shift-c": "terminal::Copy",
+      "ctrl-shift-v": "terminal::Paste"
+    }
+  },
+  {
+    "context": "Search",
+    "bindings": {
+      "enter": "search::SelectNextMatch",
+      "shift-enter": "search::SelectPrevMatch"
+    }
+  }
+]
