@@ -27,19 +27,8 @@
     fsType = "ext4";
   };
 
-  # Swap configuration - ZRAM removed, using file swap only
-  swapDevices = [
-    {
-      device = "/var/swap/swapfile";
-      size = 16384; # 16GB swap file
-      priority = 5; # Standard file swap priority
-    }
-  ];
-
-  # Create swap file directory
-  systemd.tmpfiles.rules = [
-    "d /var/swap 0700 root root -"
-  ];
+  # Swap disabled - using RAM-only configuration (62GB RAM available)
+  swapDevices = [];
 
   # Enables DHCP on each ethernet and wireless interface.
   networking.useDHCP = lib.mkDefault true;
