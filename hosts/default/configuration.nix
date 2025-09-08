@@ -82,6 +82,15 @@ in {
     # Temporary files and kernel optimization
     tmp.useTmpfs = true;
 
+    # RAM-only operation optimizations (no swap)
+    kernel.sysctl = {
+      "vm.swappiness" = lib.mkForce 0; # Disable swapping entirely (override core module)
+      "vm.vfs_cache_pressure" = lib.mkForce 50; # Optimize filesystem cache
+      "vm.dirty_ratio" = lib.mkForce 80; # Increase dirty page ratio for RAM-only
+      "vm.dirty_background_ratio" = lib.mkForce 5; # Background writeback ratio
+      "vm.dirty_expire_centisecs" = 1000; # Faster dirty page expiry
+    };
+
     # Kernel configuration
     kernelPackages = pkgs.linuxPackages_6_6;
 
