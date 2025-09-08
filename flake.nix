@@ -22,6 +22,7 @@
 
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
+
   };
 
   outputs = {

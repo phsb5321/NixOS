@@ -1,9 +1,10 @@
 # ~/NixOS/modules/default.nix
 {
   imports = [
-    ./networking
     ./core
     ./packages
+    ./networking
+    ./desktop
     ./dotfiles
   ];
 }

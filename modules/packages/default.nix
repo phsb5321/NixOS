@@ -9,6 +9,7 @@
 }:
 with lib; let
   cfg = config.modules.packages;
+  
 in {
   options.modules.packages = {
     enable = mkEnableOption "shared packages module";
@@ -37,9 +38,10 @@ in {
           # Code editors - use unstable for latest VS Code
           pkgs-unstable.vscode
           code-cursor # Temporarily disabled due to download issues
+          pkgs-unstable.zed-editor # Testing with updated flake inputs
 
           # API testing and development
-          bruno # Open-source API client (Postman alternative)
+          bruno # Bruno API client - portal errors are cosmetic, app functions normally
           bruno-cli # Bruno command-line interface
 
           # Language runtimes and package managers
@@ -59,6 +61,25 @@ in {
           cmake # Cross-platform build system
           ninja # Small build system with focus on speed
           pkg-config # Package configuration tool
+          mermaid-cli # Mermaid CLI for generating diagrams
+
+          # Language servers for Zed Editor
+          nixd # Nix language server
+          nil # Alternative Nix language server
+          nodePackages.typescript-language-server # TypeScript/JavaScript LSP
+          nodePackages.eslint # JavaScript/TypeScript linter
+          nodePackages.prettier # Code formatter
+          marksman # Markdown language server
+          taplo # TOML language server
+          yaml-language-server # YAML language server
+          vscode-langservers-extracted # HTML, CSS, JSON language servers
+          bash-language-server # Bash language server
+          shfmt # Shell script formatter
+          rust-analyzer # Rust language server
+          gopls # Go language server
+          pyright # Python language server
+          ruff # Python linter and formatter
+          black # Python code formatter
 
           # Dotfiles management
           chezmoi # Manage your dotfiles across multiple machines
@@ -69,7 +90,7 @@ in {
           gh # GitHub CLI
           glab # GitLab CLI
           lazygit # Simple terminal UI for git commands
-          gitui # Terminal UI for git
+          # gitui # Terminal UI for git - temporarily disabled due to compilation issues
           delta # Syntax-highlighting pager for git
 
           # Modern development utilities
@@ -149,6 +170,7 @@ in {
           bleachbit
           # PDF viewer (modern Qt 6 version)
           kdePackages.okular
+          ferdium
 
           # Font packages to fix UI cramping issues
           # corefonts # Microsoft Core Fonts - temporarily disabled due to network issues
@@ -183,6 +205,21 @@ in {
           dxvk # DirectX to Vulkan
         ];
         description = "List of gaming packages to install";
+      };
+
+      minecraftSupport = {
+        enable = mkOption {
+          type = types.bool;
+          default = false;
+          description = "Enable Minecraft support with Prism Launcher";
+        };
+        packages = mkOption {
+          type = types.listOf types.package;
+          default = with pkgs; [
+            prismlauncher # Prism Launcher for Minecraft
+          ];
+          description = "List of Minecraft-related packages to install";
+        };
       };
     };
 
@@ -288,6 +325,7 @@ in {
       ++ (optionals media.enable media.packages)
       ++ (optionals utilities.enable utilities.packages)
       ++ (optionals gaming.enable gaming.packages)
+      ++ (optionals gaming.minecraftSupport.enable gaming.minecraftSupport.packages)
       ++ (optionals audioVideo.enable audioVideo.packages)
       ++ (optionals terminal.enable terminal.packages)
       ++ (optionals python.enable [python.package])

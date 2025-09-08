@@ -1,0 +1,108 @@
+{
+  "theme": "Gruvbox Dark Hard",
+  "ui_font_size": 18,
+  "buffer_font_size": 18,
+  "buffer_font_family": "JetBrainsMono Nerd Font Mono",
+  "base_keymap": "VSCode",
+  "vim_mode": false,
+  "auto_save": "on_focus_change",
+  "format_on_save": "on",
+  "tab_size": 2,
+  "hard_tabs": false,
+  "lsp": {
+    "nixd": {
+      "initialization_options": {
+        "nixpkgs": {
+          "expr": "import <nixpkgs> { }"
+        },
+        "formatting": {
+          "command": ["alejandra"]
+        }
+      }
+    },
+    "nil": {
+      "initialization_options": {
+        "formatting": {
+          "command": ["alejandra"]
+        }
+      }
+    }
+  },
+  "languages": {
+    "Nix": {
+      "format_on_save": "on",
+      "tab_size": 2,
+      "hard_tabs": false,
+      "language_servers": ["nixd"],
+      "formatter": {
+        "external": {
+          "command": "alejandra",
+          "arguments": ["--quiet"]
+        }
+      }
+    },
+    "JavaScript": {
+      "tab_size": 2,
+      "language_servers": ["typescript-language-server"],
+      "format_on_save": "on"
+    },
+    "TypeScript": {
+      "tab_size": 2,
+      "language_servers": ["typescript-language-server"],
+      "format_on_save": "on"
+    },
+    "JSON": {
+      "tab_size": 2,
+      "language_servers": ["json-language-server"],
+      "format_on_save": "on"
+    }
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "assistant": {
+    "enabled": true,
+    "provider": "anthropic",
+    "version": "claude-3-5-sonnet-latest"
+  },
+  "agent": {
+    "enabled": true
+  },
+  "agent_servers": {
+    "claude_code": {
+      "enabled": true
+    }
+  },
+  "copilot": {
+    "enabled": true,
+    "disabled_globs": [
+      ".env*",
+      "*.key",
+      "*.pem", 
+      "*.cert",
+      "secrets/**"
+    ]
+  },
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.direnv", 
+    "**/node_modules",
+    "**/target",
+    "**/.nix-store",
+    "**/result*",
+    "**/flake.lock"
+  ],
+  "project_panel": {
+    "git_status": true,
+    "button": false
+  },
+  "terminal": {
+    "shell": "system",
+    "font_family": "JetBrainsMono Nerd Font Mono",
+    "font_size": 16
+  },
+  "vim": {
+    "use_system_clipboard": "always"
+  }
+}
