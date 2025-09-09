@@ -82,13 +82,22 @@ in {
     # Temporary files and kernel optimization
     tmp.useTmpfs = true;
 
-    # RAM-only operation optimizations (no swap)
+    # RAM-only operation and performance optimizations (no swap)
     kernel.sysctl = {
-      "vm.swappiness" = lib.mkForce 0; # Disable swapping entirely (override core module)
+      "vm.swappiness" = lib.mkForce 0; # Disable swapping entirely
       "vm.vfs_cache_pressure" = lib.mkForce 50; # Optimize filesystem cache
-      "vm.dirty_ratio" = lib.mkForce 80; # Increase dirty page ratio for RAM-only
-      "vm.dirty_background_ratio" = lib.mkForce 5; # Background writeback ratio
-      "vm.dirty_expire_centisecs" = 1000; # Faster dirty page expiry
+      "vm.dirty_ratio" = lib.mkForce 90; # High ratio for 62GB RAM system
+      "vm.dirty_background_ratio" = lib.mkForce 10; # Background writeback
+      "vm.dirty_expire_centisecs" = 3000; # Hold dirty pages longer in RAM
+      "vm.dirty_writeback_centisecs" = 1500; # Less frequent writeback
+      
+      # I/O scheduler optimizations for high I/O wait
+      "vm.page-cluster" = 0; # Disable page clustering to reduce I/O
+      "kernel.sched_autogroup_enabled" = 1; # Better process grouping
+      
+      # Filesystem performance optimizations
+      "fs.file-max" = lib.mkForce 4194304; # Increase file handle limit (higher than gaming module)
+      "fs.aio-max-nr" = 1048576; # Increase async I/O limit
     };
 
     # Kernel configuration
