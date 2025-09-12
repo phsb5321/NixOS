@@ -396,11 +396,14 @@ in {
       ]
       ++ cfg.extraSystemPackages;
 
-    # Default system-wide shell
+    # Default system-wide shell and programs
     programs = {
       nix-ld.enable = true;
       zsh.enable = true;
       dconf.enable = true;
+      
+      # Enable ADB for Android development (adds udev rules + adbusers group)
+      adb.enable = true;
     };
   };
 }
