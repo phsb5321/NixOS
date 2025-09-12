@@ -126,3 +126,14 @@ The desktop host supports multiple GPU configurations:
 - Dotfiles changes apply immediately without rebuilds
 - Language servers and tools are pre-configured for modern development
 - Zed Editor with Claude Code ACP agent integration
+
+### External Binary Compatibility
+- **steam-run**: For running external binaries with library dependencies
+  ```bash
+  steam-run ./external-binary  # Provides FHS environment
+  ```
+- **ADB Support**: Android development enabled on all devices
+  ```bash
+  adb devices  # Android Debug Bridge ready
+  ```
+- **nix-ld**: Alternative compatibility layer for dynamic linking
