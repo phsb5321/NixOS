@@ -67,13 +67,13 @@
     # Firewall configuration for Tailscale
     networking.firewall = lib.mkIf config.modules.networking.tailscale.openFirewall {
       # Trust Tailscale interface
-      trustedInterfaces = [ config.modules.networking.tailscale.interfaceName ];
-      
+      trustedInterfaces = [config.modules.networking.tailscale.interfaceName];
+
       # Allow Tailscale UDP port
-      allowedUDPPorts = [ config.modules.networking.tailscale.port ];
-      
+      allowedUDPPorts = [config.modules.networking.tailscale.port];
+
       # Allow SSH over Tailscale (secure remote access)
-      allowedTCPPorts = [ 22 ];
+      allowedTCPPorts = [22];
     };
 
     # Ensure Tailscale CLI is available
@@ -90,23 +90,23 @@
     # Systemd service to handle auth key if provided
     systemd.services.tailscale-autoconnect = lib.mkIf (config.modules.networking.tailscale.authKeyFile != null) {
       description = "Automatic connection to Tailscale";
-      after = [ "network-pre.target" "tailscale.service" ];
-      wants = [ "network-pre.target" "tailscale.service" ];
-      wantedBy = [ "multi-user.target" ];
+      after = ["network-pre.target" "tailscale.service"];
+      wants = ["network-pre.target" "tailscale.service"];
+      wantedBy = ["multi-user.target"];
       serviceConfig = {
         Type = "oneshot";
       };
       script = ''
         # Wait for tailscale to be ready
         sleep 2
-        
+
         # Check if already connected
         status=$(${pkgs.tailscale}/bin/tailscale status --json | ${pkgs.jq}/bin/jq -r '.BackendState')
         if [ "$status" = "Running" ]; then
           echo "Tailscale already running"
           exit 0
         fi
-        
+
         # Connect using auth key
         echo "Connecting to Tailscale..."
         ${pkgs.tailscale}/bin/tailscale up --auth-key-file=${config.modules.networking.tailscale.authKeyFile} ${lib.concatStringsSep " " config.modules.networking.tailscale.extraUpFlags}

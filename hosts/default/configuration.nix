@@ -73,9 +73,12 @@ in {
   # GNOME configuration - NixOS 25.11+ Wayland-only (X11 sessions removed in 25.11+)
   modules.desktop.gnome = {
     enable = true;
-    variant = "hardware"; # Back to hardware acceleration 
+    variant = "hardware"; # Back to hardware acceleration
     wayland.enable = true; # NixOS 25.11+ only supports Wayland
   };
+
+  # Power management for gaming performance
+  powerManagement.cpuFreqGovernor = "performance";
 
   # Boot configuration with variants
   boot = {
@@ -84,17 +87,17 @@ in {
 
     # RAM-only operation and performance optimizations (no swap)
     kernel.sysctl = {
-      "vm.swappiness" = lib.mkForce 0; # Disable swapping entirely
+      "vm.swappiness" = lib.mkForce 1; # Minimal swapping for better gaming performance
       "vm.vfs_cache_pressure" = lib.mkForce 50; # Optimize filesystem cache
-      "vm.dirty_ratio" = lib.mkForce 90; # High ratio for 62GB RAM system
-      "vm.dirty_background_ratio" = lib.mkForce 10; # Background writeback
-      "vm.dirty_expire_centisecs" = 3000; # Hold dirty pages longer in RAM
-      "vm.dirty_writeback_centisecs" = 1500; # Less frequent writeback
-      
+      "vm.dirty_ratio" = lib.mkForce 10; # Low ratio for better responsiveness
+      "vm.dirty_background_ratio" = lib.mkForce 1; # Fast dirty page flushing
+      "vm.dirty_expire_centisecs" = 500; # Quick dirty page expiration
+      "vm.dirty_writeback_centisecs" = 100; # Frequent writeback for low latency
+
       # I/O scheduler optimizations for high I/O wait
       "vm.page-cluster" = 0; # Disable page clustering to reduce I/O
       "kernel.sched_autogroup_enabled" = 1; # Better process grouping
-      
+
       # Filesystem performance optimizations
       "fs.file-max" = lib.mkForce 4194304; # Increase file handle limit (higher than gaming module)
       "fs.aio-max-nr" = 1048576; # Increase async I/O limit
@@ -103,8 +106,13 @@ in {
     # Kernel configuration
     kernelPackages = pkgs.linuxPackages_6_6;
 
-    # Dynamic kernel parameters based on variant
-    kernelParams = activeVariant.kernelParams;
+    # Dynamic kernel parameters based on variant with low-latency optimizations
+    kernelParams =
+      activeVariant.kernelParams
+      ++ [
+        "preempt=full" # Enable full preemption for low latency
+        "nohz_full=all" # Reduce timer interrupts on all CPUs
+      ];
 
     # Conditional kernel module handling
     initrd.kernelModules =
@@ -237,7 +245,6 @@ in {
     androidTools.enable = activeVariant.enableHardwareAccel;
   };
 
-
   # Document tools
   modules.core.documentTools = {
     enable = true;
@@ -365,13 +372,13 @@ in {
 
   # Host-specific network configuration
   modules.networking.firewall.openPorts = [3000]; # Development server port
-  
+
   # Tailscale for remote access and mesh networking
   modules.networking.tailscale = {
     enable = true;
     useRoutingFeatures = "both"; # Can serve as exit node and use routes
     extraUpFlags = [
-      "--advertise-exit-node" 
+      "--advertise-exit-node"
       "--accept-routes"
     ];
   };

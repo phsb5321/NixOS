@@ -401,7 +401,7 @@ in {
       nix-ld.enable = true;
       zsh.enable = true;
       dconf.enable = true;
-      
+
       # Enable ADB for Android development (adds udev rules + adbusers group)
       adb.enable = true;
     };
