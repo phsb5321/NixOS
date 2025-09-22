@@ -74,26 +74,30 @@
       enable = true;
       wayland = config.modules.desktop.gnome.wayland.enable;
     };
-    
+
     services.desktopManager.gnome.enable = true;
 
-    # Comprehensive XDG Desktop Portal configuration for Bruno file dialogs
+    # Comprehensive XDG Desktop Portal configuration for screen sharing and file dialogs
     xdg.portal = {
       enable = true;
       extraPortals = with pkgs; [
-        xdg-desktop-portal-gnome
+        xdg-desktop-portal-gnome # GNOME portal implementation
         xdg-desktop-portal-gtk # Essential for FileChooser interface
       ];
       config = {
         common = {
-          default = [ "gnome" ];
-          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-          "org.freedesktop.impl.portal.Print" = [ "gtk" ];
+          default = ["gnome"];
+          "org.freedesktop.impl.portal.FileChooser" = ["gtk"];
+          "org.freedesktop.impl.portal.Print" = ["gtk"];
+          "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
+          "org.freedesktop.impl.portal.Screenshot" = ["gnome"];
         };
         gnome = {
-          default = [ "gnome" "gtk" ];
-          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-          "org.freedesktop.impl.portal.Print" = [ "gtk" ];
+          default = ["gnome" "gtk"];
+          "org.freedesktop.impl.portal.FileChooser" = ["gtk"];
+          "org.freedesktop.impl.portal.Print" = ["gtk"];
+          "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
+          "org.freedesktop.impl.portal.Screenshot" = ["gnome"];
         };
       };
     };
@@ -102,6 +106,7 @@
     services.gnome = {
       gnome-keyring.enable = true;
       gnome-settings-daemon.enable = true;
+      gnome-remote-desktop.enable = true;
       evolution-data-server.enable = true;
       glib-networking.enable = true;
       sushi.enable = true;
@@ -125,21 +130,24 @@
       gnome-settings-daemon
     ];
 
-    # Optimized Wayland environment for Electron file dialogs
+    # Optimized Wayland environment for Electron file dialogs and WebRTC screen sharing
     environment.sessionVariables = {
       # Electron Wayland support
       NIXOS_OZONE_WL = "1";
       XDG_SESSION_TYPE = "wayland";
       XDG_CURRENT_DESKTOP = "GNOME";
-      
-      # Portal support for file dialogs (crucial for Bruno)
+
+      # Portal support for file dialogs and screen sharing (crucial for Bruno and WebRTC)
       GTK_USE_PORTAL = "1";
-      
+
+      # WebRTC PipeWire screen sharing support
+      WEBRTC_PIPEWIRE_CAPTURER = "1";
+
       # Wayland display configuration
       GDK_BACKEND = "wayland,x11";
       QT_QPA_PLATFORM = "wayland;xcb";
       MOZ_ENABLE_WAYLAND = "1";
-      
+
       # Theme configuration
       XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
       XCURSOR_SIZE = "24";
@@ -151,6 +159,23 @@
       systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP GTK_USE_PORTAL 2>/dev/null || true
       dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP GTK_USE_PORTAL 2>/dev/null || true
     '';
+
+    # Ensure portal services are available
+    systemd.user.services.xdg-desktop-portal-gnome = {
+      wantedBy = ["default.target"];
+      environment = {
+        XDG_CURRENT_DESKTOP = "GNOME";
+        WAYLAND_DISPLAY = "wayland-0";
+      };
+    };
+
+    systemd.user.services.xdg-desktop-portal-gtk = {
+      wantedBy = ["default.target"];
+      environment = {
+        XDG_CURRENT_DESKTOP = "GNOME";
+        WAYLAND_DISPLAY = "wayland-0";
+      };
+    };
 
     # Core GNOME packages
     environment.systemPackages = with pkgs;
@@ -167,6 +192,12 @@
         gnome-text-editor
         nautilus
         firefox
+
+        # Portal and screen sharing support
+        xdg-desktop-portal
+        xdg-desktop-portal-gnome
+        xdg-desktop-portal-gtk
+        gnome-remote-desktop
 
         # Theme packages
         arc-theme
