@@ -37,9 +37,10 @@ in {
           # Code editors - use unstable for latest VS Code
           pkgs-unstable.vscode
           code-cursor # Temporarily disabled due to download issues
+          pkgs-unstable.zed-editor # Testing with updated flake inputs
 
           # API testing and development
-          bruno # Open-source API client (Postman alternative)
+          bruno # Bruno API client - portal errors are cosmetic, app functions normally
           bruno-cli # Bruno command-line interface
 
           # Language runtimes and package managers

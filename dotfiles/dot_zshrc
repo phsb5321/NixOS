@@ -489,6 +489,15 @@ alias cm='chezmoi-apply'  # Short alias for quick access
 alias spotify-gui='spot'       # Launch native GNOME Spotify client
 alias spotify-tui='ncspot'     # Launch terminal Spotify client
 
+# Editor aliases  
+alias zed='zeditor'             # Convenient alias for Zed Editor
+
+# X11 session specific environment variables (for terminal compatibility)
+if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+    export KITTY_DISABLE_WAYLAND=1
+    export DISPLAY="${DISPLAY:-:0}"
+fi
+
 # Load Powerlevel10k theme (keep at the end)
 # Check for Nix store path first, fallback to home directory
 if [[ -f "/run/current-system/sw/share/zsh-powerlevel10k/powerlevel10k.zsh-theme" ]]; then

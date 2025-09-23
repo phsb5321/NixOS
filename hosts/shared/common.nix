@@ -4,7 +4,8 @@
   lib,
   systemVersion,
   ...
-}: {
+}:
+{
   # Shared configuration for desktop hosts
 
   # Enable shared packages
@@ -128,8 +129,8 @@
     firewall = {
       enable = true;
       allowPing = true;
-      openPorts = [22];
-      trustedInterfaces = [];
+      openPorts = [ 22 ];
+      trustedInterfaces = [ ];
     };
   };
 
@@ -259,7 +260,7 @@
     bluetooth = {
       enable = true;
       powerOnBoot = true;
-      disabledPlugins = ["sap"];
+      disabledPlugins = [ "sap" ];
       settings = {
         General = {
           AutoEnable = "true";
@@ -278,7 +279,8 @@
   services.blueman.enable = lib.mkDefault true;
   services.printing.enable = lib.mkDefault true;
   services.printing.drivers = lib.mkDefault (
-    with pkgs; [
+    with pkgs;
+    [
       gutenprint
       hplip
       epson-escpr
@@ -292,7 +294,7 @@
 
   # Services
   services = {
-    # Audio system managed by modules.core.pipewire
+    # Audio system managed by modules/core/pipewire.nix
     pulseaudio.enable = false;
 
     syncthing = {
