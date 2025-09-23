@@ -242,11 +242,11 @@ in {
     # SOLUTION: Hardware WiFi toggle is F4 key on this laptop
     boot.kernelParams = [
       "rfkill.default_state=1" # Unblock WiFi by default
-      "iwlwifi.power_save=0"   # Disable power saving for stability
+      "iwlwifi.power_save=0" # Disable power saving for stability
       "iwlwifi.bt_coex_active=0" # Disable Bluetooth coexistence if problematic
-      "pcie_aspm=off"          # Disable PCIe power management (helps with CNVi)
-      "acpi_osi=Linux"         # ACPI compatibility for WiFi
-      "acpi_backlight=vendor"  # Fix ACPI conflicts
+      "pcie_aspm=off" # Disable PCIe power management (helps with CNVi)
+      "acpi_osi=Linux" # ACPI compatibility for WiFi
+      "acpi_backlight=vendor" # Fix ACPI conflicts
     ];
 
     # Module configuration for Intel CNVi WiFi (device 8086:06f0)
@@ -272,8 +272,8 @@ in {
     # Create aggressive systemd service to unblock WiFi on boot
     systemd.services.wifi-unblock = {
       description = "Aggressively unblock WiFi on boot";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "systemd-modules-load.service" ];
+      wantedBy = ["multi-user.target"];
+      after = ["systemd-modules-load.service"];
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
@@ -281,17 +281,17 @@ in {
           # Multiple attempts to unblock WiFi
           ${pkgs.util-linux}/bin/rfkill unblock wifi
           ${pkgs.util-linux}/bin/rfkill unblock all
-          
+
           # Try direct sysfs approach if available
           if [ -w /sys/class/rfkill/rfkill1/soft ]; then
             echo 0 > /sys/class/rfkill/rfkill1/soft
           fi
-          
+
           # Reload iwlwifi module
           ${pkgs.kmod}/bin/modprobe -r iwlwifi || true
           sleep 2
           ${pkgs.kmod}/bin/modprobe iwlwifi
-          
+
           # Final unblock attempt
           ${pkgs.util-linux}/bin/rfkill unblock wifi
         '';
@@ -321,7 +321,7 @@ in {
     # Video drivers
     services.xserver.videoDrivers = lib.mkIf cfg.graphics.hybridGraphics [
       "modesetting" # Intel
-      "nvidia"      # NVIDIA
+      "nvidia" # NVIDIA
     ];
 
     # Enable firmware updates
