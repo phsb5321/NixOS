@@ -6,8 +6,7 @@
   systemVersion,
   lib,
   ...
-}:
-{
+}: {
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -113,6 +112,13 @@
       # Additional utilities
       ventoy-full # For creating bootable USB drives
       # etcher # Alternative USB flashing tool - package not found
+
+      # AI Development Tools
+      claude-code # Claude Code terminal-based coding assistant
+      # Note: Also install Claude Code VS Code extension manually:
+      # - Open VS Code Extensions (Ctrl+Shift+X)
+      # - Search for "claude-code" by Anthropic
+      # - Install the extension for IDE integration
     ];
   };
 

@@ -5,8 +5,7 @@
   lib,
   pkgs,
   ...
-}:
-{
+}: {
   options.modules.desktop.gnome = {
     enable = lib.mkEnableOption "GNOME desktop environment";
 
@@ -107,21 +106,21 @@
       ];
       config = {
         common = {
-          default = [ "gnome" ];
-          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-          "org.freedesktop.impl.portal.Print" = [ "gtk" ];
-          "org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
-          "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+          default = ["gnome"];
+          "org.freedesktop.impl.portal.FileChooser" = ["gtk"];
+          "org.freedesktop.impl.portal.Print" = ["gtk"];
+          "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
+          "org.freedesktop.impl.portal.Screenshot" = ["gnome"];
         };
         gnome = {
           default = [
             "gnome"
             "gtk"
           ];
-          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-          "org.freedesktop.impl.portal.Print" = [ "gtk" ];
-          "org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
-          "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+          "org.freedesktop.impl.portal.FileChooser" = ["gtk"];
+          "org.freedesktop.impl.portal.Print" = ["gtk"];
+          "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
+          "org.freedesktop.impl.portal.Screenshot" = ["gnome"];
         };
       };
     };
@@ -207,7 +206,7 @@
 
     # Ensure portal services are available
     systemd.user.services.xdg-desktop-portal-gnome = {
-      wantedBy = [ "default.target" ];
+      wantedBy = ["default.target"];
       environment = {
         XDG_CURRENT_DESKTOP = "GNOME";
         WAYLAND_DISPLAY = "wayland-0";
@@ -215,7 +214,7 @@
     };
 
     systemd.user.services.xdg-desktop-portal-gtk = {
-      wantedBy = [ "default.target" ];
+      wantedBy = ["default.target"];
       environment = {
         XDG_CURRENT_DESKTOP = "GNOME";
         WAYLAND_DISPLAY = "wayland-0";
@@ -223,8 +222,7 @@
     };
 
     # Core GNOME packages
-    environment.systemPackages =
-      with pkgs;
+    environment.systemPackages = with pkgs;
       [
         # Essential GNOME packages
         gnome-session
@@ -303,7 +301,7 @@
             dynamic-workspaces = true;
             workspaces-only-on-primary = false;
             center-new-windows = true;
-            experimental-features = [ "scale-monitor-framebuffer" ];
+            experimental-features = ["scale-monitor-framebuffer"];
           };
 
           "org/gnome/desktop/wm/preferences" = {
@@ -370,10 +368,10 @@
       ];
       fontconfig = {
         defaultFonts = {
-          serif = [ "Noto Serif" ];
-          sansSerif = [ "Cantarell" ];
-          monospace = [ "Source Code Pro" ];
-          emoji = [ "Noto Color Emoji" ];
+          serif = ["Noto Serif"];
+          sansSerif = ["Cantarell"];
+          monospace = ["Source Code Pro"];
+          emoji = ["Noto Color Emoji"];
         };
         hinting.enable = true;
         antialias = true;

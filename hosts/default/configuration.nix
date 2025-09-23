@@ -1,6 +1,7 @@
 # NixOS Desktop Configuration - Host Specific
 # Contains only host-specific configuration, GNOME config is in shared modules
 {
+  config,
   pkgs,
   lib,
   hostname,
@@ -139,8 +140,8 @@ in {
     cpu.intel.updateMicrocode = true;
   };
 
-  # X11 configuration (includes video drivers)
-  services.xserver = {
+  # X11 configuration (includes video drivers) - conditional on GNOME Wayland setting
+  services.xserver = lib.mkIf (!config.modules.desktop.gnome.wayland.enable) {
     enable = true;
     videoDrivers = lib.mkForce activeVariant.videoDrivers;
     # X11 config only needed for software rendering fallback
@@ -266,7 +267,10 @@ in {
         markdownlint = true;
         vale = {
           enable = true;
-          styles = ["google" "write-good"];
+          styles = [
+            "google"
+            "write-good"
+          ];
         };
         linkCheck = true;
       };
