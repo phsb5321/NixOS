@@ -34,6 +34,17 @@
     stateVersion = systemVersion;
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
+
+    # Audio system configuration
+    pipewire = {
+      enable = true;
+      highQualityAudio = true;
+      bluetooth.enable = true;
+      bluetooth.highQualityProfiles = true;
+      lowLatency = false; # Gaming/desktop use doesn't need ultra-low latency
+      tools.enable = true;
+    };
+
     extraSystemPackages = with pkgs; [
       # Basic system utilities
       blueman
@@ -281,15 +292,7 @@
 
   # Services
   services = {
-    # Audio system - comprehensive PipeWire setup for GNOME
-    pipewire = {
-      enable = true;
-      alsa.enable = true;
-      alsa.support32Bit = true;
-      pulse.enable = true;
-      wireplumber.enable = true;
-      jack.enable = true;
-    };
+    # Audio system managed by modules.core.pipewire
     pulseaudio.enable = false;
 
     syncthing = {
