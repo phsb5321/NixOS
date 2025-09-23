@@ -44,6 +44,12 @@
       enable = true;
       variant = ",abnt2";
     };
+
+    # Enable gaming for Steam integration
+    gaming = {
+      enable = true;
+      enableSteam = true;
+    };
   };
 
   # Networking configuration with Tailscale
@@ -83,7 +89,7 @@
     terminal.enable = true;
     media.enable = true;
     audioVideo.enable = true;
-    gaming.enable = false; # Save battery by default
+    gaming.enable = true; # Enable for Steam integration
 
     # Additional laptop-specific packages
     extraPackages = with pkgs; [
@@ -114,24 +120,38 @@
       # etcher # Alternative USB flashing tool - package not found
 
       # AI Development Tools
-      claude-code # Claude Code terminal-based coding assistant
+      claude-code # Claude Code terminal-based coding assistant (binary name: claude)
+      # Usage: claude --help for options, claude for interactive mode
       # Note: Also install Claude Code VS Code extension manually:
       # - Open VS Code Extensions (Ctrl+Shift+X)
       # - Search for "claude-code" by Anthropic
       # - Install the extension for IDE integration
+
+      # NVIDIA tools for manual gaming usage
+      nvidia-system-monitor-qt
+      nvtopPackages.full
     ];
   };
 
   # Enable GNOME desktop
-  modules.desktop.gnome.enable = true;
+  modules.desktop.gnome = {
+    enable = true;
+    wayland.enable = lib.mkForce false; # Force X11 for NVIDIA compatibility
+  };
+
+  # Enable OpenGL/Vulkan for gaming
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true; # Required for Steam and 32-bit games
+  };
 
   # Hardware-specific overrides
   modules.hardware.laptop = {
     enable = true;
 
-    # Temporarily disable hybrid graphics to test Intel-only
+    # Disable hybrid graphics - causing blank screen issues
     graphics = {
-      hybridGraphics = false;
+      hybridGraphics = false; # Disable NVIDIA to restore display
       intelBusId = "PCI:0:2:0"; # Intel UHD Graphics
       nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
     };
@@ -230,6 +250,14 @@
     # Electron apps scaling
     ELECTRON_FORCE_IS_PACKAGED = "true";
     ELECTRON_TRASH = "gio";
+
+    # Steam optimizations
+    STEAM_RUNTIME = "1";
+    STEAM_RUNTIME_HEAVY = "1";
+
+    # DXVK optimizations for laptop
+    DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
+    DXVK_LOG_LEVEL = "warn";
   };
 
   # System state version
