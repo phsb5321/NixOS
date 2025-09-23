@@ -6,7 +6,8 @@
   systemVersion,
   lib,
   ...
-}: {
+}:
+{
   imports = [
     ./hardware-configuration.nix
     ../../modules
@@ -46,7 +47,7 @@
     };
   };
 
-  # Networking configuration
+  # Networking configuration with Tailscale
   modules.networking = {
     enable = true;
     hostName = "nixos-laptop";
@@ -55,11 +56,21 @@
     # Laptop-specific network settings
     firewall = {
       enable = true;
-      allowPing = lib.mkDefault false; # More secure on public WiFi
+      allowPing = lib.mkForce false; # More secure on public WiFi
       openPorts = [
         22 # SSH
         3000 # Development server
         8080 # Development server
+      ];
+    };
+
+    # Tailscale for secure mobile connectivity
+    tailscale = {
+      enable = true;
+      useRoutingFeatures = "client"; # Can use exit nodes and subnet routes
+      extraUpFlags = [
+        "--accept-routes"
+        "--accept-dns"
       ];
     };
   };
@@ -105,14 +116,17 @@
     ];
   };
 
+  # Enable GNOME desktop
+  modules.desktop.gnome.enable = true;
+
   # Hardware-specific overrides
   modules.hardware.laptop = {
     enable = true;
-    
+
     # Temporarily disable hybrid graphics to test Intel-only
     graphics = {
       hybridGraphics = false;
-      intelBusId = "PCI:0:2:0";  # Intel UHD Graphics
+      intelBusId = "PCI:0:2:0"; # Intel UHD Graphics
       nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
     };
 
@@ -181,7 +195,10 @@
     # Printing support (often needed on laptops)
     printing = {
       enable = true;
-      drivers = [pkgs.hplip pkgs.gutenprint];
+      drivers = [
+        pkgs.hplip
+        pkgs.gutenprint
+      ];
     };
 
     # Optimize SSD performance
@@ -209,6 +226,6 @@
     ELECTRON_TRASH = "gio";
   };
 
-  # This value determines the NixOS release
+  # System state version
   system.stateVersion = systemVersion;
 }
