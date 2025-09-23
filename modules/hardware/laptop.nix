@@ -209,6 +209,8 @@ in {
 
         # Display control
         brightnessctl
+        xorg.xbacklight
+        light
 
         # Battery monitoring
         acpitool
@@ -246,7 +248,7 @@ in {
       "iwlwifi.bt_coex_active=0" # Disable Bluetooth coexistence if problematic
       "pcie_aspm=off" # Disable PCIe power management (helps with CNVi)
       "acpi_osi=Linux" # ACPI compatibility for WiFi
-      "acpi_backlight=vendor" # Fix ACPI conflicts
+      "acpi_backlight=video" # Use video backlight interface
     ];
 
     # Module configuration for Intel CNVi WiFi (device 8086:06f0)
@@ -256,6 +258,9 @@ in {
       options iwlwifi power_save=0
       options iwlwifi d0i3_disable=1
       options iwlwifi uapsd_disable=1
+
+      # Intel graphics backlight configuration
+      options i915 enable_guc=2
     '';
 
     # Blacklist problematic modules that can cause rfkill issues
@@ -298,25 +303,24 @@ in {
       };
     };
 
-    # NVIDIA configuration for hybrid laptops (temporarily disabled for WiFi testing)
-    # hardware.nvidia = lib.mkIf cfg.graphics.hybridGraphics {
-    #     modesetting.enable = true;
-    #     powerManagement.enable = true;
-    #     powerManagement.finegrained = true;
-    #     open = false; # Use proprietary drivers for GTX 1650
-    #     nvidiaSettings = true;
-    #     package = config.boot.kernelPackages.nvidiaPackages.production;
+    # NVIDIA configuration for hybrid laptops for gaming performance
+    hardware.nvidia = lib.mkIf cfg.graphics.hybridGraphics {
+      modesetting.enable = true;
+      powerManagement.enable = true;
+      powerManagement.finegrained = true;
+      open = false; # Use proprietary drivers for GTX 1650
+      nvidiaSettings = true;
+      package = config.boot.kernelPackages.nvidiaPackages.production;
 
-    #     prime = {
-    #       offload = {
-    #         enable = true;
-    #         enableOffloadCmd = true;
-    #       };
-    #       intelBusId = cfg.graphics.intelBusId;
-    #       nvidiaBusId = cfg.graphics.nvidiaBusId;
-    #     };
-    #   };
-    # };
+      prime = {
+        offload = {
+          enable = true;
+          enableOffloadCmd = true;
+        };
+        intelBusId = cfg.graphics.intelBusId;
+        nvidiaBusId = cfg.graphics.nvidiaBusId;
+      };
+    };
 
     # Video drivers
     services.xserver.videoDrivers = lib.mkIf cfg.graphics.hybridGraphics [
@@ -346,6 +350,57 @@ in {
           event = "video/brightnessdown";
           action = "${pkgs.brightnessctl}/bin/brightnessctl set 10%-";
         };
+      };
+    };
+
+    # Udev rules for brightness control permissions
+    services.udev.extraRules = lib.mkIf cfg.display.brightnessControl ''
+      # Allow users to control brightness
+      ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="intel_backlight", MODE="0666", RUN+="${pkgs.coreutils}/bin/chmod a+w /sys/class/backlight/%k/brightness"
+      ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="acpi_video0", MODE="0666", RUN+="${pkgs.coreutils}/bin/chmod a+w /sys/class/backlight/%k/brightness"
+
+      # Grant video group access to backlight control
+      SUBSYSTEM=="backlight", ACTION=="add", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness"
+      SUBSYSTEM=="backlight", ACTION=="add", RUN+="${pkgs.coreutils}/bin/chmod g+w /sys/class/backlight/%k/brightness"
+
+      # Alternative approach for Intel graphics
+      SUBSYSTEM=="drm", ACTION=="change", ENV{HOTPLUG}=="1", RUN+="${pkgs.systemd}/bin/systemctl --no-block start backlight-permissions.service"
+    '';
+
+    # Systemd service to ensure backlight device exists
+    systemd.services.backlight-permissions = lib.mkIf cfg.display.brightnessControl {
+      description = "Set backlight permissions";
+      wantedBy = ["graphical.target"];
+      after = ["systemd-backlight@backlight:intel_backlight.service"];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = pkgs.writeShellScript "backlight-permissions" ''
+          # Wait for backlight device
+          sleep 2
+
+          # Try to find any backlight device
+          for device in /sys/class/backlight/*; do
+            if [ -e "$device/brightness" ]; then
+              echo "Found backlight device: $device"
+              chmod 666 "$device/brightness" || true
+              chgrp video "$device/brightness" || true
+            fi
+          done
+
+          # Load i915 module if not loaded
+          if ! lsmod | grep -q "^i915 "; then
+            ${pkgs.kmod}/bin/modprobe i915
+            sleep 2
+          fi
+
+          # Check again after loading i915
+          for device in /sys/class/backlight/*; do
+            if [ -e "$device/brightness" ]; then
+              chmod 666 "$device/brightness" || true
+            fi
+          done
+        '';
       };
     };
   };
