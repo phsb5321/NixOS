@@ -25,21 +25,11 @@
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/66429e28-aff7-4427-a85e-5f742179ae25";
     fsType = "ext4";
+    options = ["noatime"]; # Reduce SSD writes and improve I/O performance
   };
 
-  # Swap configuration - ZRAM removed, using file swap only
-  swapDevices = [
-    {
-      device = "/var/swap/swapfile";
-      size = 16384; # 16GB swap file
-      priority = 5; # Standard file swap priority
-    }
-  ];
-
-  # Create swap file directory
-  systemd.tmpfiles.rules = [
-    "d /var/swap 0700 root root -"
-  ];
+  # Swap disabled - using RAM-only configuration (62GB RAM available)
+  swapDevices = [];
 
   # Enables DHCP on each ethernet and wireless interface.
   networking.useDHCP = lib.mkDefault true;

@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "description": "NixOS dotfiles-managed Claude Code settings",
+  "commands": {
+    "autoload": true,
+    "global_commands": true,
+    "project_commands": true
+  },
+  "performance": {
+    "context_optimization": true,
+    "model_switching": {
+      "enabled": true,
+      "planning_model": "claude-3-opus",
+      "implementation_model": "claude-3-sonnet"
+    }
+  },
+  "team_sharing": {
+    "enabled": true,
+    "version_control": true,
+    "command_sharing": true
+  },
+  "nixos": {
+    "flake_path": "/home/notroot/NixOS",
+    "dotfiles_path": "/home/notroot/NixOS/dotfiles",
+    "auto_host_detection": true
+  }
+}

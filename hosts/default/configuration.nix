@@ -58,7 +58,7 @@
       ];
     };
   };
-  # Simple default variant selection to avoid circular dependency
+  # Simple default variant selection (hardcoded to hardware for stability)
   activeVariant = variants.hardware; # Default to hardware variant
 in {
   imports = [
@@ -70,23 +70,49 @@ in {
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;
 
-  # Clean GNOME configuration following NixOS Wiki recommendations
+  # GNOME configuration - NixOS 25.11+ Wayland-only (X11 sessions removed in 25.11+)
   modules.desktop.gnome = {
     enable = true;
-    variant = "hardware"; # Back to default hardware variant
-    wayland.enable = true; # Re-enable Wayland
+    variant = "hardware"; # Back to hardware acceleration
+    wayland.enable = true; # NixOS 25.11+ only supports Wayland
   };
+
+  # Power management for gaming performance
+  powerManagement.cpuFreqGovernor = "performance";
 
   # Boot configuration with variants
   boot = {
     # Temporary files and kernel optimization
     tmp.useTmpfs = true;
 
+    # RAM-only operation and performance optimizations (no swap)
+    kernel.sysctl = {
+      "vm.swappiness" = lib.mkForce 1; # Minimal swapping for better gaming performance
+      "vm.vfs_cache_pressure" = lib.mkForce 50; # Optimize filesystem cache
+      "vm.dirty_ratio" = lib.mkForce 10; # Low ratio for better responsiveness
+      "vm.dirty_background_ratio" = lib.mkForce 1; # Fast dirty page flushing
+      "vm.dirty_expire_centisecs" = 500; # Quick dirty page expiration
+      "vm.dirty_writeback_centisecs" = 100; # Frequent writeback for low latency
+
+      # I/O scheduler optimizations for high I/O wait
+      "vm.page-cluster" = 0; # Disable page clustering to reduce I/O
+      "kernel.sched_autogroup_enabled" = 1; # Better process grouping
+
+      # Filesystem performance optimizations
+      "fs.file-max" = lib.mkForce 4194304; # Increase file handle limit (higher than gaming module)
+      "fs.aio-max-nr" = 1048576; # Increase async I/O limit
+    };
+
     # Kernel configuration
     kernelPackages = pkgs.linuxPackages_6_6;
 
-    # Dynamic kernel parameters based on variant
-    kernelParams = activeVariant.kernelParams;
+    # Dynamic kernel parameters based on variant with low-latency optimizations
+    kernelParams =
+      activeVariant.kernelParams
+      ++ [
+        "preempt=full" # Enable full preemption for low latency
+        "nohz_full=all" # Reduce timer interrupts on all CPUs
+      ];
 
     # Conditional kernel module handling
     initrd.kernelModules =
@@ -207,6 +233,10 @@ in {
       nano
       htop
     ];
+
+  # GNOME login fixes (NixOS Wiki solution for session registration failures)
+  systemd.services."getty@tty1".enable = false;
+  systemd.services."autovt@tty1".enable = false;
 
   # Host-specific module configuration
   modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
@@ -342,6 +372,16 @@ in {
 
   # Host-specific network configuration
   modules.networking.firewall.openPorts = [3000]; # Development server port
+
+  # Tailscale for remote access and mesh networking
+  modules.networking.tailscale = {
+    enable = true;
+    useRoutingFeatures = "both"; # Can serve as exit node and use routes
+    extraUpFlags = [
+      "--advertise-exit-node"
+      "--accept-routes"
+    ];
+  };
 
   # Programs (conditional)
   programs.steam = lib.mkIf activeVariant.enableHardwareAccel {
