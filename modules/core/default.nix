@@ -19,6 +19,7 @@ in {
     ./pipewire.nix
     ./monitor-audio.nix
     ./document-tools.nix
+    ./networking.nix
   ];
 
   options.modules.core = with lib; {
@@ -153,6 +154,13 @@ in {
           mermaid = lib.mkDefault false;
         };
       };
+    };
+
+    # Enable networking module to fix idle disconnection issues
+    modules.core.networking = {
+      enable = true;
+      preventIdleDisconnection = true;
+      interfaces = ["enp8s0" "wlp9s0"]; # Ethernet and WiFi interfaces
     };
 
     # Enable proper time synchronization for time-sensitive tokens

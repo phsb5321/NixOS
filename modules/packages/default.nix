@@ -142,7 +142,7 @@ in {
         type = types.listOf types.package;
         default = with pkgs; [
           vlc
-          spotify # Official Spotify client
+          pkgs-unstable.spotify # Latest Spotify client with better Wayland support
           spot # Native GNOME Spotify client (lightweight)
           ncspot # Terminal-based Spotify client (minimal resources)
           vesktop # Better Discord client with Vencord built-in
