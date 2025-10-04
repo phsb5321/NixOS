@@ -57,7 +57,11 @@
     };
 
     variant = lib.mkOption {
-      type = lib.types.enum ["hardware" "conservative" "software"];
+      type = lib.types.enum [
+        "hardware"
+        "conservative"
+        "software"
+      ];
       default = "hardware";
       description = ''
         Hardware acceleration variant:
@@ -69,13 +73,29 @@
   };
 
   config = lib.mkIf config.modules.desktop.gnome.enable {
-    # NixOS 25.11+ GNOME Wayland configuration
+    # NixOS 25.11+ GNOME configuration with conditional Wayland/X11 support
     services.displayManager.gdm = {
       enable = true;
       wayland = config.modules.desktop.gnome.wayland.enable;
+      settings = lib.mkIf (!config.modules.desktop.gnome.wayland.enable) {
+        daemon = {
+          # Disable Wayland in GDM for X11-only mode
+          WaylandEnable = false;
+          # Force X11 session selection
+          DefaultSession = "gnome-xorg.desktop";
+        };
+        security = {
+          # Disable user switching to prevent session conflicts
+          AllowGuestAccount = false;
+          AllowUserList = true;
+        };
+      };
     };
 
     services.desktopManager.gnome.enable = true;
+
+    # X11 support for non-Wayland configurations
+    services.xserver.enable = !config.modules.desktop.gnome.wayland.enable;
 
     # Comprehensive XDG Desktop Portal configuration for screen sharing and file dialogs
     xdg.portal = {
@@ -93,7 +113,10 @@
           "org.freedesktop.impl.portal.Screenshot" = ["gnome"];
         };
         gnome = {
-          default = ["gnome" "gtk"];
+          default = [
+            "gnome"
+            "gtk"
+          ];
           "org.freedesktop.impl.portal.FileChooser" = ["gtk"];
           "org.freedesktop.impl.portal.Print" = ["gtk"];
           "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
@@ -130,43 +153,64 @@
       gnome-settings-daemon
     ];
 
-    # Optimized Wayland environment for Electron file dialogs and WebRTC screen sharing
-    environment.sessionVariables = {
-      # Electron Wayland support
-      NIXOS_OZONE_WL = "1";
-      XDG_SESSION_TYPE = "wayland";
-      XDG_CURRENT_DESKTOP = "GNOME";
+    # Environment variables conditional on Wayland/X11 mode
+    environment.sessionVariables = lib.mkMerge [
+      # Common variables for both modes
+      {
+        XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
+        XCURSOR_SIZE = "24";
+        GTK_USE_PORTAL = "1"; # Portal support for file dialogs
+      }
 
-      # Portal support for file dialogs and screen sharing (crucial for Bruno and WebRTC)
-      GTK_USE_PORTAL = "1";
+      # Wayland-specific variables
+      (lib.mkIf config.modules.desktop.gnome.wayland.enable {
+        # Electron Wayland support
+        NIXOS_OZONE_WL = "1";
+        XDG_SESSION_TYPE = "wayland";
+        XDG_CURRENT_DESKTOP = "GNOME";
 
-      # WebRTC PipeWire screen sharing support
-      WEBRTC_PIPEWIRE_CAPTURER = "1";
+        # WebRTC PipeWire screen sharing support
+        WEBRTC_PIPEWIRE_CAPTURER = "1";
 
-      # Wayland display configuration (fix for GTK regression)
-      GDK_BACKEND = "wayland,x11";
-      QT_QPA_PLATFORM = "wayland;xcb";
-      MOZ_ENABLE_WAYLAND = "1";
+        # Wayland display configuration (fix for GTK regression)
+        GDK_BACKEND = "wayland,x11";
+        QT_QPA_PLATFORM = "wayland;xcb";
+        MOZ_ENABLE_WAYLAND = "1";
 
-      # Basic GTK configuration
-      "GTK_CSD" = "1";                # Enable client-side decorations
+        # Basic GTK configuration
+        "GTK_CSD" = "1";                # Enable client-side decorations
 
-      # AMD GPU optimizations for Wayland
-      "WLR_DRM_NO_ATOMIC" = "1";      # Compatibility for older compositors
-      "CLUTTER_BACKEND" = "wayland";   # Force Wayland for GNOME Shell
+        # AMD GPU optimizations for Wayland
+        "WLR_DRM_NO_ATOMIC" = "1";      # Compatibility for older compositors
+        "CLUTTER_BACKEND" = "wayland";   # Force Wayland for GNOME Shell
 
-      # Hardware acceleration for AMD GPU
-      "LIBVA_DRIVER_NAME" = "radeonsi";
-      "VDPAU_DRIVER" = "radeonsi";
+        # Hardware acceleration for AMD GPU
+        "LIBVA_DRIVER_NAME" = "radeonsi";
+        "VDPAU_DRIVER" = "radeonsi";
 
-      # Chrome/Electron specific fixes for tab bar rendering
-      "CHROME_OZONE_PLATFORM_WAYLAND" = "1";
-      "ELECTRON_ENABLE_WAYLAND" = "1";
+        # Chrome/Electron specific fixes for tab bar rendering
+        "CHROME_OZONE_PLATFORM_WAYLAND" = "1";
+        "ELECTRON_ENABLE_WAYLAND" = "1";
+      })
 
-      # Theme configuration
-      XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
-      XCURSOR_SIZE = "24";
-    };
+      # X11-specific variables (for NVIDIA compatibility)
+      (lib.mkIf (!config.modules.desktop.gnome.wayland.enable) {
+        # Force GNOME to use X11
+        GDK_BACKEND = "x11";
+        # Disable Wayland for all applications
+        MOZ_ENABLE_WAYLAND = "0";
+        ELECTRON_OZONE_PLATFORM_HINT = "auto";
+        # Set renderer for GTK apps
+        GSK_RENDERER = "gl"; # Use GL renderer instead of cairo
+        # Explicitly disable Wayland
+        QT_QPA_PLATFORM = "xcb";
+        # Force X11 for session
+        XDG_SESSION_TYPE = "x11";
+        # NVIDIA specific
+        LIBVA_DRIVER_NAME = "nvidia";
+        __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      })
+    ];
 
     # Portal service initialization
     environment.extraInit = ''
@@ -368,7 +412,7 @@
         accelProfile = "adaptive";
         accelSpeed = "0";
         tapping = true;
-        naturalScrolling = false;
+        naturalScrolling = lib.mkDefault false;
       };
     };
   };

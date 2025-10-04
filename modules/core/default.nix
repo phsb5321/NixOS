@@ -321,12 +321,11 @@ in {
         jq
         popsicle
         stablePkgs.awscli2
-        # azure-cli # Temporarily disabled due to compilation issues
+        # azure-cli # Temporarily disabled - build failure with Python 3.13
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
         vdhcoapp
         inkscape
-        claude-code
         codex
         wrangler
         just
