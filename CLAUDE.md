@@ -32,6 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `dotfiles-add ~/.config/file` - Add new file to dotfiles management
 - `dotfiles-sync` - Sync dotfiles with git
 
+
 ## Architecture Overview
 
 ### Flake Structure
