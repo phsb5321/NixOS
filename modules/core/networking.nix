@@ -30,13 +30,25 @@ in {
         enable = true;
         # Prevent NetworkManager from suspending devices
         wifi.powersave = false;
-        # Additional settings for stability
+        # Additional settings for stability and IPv6 fixes
         settings = {
           main = {
             # Disable power management for all network interfaces
             no-auto-default = "*";
+            # IPv6 stability settings to prevent routing conflicts
+            dhcp = "internal";
           };
-          # Note: IPv6 and LLDP settings should be configured per-connection, not globally
+          connection = {
+            # IPv6 privacy and stability settings
+            "ipv6.ip6-privacy" = "0";  # Disable IPv6 privacy to prevent conflicts
+            "ipv6.method" = "auto";
+            "ipv6.may-fail" = "false";  # Ensure IPv6 configuration completes
+          };
+          ipv6 = {
+            # Prevent IPv6 routing conflicts that cause disconnections
+            "method" = "auto";
+            "privacy" = "disabled";
+          };
         };
       };
     };
@@ -103,37 +115,89 @@ in {
       wantedBy = ["multi-user.target"];
       after = ["network-online.target"];
       wants = ["network-online.target"];
-      path = with pkgs; [curl iproute2 coreutils];
+      path = with pkgs; [curl iproute2 coreutils networkmanager gnugrep];
       script = ''
-        # Function to test connectivity
+        # Function to test connectivity with multiple retries (reduce false positives)
         test_connectivity() {
-          # Test basic connectivity to multiple reliable servers
-          curl -s --max-time 10 --connect-timeout 5 "http://www.google.com/generate_204" >/dev/null 2>&1 || \
-          curl -s --max-time 10 --connect-timeout 5 "http://detectportal.firefox.com/canonical.html" >/dev/null 2>&1 || \
-          curl -s --max-time 10 --connect-timeout 5 "http://connectivitycheck.gstatic.com/generate_204" >/dev/null 2>&1
+          local retries=3
+          local success=0
+
+          for i in $(seq 1 $retries); do
+            # Test basic connectivity to multiple reliable servers with longer timeouts
+            if curl -s --max-time 20 --connect-timeout 10 "http://www.google.com/generate_204" >/dev/null 2>&1 || \
+               curl -s --max-time 20 --connect-timeout 10 "http://connectivitycheck.gstatic.com/generate_204" >/dev/null 2>&1 || \
+               ping -c 3 8.8.8.8 >/dev/null 2>&1; then
+              success=1
+              break
+            fi
+
+            if [ "$i" -lt "$retries" ]; then
+              echo "Connectivity test attempt $i/$retries failed, retrying in 30 seconds..."
+              sleep 30
+            fi
+          done
+
+          if [ "$success" -eq 1 ]; then
+            return 0
+          fi
+
+          # Only log detailed diagnostics after multiple failures
+          echo "Connectivity failed after $retries attempts with 30s delays. Running diagnostics..."
+          return 1
+        }
+
+        # Function to fix IPv6 routing issues
+        fix_ipv6_routing() {
+          echo "Attempting to fix IPv6 routing issues..."
+
+          # Clear problematic IPv6 routes
+          ip -6 route flush table cache 2>/dev/null || true
+
+          # Restart IPv6 on the interface
+          echo 0 > /proc/sys/net/ipv6/conf/enp8s0/disable_ipv6 2>/dev/null || true
+          echo 1 > /proc/sys/net/ipv6/conf/enp8s0/disable_ipv6 2>/dev/null || true
+          sleep 2
+          echo 0 > /proc/sys/net/ipv6/conf/enp8s0/disable_ipv6 2>/dev/null || true
+
+          # Wait for IPv6 autoconfiguration
+          sleep 5
         }
 
         # Main monitoring loop
         while true; do
-          sleep 300  # Test every 5 minutes
+          sleep 900  # Test every 15 minutes (much less aggressive)
+
+          # Check physical cable connection first
+          if [ -f /sys/class/net/enp8s0/carrier ] && [ "$(cat /sys/class/net/enp8s0/carrier)" != "1" ]; then
+            echo "Physical cable disconnected on enp8s0"
+            sleep 30  # Wait for potential reconnection
+            continue
+          fi
 
           if ! test_connectivity; then
-            echo "Network connectivity lost, attempting to restore..."
+            echo "Network connectivity confirmed lost after multiple retries. Attempting conservative recovery..."
 
-            # Reset network interface
-            ip link set enp8s0 down 2>/dev/null || true
-            sleep 2
-            ip link set enp8s0 up 2>/dev/null || true
+            # First try IPv6 routing fix
+            fix_ipv6_routing
 
-            # Wait and test again
-            sleep 10
-
+            # Test again after IPv6 fix
             if test_connectivity; then
-              echo "Network connectivity restored"
-            else
-              echo "Network connectivity still lost, restarting NetworkManager"
-              systemctl restart NetworkManager
+              echo "Network connectivity restored via IPv6 routing fix"
+              continue
             fi
+
+            # More conservative approach - only log, don't restart services aggressively
+            echo "Connectivity still problematic. Logging status for manual review..."
+            echo "Interface status:"
+            ip addr show enp8s0 | head -10
+            echo "IPv6 routes:"
+            ip -6 route show | head -10
+            echo "Device status:"
+            nmcli device status
+
+            # Wait longer before next test cycle
+            echo "Waiting 5 minutes before next monitoring cycle..."
+            sleep 300
           fi
         done
       '';
