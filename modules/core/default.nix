@@ -365,7 +365,10 @@ in {
         lazygit
 
         # Remote Desktop & Network Tools
-        remmina
+        remmina # Remote desktop client with VNC, RDP, SSH, SPICE support
+        freerdp3 # Free RDP client (latest version for better compatibility)
+        tigervnc # VNC client and server
+        gnome-connections # GNOME's remote desktop client (alternative)
 
         # Terminals and Shells
         zellij

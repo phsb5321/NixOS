@@ -184,18 +184,18 @@ in {
     };
 
     # Networking optimizations for laptops
-    modules.networking = {
-      firewall = {
-        enable = true;
-        allowPing = lib.mkDefault false; # More secure on public networks
-        openPorts = lib.mkDefault (
-          if cfg.variant == "workstation"
-          then [22 3000 8080]
-          else if cfg.variant == "gaming"
-          then []
-          else [22]
-        );
-      };
+    modules.networking.firewall = {
+      enable = true;
+      developmentPorts = lib.mkDefault (
+        if cfg.variant == "workstation"
+        then [3000 8080]
+        else []
+      );
+      allowedServices = lib.mkDefault (
+        if cfg.variant == "workstation" || cfg.variant == "standard"
+        then ["ssh"]
+        else []
+      );
     };
 
     # System-level optimizations

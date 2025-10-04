@@ -58,16 +58,6 @@
     hostName = "nixos-laptop";
     enableNetworkManager = true;
 
-    # Laptop-specific network settings
-    firewall = {
-      enable = true;
-      allowPing = lib.mkForce false; # More secure on public WiFi
-      openPorts = [
-        22 # SSH
-        3000 # Development server
-        8080 # Development server
-      ];
-    };
 
     # Tailscale for secure mobile connectivity
     tailscale = {
@@ -143,6 +133,27 @@
   hardware.graphics = {
     enable = true;
     enable32Bit = true; # Required for Steam and 32-bit games
+  };
+
+  # Firewall configuration for laptop (more secure on public WiFi)
+  modules.networking.firewall = {
+    enable = true;
+    allowedServices = [ "ssh" ];
+    developmentPorts = [ 3000 8080 ];
+    tailscaleCompatible = lib.mkForce true;  # Since Tailscale is enabled
+  };
+
+  # Remote Desktop Configuration
+  modules.networking.remoteDesktop = {
+    enable = true;
+    client.enable = true;  # Enable VNC/RDP client tools
+    server = {
+      enable = false;  # Set to true if you want to access this machine remotely
+      gnomeRemoteDesktop = true;  # Use GNOME's modern remote desktop
+      vnc.enable = false;  # Traditional VNC server
+      rdp.enable = false;  # xrdp server
+    };
+    firewall.openPorts = false;  # Set to true when server is enabled
   };
 
   # Hardware-specific overrides

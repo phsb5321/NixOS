@@ -126,12 +126,14 @@
       enableDNSOverTLS = true;
       primaryProvider = "cloudflare";
     };
-    firewall = {
-      enable = true;
-      allowPing = true;
-      openPorts = [ 22 ];
-      trustedInterfaces = [ ];
-    };
+  };
+
+  # Firewall configuration using the new firewall module
+  modules.networking.firewall = {
+    enable = true;
+    allowedServices = [ "ssh" ];
+    developmentPorts = [];
+    tailscaleCompatible = false;
   };
 
   # Console configuration
@@ -177,7 +179,7 @@
     evolution-data-server.enable = lib.mkDefault true;
     glib-networking.enable = lib.mkDefault true;
     sushi.enable = lib.mkDefault true;
-    gnome-remote-desktop.enable = lib.mkForce false;
+    gnome-remote-desktop.enable = lib.mkDefault true; # Enable for RDP/VNC server support
     gnome-user-share.enable = lib.mkForce false; # Disable for security: disables GNOME file sharing over network (WebDAV, Bluetooth). Re-enable if you need network file sharing.
     rygel.enable = lib.mkForce false; # Media sharing - disable by default
     tinysparql.enable = lib.mkDefault true; # File indexing (renamed from tracker)

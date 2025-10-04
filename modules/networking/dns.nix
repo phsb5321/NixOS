@@ -68,11 +68,7 @@ in {
       enable = true;
 
       # DNS servers configuration
-      dns = cfg.primaryServers;
       fallbackDns = cfg.primaryServers ++ cfg.fallbackServers;
-
-      # Domain configuration
-      domains = [ "~." ];  # Accept all domains
 
       # Security and performance settings
       dnssec = if cfg.enableDnssec then "allow-downgrade" else "false";

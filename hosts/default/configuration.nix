@@ -246,6 +246,19 @@ in {
     androidTools.enable = activeVariant.enableHardwareAccel;
   };
 
+  # Remote Desktop Configuration
+  modules.networking.remoteDesktop = {
+    enable = true;
+    client.enable = true;  # Enable VNC/RDP client tools
+    server = {
+      enable = false;  # Set to true if you want to access this machine remotely
+      gnomeRemoteDesktop = true;  # Use GNOME's modern remote desktop
+      vnc.enable = false;  # Traditional VNC server
+      rdp.enable = false;  # xrdp server
+    };
+    firewall.openPorts = false;  # Set to true when server is enabled
+  };
+
   # Document tools
   modules.core.documentTools = {
     enable = true;
@@ -385,7 +398,10 @@ in {
   };
 
   # Development server ports
-  modules.networking.firewall.openPorts = [ 3000 3001 8080 8000 ];
+  modules.networking.firewall = {
+    enable = true;
+    developmentPorts = [ 3000 3001 8080 8000 ];
+  };
 
   # Programs (conditional)
   programs.steam = lib.mkIf activeVariant.enableHardwareAccel {
