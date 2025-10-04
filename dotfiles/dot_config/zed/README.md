@@ -51,7 +51,7 @@ Comprehensive Nix language snippets:
 
 ### AI-Powered Development
 - **GitHub Copilot**: Enabled with security exclusions for sensitive files
-- **Zed Assistant**: Claude Sonnet 4 with comprehensive tool access
+- **Zed Assistant**: AI assistant with comprehensive tool access
 - **Edit Predictions**: Eager mode for faster suggestions
 - **Agent Profiles**: Custom "Write" profile with file system and development tools
 
