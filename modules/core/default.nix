@@ -20,6 +20,7 @@ in {
     ./monitor-audio.nix
     ./document-tools.nix
     ./networking.nix
+    ../hardware/amd-gpu.nix
   ];
 
   options.modules.core = with lib; {
@@ -161,6 +162,14 @@ in {
       enable = true;
       preventIdleDisconnection = true;
       interfaces = ["enp8s0" "wlp9s0"]; # Ethernet and WiFi interfaces
+    };
+
+    # Enable AMD GPU optimizations for RX 5700 XT
+    modules.hardware.amdgpu = {
+      enable = true;
+      model = "navi10";  # RX 5700 XT uses Navi 10
+      powerManagement = true;
+      overdrive = false; # Disable overclocking for stability
     };
 
     # Enable proper time synchronization for time-sensitive tokens
