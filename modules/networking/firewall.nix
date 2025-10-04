@@ -32,7 +32,7 @@ in {
     allowedServices = mkOption {
       type = types.listOf types.str;
       default = [ "ssh" ];
-      description = "Services to allow through firewall";
+      description = "Services to allow through firewall (ssh, http, https, vnc, rdp)";
     };
 
     developmentPorts = mkOption {
@@ -58,6 +58,8 @@ in {
         lib.optionals (lib.elem "ssh" cfg.allowedServices) [ 22 ]
         ++ lib.optionals (lib.elem "http" cfg.allowedServices) [ 80 ]
         ++ lib.optionals (lib.elem "https" cfg.allowedServices) [ 443 ]
+        ++ lib.optionals (lib.elem "vnc" cfg.allowedServices) [ 5900 5901 ] # VNC ports
+        ++ lib.optionals (lib.elem "rdp" cfg.allowedServices) [ 3389 ] # RDP port
         ++ cfg.developmentPorts;
 
       allowedUDPPorts = [
@@ -76,8 +78,8 @@ in {
       # Allow ping for network diagnostics
       allowPing = true;
 
-      # Tailscale-specific rules
-      extraCommands = lib.mkIf cfg.tailscaleCompatible ''
+      # Tailscale-specific rules (only for iptables, not nftables)
+      extraCommands = lib.mkIf (cfg.tailscaleCompatible && !cfg.useNftables) ''
         # Allow Tailscale mesh traffic
         iptables -A INPUT -i tailscale0 -j ACCEPT
         iptables -A OUTPUT -o tailscale0 -j ACCEPT
@@ -90,7 +92,7 @@ in {
         iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
       '';
 
-      extraStopCommands = lib.mkIf cfg.tailscaleCompatible ''
+      extraStopCommands = lib.mkIf (cfg.tailscaleCompatible && !cfg.useNftables) ''
         # Clean up Tailscale rules
         iptables -D INPUT -i tailscale0 -j ACCEPT 2>/dev/null || true
         iptables -D OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null || true
@@ -99,11 +101,11 @@ in {
       '';
     };
 
-    # Enable nftables for better Tailscale compatibility
-    networking.nftables = lib.mkIf (cfg.useNftables && cfg.tailscaleCompatible) {
+    # Enable nftables when requested
+    networking.nftables = lib.mkIf cfg.useNftables {
       enable = true;
 
-      # Basic nftables ruleset that works with Tailscale
+      # Basic nftables ruleset
       ruleset = ''
         table inet filter {
           chain input {
@@ -112,8 +114,10 @@ in {
             # Allow loopback
             iifname "lo" accept
 
-            # Allow Tailscale
-            iifname "tailscale0" accept
+            ${lib.optionalString cfg.tailscaleCompatible ''
+              # Allow Tailscale
+              iifname "tailscale0" accept
+            ''}
 
             # Allow established and related connections
             ct state {established, related} accept
@@ -129,9 +133,11 @@ in {
           chain forward {
             type filter hook forward priority filter;
 
-            # Allow Tailscale forwarding
-            iifname "tailscale0" accept
-            oifname "tailscale0" accept
+            ${lib.optionalString cfg.tailscaleCompatible ''
+              # Allow Tailscale forwarding
+              iifname "tailscale0" accept
+              oifname "tailscale0" accept
+            ''}
 
             # Allow established and related
             ct state {established, related} accept
@@ -154,8 +160,8 @@ in {
       nftables
 
       # Network analysis
-      netstat-nat
-      ss
+      inetutils  # provides network utilities
+      iproute2  # provides ss
       lsof
 
       # Traffic monitoring

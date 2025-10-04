@@ -8,6 +8,9 @@
 {
   imports = [
     ./tailscale.nix
+    ./remote-desktop.nix
+    ./dns.nix
+    ./firewall.nix
   ];
 }
 // (
@@ -87,31 +90,6 @@
         };
       };
 
-      firewall = {
-        enable = mkOption {
-          type = types.bool;
-          default = true;
-          description = "Enable basic stateful firewall";
-        };
-
-        allowPing = mkOption {
-          type = types.bool;
-          default = true;
-          description = "Allow ICMP echo requests";
-        };
-
-        openPorts = mkOption {
-          type = types.listOf types.int;
-          default = [22];
-          description = "TCP ports to open (e.g. SSH)";
-        };
-
-        trustedInterfaces = mkOption {
-          type = types.listOf types.str;
-          default = [];
-          description = "Interfaces on which all traffic is allowed";
-        };
-      };
 
       monitoring = {
         enable = mkOption {
@@ -168,20 +146,6 @@
         '';
       };
 
-      # ———————————————————————————————————————
-      # Firewall with enhanced monitoring
-      # ———————————————————————————————————————
-      networking.firewall = mkIf cfg.firewall.enable {
-        enable = true;
-        allowedTCPPorts = cfg.firewall.openPorts;
-        allowPing = lib.mkDefault cfg.firewall.allowPing;
-        trustedInterfaces = cfg.firewall.trustedInterfaces;
-        # Enhanced connection tracking for reliability
-        connectionTrackingModules = mkIf cfg.monitoring.connectionTracking [
-          "nf_conntrack_ftp"
-          "nf_conntrack_tftp"
-        ];
-      };
 
       # ———————————————————————————————————————
       # Network monitoring and reliability
