@@ -73,12 +73,12 @@ in {
     # Environment variables for AMD GPU
     environment = {
       variables = {
-        # Video acceleration drivers
-        "VDPAU_DRIVER" = "radeonsi";
-        "LIBVA_DRIVER_NAME" = "radeonsi";
+        # Video acceleration drivers - use mkDefault to allow laptop to override for NVIDIA
+        "VDPAU_DRIVER" = lib.mkDefault "radeonsi";
+        "LIBVA_DRIVER_NAME" = lib.mkDefault "radeonsi";
 
         # Vulkan driver
-        "AMD_VULKAN_ICD" = "RADV";
+        "AMD_VULKAN_ICD" = lib.mkDefault "RADV";
       };
 
       # Useful AMD GPU tools
