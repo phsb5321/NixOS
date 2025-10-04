@@ -7,6 +7,7 @@
   ...
 }: let
   # Configuration variants for different scenarios
+
   variants = {
     # Normal operation with hardware acceleration
     hardware = {
@@ -67,8 +68,6 @@ in {
     ../shared/common.nix
   ];
 
-  # Host-specific metadata
-  modules.networking.hostName = lib.mkForce hostname;
 
   # GNOME configuration - NixOS 25.11+ Wayland-only (X11 sessions removed in 25.11+)
   modules.desktop.gnome = {
@@ -133,8 +132,9 @@ in {
   hardware = {
     graphics = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
-      extraPackages = with pkgs; [amdvlk];
-      extraPackages32 = with pkgs; [driversi686Linux.amdvlk];
+      # RADV is enabled by default, amdvlk has been deprecated
+      extraPackages = with pkgs; [];
+      extraPackages32 = with pkgs; [];
     };
     cpu.intel.updateMicrocode = true;
   };
@@ -223,7 +223,7 @@ in {
       lm_sensors
 
       # Host-specific terminal (GPU-accelerated)
-      kitty
+      # kitty # Temporarily disabled due to test failures
     ]
     ++ lib.optionals (!activeVariant.enableHardwareAccel) [
       # Essential packages for software rendering mode
@@ -292,7 +292,7 @@ in {
   modules.packages.extraPackages = with pkgs;
     lib.optionals activeVariant.enableHardwareAccel [
       # Development tools
-      calibre
+      # calibre # Temporarily disabled due to kitty dependency issue
       anydesk
       postman
       dbeaver-bin
@@ -370,10 +370,7 @@ in {
       noto-fonts-cjk-sans
     ];
 
-  # Host-specific network configuration
-  modules.networking.firewall.openPorts = [3000]; # Development server port
-
-  # Tailscale for remote access and mesh networking
+  # Tailscale configuration using existing networking module
   modules.networking.tailscale = {
     enable = true;
     useRoutingFeatures = "both"; # Can serve as exit node and use routes
@@ -382,6 +379,9 @@ in {
       "--accept-routes"
     ];
   };
+
+  # Development server ports
+  modules.networking.firewall.openPorts = [ 3000 3001 8080 8000 ];
 
   # Programs (conditional)
   programs.steam = lib.mkIf activeVariant.enableHardwareAccel {
@@ -423,6 +423,69 @@ in {
 
   # Note: Wayland environment variables are now managed by the GNOME module
   # to prevent conflicts and ensure consistency across all applications
+
+  # Comprehensive DNS fix for Tailscale/systemd-resolved conflicts
+  networking = {
+    # Disable DHCP DNS to prevent conflicts
+    dhcpcd.extraConfig = "nohook resolv.conf";
+
+    # Use specific nameservers
+    nameservers = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1" ];
+
+    # Fix for Tailscale conflicts
+    firewall.checkReversePath = "loose";
+    nftables.enable = true;
+  };
+
+  # Configure systemd-resolved properly
+  services.resolved = {
+    enable = true;
+    dnssec = "allow-downgrade";
+    domains = [ "~." ];
+    fallbackDns = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1" ];
+    extraConfig = ''
+      DNSOverTLS=yes
+      DNS=8.8.8.8 8.8.4.4 1.1.1.1 1.0.0.1
+      FallbackDNS=8.8.8.8 8.8.4.4
+      Domains=~.
+      DNSSEC=allow-downgrade
+      DNSStubListener=yes
+      Cache=yes
+      DNSStubListenerExtra=0.0.0.0
+    '';
+  };
+
+  # Auto-restart DNS on resume from suspend
+  powerManagement.resumeCommands = ''
+    ${pkgs.systemd}/bin/systemctl restart systemd-resolved
+    ${pkgs.systemd}/bin/systemctl restart NetworkManager
+  '';
+
+  # Create systemd timer to check DNS health
+  systemd.timers.dns-health-check = {
+    wantedBy = [ "timers.target" ];
+    partOf = [ "dns-health-check.service" ];
+    timerConfig = {
+      OnCalendar = "*:0/5"; # Every 5 minutes
+      Persistent = true;
+    };
+  };
+
+  systemd.services.dns-health-check = {
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "dns-health-check" ''
+        #!/bin/sh
+        # Check if DNS is working
+        if ! ${pkgs.systemd}/bin/resolvectl query google.com >/dev/null 2>&1; then
+          echo "DNS failed, restarting services..."
+          ${pkgs.systemd}/bin/systemctl restart systemd-resolved
+          sleep 2
+          ${pkgs.systemd}/bin/systemctl restart NetworkManager
+        fi
+      '';
+    };
+  };
 
   # System state version
   system.stateVersion = "25.11";

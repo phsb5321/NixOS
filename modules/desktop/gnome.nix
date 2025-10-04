@@ -143,10 +143,13 @@
       # WebRTC PipeWire screen sharing support
       WEBRTC_PIPEWIRE_CAPTURER = "1";
 
-      # Wayland display configuration
+      # Wayland display configuration (fix for GTK regression)
       GDK_BACKEND = "wayland,x11";
       QT_QPA_PLATFORM = "wayland;xcb";
       MOZ_ENABLE_WAYLAND = "1";
+
+      # Basic GTK configuration
+      "GTK_CSD" = "1";                # Enable client-side decorations
 
       # AMD GPU optimizations for Wayland
       "WLR_DRM_NO_ATOMIC" = "1";      # Compatibility for older compositors
@@ -155,6 +158,10 @@
       # Hardware acceleration for AMD GPU
       "LIBVA_DRIVER_NAME" = "radeonsi";
       "VDPAU_DRIVER" = "radeonsi";
+
+      # Chrome/Electron specific fixes for tab bar rendering
+      "CHROME_OZONE_PLATFORM_WAYLAND" = "1";
+      "ELECTRON_ENABLE_WAYLAND" = "1";
 
       # Theme configuration
       XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
