@@ -148,6 +148,14 @@
       QT_QPA_PLATFORM = "wayland;xcb";
       MOZ_ENABLE_WAYLAND = "1";
 
+      # AMD GPU optimizations for Wayland
+      "WLR_DRM_NO_ATOMIC" = "1";      # Compatibility for older compositors
+      "CLUTTER_BACKEND" = "wayland";   # Force Wayland for GNOME Shell
+
+      # Hardware acceleration for AMD GPU
+      "LIBVA_DRIVER_NAME" = "radeonsi";
+      "VDPAU_DRIVER" = "radeonsi";
+
       # Theme configuration
       XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
       XCURSOR_SIZE = "24";
@@ -257,7 +265,15 @@
             dynamic-workspaces = true;
             workspaces-only-on-primary = false;
             center-new-windows = true;
-            experimental-features = ["scale-monitor-framebuffer"];
+            # GNOME 48 optimizations for AMD GPU (RX 5700 XT)
+            experimental-features = [
+              "scale-monitor-framebuffer"
+              "rt-scheduler"  # Real-time scheduler for smoother animations
+            ];
+            # Dynamic triple buffering for better performance (GNOME 48 feature)
+            dynamic-triple-buffering = true;
+            # Optimize for AMD GPU performance
+            force-sync = false;  # Let AMD GPU handle vsync
           };
 
           "org/gnome/desktop/wm/preferences" = {
