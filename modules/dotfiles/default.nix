@@ -9,7 +9,7 @@ with lib; let
   cfg = config.modules.dotfiles;
 
   # Path to the dotfiles directory within the NixOS project
-  dotfilesPath = "${config.users.users.${cfg.username}.home}/NixOS/dotfiles";
+  dotfilesPath = "${config.users.users.${cfg.username}.home}/${cfg.projectDir}/dotfiles";
 
   # Script to initialize chezmoi with our custom source directory
   initScript = pkgs.writeShellScriptBin "dotfiles-init" ''
@@ -39,39 +39,39 @@ with lib; let
         mkdir -p ~/.config/chezmoi
 
         # Create chezmoi configuration
-        cat > ~/.config/chezmoi/chezmoi.toml << 'EOF'
-    # Chezmoi configuration for NixOS project
-    # This configures chezmoi to use the dotfiles directory within the project
+        cat > ~/.config/chezmoi/chezmoi.toml <<EOF
+# Chezmoi configuration for NixOS project
+# This configures chezmoi to use the dotfiles directory within the project
 
-    # Set the source directory to our NixOS dotfiles
-    sourceDir = "${dotfilesPath}"
+# Set the source directory to our NixOS dotfiles
+sourceDir = "$DOTFILES_DIR"
 
-    [data]
-        # Hostname for templating
-        hostname = "{{ .chezmoi.hostname }}"
-        # Username for templating
-        username = "{{ .chezmoi.username }}"
-        # OS for templating
-        os = "{{ .chezmoi.os }}"
-        # Architecture for templating
-        arch = "{{ .chezmoi.arch }}"
+[data]
+    # Hostname for templating
+    hostname = "{{ .chezmoi.hostname }}"
+    # Username for templating
+    username = "{{ .chezmoi.username }}"
+    # OS for templating
+    os = "{{ .chezmoi.os }}"
+    # Architecture for templating
+    arch = "{{ .chezmoi.arch }}"
 
-    [git]
-        # Auto-commit changes to dotfiles
-        autoCommit = true
-        # Auto-push changes (set to false initially for safety)
-        autoPush = false
+[git]
+    # Auto-commit changes to dotfiles
+    autoCommit = true
+    # Auto-push changes (set to false initially for safety)
+    autoPush = false
 
-    [edit]
-        # Use VS Code as the default editor for dotfiles
-        command = "code"
-        args = ["--wait"]
+[edit]
+    # Use VS Code as the default editor for dotfiles
+    command = "code"
+    args = ["--wait"]
 
-    [diff]
-        # Use VS Code for diffs
-        command = "code"
-        args = ["--wait", "--diff"]
-    EOF
+[diff]
+    # Use VS Code for diffs
+    command = "code"
+    args = ["--wait", "--diff"]
+EOF
 
         # Apply dotfiles
         echo "🔄 Applying dotfiles..."
@@ -238,6 +238,12 @@ in {
       type = types.str;
       default = "notroot";
       description = "Username for dotfiles management";
+    };
+
+    projectDir = mkOption {
+      type = types.str;
+      default = "NixOS";
+      description = "Name of NixOS project directory in user home";
     };
 
     enableHelperScripts = mkOption {
