@@ -1,0 +1,39 @@
+# Git Configuration for {{ .chezmoi.hostname }}
+# Managed by chezmoi - DO NOT EDIT DIRECTLY
+# Edit in: {{ .chezmoi.sourceDir }}/dot_gitconfig.tmpl
+
+[credential]
+	helper = store
+
+[user]
+	name = Pedro Balbino
+{{- if .isDesktop }}
+	email = pedro.balbino@globalsys.com.br
+{{- else if .isLaptop }}
+	email = pedro.balbino@globalsys.com.br
+{{- else }}
+	email = pedro.balbino@globalsys.com.br
+{{- end }}
+
+[init]
+	defaultBranch = main
+
+[core]
+	editor = code --wait
+	autocrlf = input
+
+[pull]
+	rebase = false
+
+[push]
+	default = simple
+	autoSetupRemote = true
+
+[alias]
+	st = status
+	co = checkout
+	br = branch
+	ci = commit
+	unstage = reset HEAD --
+	last = log -1 HEAD
+	visual = log --graph --oneline --decorate --all
