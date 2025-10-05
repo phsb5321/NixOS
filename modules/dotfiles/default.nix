@@ -234,6 +234,99 @@ EOF
     echo "📋 Currently managed files:"
     chezmoi managed --source "$DOTFILES_DIR" 2>/dev/null || echo "No files managed yet"
   '';
+
+  # Script to validate dotfiles before applying
+  checkScript = pkgs.writeShellScriptBin "dotfiles-check" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    DOTFILES_DIR="${dotfilesPath}"
+
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+        exit 1
+    fi
+
+    echo "🔍 Validating Dotfiles"
+    echo "====================="
+    echo ""
+
+    # Track validation status
+    VALIDATION_FAILED=0
+
+    # Check SSH config syntax
+    echo "📝 Checking SSH config..."
+    SSH_CONFIG="$HOME/.ssh/config"
+    if [[ -f "$SSH_CONFIG" ]]; then
+        if ssh -G test >/dev/null 2>&1; then
+            echo "✅ SSH config is valid"
+        else
+            echo "❌ SSH config has syntax errors"
+            VALIDATION_FAILED=1
+        fi
+    else
+        echo "⚠️  No SSH config found (will be created on apply)"
+    fi
+    echo ""
+
+    # Check Git config syntax
+    echo "📝 Checking Git config..."
+    GIT_CONFIG="$HOME/.gitconfig"
+    if [[ -f "$GIT_CONFIG" ]]; then
+        if git config --file "$GIT_CONFIG" --list >/dev/null 2>&1; then
+            echo "✅ Git config is valid"
+            # Check for user.email
+            if git config --file "$GIT_CONFIG" user.email >/dev/null 2>&1; then
+                EMAIL=$(git config --file "$GIT_CONFIG" user.email)
+                echo "   Email: $EMAIL"
+            else
+                echo "⚠️  No user.email configured"
+            fi
+        else
+            echo "❌ Git config has syntax errors"
+            VALIDATION_FAILED=1
+        fi
+    else
+        echo "⚠️  No Git config found (will be created on apply)"
+    fi
+    echo ""
+
+    # Check for sensitive data in dotfiles
+    echo "🔒 Checking for sensitive data..."
+    SENSITIVE_PATTERNS="password|secret|api[_-]?key|private[_-]?key|token"
+    if grep -rE -i "$SENSITIVE_PATTERNS" "$DOTFILES_DIR" 2>/dev/null | grep -v ".tmpl" | grep -v "Binary file"; then
+        echo "❌ Found potential sensitive data in dotfiles (see above)"
+        echo "   Consider using chezmoi encryption for sensitive files"
+        VALIDATION_FAILED=1
+    else
+        echo "✅ No obvious sensitive data found"
+    fi
+    echo ""
+
+    # Check for hardcoded paths
+    echo "🔍 Checking for hardcoded paths..."
+    HARDCODED_PATTERNS="/home/notroot"
+    if grep -r "$HARDCODED_PATTERNS" "$DOTFILES_DIR" --exclude="*.tmpl" 2>/dev/null; then
+        echo "⚠️  Found hardcoded paths (see above)"
+        echo "   Consider using templates with {{ .chezmoi.homeDir }}"
+    else
+        echo "✅ No hardcoded paths found"
+    fi
+    echo ""
+
+    # Summary
+    echo "📊 Validation Summary"
+    echo "===================="
+    if [[ $VALIDATION_FAILED -eq 0 ]]; then
+        echo "✅ All validations passed"
+        echo "💡 You can safely run 'dotfiles-apply'"
+        exit 0
+    else
+        echo "❌ Some validations failed"
+        echo "⚠️  Fix the issues before applying dotfiles"
+        exit 1
+    fi
+  '';
 in {
   options.modules.dotfiles = {
     enable = mkEnableOption "dotfiles management with chezmoi";
@@ -270,6 +363,7 @@ in {
         addScript
         statusScript
         syncScript
+        checkScript
       ]);
 
     # Create shell aliases for convenience
