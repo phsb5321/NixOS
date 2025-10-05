@@ -1,34 +1,52 @@
+# SSH Configuration for {{ .chezmoi.hostname }}
+# Managed by chezmoi - DO NOT EDIT DIRECTLY
+# Edit in: {{ .chezmoi.sourceDir }}/dot_ssh/config.tmpl
+
+# Common SSH hosts (available on all machines)
+Host github.com
+  User git
+  IdentityFile ~/.ssh/id_rsa.9
+  IdentitiesOnly yes
+
+Host ssh.dev.azure.com
+  User git
+  IdentityFile ~/.ssh/id_rsa.10
+  IdentitiesOnly yes
+
+{{- if .isDesktop }}
+
+# Desktop-specific hosts - Home infrastructure
 Host AvellComputer
   HostName 192.168.1.28
   User notroot
-  IdentityFile /home/notroot/.ssh/id_rsa
+  IdentityFile ~/.ssh/id_rsa
   IdentitiesOnly yes
   SetEnv TERM=xterm-256color
 
 Host DebMachine
   HostName 192.168.1.23
   User debinha
-  IdentityFile /home/notroot/.ssh/id_rsa.4
+  IdentityFile ~/.ssh/id_rsa.4
   IdentitiesOnly yes
   SetEnv TERM=xterm-256color
 
 Host ArchServer
   HostName 192.168.1.24
   User notroot
-  IdentityFile /home/notroot/.ssh/id_rsa.7
+  IdentityFile ~/.ssh/id_rsa.7
   IdentitiesOnly yes
 
 Host ProxMox.Home301Server
   HostName 192.168.1.10
   User root
   IdentitiesOnly yes
-  IdentityFile /home/notroot/.ssh/id_rsa
+  IdentityFile ~/.ssh/id_rsa
   SetEnv TERM=xterm-256color
 
 Host ProxMox.AudioBook
   HostName 192.168.1.7
   User notroot
-  IdentityFile /home/notroot/.ssh/proxmox_audiobook
+  IdentityFile ~/.ssh/proxmox_audiobook
   IdentitiesOnly yes
   IdentityAgent none
   SetEnv TERM=xterm-256color
@@ -39,7 +57,7 @@ Host ProxMox.AudioBook
 Host audiobook-vm
   HostName 192.168.1.7
   User notroot
-  IdentityFile /home/notroot/.ssh/proxmox_audiobook
+  IdentityFile ~/.ssh/proxmox_audiobook
   IdentitiesOnly yes
   IdentityAgent none
   SetEnv TERM=xterm-256color
@@ -47,13 +65,13 @@ Host audiobook-vm
 Host ProxMox.GlobalSysVM
   HostName 192.168.1.43
   User notroot
-  IdentityFile /home/notroot/.ssh/id_rsa.2
+  IdentityFile ~/.ssh/id_rsa.2
   IdentitiesOnly yes
   SetEnv TERM=xterm-256color
 
 Host ProxMox.Code
   HostName 192.168.1.53
-  IdentityFile /home/notroot/.ssh/id_rsa.3
+  IdentityFile ~/.ssh/id_rsa.3
   User notroot
   SetEnv TERM=xterm-256color
 
@@ -71,7 +89,7 @@ Host ProxMox.Coolify
 Host ProxMox.PlexVM
     HostName 192.168.1.144
     User notroot
-    IdentityFile /home/notroot/.ssh/proxmox_vm_105
+    IdentityFile ~/.ssh/proxmox_vm_105
     IdentitiesOnly yes
     IdentityAgent none
     SetEnv TERM=xterm-256color
@@ -82,20 +100,10 @@ Host ProxMox.PlexVM
 Host plex-vm
     HostName 192.168.1.144
     User notroot
-    IdentityFile /home/notroot/.ssh/proxmox_vm_105
+    IdentityFile ~/.ssh/proxmox_vm_105
     IdentitiesOnly yes
     IdentityAgent none
     SetEnv TERM=xterm-256color
-
-Host github.com
-  User git
-  IdentityFile ~/.ssh/id_rsa.9
-  IdentitiesOnly yes
-
-Host ssh.dev.azure.com
-  User git
-  IdentityFile ~/.ssh/id_rsa.10
-  IdentitiesOnly yes
 
 Host 3.238.185.9
     IdentitiesOnly yes
@@ -113,18 +121,32 @@ Host RaspberryPi
 Host DelicasaPi
     HostName 192.168.1.124
     User pi
-    IdentityFile /home/notroot/.ssh/delicasa_pi_key
+    IdentityFile ~/.ssh/delicasa_pi_key
     IdentitiesOnly yes
     IdentityAgent none
     SetEnv TERM=xterm-256color
     AddressFamily inet
     ServerAliveInterval 60
     ServerAliveCountMax 3
-    
+
 # Alternative shorter alias
 Host pi
     HostName 192.168.1.124
     User pi
-    IdentityFile /home/notroot/.ssh/delicasa_pi_key
+    IdentityFile ~/.ssh/delicasa_pi_key
     IdentitiesOnly yes
     IdentityAgent none
+    SetEnv TERM=xterm-256color
+    AddressFamily inet
+{{- end }}
+
+{{- if .isLaptop }}
+
+# Laptop-specific hosts - Mobile development
+# Add laptop-specific SSH hosts here as needed
+# Example:
+# Host laptop-specific-server
+#   HostName example.com
+#   User username
+#   IdentityFile ~/.ssh/laptop_key
+{{- end }}
