@@ -27,6 +27,7 @@ with lib; let
 
         # Path to our dotfiles directory
         DOTFILES_DIR="${dotfilesPath}"
+        USERNAME="${cfg.username}"
 
         if [[ ! -d "$DOTFILES_DIR" ]]; then
             echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
@@ -55,6 +56,9 @@ sourceDir = "$DOTFILES_DIR"
     os = "{{ .chezmoi.os }}"
     # Architecture for templating
     arch = "{{ .chezmoi.arch }}"
+    # Host type detection
+    isDesktop = {{ if eq .chezmoi.hostname "nixos" }}true{{ else }}false{{ end }}
+    isLaptop = {{ if eq .chezmoi.hostname "laptop" }}true{{ else }}false{{ end }}
 
 [git]
     # Auto-commit changes to dotfiles
