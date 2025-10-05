@@ -155,7 +155,10 @@
     };
   in {
     # NixOS Configurations - Generated from hosts definition
-    nixosConfigurations = nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts;
+    nixosConfigurations = nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts // {
+      # Compatibility alias for systems with hostname "nixos"
+      nixos = mkNixosSystem hosts.default;
+    };
 
     # Formatter for each system
     formatter = forAllSystems (system: (import nixpkgs {inherit system;}).nixpkgs-fmt);
