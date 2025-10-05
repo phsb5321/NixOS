@@ -380,6 +380,10 @@ in {
       zip
       p7zip
 
+      # AI Development Tools
+      claude-code # Claude Code terminal-based coding assistant (binary name: claude)
+      # Usage: claude --help for options, claude for interactive mode
+
       # Fonts
       nerd-fonts.jetbrains-mono
       noto-fonts-emoji
