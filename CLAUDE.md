@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Services Complete ✅ (28.6% complete)
-**Branch:** `refactor/architecture-v2` (20 commits pushed)
+**Status:** In Progress - Roles Complete ✅ (34.9% complete)
+**Branch:** `refactor/architecture-v2` (26+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 6, 2025
 
@@ -70,10 +70,11 @@ main (protected)
 # ✅ Milestone 8.5 Complete (Dotfiles - 8 tasks, 9 commits)
 # ✅ Milestone 1 Complete (Foundation - 6 tasks, 4 commits)
 # ✅ Milestone 2 Complete (Services - 4 tasks, 4 commits)
+# ✅ Milestone 3 Complete (Roles - 4 tasks, 4 commits)
 # Already on refactor/architecture-v2 branch
 
-# Next: Milestone 3 - Role-Based Modules
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 3.1 onwards
+# Next: Milestone 4 - GPU Abstraction
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 4.1 onwards
 ```
 
 **Completed:**
@@ -100,12 +101,19 @@ main (protected)
   - Printing service extracted (CUPS + Avahi discovery)
   - Original configs kept in common.nix (parallel implementation)
 
-**Next:**
-- Milestone 3: Role-Based Modules (4 tasks)
-  - Create roles directory structure
-  - Desktop role (gaming, full features)
-  - Laptop role (power management, minimal)
+- Milestone 3: Role-Based Modules (all 4 tasks)
+  - Roles directory created with module structure
+  - Desktop role (gaming, full features, syncthing, printing, dotfiles)
+  - Laptop role (power management, battery optimizations, zram)
   - Server/minimal roles for future use
+  - All roles disabled by default (parallel implementation)
+
+**Next:**
+- Milestone 4: GPU Abstraction (4 tasks)
+  - Create GPU directory structure
+  - AMD GPU module (RX 5700 XT optimization)
+  - Hybrid GPU module (laptop NVIDIA/Intel switching)
+  - Intel/NVIDIA standalone modules
 
 ---
 
