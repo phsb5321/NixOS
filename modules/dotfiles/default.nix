@@ -328,6 +328,10 @@ EOF
     fi
   '';
 in {
+  imports = [
+    ./auto-sync.nix
+  ];
+
   options.modules.dotfiles = {
     enable = mkEnableOption "dotfiles management with chezmoi";
 
