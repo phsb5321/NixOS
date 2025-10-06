@@ -1,9 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
 **Date:** October 6, 2025
-**Status:** In Progress - GNOME Modules Complete ✅
+**Status:** In Progress - Testing Infrastructure Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
-**Progress:** 34/63 tasks complete (54.0%)
+**Progress:** 37/63 tasks complete (58.7%)
 
 ---
 
@@ -161,10 +161,10 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 - [x] Task 6.2: Base module
 - [x] Task 6.3: Extensions/settings/wayland
 
-**Milestone 7: Tests** (1.5h)
-- [ ] Task 7.1: Tests directory
-- [ ] Task 7.2: Formatting/linting
-- [ ] Task 7.3: Boot tests
+**Milestone 7: Tests** (✅ COMPLETE - 1.5h)
+- [x] Task 7.1: Tests directory
+- [x] Task 7.2: Formatting/linting
+- [x] Task 7.3: Boot tests
 
 **Milestone 8: Secrets** (0.75h)
 - [ ] Task 8.1: Secrets directory
@@ -340,10 +340,11 @@ After completing this refactoring:
 - ✅ Milestone 4: GPU Abstraction (4 tasks, 2 commits)
 - ✅ Milestone 5: Package Splitting (5 tasks, 1 commit)
 - ✅ Milestone 6: GNOME Modules (3 tasks, 1 commit)
+- ✅ Milestone 7: Testing Infrastructure (3 tasks, 1 commit)
 
-**Total:** 34/63 tasks (54.0%)
+**Total:** 37/63 tasks (58.7%)
 
-**Next:** Milestone 7 - Testing Infrastructure
+**Next:** Milestone 8 - Secrets Management
 
 Continue with:
 
@@ -351,9 +352,9 @@ Continue with:
 # Already on refactor/architecture-v2 branch
 git status
 
-# Start Milestone 7, Task 7.1
-# Create tests directory
+# Start Milestone 8, Task 8.1
+# Create secrets directory
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Progress:** 54.0% complete. GNOME is modular! 🎯
+**Progress:** 58.7% complete. Testing infrastructure ready! 🎯
