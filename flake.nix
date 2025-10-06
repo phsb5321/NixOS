@@ -22,6 +22,12 @@
 
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
+
+    # Modular flake framework
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
   };
 
   outputs = {
