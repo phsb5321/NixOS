@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Roles Complete ✅ (34.9% complete)
-**Branch:** `refactor/architecture-v2` (26+ commits pushed)
+**Status:** In Progress - GPU Abstraction Complete ✅ (41.3% complete)
+**Branch:** `refactor/architecture-v2` (28+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 6, 2025
 
@@ -71,10 +71,11 @@ main (protected)
 # ✅ Milestone 1 Complete (Foundation - 6 tasks, 4 commits)
 # ✅ Milestone 2 Complete (Services - 4 tasks, 4 commits)
 # ✅ Milestone 3 Complete (Roles - 4 tasks, 4 commits)
+# ✅ Milestone 4 Complete (GPU - 4 tasks, 2 commits)
 # Already on refactor/architecture-v2 branch
 
-# Next: Milestone 4 - GPU Abstraction
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 4.1 onwards
+# Next: Milestone 5 - Package Splitting
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 5.1 onwards
 ```
 
 **Completed:**
@@ -108,12 +109,21 @@ main (protected)
   - Server/minimal roles for future use
   - All roles disabled by default (parallel implementation)
 
+- Milestone 4: GPU Abstraction (all 4 tasks)
+  - GPU directory created with module structure
+  - AMD GPU module (RX 5700 XT, Navi 10/21/22/23/24, RDNA3 support)
+  - Hybrid GPU module (NVIDIA Prime with offload/sync/reverse-prime modes)
+  - Intel GPU module (generation detection, iHD vs i965 driver selection)
+  - NVIDIA GPU module (stable/beta/legacy drivers, open-source support)
+  - All modules disabled by default with configurable options
+
 **Next:**
-- Milestone 4: GPU Abstraction (4 tasks)
-  - Create GPU directory structure
-  - AMD GPU module (RX 5700 XT optimization)
-  - Hybrid GPU module (laptop NVIDIA/Intel switching)
-  - Intel/NVIDIA standalone modules
+- Milestone 5: Package Splitting (5 tasks)
+  - Split monolithic packages module into categories
+  - Browsers module (Chrome, Firefox, Brave, Zen)
+  - Development module (VSCode, LSPs, compilers)
+  - Media/gaming/utilities modules
+  - Audio/terminal modules
 
 ---
 

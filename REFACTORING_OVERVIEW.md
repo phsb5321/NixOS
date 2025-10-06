@@ -1,9 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
 **Date:** October 6, 2025
-**Status:** In Progress - Roles Complete ✅
+**Status:** In Progress - GPU Abstraction Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
-**Progress:** 22/63 tasks complete (34.9%)
+**Progress:** 26/63 tasks complete (41.3%)
 
 ---
 
@@ -143,11 +143,11 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 - [x] Task 3.3: Create laptop role
 - [x] Task 3.4: Create server/minimal roles
 
-**Milestone 4: GPU** (1.75h)
-- [ ] Task 4.1: Create GPU directory
-- [ ] Task 4.2: AMD GPU module
-- [ ] Task 4.3: Hybrid GPU module
-- [ ] Task 4.4: Intel/NVIDIA modules
+**Milestone 4: GPU** (✅ COMPLETE - 1.75h)
+- [x] Task 4.1: Create GPU directory
+- [x] Task 4.2: AMD GPU module
+- [x] Task 4.3: Hybrid GPU module
+- [x] Task 4.4: Intel/NVIDIA modules
 
 **Milestone 5: Packages** (3.5h)
 - [ ] Task 5.1: New packages structure
@@ -337,10 +337,11 @@ After completing this refactoring:
 - ✅ Milestone 1: Foundation Setup (6 tasks, 4 commits)
 - ✅ Milestone 2: Modular Services (4 tasks, 4 commits)
 - ✅ Milestone 3: Role-Based Modules (4 tasks, 4 commits)
+- ✅ Milestone 4: GPU Abstraction (4 tasks, 2 commits)
 
-**Total:** 22/63 tasks (34.9%)
+**Total:** 26/63 tasks (41.3%)
 
-**Next:** Milestone 4 - GPU Abstraction
+**Next:** Milestone 5 - Package Splitting
 
 Continue with:
 
@@ -348,9 +349,9 @@ Continue with:
 # Already on refactor/architecture-v2 branch
 git status
 
-# Start Milestone 4, Task 4.1
-# Create GPU directory structure
+# Start Milestone 5, Task 5.1
+# Create new packages structure
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Progress:** 34.9% complete. Roles are modular! 🎯
+**Progress:** 41.3% complete. GPU modules ready! 🎯
