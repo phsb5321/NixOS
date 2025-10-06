@@ -1,9 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
 **Date:** October 6, 2025
-**Status:** In Progress - Services Complete ✅
+**Status:** In Progress - Roles Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
-**Progress:** 18/63 tasks complete (28.6%)
+**Progress:** 22/63 tasks complete (34.9%)
 
 ---
 
@@ -137,11 +137,11 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 - [x] Task 2.3: Extract SSH service
 - [x] Task 2.4: Extract printing service
 
-**Milestone 3: Roles** (2h)
-- [ ] Task 3.1: Create roles directory
-- [ ] Task 3.2: Create desktop role
-- [ ] Task 3.3: Create laptop role
-- [ ] Task 3.4: Create server/minimal roles
+**Milestone 3: Roles** (✅ COMPLETE - 2h)
+- [x] Task 3.1: Create roles directory
+- [x] Task 3.2: Create desktop role
+- [x] Task 3.3: Create laptop role
+- [x] Task 3.4: Create server/minimal roles
 
 **Milestone 4: GPU** (1.75h)
 - [ ] Task 4.1: Create GPU directory
@@ -336,10 +336,11 @@ After completing this refactoring:
 - ✅ Milestone 8.5: Dotfiles Enhancement (8 tasks, 9 commits)
 - ✅ Milestone 1: Foundation Setup (6 tasks, 4 commits)
 - ✅ Milestone 2: Modular Services (4 tasks, 4 commits)
+- ✅ Milestone 3: Role-Based Modules (4 tasks, 4 commits)
 
-**Total:** 18/63 tasks (28.6%)
+**Total:** 22/63 tasks (34.9%)
 
-**Next:** Milestone 3 - Role-Based Modules
+**Next:** Milestone 4 - GPU Abstraction
 
 Continue with:
 
@@ -347,9 +348,9 @@ Continue with:
 # Already on refactor/architecture-v2 branch
 git status
 
-# Start Milestone 3, Task 3.1
-# Create roles directory
+# Start Milestone 4, Task 4.1
+# Create GPU directory structure
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Progress:** 28.6% complete. Services are modular! 🎯
+**Progress:** 34.9% complete. Roles are modular! 🎯
