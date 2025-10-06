@@ -8,5 +8,6 @@
     ./dotfiles
     ./hardware
     ./profiles
+    ./services
   ];
 }
