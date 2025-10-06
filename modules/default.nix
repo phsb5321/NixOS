@@ -10,5 +10,6 @@
     ./profiles
     ./services
     ./roles
+    ./gpu
   ];
 }
