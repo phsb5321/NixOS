@@ -1,9 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
 **Date:** October 6, 2025
-**Status:** In Progress - GPU Abstraction Complete ✅
+**Status:** In Progress - Package Splitting Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
-**Progress:** 26/63 tasks complete (41.3%)
+**Progress:** 31/63 tasks complete (49.2%)
 
 ---
 
@@ -149,12 +149,12 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 - [x] Task 4.3: Hybrid GPU module
 - [x] Task 4.4: Intel/NVIDIA modules
 
-**Milestone 5: Packages** (3.5h)
-- [ ] Task 5.1: New packages structure
-- [ ] Task 5.2: Split browsers
-- [ ] Task 5.3: Split development
-- [ ] Task 5.4: Split media/gaming/utilities
-- [ ] Task 5.5: Split audio/terminal
+**Milestone 5: Packages** (✅ COMPLETE - 3.5h)
+- [x] Task 5.1: New packages structure
+- [x] Task 5.2: Split browsers
+- [x] Task 5.3: Split development
+- [x] Task 5.4: Split media/gaming/utilities
+- [x] Task 5.5: Split audio/terminal
 
 **Milestone 6: GNOME** (1.5h)
 - [ ] Task 6.1: GNOME subdirectory
@@ -338,10 +338,11 @@ After completing this refactoring:
 - ✅ Milestone 2: Modular Services (4 tasks, 4 commits)
 - ✅ Milestone 3: Role-Based Modules (4 tasks, 4 commits)
 - ✅ Milestone 4: GPU Abstraction (4 tasks, 2 commits)
+- ✅ Milestone 5: Package Splitting (5 tasks, 1 commit)
 
-**Total:** 26/63 tasks (41.3%)
+**Total:** 31/63 tasks (49.2%)
 
-**Next:** Milestone 5 - Package Splitting
+**Next:** Milestone 6 - GNOME Modules
 
 Continue with:
 
@@ -349,9 +350,9 @@ Continue with:
 # Already on refactor/architecture-v2 branch
 git status
 
-# Start Milestone 5, Task 5.1
-# Create new packages structure
+# Start Milestone 6, Task 6.1
+# Create GNOME subdirectory
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Progress:** 41.3% complete. GPU modules ready! 🎯
+**Progress:** 49.2% complete. Packages are modular! 🎯
