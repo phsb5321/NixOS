@@ -11,5 +11,6 @@
     ./services
     ./roles
     ./gpu
+    ./secrets
   ];
 }
