@@ -1,8 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
-**Date:** October 5, 2025
-**Status:** Planning Complete, Ready to Execute
+**Date:** October 6, 2025
+**Status:** In Progress - Dotfiles Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
+**Progress:** 8/63 tasks complete (12.7%)
 
 ---
 
@@ -38,14 +39,15 @@ This refactoring effort is documented across three files:
 - ✅ **Add:** Testing infrastructure with NixOS tests
 - 📉 **Result:** Host configs reduced by 77-80%
 
-### Dotfiles Enhancement (Bonus)
-- ✅ **Fix:** Properly initialize chezmoi (currently broken)
-- ✅ **Add:** Template-based configs (SSH, Git per-host)
-- ✅ **Add:** Missing essential dotfiles (.gitignore, .editorconfig)
-- ✅ **Add:** Validation scripts to prevent broken configs
-- ✅ **Add:** Portable paths (not hardcoded)
-- ⚙️ **Optional:** Secrets integration with sops-nix
-- ⚙️ **Optional:** Automatic sync with systemd
+### Dotfiles Enhancement (✅ COMPLETE)
+- ✅ **Fix:** Properly initialize chezmoi (currently broken) - **DONE**
+- ✅ **Add:** Template-based configs (SSH, Git per-host) - **DONE**
+- ✅ **Add:** Missing essential dotfiles (.gitignore, .editorconfig) - **DONE**
+- ✅ **Add:** Validation scripts to prevent broken configs - **DONE**
+- ✅ **Add:** Portable paths (not hardcoded) - **DONE**
+- ✅ **Optional:** Secrets integration with sops-nix - **DONE**
+- ✅ **Optional:** Automatic sync with systemd - **DONE**
+- 📝 **Added:** Complete documentation in SECRETS_INTEGRATION.md
 
 ---
 
@@ -77,19 +79,18 @@ cat ARCHITECTURE_IMPROVEMENT_PLAN.md | less
 cat DOTFILES_ANALYSIS.md | less
 ```
 
-### Step 2: Create Backup
+### Step 2: Create Backup ✅ DONE
 ```bash
 # Create backup tag
-sudo nixos-rebuild build --flake .#default
-git commit -am "backup: Working configuration before refactor"
-git tag backup-$(date +%Y%m%d)
-git push origin --tags
+git tag backup-20251005
+git push origin backup-20251005
 ```
 
-### Step 3: Create Feature Branch
+### Step 3: Create Feature Branch ✅ DONE
 ```bash
-# Start the refactoring
-git checkout -b refactor/architecture-v2
+# Branch created and pushed
+git checkout refactor/architecture-v2
+# 9 commits on this branch
 ```
 
 ### Step 4: Start with Foundation (Milestone 1)
@@ -169,15 +170,15 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 - [ ] Task 8.1: Secrets directory
 - [ ] Task 8.2: Initialize secrets
 
-**Milestone 8.5: Dotfiles** (3.5h - Optional but Recommended)
-- [ ] Task 8.5.1: Initialize chezmoi
-- [ ] Task 8.5.2: Portable paths
-- [ ] Task 8.5.3: SSH config template
-- [ ] Task 8.5.4: Git config template
-- [ ] Task 8.5.5: Missing dotfiles
-- [ ] Task 8.5.6: Validation script
-- [ ] Task 8.5.7: Secrets integration (optional)
-- [ ] Task 8.5.8: Auto-sync (optional)
+**Milestone 8.5: Dotfiles** (✅ COMPLETE - 3.5h)
+- [x] Task 8.5.1: Initialize chezmoi
+- [x] Task 8.5.2: Portable paths
+- [x] Task 8.5.3: SSH config template
+- [x] Task 8.5.4: Git config template
+- [x] Task 8.5.5: Missing dotfiles
+- [x] Task 8.5.6: Validation script
+- [x] Task 8.5.7: Secrets integration (optional)
+- [x] Task 8.5.8: Auto-sync (optional)
 
 ### Week 2: Migration (Test Carefully!)
 
@@ -329,19 +330,21 @@ After completing this refactoring:
 
 ---
 
-## 🚦 Status: Ready to Start
+## 🚦 Status: In Progress
 
-All planning is complete. You can begin with:
+**Completed:** Milestone 8.5 - Dotfiles Enhancement (8 tasks, 9 commits)
+
+**Next:** Milestone 1 - Foundation Setup
+
+Continue with:
 
 ```bash
-# Step 1: Backup
-git tag backup-$(date +%Y%m%d)
+# Already on refactor/architecture-v2 branch
+git status
 
-# Step 2: Create branch
-git checkout -b refactor/architecture-v2
-
-# Step 3: Start Task 1.2
+# Start Milestone 1, Task 1.2
+# Add flake-parts input
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Good luck! Take it slow, test frequently, and commit after each task.** 🎯
+**Progress:** 12.7% complete. Keep testing frequently and commit after each task! 🎯
