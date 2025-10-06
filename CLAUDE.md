@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Dotfiles Complete ✅ (12.7% complete)
-**Branch:** `refactor/architecture-v2` (9 commits pushed)
+**Status:** In Progress - Foundation Complete ✅ (22.2% complete)
+**Branch:** `refactor/architecture-v2` (14 commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 6, 2025
 
@@ -45,7 +45,7 @@ main (protected)
   ├── develop (integration branch)
   │   ├── host/default (desktop, 75 commits ahead)
   │   ├── host/laptop (laptop)
-  │   └── refactor/architecture-v2 (ACTIVE - 9 commits, dotfiles complete)
+  │   └── refactor/architecture-v2 (ACTIVE - 14 commits, foundation complete)
 ```
 
 ### DO NOT (During Refactoring)
@@ -68,10 +68,11 @@ main (protected)
 
 ```bash
 # ✅ Milestone 8.5 Complete (Dotfiles - 8 tasks, 9 commits)
+# ✅ Milestone 1 Complete (Foundation - 6 tasks, 4 commits)
 # Already on refactor/architecture-v2 branch
 
-# Next: Milestone 1 - Foundation Setup
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 1.2 onwards
+# Next: Milestone 2 - Modular Services
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 2.1 onwards
 ```
 
 **Completed:**
@@ -83,11 +84,19 @@ main (protected)
   - Auto-sync with systemd
   - Essential dotfiles and documentation
 
+- Milestone 1: Foundation Setup (all 6 tasks)
+  - flake-parts input added
+  - flake-utils input (already present)
+  - lib/ directory with helper functions
+  - System builders (mkSystem, mkPackageCategory)
+  - Utility functions (mergeWithPriority, pkgsIf, enableAll)
+  - sops-nix input for secrets
+
 **Next:**
-- Milestone 1: Foundation Setup (6 tasks)
-  - Add flake-parts and flake-utils
-  - Create lib directory with helpers
-  - Add sops-nix for secrets management
+- Milestone 2: Modular Services (4 tasks)
+  - Create services directory
+  - Extract syncthing, SSH, printing services
+  - Keep original configs in parallel (safe approach)
 
 ---
 
