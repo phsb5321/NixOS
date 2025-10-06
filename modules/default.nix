@@ -9,5 +9,6 @@
     ./hardware
     ./profiles
     ./services
+    ./roles
   ];
 }
