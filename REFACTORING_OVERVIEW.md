@@ -1,9 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
 **Date:** October 6, 2025
-**Status:** In Progress - Testing Infrastructure Complete ✅
+**Status:** In Progress - Secrets Management Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
-**Progress:** 37/63 tasks complete (58.7%)
+**Progress:** 39/63 tasks complete (61.9%)
 
 ---
 
@@ -166,9 +166,9 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 - [x] Task 7.2: Formatting/linting
 - [x] Task 7.3: Boot tests
 
-**Milestone 8: Secrets** (0.75h)
-- [ ] Task 8.1: Secrets directory
-- [ ] Task 8.2: Initialize secrets
+**Milestone 8: Secrets** (✅ COMPLETE - 0.75h)
+- [x] Task 8.1: Secrets directory
+- [x] Task 8.2: Initialize secrets
 
 **Milestone 8.5: Dotfiles** (✅ COMPLETE - 3.5h)
 - [x] Task 8.5.1: Initialize chezmoi
@@ -341,10 +341,11 @@ After completing this refactoring:
 - ✅ Milestone 5: Package Splitting (5 tasks, 1 commit)
 - ✅ Milestone 6: GNOME Modules (3 tasks, 1 commit)
 - ✅ Milestone 7: Testing Infrastructure (3 tasks, 1 commit)
+- ✅ Milestone 8: Secrets Management (2 tasks, 1 commit)
 
-**Total:** 37/63 tasks (58.7%)
+**Total:** 39/63 tasks (61.9%)
 
-**Next:** Milestone 8 - Secrets Management
+**Next:** Milestone 9 - Desktop Migration ⚠️ HIGH RISK
 
 Continue with:
 
@@ -352,9 +353,10 @@ Continue with:
 # Already on refactor/architecture-v2 branch
 git status
 
-# Start Milestone 8, Task 8.1
-# Create secrets directory
+# ⚠️ WARNING: Breaking changes ahead!
+# Milestone 9 involves migrating desktop host to new role-based config
+# Test thoroughly before proceeding
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Progress:** 58.7% complete. Testing infrastructure ready! 🎯
+**Progress:** 61.9% complete. Secrets infrastructure ready! 🎯

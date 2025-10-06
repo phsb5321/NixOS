@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Testing Infrastructure Complete ✅ (58.7% complete)
-**Branch:** `refactor/architecture-v2` (34+ commits pushed)
+**Status:** In Progress - Secrets Management Complete ✅ (61.9% complete)
+**Branch:** `refactor/architecture-v2` (36+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 6, 2025
 
@@ -75,10 +75,11 @@ main (protected)
 # ✅ Milestone 5 Complete (Packages - 5 tasks, 1 commit)
 # ✅ Milestone 6 Complete (GNOME - 3 tasks, 1 commit)
 # ✅ Milestone 7 Complete (Tests - 3 tasks, 1 commit)
+# ✅ Milestone 8 Complete (Secrets - 2 tasks, 1 commit)
 # Already on refactor/architecture-v2 branch
 
-# Next: Milestone 8 - Secrets Management
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 8.1 onwards
+# ⚠️ Next: Milestone 9 - Desktop Migration (HIGH RISK - Breaking Changes)
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 9.1 onwards
 ```
 
 **Completed:**
@@ -151,10 +152,22 @@ main (protected)
   - Test scripts ready for CI/CD integration (385 lines across 5 files)
   - Comprehensive README.md with usage examples
 
+- Milestone 8: Secrets Management (all 2 tasks)
+  - Created secrets/ directory with sops-nix integration
+  - Secrets module with configurable options (enable, defaultSopsFile, ageKeyFile)
+  - Comprehensive README.md with setup, usage, security best practices
+  - Example configuration files: .sops.yaml.example, example.yaml
+  - .gitignore to prevent committing unencrypted secrets
+  - Ready for age encryption and per-host secret files
+  - Integration with dotfiles and services
+  - 434 lines of documentation and configuration
+
 **Next:**
-- Milestone 8: Secrets Management (2 tasks)
-  - Create secrets directory structure
-  - Initialize sops-nix for encrypted secrets
+- ⚠️ Milestone 9: Desktop Migration (4 tasks - HIGH RISK)
+  - Migrate desktop host to role-based configuration
+  - Breaking changes - requires careful testing
+  - Test configuration before switching
+  - Verify all services and packages work
 
 ---
 
