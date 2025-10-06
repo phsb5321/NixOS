@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Foundation Complete ✅ (22.2% complete)
-**Branch:** `refactor/architecture-v2` (14 commits pushed)
+**Status:** In Progress - Services Complete ✅ (28.6% complete)
+**Branch:** `refactor/architecture-v2` (20 commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 6, 2025
 
@@ -45,7 +45,7 @@ main (protected)
   ├── develop (integration branch)
   │   ├── host/default (desktop, 75 commits ahead)
   │   ├── host/laptop (laptop)
-  │   └── refactor/architecture-v2 (ACTIVE - 14 commits, foundation complete)
+  │   └── refactor/architecture-v2 (ACTIVE - 20 commits, services complete)
 ```
 
 ### DO NOT (During Refactoring)
@@ -69,10 +69,11 @@ main (protected)
 ```bash
 # ✅ Milestone 8.5 Complete (Dotfiles - 8 tasks, 9 commits)
 # ✅ Milestone 1 Complete (Foundation - 6 tasks, 4 commits)
+# ✅ Milestone 2 Complete (Services - 4 tasks, 4 commits)
 # Already on refactor/architecture-v2 branch
 
-# Next: Milestone 2 - Modular Services
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 2.1 onwards
+# Next: Milestone 3 - Role-Based Modules
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 3.1 onwards
 ```
 
 **Completed:**
@@ -92,11 +93,19 @@ main (protected)
   - Utility functions (mergeWithPriority, pkgsIf, enableAll)
   - sops-nix input for secrets
 
+- Milestone 2: Modular Services (all 4 tasks)
+  - Services directory created with module structure
+  - Syncthing service extracted (file sync)
+  - SSH service extracted (OpenSSH with security options)
+  - Printing service extracted (CUPS + Avahi discovery)
+  - Original configs kept in common.nix (parallel implementation)
+
 **Next:**
-- Milestone 2: Modular Services (4 tasks)
-  - Create services directory
-  - Extract syncthing, SSH, printing services
-  - Keep original configs in parallel (safe approach)
+- Milestone 3: Role-Based Modules (4 tasks)
+  - Create roles directory structure
+  - Desktop role (gaming, full features)
+  - Laptop role (power management, minimal)
+  - Server/minimal roles for future use
 
 ---
 
