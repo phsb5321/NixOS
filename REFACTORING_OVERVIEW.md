@@ -1,9 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
 **Date:** October 6, 2025
-**Status:** In Progress - Package Splitting Complete ✅
+**Status:** In Progress - GNOME Modules Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
-**Progress:** 31/63 tasks complete (49.2%)
+**Progress:** 34/63 tasks complete (54.0%)
 
 ---
 
@@ -156,10 +156,10 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 - [x] Task 5.4: Split media/gaming/utilities
 - [x] Task 5.5: Split audio/terminal
 
-**Milestone 6: GNOME** (1.5h)
-- [ ] Task 6.1: GNOME subdirectory
-- [ ] Task 6.2: Base module
-- [ ] Task 6.3: Extensions/settings/wayland
+**Milestone 6: GNOME** (✅ COMPLETE - 1.5h)
+- [x] Task 6.1: GNOME subdirectory
+- [x] Task 6.2: Base module
+- [x] Task 6.3: Extensions/settings/wayland
 
 **Milestone 7: Tests** (1.5h)
 - [ ] Task 7.1: Tests directory
@@ -339,10 +339,11 @@ After completing this refactoring:
 - ✅ Milestone 3: Role-Based Modules (4 tasks, 4 commits)
 - ✅ Milestone 4: GPU Abstraction (4 tasks, 2 commits)
 - ✅ Milestone 5: Package Splitting (5 tasks, 1 commit)
+- ✅ Milestone 6: GNOME Modules (3 tasks, 1 commit)
 
-**Total:** 31/63 tasks (49.2%)
+**Total:** 34/63 tasks (54.0%)
 
-**Next:** Milestone 6 - GNOME Modules
+**Next:** Milestone 7 - Testing Infrastructure
 
 Continue with:
 
@@ -350,9 +351,9 @@ Continue with:
 # Already on refactor/architecture-v2 branch
 git status
 
-# Start Milestone 6, Task 6.1
-# Create GNOME subdirectory
+# Start Milestone 7, Task 7.1
+# Create tests directory
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Progress:** 49.2% complete. Packages are modular! 🎯
+**Progress:** 54.0% complete. GNOME is modular! 🎯

@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Package Splitting Complete ✅ (49.2% complete)
-**Branch:** `refactor/architecture-v2` (30+ commits pushed)
+**Status:** In Progress - GNOME Modules Complete ✅ (54.0% complete)
+**Branch:** `refactor/architecture-v2` (32+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 6, 2025
 
@@ -73,10 +73,11 @@ main (protected)
 # ✅ Milestone 3 Complete (Roles - 4 tasks, 4 commits)
 # ✅ Milestone 4 Complete (GPU - 4 tasks, 2 commits)
 # ✅ Milestone 5 Complete (Packages - 5 tasks, 1 commit)
+# ✅ Milestone 6 Complete (GNOME - 3 tasks, 1 commit)
 # Already on refactor/architecture-v2 branch
 
-# Next: Milestone 6 - GNOME Modules
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 6.1 onwards
+# Next: Milestone 7 - Testing Infrastructure
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 7.1 onwards
 ```
 
 **Completed:**
@@ -130,11 +131,20 @@ main (protected)
   - New modular system with 696 lines across 7 category files
   - Old monolithic module (335 lines) preserved for migration
 
+- Milestone 6: GNOME Modules (all 3 tasks)
+  - Created modules/desktop/gnome/ subdirectory
+  - Base module: GDM, core services, portal, themes, power management
+  - Extensions module: 10+ extensions with individual toggles + productivity bundle
+  - Settings module: dark mode, animations, hot corners, battery, weekday
+  - Wayland module: Wayland/X11 switching, Electron support, screen sharing, variants
+  - Modular system with 515 lines across 3 files (base, extensions, wayland)
+  - Old monolithic gnome.nix preserved for migration
+
 **Next:**
-- Milestone 6: GNOME Modules (3 tasks)
-  - Create GNOME subdirectory structure
-  - Base GNOME module
-  - Extensions, settings, and Wayland configuration
+- Milestone 7: Testing Infrastructure (3 tasks)
+  - Create tests directory structure
+  - Add formatting and linting tests
+  - Add boot and system tests
 
 ---
 
