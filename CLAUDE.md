@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - GPU Abstraction Complete ✅ (41.3% complete)
-**Branch:** `refactor/architecture-v2` (28+ commits pushed)
+**Status:** In Progress - Package Splitting Complete ✅ (49.2% complete)
+**Branch:** `refactor/architecture-v2` (30+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 6, 2025
 
@@ -72,10 +72,11 @@ main (protected)
 # ✅ Milestone 2 Complete (Services - 4 tasks, 4 commits)
 # ✅ Milestone 3 Complete (Roles - 4 tasks, 4 commits)
 # ✅ Milestone 4 Complete (GPU - 4 tasks, 2 commits)
+# ✅ Milestone 5 Complete (Packages - 5 tasks, 1 commit)
 # Already on refactor/architecture-v2 branch
 
-# Next: Milestone 5 - Package Splitting
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 5.1 onwards
+# Next: Milestone 6 - GNOME Modules
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 6.1 onwards
 ```
 
 **Completed:**
@@ -117,13 +118,23 @@ main (protected)
   - NVIDIA GPU module (stable/beta/legacy drivers, open-source support)
   - All modules disabled by default with configurable options
 
+- Milestone 5: Package Splitting (all 5 tasks)
+  - Created modules/packages/categories/ directory
+  - Browsers module: Chrome, Brave, LibreWolf, Zen (individual toggles)
+  - Development module: 10+ options (editors, runtimes, compilers, LSPs, Git, utilities)
+  - Media module: VLC, Spotify, Discord, OBS, GIMP
+  - Gaming module: performance tools, launchers, Wine, GPU control, Minecraft
+  - Utilities module: disk management, compression, security, fonts
+  - Audio-Video module: PipeWire, EasyEffects, control tools
+  - Terminal module: fonts, shell, themes, plugins, applications
+  - New modular system with 696 lines across 7 category files
+  - Old monolithic module (335 lines) preserved for migration
+
 **Next:**
-- Milestone 5: Package Splitting (5 tasks)
-  - Split monolithic packages module into categories
-  - Browsers module (Chrome, Firefox, Brave, Zen)
-  - Development module (VSCode, LSPs, compilers)
-  - Media/gaming/utilities modules
-  - Audio/terminal modules
+- Milestone 6: GNOME Modules (3 tasks)
+  - Create GNOME subdirectory structure
+  - Base GNOME module
+  - Extensions, settings, and Wayland configuration
 
 ---
 
