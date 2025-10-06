@@ -1,9 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
 **Date:** October 6, 2025
-**Status:** In Progress - Foundation Complete ✅
+**Status:** In Progress - Services Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
-**Progress:** 14/63 tasks complete (22.2%)
+**Progress:** 18/63 tasks complete (28.6%)
 
 ---
 
@@ -131,11 +131,11 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 - [x] Task 1.5: Add core lib functions
 - [x] Task 1.6: Add sops-nix input
 
-**Milestone 2: Services** (1.5h)
-- [ ] Task 2.1: Create services directory
-- [ ] Task 2.2: Extract syncthing service
-- [ ] Task 2.3: Extract SSH service
-- [ ] Task 2.4: Extract printing service
+**Milestone 2: Services** (✅ COMPLETE - 1.5h)
+- [x] Task 2.1: Create services directory
+- [x] Task 2.2: Extract syncthing service
+- [x] Task 2.3: Extract SSH service
+- [x] Task 2.4: Extract printing service
 
 **Milestone 3: Roles** (2h)
 - [ ] Task 3.1: Create roles directory
@@ -335,10 +335,11 @@ After completing this refactoring:
 **Completed:**
 - ✅ Milestone 8.5: Dotfiles Enhancement (8 tasks, 9 commits)
 - ✅ Milestone 1: Foundation Setup (6 tasks, 4 commits)
+- ✅ Milestone 2: Modular Services (4 tasks, 4 commits)
 
-**Total:** 14/63 tasks (22.2%)
+**Total:** 18/63 tasks (28.6%)
 
-**Next:** Milestone 2 - Modular Services
+**Next:** Milestone 3 - Role-Based Modules
 
 Continue with:
 
@@ -346,9 +347,9 @@ Continue with:
 # Already on refactor/architecture-v2 branch
 git status
 
-# Start Milestone 2, Task 2.1
-# Create services directory
+# Start Milestone 3, Task 3.1
+# Create roles directory
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Progress:** 22.2% complete. Foundation is solid! 🎯
+**Progress:** 28.6% complete. Services are modular! 🎯
