@@ -348,6 +348,12 @@ in {
       default = true;
       description = "Install helper scripts for dotfiles management";
     };
+
+    secretsIntegration = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Enable secrets integration with chezmoi templates";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -371,6 +377,16 @@ in {
       "dotfiles" = "dotfiles-status";
       "dotfiles-diff" = "dotfiles-apply --diff";
       "dotfiles-info" = "dotfiles-sync";
+    };
+
+    # Expose secrets as environment variables for chezmoi templates
+    # This allows templates to use: {{ env "CHEZMOI_SECRET_NAME" }}
+    # Secrets will be available when sops-nix is configured
+    environment.sessionVariables = mkIf cfg.secretsIntegration {
+      # These paths will be populated by sops-nix when configured
+      # Example: CHEZMOI_GITHUB_TOKEN points to decrypted secret
+      # Add your secrets here following the pattern:
+      # CHEZMOI_SECRET_NAME = "/run/secrets/secret-name";
     };
   };
 }
