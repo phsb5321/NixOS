@@ -1,9 +1,9 @@
 # NixOS Configuration Refactoring - Overview
 
 **Date:** October 6, 2025
-**Status:** In Progress - Dotfiles Complete ✅
+**Status:** In Progress - Foundation Complete ✅
 **Estimated Total Time:** 28 hours over 2 weeks
-**Progress:** 8/63 tasks complete (12.7%)
+**Progress:** 14/63 tasks complete (22.2%)
 
 ---
 
@@ -123,13 +123,13 @@ Follow the tasks in order from ARCHITECTURE_IMPROVEMENT_PLAN.md:
 
 ### Week 1: Safe Foundation (Low Risk)
 
-**Milestone 1: Foundation** (2h)
-- [ ] Task 1.1: Backup current system
-- [ ] Task 1.2: Add flake-parts input
-- [ ] Task 1.3: Add flake-utils input
-- [ ] Task 1.4: Create lib directory
-- [ ] Task 1.5: Add core lib functions
-- [ ] Task 1.6: Add sops-nix input
+**Milestone 1: Foundation** (✅ COMPLETE - 2h)
+- [x] Task 1.1: Backup current system
+- [x] Task 1.2: Add flake-parts input
+- [x] Task 1.3: Add flake-utils input
+- [x] Task 1.4: Create lib directory
+- [x] Task 1.5: Add core lib functions
+- [x] Task 1.6: Add sops-nix input
 
 **Milestone 2: Services** (1.5h)
 - [ ] Task 2.1: Create services directory
@@ -332,9 +332,13 @@ After completing this refactoring:
 
 ## 🚦 Status: In Progress
 
-**Completed:** Milestone 8.5 - Dotfiles Enhancement (8 tasks, 9 commits)
+**Completed:**
+- ✅ Milestone 8.5: Dotfiles Enhancement (8 tasks, 9 commits)
+- ✅ Milestone 1: Foundation Setup (6 tasks, 4 commits)
 
-**Next:** Milestone 1 - Foundation Setup
+**Total:** 14/63 tasks (22.2%)
+
+**Next:** Milestone 2 - Modular Services
 
 Continue with:
 
@@ -342,9 +346,9 @@ Continue with:
 # Already on refactor/architecture-v2 branch
 git status
 
-# Start Milestone 1, Task 1.2
-# Add flake-parts input
+# Start Milestone 2, Task 2.1
+# Create services directory
 # (Follow ARCHITECTURE_IMPROVEMENT_PLAN.md)
 ```
 
-**Progress:** 12.7% complete. Keep testing frequently and commit after each task! 🎯
+**Progress:** 22.2% complete. Foundation is solid! 🎯
