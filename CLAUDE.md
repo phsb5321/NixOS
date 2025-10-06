@@ -4,11 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 🚧 ACTIVE REFACTORING - READ FIRST
+## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** Planning complete, ready to execute
-**Branch:** `refactor/architecture-v2` (to be created)
+**Status:** In Progress - Dotfiles Complete ✅ (12.7% complete)
+**Branch:** `refactor/architecture-v2` (9 commits pushed)
 **Documentation:** See refactoring docs below
+**Last Updated:** October 6, 2025
 
 ### Refactoring Documents (START HERE)
 
@@ -28,12 +29,14 @@ Before making any changes to the architecture, READ THESE:
 - Add testing infrastructure
 - **Result:** 77-80% reduction in host config lines
 
-#### Dotfiles Enhancement (Milestone 8.5)
-- Fix chezmoi initialization (currently broken)
-- Add template-based configs (SSH, Git per-host)
-- Add validation scripts
-- Integrate secrets management
-- Optional: Auto-sync with systemd
+#### Dotfiles Enhancement ✅ COMPLETE (Milestone 8.5)
+- ✅ Fix chezmoi initialization - **DONE**
+- ✅ Add template-based configs (SSH, Git per-host) - **DONE**
+- ✅ Add validation scripts (dotfiles-check) - **DONE**
+- ✅ Integrate secrets management - **DONE**
+- ✅ Auto-sync with systemd timers - **DONE**
+- ✅ Portable paths configuration - **DONE**
+- ✅ Essential dotfiles (.gitignore, .editorconfig, .curlrc) - **DONE**
 
 ### Current Branch Strategy During Refactoring
 
@@ -42,7 +45,7 @@ main (protected)
   ├── develop (integration branch)
   │   ├── host/default (desktop, 75 commits ahead)
   │   ├── host/laptop (laptop)
-  │   └── refactor/architecture-v2 (TO BE CREATED - refactoring work)
+  │   └── refactor/architecture-v2 (ACTIVE - 9 commits, dotfiles complete)
 ```
 
 ### DO NOT (During Refactoring)
@@ -61,19 +64,30 @@ main (protected)
 ✅ Test with `nix flake check` and `nixos-rebuild build` before committing
 ✅ Bug fixes can go on current branches (will merge later)
 
-### Quick Start Refactoring
+### Refactoring Progress
 
 ```bash
-# 1. Create backup and branch
-git tag backup-$(date +%Y%m%d)
-git checkout -b refactor/architecture-v2
+# ✅ Milestone 8.5 Complete (Dotfiles - 8 tasks, 9 commits)
+# Already on refactor/architecture-v2 branch
 
-# 2. Read the plan
-cat REFACTORING_OVERVIEW.md
-
-# 3. Start with Task 1.2 (backup already done)
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md step-by-step
+# Next: Milestone 1 - Foundation Setup
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 1.2 onwards
 ```
+
+**Completed:**
+- Milestone 8.5: Dotfiles Enhancement (all 8 tasks)
+  - Chezmoi initialization and configuration
+  - SSH/Git config templates with host detection
+  - Validation script (dotfiles-check)
+  - Secrets integration support
+  - Auto-sync with systemd
+  - Essential dotfiles and documentation
+
+**Next:**
+- Milestone 1: Foundation Setup (6 tasks)
+  - Add flake-parts and flake-utils
+  - Create lib directory with helpers
+  - Add sops-nix for secrets management
 
 ---
 
@@ -105,13 +119,21 @@ cat REFACTORING_OVERVIEW.md
 - `nix-store --optimise` - Deduplicate Nix store
 - `journalctl --vacuum-time=2w` - Clean system logs
 
-### Dotfiles Management (chezmoi)
-- `dotfiles-init` - Initialize dotfiles management
+### Dotfiles Management (chezmoi) ✨ Enhanced
+- `dotfiles-init` - Initialize dotfiles management (✅ now working)
 - `dotfiles-status` or `dotfiles` - Check dotfiles status
+- `dotfiles-check` - ✨ NEW: Validate dotfiles before applying (checks SSH, Git syntax, scans for secrets)
 - `dotfiles-edit` - Edit dotfiles in VS Code/Cursor
 - `dotfiles-apply` - Apply dotfiles changes to system
 - `dotfiles-add ~/.config/file` - Add new file to dotfiles management
-- `dotfiles-sync` - Sync dotfiles with git
+- `dotfiles-sync` - Show dotfiles management info
+
+**New Features:**
+- 📝 **Templates:** SSH and Git configs adapt per-host (desktop/laptop)
+- 🔒 **Secrets:** Ready for sops-nix integration (see `dotfiles/SECRETS_INTEGRATION.md`)
+- ✅ **Validation:** Automatic syntax checking and secret scanning
+- ⚙️ **Auto-sync:** Optional systemd timers for automatic application
+- 📦 **Essential files:** .gitignore_global, .editorconfig, .curlrc included
 
 
 ## Architecture Overview
@@ -218,10 +240,15 @@ The desktop host supports multiple GPU configurations:
 - Laptop: X11 mode for better file picker compatibility
 - Portal backend: GTK FileChooser interface for Electron applications
 
-### Dotfiles Integration
+### Dotfiles Integration ✨ Enhanced
 - Project-local dotfiles using chezmoi stored in `~/NixOS/dotfiles/`
 - Independent of NixOS rebuilds for instant configuration changes
 - Git-managed with helper scripts for common operations
+- **✨ NEW:** Template-based configs with host detection (isDesktop/isLaptop)
+- **✨ NEW:** Validation script prevents broken configs (SSH, Git syntax checking)
+- **✨ NEW:** Secrets integration ready (environment variables for templates)
+- **✨ NEW:** Optional auto-sync with systemd timers and path watchers
+- **✨ NEW:** Portable configuration (configurable paths, not hardcoded)
 - Zed Editor configured with Claude Code integration
 
 ### Development Workflow
