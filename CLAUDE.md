@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - GNOME Modules Complete ✅ (54.0% complete)
-**Branch:** `refactor/architecture-v2` (32+ commits pushed)
+**Status:** In Progress - Testing Infrastructure Complete ✅ (58.7% complete)
+**Branch:** `refactor/architecture-v2` (34+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 6, 2025
 
@@ -74,10 +74,11 @@ main (protected)
 # ✅ Milestone 4 Complete (GPU - 4 tasks, 2 commits)
 # ✅ Milestone 5 Complete (Packages - 5 tasks, 1 commit)
 # ✅ Milestone 6 Complete (GNOME - 3 tasks, 1 commit)
+# ✅ Milestone 7 Complete (Tests - 3 tasks, 1 commit)
 # Already on refactor/architecture-v2 branch
 
-# Next: Milestone 7 - Testing Infrastructure
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 7.1 onwards
+# Next: Milestone 8 - Secrets Management
+# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 8.1 onwards
 ```
 
 **Completed:**
@@ -140,11 +141,20 @@ main (protected)
   - Modular system with 515 lines across 3 files (base, extensions, wayland)
   - Old monolithic gnome.nix preserved for migration
 
+- Milestone 7: Testing Infrastructure (all 3 tasks)
+  - Created tests/ directory with modular structure
+  - Formatting tests: format-check, format-fix, lint-check, pre-commit-check
+  - Boot tests: boot-test-all, boot-test-default, boot-test-laptop
+  - VM tests: vm-test-default for QEMU testing
+  - Evaluation tests: eval-test for configuration validation
+  - Full test suite: test-all combining all checks
+  - Test scripts ready for CI/CD integration (385 lines across 5 files)
+  - Comprehensive README.md with usage examples
+
 **Next:**
-- Milestone 7: Testing Infrastructure (3 tasks)
-  - Create tests directory structure
-  - Add formatting and linting tests
-  - Add boot and system tests
+- Milestone 8: Secrets Management (2 tasks)
+  - Create secrets directory structure
+  - Initialize sops-nix for encrypted secrets
 
 ---
 
