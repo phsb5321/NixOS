@@ -6,10 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Secrets Management Complete ✅ (61.9% complete)
-**Branch:** `refactor/architecture-v2` (36+ commits pushed)
+**Status:** In Progress - Desktop Configuration Switched ⚠️ NEEDS REBUILD (63.5% complete)
+**Branch:** `refactor/architecture-v2` (37+ commits pushed)
 **Documentation:** See refactoring docs below
-**Last Updated:** October 6, 2025
+**Last Updated:** October 7, 2025
 
 ### Refactoring Documents (START HERE)
 
@@ -76,10 +76,13 @@ main (protected)
 # ✅ Milestone 6 Complete (GNOME - 3 tasks, 1 commit)
 # ✅ Milestone 7 Complete (Tests - 3 tasks, 1 commit)
 # ✅ Milestone 8 Complete (Secrets - 2 tasks, 1 commit)
+# ⚠️ Milestone 9: Desktop Migration - Tasks 9.1-9.3 Complete (1 commit)
+#    ⚠️ Task 9.4 PENDING: User must rebuild system
 # Already on refactor/architecture-v2 branch
 
-# ⚠️ Next: Milestone 9 - Desktop Migration (HIGH RISK - Breaking Changes)
-# Follow ARCHITECTURE_IMPROVEMENT_PLAN.md Task 9.1 onwards
+# ⚠️ IMPORTANT: Desktop config switched to role-based architecture
+# User must run: sudo nixos-rebuild switch --flake .#default
+# After successful rebuild, continue with Milestone 10 (Laptop Migration)
 ```
 
 **Completed:**
@@ -162,12 +165,27 @@ main (protected)
   - Integration with dotfiles and services
   - 434 lines of documentation and configuration
 
+- Milestone 9: Desktop Migration (tasks 9.1-9.3 complete, 9.4 pending)
+  - ✅ Task 9.1: Created role-based desktop configuration (configuration-new.nix, 675 lines)
+  - ✅ Task 9.2: Fixed 7 compatibility issues:
+    * SSH settings conflicts (added lib.mkDefault)
+    * Deprecated amdvlk package (removed, RADV is default)
+    * GVariant dconf complexity (removed system-level settings)
+    * Laptop profile API updates (new package categories)
+    * extraPackages option (moved to environment.systemPackages)
+    * Desktop module imports (fixed path to new modular GNOME)
+    * Package module activation (swapped to modular structure)
+  - ✅ Task 9.3: Switched to role-based configuration (BREAKING)
+  - ⚠️ Task 9.4: **USER ACTION REQUIRED** - Rebuild system:
+    ```bash
+    sudo nixos-rebuild switch --flake .#default
+    ```
+  - Configuration builds successfully
+  - Backups created: configuration-old.nix, configuration-original.nix
+
 **Next:**
-- ⚠️ Milestone 9: Desktop Migration (4 tasks - HIGH RISK)
-  - Migrate desktop host to role-based configuration
-  - Breaking changes - requires careful testing
-  - Test configuration before switching
-  - Verify all services and packages work
+- ⚠️ Milestone 9: Task 9.4 - User must rebuild system
+- After successful rebuild: Milestone 10 (Laptop Migration - 4 tasks)
 
 ---
 
