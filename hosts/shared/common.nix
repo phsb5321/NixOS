@@ -8,19 +8,14 @@
 {
   # Shared configuration for desktop hosts
 
-  # Enable shared packages
+  # Enable shared packages (modular system - no top-level enable)
   modules.packages = {
-    enable = true;
     browsers.enable = true;
     development.enable = true;
     media.enable = true;
     utilities.enable = true;
     audioVideo.enable = true;
     terminal.enable = true;
-    python = {
-      enable = true;
-      withGTK = true;
-    };
   };
 
   # Enable dotfiles management
