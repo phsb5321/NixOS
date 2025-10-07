@@ -18,6 +18,7 @@ Before making any changes to the architecture, READ THESE:
 1. **REFACTORING_OVERVIEW.md** - Quick start guide and high-level summary
 2. **ARCHITECTURE_IMPROVEMENT_PLAN.md** - Complete 63-task implementation plan
 3. **DOTFILES_ANALYSIS.md** - Dotfiles enhancement strategy
+4. **FLAKE_USAGE.md** - Comprehensive flake usage guide (NEW)
 
 ### What's Being Refactored
 
