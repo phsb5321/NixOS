@@ -227,11 +227,11 @@ in {
 
     # SSH configuration
     services.openssh = {
-      enable = true;
+      enable = lib.mkDefault true;
       settings = {
-        PermitRootLogin = "no";
-        PasswordAuthentication = true;
-        KbdInteractiveAuthentication = false;
+        PermitRootLogin = lib.mkDefault "no";
+        PasswordAuthentication = lib.mkDefault true;
+        KbdInteractiveAuthentication = lib.mkDefault false;
       };
     };
 

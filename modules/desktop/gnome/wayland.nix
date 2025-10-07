@@ -92,32 +92,8 @@ in {
       })
     ];
 
-    # Mutter settings based on variant
-    programs.dconf.profiles.user.databases = lib.mkIf cfg.settings.enable [
-      {
-        lockAll = false;
-        settings = {
-          "org/gnome/mutter" = lib.mkMerge [
-            # Hardware variant (default)
-            (lib.mkIf (cfg.wayland.variant == "hardware") {
-              experimental-features = [
-                "scale-monitor-framebuffer"
-                "variable-refresh-rate"
-              ];
-            })
-
-            # Conservative variant
-            (lib.mkIf (cfg.wayland.variant == "conservative") {
-              experimental-features = [];
-            })
-
-            # Software variant
-            (lib.mkIf (cfg.wayland.variant == "software") {
-              experimental-features = [];
-            })
-          ];
-        };
-      }
-    ];
+    # Note: Mutter experimental features configuration removed
+    # Users should configure these through home-manager or gsettings/dconf directly:
+    # gsettings set org.gnome.mutter experimental-features "['scale-monitor-framebuffer', 'variable-refresh-rate']"
   };
 }
