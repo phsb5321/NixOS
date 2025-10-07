@@ -66,11 +66,11 @@ The refactoring has been successfully merged to develop:
 ✅ All deprecated code removed
 ✅ Flake modernized with rich outputs
 
-**Current Status:**
+**Deployment Status:**
 - `develop` branch contains the new architecture
-- Both host configurations build successfully
-- Desktop system can be updated with: `sudo nixos-rebuild switch --flake .#default`
-- Laptop system can be updated with: `sudo nixos-rebuild switch --flake .#laptop`
+- Desktop: ✅ **DEPLOYED** (October 7, 2025) - Running new architecture
+- Laptop: 📋 **READY** - Can be updated with: `sudo nixos-rebuild switch --flake .#laptop`
+- Cleanup: Garbage collected (5GB freed), store optimized
 
 **Next Actions:**
 1. ✅ DONE: Merge `refactor/architecture-v2` → `develop`

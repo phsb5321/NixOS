@@ -453,14 +453,15 @@ The refactoring was successfully merged to the `develop` branch:
 ✅ Desktop configuration builds: `/nix/store/lvf0qv38jlf2gk9rzxz78m6hghc36crw-nixos-system-nixos-desktop-25.11.20251002.dc704e6`
 ✅ Laptop configuration builds: `/nix/store/yj3ld5q5k5p5ym951i23gg59bqfqnalc-nixos-system-nixos-laptop-25.11.20251002.7df7ff7`
 
-### Ready for Deployment
+### Deployment Status
 
-Users can now update their systems to the new architecture:
+**Desktop: ✅ DEPLOYED**
+- Deployment Date: October 7, 2025
+- System: /nix/store/lvf0qv38jlf2gk9rzxz78m6hghc36crw-nixos-system-nixos-desktop-25.11
+- Status: Running successfully with new architecture
+- Services: All services operational (0 failed units)
+- Cleanup: Garbage collected (5GB freed), store optimized
 
-```bash
-# Desktop
-sudo nixos-rebuild switch --flake .#default
-
-# Laptop
-sudo nixos-rebuild switch --flake .#laptop
-```
+**Laptop: 📋 READY**
+- Ready for deployment with: `sudo nixos-rebuild switch --flake .#laptop`
+- Build verified: /nix/store/yj3ld5q5k5p5ym951i23gg59bqfqnalc-nixos-system-nixos-laptop-25.11
