@@ -1,8 +1,11 @@
 # ~/NixOS/modules/desktop/gnome/extensions.nix
 # GNOME Shell extensions and dconf settings
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.modules.desktop.gnome;
 in {
   options.modules.desktop.gnome.extensions = {
@@ -72,6 +75,12 @@ in {
       description = "Enable Sound Output Device Chooser extension";
     };
 
+    launchNewInstance = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Enable Launch New Instance extension";
+    };
+
     productivity = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -120,16 +129,17 @@ in {
   config = lib.mkIf (cfg.enable && cfg.extensions.enable) {
     # Extension packages
     environment.systemPackages = with pkgs;
-      (lib.optionals cfg.extensions.appIndicator [ gnomeExtensions.appindicator ])
-      ++ (lib.optionals cfg.extensions.dashToDock [ gnomeExtensions.dash-to-dock ])
-      ++ (lib.optionals cfg.extensions.userThemes [ gnomeExtensions.user-themes ])
-      ++ (lib.optionals cfg.extensions.justPerfection [ gnomeExtensions.just-perfection ])
-      ++ (lib.optionals (cfg.extensions.vitals || cfg.extensions.productivity) [ gnomeExtensions.vitals ])
-      ++ (lib.optionals (cfg.extensions.caffeine || cfg.extensions.productivity) [ gnomeExtensions.caffeine ])
-      ++ (lib.optionals (cfg.extensions.clipboard || cfg.extensions.productivity) [ gnomeExtensions.clipboard-indicator ])
-      ++ (lib.optionals cfg.extensions.gsconnect [ gnomeExtensions.gsconnect ])
-      ++ (lib.optionals cfg.extensions.workspaceIndicator [ gnomeExtensions.workspace-indicator ])
-      ++ (lib.optionals cfg.extensions.soundOutputChooser [ gnomeExtensions.sound-output-device-chooser ]);
+      (lib.optionals cfg.extensions.appIndicator [gnomeExtensions.appindicator])
+      ++ (lib.optionals cfg.extensions.dashToDock [gnomeExtensions.dash-to-dock])
+      ++ (lib.optionals cfg.extensions.userThemes [gnomeExtensions.user-themes])
+      ++ (lib.optionals cfg.extensions.justPerfection [gnomeExtensions.just-perfection])
+      ++ (lib.optionals (cfg.extensions.vitals || cfg.extensions.productivity) [gnomeExtensions.vitals])
+      ++ (lib.optionals (cfg.extensions.caffeine || cfg.extensions.productivity) [gnomeExtensions.caffeine])
+      ++ (lib.optionals (cfg.extensions.clipboard || cfg.extensions.productivity) [gnomeExtensions.clipboard-indicator])
+      ++ (lib.optionals cfg.extensions.gsconnect [gnomeExtensions.gsconnect])
+      ++ (lib.optionals cfg.extensions.workspaceIndicator [gnomeExtensions.workspace-indicator])
+      ++ (lib.optionals cfg.extensions.soundOutputChooser [gnomeExtensions.sound-output-device-chooser])
+      ++ (lib.optionals cfg.extensions.launchNewInstance [gnomeExtensions.launch-new-instance]);
 
     # Note: dconf settings are intentionally minimal at system level
     # Users should configure GNOME settings through the GUI or home-manager
