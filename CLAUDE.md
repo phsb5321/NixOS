@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Desktop Migration Complete ✅ (63.5% complete)
-**Branch:** `refactor/architecture-v2` (39+ commits pushed)
+**Status:** In Progress - Laptop Migration Complete ✅ (69.8% complete)
+**Branch:** `refactor/architecture-v2` (41+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 7, 2025
 
@@ -77,10 +77,11 @@ main (protected)
 # ✅ Milestone 7 Complete (Tests - 3 tasks, 1 commit)
 # ✅ Milestone 8 Complete (Secrets - 2 tasks, 1 commit)
 # ✅ Milestone 9 Complete (Desktop Migration - 4 tasks, 3 commits)
+# ✅ Milestone 10 Complete (Laptop Migration - 4 tasks, 1 commit)
 # Already on refactor/architecture-v2 branch
 
-# 🎯 Next: Milestone 10 - Laptop Migration (4 tasks)
-# System successfully rebuilt with new role-based architecture
+# 🎯 Next: Milestone 11 - Cleanup (4 tasks)
+# Remove old configs, update imports, clean up backup files
 ```
 
 **Completed:**
@@ -180,11 +181,23 @@ main (protected)
     * New configuration active
     * Backups available: configuration-old.nix, configuration-original.nix
 
+- Milestone 10: Laptop Migration ✅ COMPLETE (all 4 tasks, 1 commit)
+  - ✅ Task 10.1: Created role-based laptop configuration (385 lines, -31% from 276)
+  - ✅ Task 10.2: Fixed 2 compatibility issues:
+    * Wayland enable conflict (added lib.mkForce for NVIDIA X11)
+    * User configuration incomplete (added isNormalUser, description)
+  - ✅ Task 10.3: Configuration switched to new architecture
+  - ✅ Task 10.4: Build successful, ready for deployment
+    * No shared/common.nix import (uses laptop profile)
+    * Proper GNOME, package, and hardware configuration
+    * Backups available: configuration-old.nix, configuration-original.nix
+
 **Next:**
-- 🎯 Milestone 10: Laptop Migration (4 tasks)
-  - Migrate laptop host to role-based configuration
-  - Apply lessons learned from desktop migration
-  - Test laptop-specific features (battery, power management)
+- 🎯 Milestone 11: Cleanup (4 tasks)
+  - Remove old configuration files and backups
+  - Delete deprecated shared/common.nix
+  - Remove old monolithic package modules
+  - Clean up any remaining deprecated code
 
 ---
 
