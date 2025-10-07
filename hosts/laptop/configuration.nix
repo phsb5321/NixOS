@@ -80,6 +80,22 @@
     };
   };
 
+  # FortiClient VPN configuration (laptop only)
+  modules.hardware.forticlient = {
+    enable = true;
+    autoStart = false; # Don't auto-connect on boot
+
+    # Example server configuration - update with your actual VPN details
+    serverConfig = {
+      # host = "vpn.example.com";
+      # port = 443;
+      # realm = "";
+    };
+
+    # Optional: Add trusted certificate hash if known
+    # trustedCert = "sha256:xxxxxx";
+  };
+
   # Package configuration with laptop optimizations
   modules.packages = {
     enable = true;
