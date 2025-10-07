@@ -72,7 +72,6 @@
 
   # Package configuration with laptop optimizations
   modules.packages = {
-    enable = true;
     browsers.enable = true;
     development.enable = true;
     utilities.enable = true;
@@ -80,9 +79,10 @@
     media.enable = true;
     audioVideo.enable = true;
     gaming.enable = true; # Enable for Steam integration
+  };
 
-    # Additional laptop-specific packages
-    extraPackages = with pkgs; [
+  # Additional laptop-specific packages
+  environment.systemPackages = with pkgs; [
       # Development tools for workstation variant
       insomnia
       mongodb-compass
@@ -121,7 +121,6 @@
       nvidia-system-monitor-qt
       nvtopPackages.full
     ];
-  };
 
   # Enable GNOME desktop
   modules.desktop.gnome = {
