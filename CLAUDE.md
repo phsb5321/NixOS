@@ -4,12 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## ✅ REFACTORING COMPLETE
+## ✅ REFACTORING COMPLETE & MERGED
 
-**Status:** Complete ✅ (100% - 63/63 tasks)
-**Branch:** `refactor/architecture-v2` (47 commits, ready for merge)
+**Status:** Complete ✅ (100% - 63/63 tasks) - **MERGED TO DEVELOP**
+**Branch:** `develop` (contains all refactoring work)
+**Refactor Branch:** `refactor/architecture-v2` (48 commits, merged via fast-forward)
 **Documentation:** See refactoring docs below
 **Completion Date:** October 7, 2025
+**Merge Date:** October 7, 2025
 
 ### Refactoring Documents
 
@@ -45,28 +47,36 @@ Comprehensive documentation of the completed refactoring:
 
 ```
 main (protected)
-  ├── develop (integration branch)
-  │   ├── host/default (desktop, 75 commits ahead)
-  │   ├── host/laptop (laptop)
-  │   └── refactor/architecture-v2 (COMPLETE - 47 commits, ready for merge)
+  ├── develop (ACTIVE - contains all refactoring work)
+  │   ├── refactor/architecture-v2 (MERGED via fast-forward ✅)
+  │   ├── host/default (desktop - now obsolete, can be archived)
+  │   └── host/laptop (laptop - now obsolete, can be archived)
 ```
 
-### Next Steps
+### Integration Complete ✅
 
-The refactoring is complete and ready for integration:
+The refactoring has been successfully merged to develop:
 
 ✅ All 63 tasks completed across 13 milestones
-✅ Both hosts verified building successfully
-✅ Desktop system running new architecture
-✅ Comprehensive documentation created
+✅ Merged to `develop` via fast-forward (clean merge)
+✅ Both configurations verified building successfully after merge
+✅ Desktop: 445 lines (-14% reduction)
+✅ Laptop: 387 lines (fully self-contained)
+✅ Comprehensive documentation created (5 guides)
 ✅ All deprecated code removed
 ✅ Flake modernized with rich outputs
 
-**Recommended Next Actions:**
-1. Merge `refactor/architecture-v2` → `develop`
-2. Test on both desktop and laptop systems
-3. Merge `develop` → `main` when stable
-4. Archive host-specific branches (now obsolete)
+**Current Status:**
+- `develop` branch contains the new architecture
+- Both host configurations build successfully
+- Desktop system can be updated with: `sudo nixos-rebuild switch --flake .#default`
+- Laptop system can be updated with: `sudo nixos-rebuild switch --flake .#laptop`
+
+**Next Actions:**
+1. ✅ DONE: Merge `refactor/architecture-v2` → `develop`
+2. Test on both desktop and laptop systems (recommended)
+3. Merge `develop` → `main` when verified stable
+4. Archive obsolete branches (`host/default`, `host/laptop`)
 
 ### Refactoring Milestones - All Complete ✅
 
