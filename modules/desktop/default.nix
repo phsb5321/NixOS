@@ -1,5 +1,5 @@
 {
   imports = [
-    ./gnome.nix
+    ./gnome  # New modular GNOME structure
   ];
 }
