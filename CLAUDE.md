@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Cleanup Complete ✅ (76.2% complete)
-**Branch:** `refactor/architecture-v2` (44+ commits pushed)
+**Status:** In Progress - Flake Modernization Complete ✅ (81.0% complete)
+**Branch:** `refactor/architecture-v2` (46+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 7, 2025
 
@@ -80,10 +80,11 @@ main (protected)
 # ✅ Milestone 9 Complete (Desktop Migration - 4 tasks, 3 commits)
 # ✅ Milestone 10 Complete (Laptop Migration - 4 tasks, 1 commit)
 # ✅ Milestone 11 Complete (Cleanup - 4 tasks, 3 commits)
+# ✅ Milestone 12 Complete (Flake Modernization - 3 tasks, 2 commits)
 # Already on refactor/architecture-v2 branch
 
-# 🎯 Next: Milestone 12 - Flake Modernization (3 tasks)
-# Use flake-parts, improve structure, enhance flake outputs
+# 🎯 Next: Milestone 13 - Final Validation (5 tasks)
+# Run tests, verify systems, update docs, validate performance
 ```
 
 **Completed:**
@@ -204,11 +205,25 @@ main (protected)
     * Codebase now clean and maintainable
   - ✅ Verification: Flake check passes for all configurations
 
+- Milestone 12: Flake Modernization ✅ COMPLETE (all 3 tasks, 2 commits)
+  - ✅ Task 12.1: Reviewed current flake structure
+  - ✅ Task 12.2: Improved flake outputs:
+    * Changed formatter to alejandra (better than nixpkgs-fmt)
+    * Added checks output (format-check, lint-check, deadnix-check)
+    * Added apps output (format, update, check-config)
+    * Enhanced devShell with tools and helpful shellHook
+  - ✅ Task 12.3: Documented flake usage:
+    * Created FLAKE_USAGE.md (300+ lines, comprehensive)
+    * Covers all outputs, workflows, CI/CD integration
+    * Includes troubleshooting and advanced usage
+
 **Next:**
-- 🎯 Milestone 12: Flake Modernization (3 tasks)
-  - Modernize flake structure using flake-parts
-  - Improve flake outputs and organization
-  - Enhance development shell configuration
+- 🎯 Milestone 13: Final Validation (5 tasks)
+  - Run comprehensive test suite
+  - Verify all system configurations
+  - Update all documentation
+  - Performance validation
+  - Final code review and cleanup
 
 ---
 
