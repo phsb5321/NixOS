@@ -89,9 +89,7 @@ in
     };
 
     # Add user to networkmanager group for VPN management
-    users.users.${config.users.users.notroot.name or "notroot"} = {
-      extraGroups = [ "networkmanager" ];
-    };
+    users.groups.networkmanager.members = [ "notroot" ];
 
     # Enable required kernel modules
     boot.kernelModules = [ "ppp_async" "ppp_deflate" "ppp_mppe" ];
