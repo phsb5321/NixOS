@@ -131,57 +131,8 @@ in {
       ++ (lib.optionals cfg.extensions.workspaceIndicator [ gnomeExtensions.workspace-indicator ])
       ++ (lib.optionals cfg.extensions.soundOutputChooser [ gnomeExtensions.sound-output-device-chooser ]);
 
-    # dconf settings
-    programs.dconf.profiles.user.databases = lib.mkIf cfg.settings.enable [
-      {
-        lockAll = false;
-        settings = {
-          # Enabled extensions
-          "org/gnome/shell" = {
-            enabled-extensions = lib.flatten [
-              (lib.optional cfg.extensions.appIndicator "appindicatorsupport@rgcjonas.gmail.com")
-              (lib.optional cfg.extensions.dashToDock "dash-to-dock@micxgx.gmail.com")
-              (lib.optional cfg.extensions.userThemes "user-theme@gnome-shell-extensions.gcampax.github.com")
-              (lib.optional cfg.extensions.justPerfection "just-perfection-desktop@just-perfection")
-              (lib.optional (cfg.extensions.vitals || cfg.extensions.productivity) "Vitals@CoreCoding.com")
-              (lib.optional (cfg.extensions.caffeine || cfg.extensions.productivity) "caffeine@patapon.info")
-              (lib.optional (cfg.extensions.clipboard || cfg.extensions.productivity) "clipboard-indicator@tudmotu.com")
-              (lib.optional cfg.extensions.gsconnect "gsconnect@andyholmes.github.io")
-              (lib.optional cfg.extensions.workspaceIndicator "workspace-indicator@gnome-shell-extensions.gcampax.github.com")
-              (lib.optional cfg.extensions.soundOutputChooser "sound-output-device-chooser@kgshank.net")
-            ];
-            favorite-apps = [
-              "org.gnome.Nautilus.desktop"
-              "firefox.desktop"
-              "org.gnome.Terminal.desktop"
-              "org.gnome.TextEditor.desktop"
-            ];
-          };
-
-          # Desktop interface settings
-          "org/gnome/desktop/interface" = {
-            color-scheme = if cfg.settings.darkMode then "prefer-dark" else "default";
-            icon-theme = cfg.theme.iconTheme;
-            cursor-theme = cfg.theme.cursorTheme;
-            cursor-size = lib.gvariant.mkInt32 24;
-            font-name = "Cantarell 11";
-            document-font-name = "Cantarell 11";
-            monospace-font-name = "Source Code Pro 10";
-            enable-animations = cfg.settings.animations;
-            enable-hot-corners = cfg.settings.hotCorners;
-            show-battery-percentage = cfg.settings.batteryPercentage;
-            clock-show-weekday = cfg.settings.weekday;
-          };
-
-          # Window manager settings
-          "org/gnome/mutter" = {
-            edge-tiling = true;
-            dynamic-workspaces = true;
-            workspaces-only-on-primary = false;
-            center-new-windows = true;
-          };
-        };
-      }
-    ];
+    # Note: dconf settings are intentionally minimal at system level
+    # Users should configure GNOME settings through the GUI or home-manager
+    # System-level dconf configuration has been removed to avoid GVariant complexity
   };
 }
