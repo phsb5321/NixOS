@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚧 ACTIVE REFACTORING - IN PROGRESS
 
-**Status:** In Progress - Laptop Migration Complete ✅ (69.8% complete)
-**Branch:** `refactor/architecture-v2` (41+ commits pushed)
+**Status:** In Progress - Cleanup Complete ✅ (76.2% complete)
+**Branch:** `refactor/architecture-v2` (44+ commits pushed)
 **Documentation:** See refactoring docs below
 **Last Updated:** October 7, 2025
 
@@ -78,10 +78,11 @@ main (protected)
 # ✅ Milestone 8 Complete (Secrets - 2 tasks, 1 commit)
 # ✅ Milestone 9 Complete (Desktop Migration - 4 tasks, 3 commits)
 # ✅ Milestone 10 Complete (Laptop Migration - 4 tasks, 1 commit)
+# ✅ Milestone 11 Complete (Cleanup - 4 tasks, 3 commits)
 # Already on refactor/architecture-v2 branch
 
-# 🎯 Next: Milestone 11 - Cleanup (4 tasks)
-# Remove old configs, update imports, clean up backup files
+# 🎯 Next: Milestone 12 - Flake Modernization (3 tasks)
+# Use flake-parts, improve structure, enhance flake outputs
 ```
 
 **Completed:**
@@ -192,12 +193,21 @@ main (protected)
     * Proper GNOME, package, and hardware configuration
     * Backups available: configuration-old.nix, configuration-original.nix
 
+- Milestone 11: Cleanup ✅ COMPLETE (all 4 tasks, 3 commits)
+  - ✅ Task 11.1: Removed 4 backup configuration files
+  - ✅ Task 11.2: Deleted hosts/shared/common.nix directory
+  - ✅ Task 11.3: Removed old monolithic package module (default-old.nix)
+  - ✅ Task 11.4: Cleaned up deprecated code:
+    * Removed old gnome.nix (monolithic GNOME module)
+    * Removed new-default.nix
+    * Codebase now clean and maintainable
+  - ✅ Verification: Flake check passes for all configurations
+
 **Next:**
-- 🎯 Milestone 11: Cleanup (4 tasks)
-  - Remove old configuration files and backups
-  - Delete deprecated shared/common.nix
-  - Remove old monolithic package modules
-  - Clean up any remaining deprecated code
+- 🎯 Milestone 12: Flake Modernization (3 tasks)
+  - Modernize flake structure using flake-parts
+  - Improve flake outputs and organization
+  - Enhance development shell configuration
 
 ---
 
