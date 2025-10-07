@@ -51,12 +51,12 @@ in {
         vulkan-tools
         vulkan-validation-layers
         mesa
-        amdvlk  # AMD's official Vulkan driver
+        # RADV is enabled by default, amdvlk has been deprecated
       ];
 
       extraPackages32 = lib.optionals cfg.gaming (with pkgs.driversi686Linux; [
         mesa
-        amdvlk
+        # RADV is enabled by default, amdvlk has been deprecated
       ]);
     };
 
