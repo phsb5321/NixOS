@@ -1,0 +1,152 @@
+# SSH Configuration for {{ .chezmoi.hostname }}
+# Managed by chezmoi - DO NOT EDIT DIRECTLY
+# Edit in: {{ .chezmoi.sourceDir }}/dot_ssh/config.tmpl
+
+# Common SSH hosts (available on all machines)
+Host github.com
+  User git
+  IdentityFile ~/.ssh/id_rsa.9
+  IdentitiesOnly yes
+
+Host ssh.dev.azure.com
+  User git
+  IdentityFile ~/.ssh/id_rsa.10
+  IdentitiesOnly yes
+
+{{- if .isDesktop }}
+
+# Desktop-specific hosts - Home infrastructure
+Host AvellComputer
+  HostName 192.168.1.28
+  User notroot
+  IdentityFile ~/.ssh/id_rsa
+  IdentitiesOnly yes
+  SetEnv TERM=xterm-256color
+
+Host DebMachine
+  HostName 192.168.1.23
+  User debinha
+  IdentityFile ~/.ssh/id_rsa.4
+  IdentitiesOnly yes
+  SetEnv TERM=xterm-256color
+
+Host ArchServer
+  HostName 192.168.1.24
+  User notroot
+  IdentityFile ~/.ssh/id_rsa.7
+  IdentitiesOnly yes
+
+Host ProxMox.Home301Server
+  HostName 192.168.1.10
+  User root
+  IdentitiesOnly yes
+  IdentityFile ~/.ssh/id_rsa
+  SetEnv TERM=xterm-256color
+
+Host ProxMox.AudioBook
+  HostName 192.168.1.7
+  User notroot
+  IdentityFile ~/.ssh/proxmox_audiobook
+  IdentitiesOnly yes
+  IdentityAgent none
+  SetEnv TERM=xterm-256color
+  ServerAliveInterval 60
+  ServerAliveCountMax 3
+
+# Alternative shorter alias for AudioBook VM
+Host audiobook-vm
+  HostName 192.168.1.7
+  User notroot
+  IdentityFile ~/.ssh/proxmox_audiobook
+  IdentitiesOnly yes
+  IdentityAgent none
+  SetEnv TERM=xterm-256color
+
+Host ProxMox.GlobalSysVM
+  HostName 192.168.1.43
+  User notroot
+  IdentityFile ~/.ssh/id_rsa.2
+  IdentitiesOnly yes
+  SetEnv TERM=xterm-256color
+
+Host ProxMox.Code
+  HostName 192.168.1.53
+  IdentityFile ~/.ssh/id_rsa.3
+  User notroot
+  SetEnv TERM=xterm-256color
+
+Host ProxMox.CasaOS
+  HostName 192.168.1.119
+  User notroot
+  SetEnv TERM=xterm-256color
+
+Host ProxMox.Coolify
+  HostName 192.168.1.110
+  User notroot
+  SetEnv TERM=xterm-256color
+
+# Proxmox VM 105 - Plex Media Server
+Host ProxMox.PlexVM
+    HostName 192.168.1.144
+    User notroot
+    IdentityFile ~/.ssh/proxmox_vm_105
+    IdentitiesOnly yes
+    IdentityAgent none
+    SetEnv TERM=xterm-256color
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+
+# Alternative shorter alias for VM 105
+Host plex-vm
+    HostName 192.168.1.144
+    User notroot
+    IdentityFile ~/.ssh/proxmox_vm_105
+    IdentitiesOnly yes
+    IdentityAgent none
+    SetEnv TERM=xterm-256color
+
+Host 3.238.185.9
+    IdentitiesOnly yes
+
+Host RaspberryPi
+    HostName 192.168.1.124
+    User pi
+    IdentityFile ~/.ssh/id_rsa
+    IdentitiesOnly yes
+    IdentityAgent none
+    SetEnv TERM=xterm-256color
+    AddressFamily inet
+
+# DeliCasa Raspberry Pi Development
+Host DelicasaPi
+    HostName 192.168.1.124
+    User pi
+    IdentityFile ~/.ssh/delicasa_pi_key
+    IdentitiesOnly yes
+    IdentityAgent none
+    SetEnv TERM=xterm-256color
+    AddressFamily inet
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+
+# Alternative shorter alias
+Host pi
+    HostName 192.168.1.124
+    User pi
+    IdentityFile ~/.ssh/delicasa_pi_key
+    IdentitiesOnly yes
+    IdentityAgent none
+    SetEnv TERM=xterm-256color
+    AddressFamily inet
+{{- end }}
+
+{{- if .isLaptop }}
+
+# Laptop-specific hosts - Mobile development
+# Add laptop-specific SSH hosts here as needed
+# Example:
+# Host laptop-specific-server
+#   HostName example.com
+#   User username
+#   IdentityFile ~/.ssh/laptop_key
+{{- end }}

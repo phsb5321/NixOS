@@ -1,0 +1,31 @@
+# cURL configuration for {{ .chezmoi.username }}
+# Managed by chezmoi
+
+# Follow redirects
+location
+
+# Show errors
+show-error
+
+# Show progress bar
+progress-bar
+
+# Resume partial downloads
+continue-at -
+
+# User agent
+user-agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+# Connection timeout (seconds)
+connect-timeout = 30
+
+# Maximum time for the entire operation (seconds)
+max-time = 600
+
+# Retry on transient errors
+retry = 3
+retry-delay = 2
+retry-max-time = 40
+
+# Use compression
+compressed

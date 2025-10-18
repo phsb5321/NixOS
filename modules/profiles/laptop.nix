@@ -84,90 +84,35 @@ in {
     };
 
     # Enable GNOME desktop with laptop optimizations
+    # Note: GNOME configuration now uses new modular system
+    # Extensions are configured individually in host configs
     modules.desktop.gnome = {
       enable = true;
       wayland.enable = true;
-
-      variant = lib.mkDefault (
-        if cfg.variant == "gaming"
-        then "hardware"
-        else if cfg.variant == "ultrabook"
-        then "conservative"
-        else "hardware"
-      );
-
-      # Laptop-specific extensions
-      extensions = {
-        enable = true;
-        list = lib.mkDefault (
-          (lib.optionals (!cfg.gnomeExtensions.minimal) [
-            # Core functionality
-            "dash-to-dock@micxgx.gmail.com"
-            "user-theme@gnome-shell-extensions.gcampax.github.com"
-            "just-perfection-desktop@just-perfection"
-            "appindicatorsupport@rgcjonas.gmail.com"
-
-            # System monitoring
-            "Vitals@CoreCoding.com"
-
-            # Power management
-            "caffeine@patapon.info"
-            "battery-health-charging@maniacx.github.com"
-            "battery-time@alexlebens.github.io"
-          ])
-          ++ (lib.optionals cfg.gnomeExtensions.productivity [
-            # Productivity
-            "forge@jmmaranan.com" # Tiling
-            "clipboard-indicator@tudmotu.com"
-            "fuzzy-app-search@gnome-shell-extensions.Czarlie.gitlab.com"
-            "auto-move-windows@gnome-shell-extensions.gcampax.github.com"
-            "launch-new-instance@gnome-shell-extensions.gcampax.github.com"
-          ])
-          ++ (lib.optionals (cfg.variant == "ultrabook" && cfg.gnomeExtensions.minimal) [
-            # Ultra-minimal for battery life
-            "battery-indicator@jgotti.org"
-          ])
-        );
-      };
     };
 
     # Package selection based on variant
-    modules.packages = {
-      enable = true;
+    # Note: Package configuration now uses new modular system
+    # Packages are configured in host configs per category
+    modules.packages.gaming.enable = lib.mkDefault (cfg.variant == "gaming");
 
-      # Disable heavy features for ultrabooks
-      gaming.enable = lib.mkDefault (cfg.variant == "gaming");
-
-      extraPackages = with pkgs;
-        [
-          # Laptop essentials
-          powertop
-          tlp
-          acpi
-          brightnessctl
-
-          # Variant-specific packages
-        ]
-        ++ lib.optionals (cfg.variant == "gaming") [
-          nvtop
-          mangohud
-          gamemode
-        ]
-        ++ lib.optionals (cfg.variant == "workstation") [
-          docker-compose
-          kubectl
-          terraform
-        ]
-        ++ lib.optionals (cfg.variant == "ultrabook") [
-          # Minimal extra packages for ultrabooks
-        ]
-        ++ lib.optionals cfg.gnomeExtensions.productivity [
-          gnomeExtensions.forge
-          gnomeExtensions.arc-menu
-          gnomeExtensions.paperwm
-          gnomeExtensions.pop-shell
-        ];
-    };
+    environment.systemPackages = with pkgs;
+      [
+        # Laptop essentials
+        powertop
+        tlp
+        acpi
+        brightnessctl
+      ]
+      ++ lib.optionals (cfg.variant == "gaming") [
+        nvtopPackages.full
+        mangohud
+        gamemode
+      ]
+      ++ lib.optionals (cfg.variant == "workstation") [
+        docker-compose
+        kubectl
+      ];
 
     # Core module optimizations for laptops
     modules.core = {
@@ -184,18 +129,18 @@ in {
     };
 
     # Networking optimizations for laptops
-    modules.networking = {
-      firewall = {
-        enable = true;
-        allowPing = lib.mkDefault false; # More secure on public networks
-        openPorts = lib.mkDefault (
-          if cfg.variant == "workstation"
-          then [22 3000 8080]
-          else if cfg.variant == "gaming"
-          then []
-          else [22]
-        );
-      };
+    modules.networking.firewall = {
+      enable = true;
+      developmentPorts = lib.mkDefault (
+        if cfg.variant == "workstation"
+        then [3000 8080]
+        else []
+      );
+      allowedServices = lib.mkDefault (
+        if cfg.variant == "workstation" || cfg.variant == "standard"
+        then ["ssh"]
+        else []
+      );
     };
 
     # System-level optimizations
