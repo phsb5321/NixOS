@@ -19,6 +19,7 @@ in {
     ./pipewire.nix
     ./monitor-audio.nix
     ./document-tools.nix
+    ../hardware/amd-gpu.nix
   ];
 
   options.modules.core = with lib; {
@@ -155,6 +156,13 @@ in {
       };
     };
 
+    # Enable AMD GPU optimizations for RX 5700 XT
+    modules.hardware.amdgpu = {
+      enable = true;
+      model = "navi10";  # RX 5700 XT uses Navi 10
+      powerManagement = true;
+    };
+
     # Enable proper time synchronization for time-sensitive tokens
     services.timesyncd.enable = true;
 
@@ -219,11 +227,11 @@ in {
 
     # SSH configuration
     services.openssh = {
-      enable = true;
+      enable = lib.mkDefault true;
       settings = {
-        PermitRootLogin = "no";
-        PasswordAuthentication = true;
-        KbdInteractiveAuthentication = false;
+        PermitRootLogin = lib.mkDefault "no";
+        PasswordAuthentication = lib.mkDefault true;
+        KbdInteractiveAuthentication = lib.mkDefault false;
       };
     };
 
@@ -272,14 +280,10 @@ in {
       };
     };
 
-    # Basic systemd-resolved configuration (Docker DNS will depend on this)
+    # Basic systemd-resolved configuration (detailed DNS config in host-specific files)
     services.resolved = {
       enable = true;
-      fallbackDns = [
-        "8.8.8.8"
-        "8.8.4.4"
-        "1.1.1.1"
-      ];
+      fallbackDns = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" ];
     };
 
     # Virtualization configuration
@@ -361,7 +365,10 @@ in {
         lazygit
 
         # Remote Desktop & Network Tools
-        remmina
+        remmina # Remote desktop client with VNC, RDP, SSH, SPICE support
+        freerdp3 # Free RDP client (latest version for better compatibility)
+        tigervnc # VNC client and server
+        gnome-connections # GNOME's remote desktop client (alternative)
 
         # Terminals and Shells
         zellij
@@ -379,7 +386,7 @@ in {
         supabase-cli
         # pkgs-unstable.zed-editor # Disabled due to hash mismatch - will re-enable after fix
         pkgs-unstable.ghostty
-        pkgs-unstable.kitty
+        # pkgs-unstable.kitty # Temporarily disabled due to test failures
         stockfish
         chromium
 

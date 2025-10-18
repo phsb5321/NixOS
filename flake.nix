@@ -22,6 +22,18 @@
 
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
+
+    # Modular flake framework
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
+
+    # Secrets management with sops
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -155,10 +167,41 @@
     };
   in {
     # NixOS Configurations - Generated from hosts definition
-    nixosConfigurations = nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts;
+    nixosConfigurations = nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts // {
+      # Compatibility alias for systems with hostname "nixos"
+      nixos = mkNixosSystem hosts.default;
+    };
 
-    # Formatter for each system
-    formatter = forAllSystems (system: (import nixpkgs {inherit system;}).nixpkgs-fmt);
+    # Formatter for each system (using alejandra for better formatting)
+    formatter = forAllSystems (system: (import nixpkgs {inherit system;}).alejandra);
+
+    # Checks for CI/CD validation
+    checks = forAllSystems (
+      system: let
+        pkgs = import nixpkgs {
+          inherit system;
+          config = pkgsConfig;
+        };
+      in {
+        # Format check
+        format-check = pkgs.runCommand "format-check" {} ''
+          ${pkgs.alejandra}/bin/alejandra --check ${./.} > $out 2>&1 || (
+            echo "Formatting issues found. Run 'nix fmt' to fix."
+            exit 1
+          )
+        '';
+
+        # Lint check
+        lint-check = pkgs.runCommand "lint-check" {} ''
+          ${pkgs.statix}/bin/statix check ${./.} > $out 2>&1
+        '';
+
+        # Dead code check
+        deadnix-check = pkgs.runCommand "deadnix-check" {} ''
+          ${pkgs.deadnix}/bin/deadnix --fail ${./.} > $out 2>&1
+        '';
+      }
+    );
 
     # Development shells (useful for development)
     devShells = forAllSystems (
@@ -171,10 +214,54 @@
         default = pkgs.mkShell {
           name = "nixos-config";
           buildInputs = with pkgs; [
-            nixpkgs-fmt
+            alejandra # Nix formatter
             statix # Nix linter
             deadnix # Dead code detection
+            nixos-rebuild # System rebuild
+            git # Version control
           ];
+          shellHook = ''
+            echo "NixOS Configuration Development Shell"
+            echo "Available commands:"
+            echo "  alejandra .    - Format Nix files"
+            echo "  statix check . - Lint Nix files"
+            echo "  deadnix .      - Find dead code"
+            echo "  nix flake check - Run all checks"
+          '';
+        };
+      }
+    );
+
+    # Apps for common tasks
+    apps = forAllSystems (
+      system: let
+        pkgs = import nixpkgs {
+          inherit system;
+          config = pkgsConfig;
+        };
+      in {
+        # Format all Nix files
+        format = {
+          type = "app";
+          program = "${pkgs.alejandra}/bin/alejandra";
+        };
+
+        # Update flake inputs
+        update = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "update" ''
+            ${pkgs.nix}/bin/nix flake update
+            echo "Flake inputs updated. Review changes with 'git diff flake.lock'"
+          '');
+        };
+
+        # Check configuration
+        check-config = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "check-config" ''
+            echo "Checking NixOS configuration..."
+            ${pkgs.nix}/bin/nix flake check
+          '');
         };
       }
     );
