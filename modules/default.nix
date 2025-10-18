@@ -8,5 +8,9 @@
     ./dotfiles
     ./hardware
     ./profiles
+    ./services
+    ./roles
+    ./gpu
+    ./secrets
   ];
 }

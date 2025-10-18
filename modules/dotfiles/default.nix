@@ -9,7 +9,7 @@ with lib; let
   cfg = config.modules.dotfiles;
 
   # Path to the dotfiles directory within the NixOS project
-  dotfilesPath = "${config.users.users.${cfg.username}.home}/NixOS/dotfiles";
+  dotfilesPath = "${config.users.users.${cfg.username}.home}/${cfg.projectDir}/dotfiles";
 
   # Script to initialize chezmoi with our custom source directory
   initScript = pkgs.writeShellScriptBin "dotfiles-init" ''
@@ -27,6 +27,7 @@ with lib; let
 
         # Path to our dotfiles directory
         DOTFILES_DIR="${dotfilesPath}"
+        USERNAME="${cfg.username}"
 
         if [[ ! -d "$DOTFILES_DIR" ]]; then
             echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
@@ -39,39 +40,42 @@ with lib; let
         mkdir -p ~/.config/chezmoi
 
         # Create chezmoi configuration
-        cat > ~/.config/chezmoi/chezmoi.toml << 'EOF'
-    # Chezmoi configuration for NixOS project
-    # This configures chezmoi to use the dotfiles directory within the project
+        cat > ~/.config/chezmoi/chezmoi.toml <<EOF
+# Chezmoi configuration for NixOS project
+# This configures chezmoi to use the dotfiles directory within the project
 
-    # Set the source directory to our NixOS dotfiles
-    sourceDir = "${dotfilesPath}"
+# Set the source directory to our NixOS dotfiles
+sourceDir = "$DOTFILES_DIR"
 
-    [data]
-        # Hostname for templating
-        hostname = "{{ .chezmoi.hostname }}"
-        # Username for templating
-        username = "{{ .chezmoi.username }}"
-        # OS for templating
-        os = "{{ .chezmoi.os }}"
-        # Architecture for templating
-        arch = "{{ .chezmoi.arch }}"
+[data]
+    # Hostname for templating
+    hostname = "{{ .chezmoi.hostname }}"
+    # Username for templating
+    username = "{{ .chezmoi.username }}"
+    # OS for templating
+    os = "{{ .chezmoi.os }}"
+    # Architecture for templating
+    arch = "{{ .chezmoi.arch }}"
+    # Host type detection
+    isDesktop = {{ if eq .chezmoi.hostname "nixos" }}true{{ else }}false{{ end }}
+    isLaptop = {{ if eq .chezmoi.hostname "laptop" }}true{{ else }}false{{ end }}
 
-    [git]
-        # Auto-commit changes to dotfiles
-        autoCommit = true
-        # Auto-push changes (set to false initially for safety)
-        autoPush = false
+[git]
+    # Auto-commit changes to dotfiles
+    autoCommit = true
+    # Auto-push changes (set to false initially for safety)
+    autoPush = false
 
-    [edit]
-        # Use VS Code as the default editor for dotfiles
-        command = "code"
-        args = ["--wait"]
+[edit]
+    # Use VS Code as the default editor for dotfiles
+    command = "code"
+    args = ["--wait"]
 
-    [diff]
-        # Use VS Code for diffs
-        command = "code"
-        args = ["--wait", "--diff"]
-    EOF
+[diff]
+    # Use VS Code for diffs
+    command = "code"
+    args = ["--wait", "--diff"]
+EOF
 
         # Apply dotfiles
         echo "🔄 Applying dotfiles..."
@@ -230,7 +234,104 @@ with lib; let
     echo "📋 Currently managed files:"
     chezmoi managed --source "$DOTFILES_DIR" 2>/dev/null || echo "No files managed yet"
   '';
+
+  # Script to validate dotfiles before applying
+  checkScript = pkgs.writeShellScriptBin "dotfiles-check" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    DOTFILES_DIR="${dotfilesPath}"
+
+    if [[ ! -d "$DOTFILES_DIR" ]]; then
+        echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+        exit 1
+    fi
+
+    echo "🔍 Validating Dotfiles"
+    echo "====================="
+    echo ""
+
+    # Track validation status
+    VALIDATION_FAILED=0
+
+    # Check SSH config syntax
+    echo "📝 Checking SSH config..."
+    SSH_CONFIG="$HOME/.ssh/config"
+    if [[ -f "$SSH_CONFIG" ]]; then
+        if ssh -G test >/dev/null 2>&1; then
+            echo "✅ SSH config is valid"
+        else
+            echo "❌ SSH config has syntax errors"
+            VALIDATION_FAILED=1
+        fi
+    else
+        echo "⚠️  No SSH config found (will be created on apply)"
+    fi
+    echo ""
+
+    # Check Git config syntax
+    echo "📝 Checking Git config..."
+    GIT_CONFIG="$HOME/.gitconfig"
+    if [[ -f "$GIT_CONFIG" ]]; then
+        if git config --file "$GIT_CONFIG" --list >/dev/null 2>&1; then
+            echo "✅ Git config is valid"
+            # Check for user.email
+            if git config --file "$GIT_CONFIG" user.email >/dev/null 2>&1; then
+                EMAIL=$(git config --file "$GIT_CONFIG" user.email)
+                echo "   Email: $EMAIL"
+            else
+                echo "⚠️  No user.email configured"
+            fi
+        else
+            echo "❌ Git config has syntax errors"
+            VALIDATION_FAILED=1
+        fi
+    else
+        echo "⚠️  No Git config found (will be created on apply)"
+    fi
+    echo ""
+
+    # Check for sensitive data in dotfiles
+    echo "🔒 Checking for sensitive data..."
+    SENSITIVE_PATTERNS="password|secret|api[_-]?key|private[_-]?key|token"
+    if grep -rE -i "$SENSITIVE_PATTERNS" "$DOTFILES_DIR" 2>/dev/null | grep -v ".tmpl" | grep -v "Binary file"; then
+        echo "❌ Found potential sensitive data in dotfiles (see above)"
+        echo "   Consider using chezmoi encryption for sensitive files"
+        VALIDATION_FAILED=1
+    else
+        echo "✅ No obvious sensitive data found"
+    fi
+    echo ""
+
+    # Check for hardcoded paths
+    echo "🔍 Checking for hardcoded paths..."
+    HARDCODED_PATTERNS="/home/notroot"
+    if grep -r "$HARDCODED_PATTERNS" "$DOTFILES_DIR" --exclude="*.tmpl" 2>/dev/null; then
+        echo "⚠️  Found hardcoded paths (see above)"
+        echo "   Consider using templates with {{ .chezmoi.homeDir }}"
+    else
+        echo "✅ No hardcoded paths found"
+    fi
+    echo ""
+
+    # Summary
+    echo "📊 Validation Summary"
+    echo "===================="
+    if [[ $VALIDATION_FAILED -eq 0 ]]; then
+        echo "✅ All validations passed"
+        echo "💡 You can safely run 'dotfiles-apply'"
+        exit 0
+    else
+        echo "❌ Some validations failed"
+        echo "⚠️  Fix the issues before applying dotfiles"
+        exit 1
+    fi
+  '';
 in {
+  imports = [
+    ./auto-sync.nix
+  ];
+
   options.modules.dotfiles = {
     enable = mkEnableOption "dotfiles management with chezmoi";
 
@@ -240,10 +341,22 @@ in {
       description = "Username for dotfiles management";
     };
 
+    projectDir = mkOption {
+      type = types.str;
+      default = "NixOS";
+      description = "Name of NixOS project directory in user home";
+    };
+
     enableHelperScripts = mkOption {
       type = types.bool;
       default = true;
       description = "Install helper scripts for dotfiles management";
+    };
+
+    secretsIntegration = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Enable secrets integration with chezmoi templates";
     };
   };
 
@@ -260,6 +373,7 @@ in {
         addScript
         statusScript
         syncScript
+        checkScript
       ]);
 
     # Create shell aliases for convenience
@@ -267,6 +381,16 @@ in {
       "dotfiles" = "dotfiles-status";
       "dotfiles-diff" = "dotfiles-apply --diff";
       "dotfiles-info" = "dotfiles-sync";
+    };
+
+    # Expose secrets as environment variables for chezmoi templates
+    # This allows templates to use: {{ env "CHEZMOI_SECRET_NAME" }}
+    # Secrets will be available when sops-nix is configured
+    environment.sessionVariables = mkIf cfg.secretsIntegration {
+      # These paths will be populated by sops-nix when configured
+      # Example: CHEZMOI_GITHUB_TOKEN points to decrypted secret
+      # Add your secrets here following the pattern:
+      # CHEZMOI_SECRET_NAME = "/run/secrets/secret-name";
     };
   };
 }

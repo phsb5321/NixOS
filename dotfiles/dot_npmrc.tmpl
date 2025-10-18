@@ -1,0 +1,28 @@
+# NPM Configuration for {{ .chezmoi.hostname }}
+# Managed by chezmoi - DO NOT EDIT DIRECTLY
+
+# Registry configuration
+registry=https://registry.npmjs.org/
+
+{{- if env "CHEZMOI_NPM_TOKEN" }}
+# NPM authentication token (from sops-nix secrets)
+//registry.npmjs.org/:_authToken={{ env "CHEZMOI_NPM_TOKEN" }}
+{{- else }}
+# NPM token not configured
+# To enable: Set up sops-nix and configure CHEZMOI_NPM_TOKEN in dotfiles module
+{{- end }}
+
+# Cache and behavior settings
+save-exact=true
+package-lock=true
+save-prefix=""
+
+# Performance
+prefer-offline=true
+{{- if .isDesktop }}
+# Desktop: More aggressive caching
+cache-min=604800
+{{- else }}
+# Laptop: Less caching to save disk space
+cache-min=86400
+{{- end }}
