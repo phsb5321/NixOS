@@ -1,8 +1,8 @@
 # ~/NixOS/shells/JavaScript.nix
-# Use NixOS 25 stable for all packages
+# Use NixOS unstable for latest packages
 {
   pkgs ?
-    import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {
+    import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
       config.allowUnfree = true;
     },
 }: let
