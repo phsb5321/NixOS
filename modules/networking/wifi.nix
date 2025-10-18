@@ -75,8 +75,9 @@ in {
           ssid=${name}
 
           [wifi-security]
-          key-mgmt=wpa-psk
+          key-mgmt=wpa-psk;sae
           psk=${network.psk}
+          ieee80211w=1
 
           [ipv4]
           method=auto

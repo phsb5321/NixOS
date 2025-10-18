@@ -228,9 +228,8 @@
     enable = true;
     enablePowersave = true; # For laptop battery life
     networks = {
-      # Add your WiFi network here
-      # Replace "YourNetworkName" with your actual WiFi network name (SSID)
-      "YourNetworkName" = {
+      # WiFi network configuration
+      "LIVE TIM_4122" = {
         psk = "123";
         priority = 100;
         autoConnect = true;
