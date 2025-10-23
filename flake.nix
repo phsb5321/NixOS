@@ -146,13 +146,13 @@
         # Uses stable nixpkgs by default
       };
 
-      # Example: server using stable for reliability
-      # server = {
-      #   system = "x86_64-linux";
-      #   hostname = "nixos-server";
-      #   configPath = "server";
-      #   nixpkgsInput = nixpkgs;  # Explicitly stable
-      # };
+      # Server using stable for reliability
+      server = {
+        system = "x86_64-linux";
+        hostname = "nixos-server";
+        configPath = "server";
+        nixpkgsInput = nixpkgs;  # Explicitly stable
+      };
     };
   in {
     # NixOS Configurations - Generated from hosts definition
