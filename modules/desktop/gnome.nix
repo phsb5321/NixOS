@@ -6,6 +6,9 @@
   pkgs,
   ...
 }: {
+  imports = [
+    ./gnome-extensions.nix
+  ];
   options.modules.desktop.gnome = {
     enable = lib.mkEnableOption "GNOME desktop environment";
 
@@ -18,19 +21,8 @@
 
       list = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        default = [
-          "dash-to-dock@micxgx.gmail.com"
-          "user-theme@gnome-shell-extensions.gcampax.github.com"
-          "just-perfection-desktop@just-perfection"
-          "appindicatorsupport@rgcjonas.gmail.com"
-          "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
-          "Vitals@CoreCoding.com"
-          "caffeine@patapon.info"
-          "clipboard-indicator@tudmotu.com"
-          "gsconnect@andyholmes.github.io"
-          "sound-output-device-chooser@kgshank.net"
-        ];
-        description = "List of GNOME Shell extensions to enable";
+        default = [];
+        description = "List of GNOME Shell extensions to enable (automatically populated by gnome-extensions module)";
       };
     };
 
@@ -175,21 +167,8 @@
         adwaita-icon-theme
         gnome-themes-extra
         gtk-engine-murrine
-      ]
-      ++ lib.optionals config.modules.desktop.gnome.extensions.enable [
-        # System tray support
-        gnomeExtensions.appindicator
-        # Extensions
-        gnomeExtensions.dash-to-dock
-        gnomeExtensions.user-themes
-        gnomeExtensions.just-perfection
-        gnomeExtensions.vitals
-        gnomeExtensions.caffeine
-        gnomeExtensions.clipboard-indicator
-        gnomeExtensions.gsconnect
-        gnomeExtensions.workspace-indicator
-        gnomeExtensions.sound-output-device-chooser
       ];
+      # Extension packages are now managed by the gnome-extensions module
 
     # Extension configuration
     programs.dconf.profiles.user.databases = lib.mkIf config.modules.desktop.gnome.extensions.enable [

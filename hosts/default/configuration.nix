@@ -77,6 +77,24 @@ in {
     wayland.enable = true; # NixOS 25.11+ only supports Wayland
   };
 
+  # Customize GNOME extensions for desktop host
+  # All basic extensions are enabled by default via shared configuration
+  # Add desktop-specific extensions here if needed
+  modules.desktop.gnomeExtensions = {
+    # Example: disable visual effects on desktop for performance
+    # visual.enable = false;
+    
+    # Example: add desktop-specific extensions
+    # extraExtensions = {
+    #   packages = with pkgs; [
+    #     gnomeExtensions.some-desktop-specific-extension
+    #   ];
+    #   list = [
+    #     "some-extension@example.com"
+    #   ];
+    # };
+  };
+
   # Boot configuration with variants
   boot = {
     # Temporary files and kernel optimization

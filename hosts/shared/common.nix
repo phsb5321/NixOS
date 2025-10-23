@@ -28,6 +28,9 @@
     enableHelperScripts = true;
   };
 
+  # Enable shared GNOME extensions for all GNOME hosts
+  modules.desktop.gnomeExtensions.enable = true;
+
   # Core configuration
   modules.core = {
     enable = true;
@@ -64,35 +67,7 @@
       # Multimedia
       celluloid # Modern video player
 
-      # Essential GNOME extensions - Core functionality
-      gnomeExtensions.dash-to-dock
-      gnomeExtensions.user-themes
-      gnomeExtensions.just-perfection
-
-      # System monitoring extensions
-      gnomeExtensions.vitals # Primary system monitor with temperature, CPU, network, storage
-      gnomeExtensions.system-monitor-next # Additional system monitor with graphs
-
-      # Productivity and customization extensions
-      gnomeExtensions.caffeine # Prevent screen lock
-      gnomeExtensions.appindicator # System tray support - required for many apps
-      gnomeExtensions.blur-my-shell # Modern blur effects
-      gnomeExtensions.clipboard-indicator # Clipboard manager
-      gnomeExtensions.gsconnect # Phone integration (KDE Connect)
-
-      # Workspace and window management
-      gnomeExtensions.workspace-indicator # Better workspace indicator
-      gnomeExtensions.advanced-alttab-window-switcher # Enhanced Alt+Tab
-
-      # Quick access and navigation
-      gnomeExtensions.places-status-indicator # Quick access to bookmarks
-      gnomeExtensions.removable-drive-menu # USB drive management
-      gnomeExtensions.sound-output-device-chooser # Audio device switching
-
-      # Additional useful extensions
-      gnomeExtensions.panel-workspace-scroll # Scroll on panel to switch workspaces
-      gnomeExtensions.auto-move-windows # Remember window positions per workspace
-      gnomeExtensions.launch-new-instance
+      # GNOME Extensions are now managed by the shared gnome-extensions module
       # Essential system packages for desktop functionality
       xdg-utils
       glib
