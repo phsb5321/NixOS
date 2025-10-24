@@ -63,10 +63,30 @@
         minor = builtins.elemAt versionParts 1;
       in "${major}.${minor}";
 
-      # Create package sets
+      # Create package sets with Qt6 workaround overlay
       pkgs = import nixpkgsInput {
         inherit system;
         config = pkgsConfig;
+        overlays = [
+          # Overlay to work around qgnomeplatform Qt6 build issues
+          (final: prev: {
+            qgnomeplatform = final.stdenv.mkDerivation {
+              pname = "qgnomeplatform-stub";
+              version = "0.8.4-stub";
+              src = final.writeText "empty" "";
+              dontUnpack = true;
+              buildPhase = "true";
+              installPhase = ''
+                mkdir -p $out/lib/qt-6/plugins/platforms
+                touch $out/lib/qt-6/plugins/platforms/.keep
+              '';
+              meta = {
+                description = "Stub package to work around Qt6 GuiPrivate build issues";
+                platforms = final.lib.platforms.linux;
+              };
+            };
+          })
+        ];
       };
 
       pkgs-unstable = import nixpkgs-unstable {
