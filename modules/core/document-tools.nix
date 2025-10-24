@@ -242,7 +242,7 @@ in {
 
               # LaTeX editors and IDEs
               pkgs.texstudio # Comprehensive LaTeX IDE
-              pkgs.texmaker # Cross-platform LaTeX editor
+              # pkgs.texmaker # Cross-platform LaTeX editor - temporarily disabled due to Qt6 build issues
               pkgs.kile # KDE LaTeX editor
               pkgs.lyx # WYSIWYM document processor
 

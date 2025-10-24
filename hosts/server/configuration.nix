@@ -57,11 +57,17 @@
     QT_QPA_PLATFORM = lib.mkForce "xcb";
   };
 
-  # Enable X server with VM-optimized drivers
+  # X server configuration for VM-optimized drivers and keyboard
   services.xserver = {
     enable = true;
     # QXL is optimal for KVM/QEMU VMs, fallback to modesetting
     videoDrivers = lib.mkForce ["qxl" "modesetting"];
+
+    # Configure keymap to match original config
+    xkb = {
+      layout = "br";
+      variant = lib.mkForce "";
+    };
   };
 
   # Bootloader - GRUB for BIOS systems
@@ -78,20 +84,28 @@
   # Enable Docker
   virtualisation.docker.enable = true;
 
-  # Enable automatic login for the user
+  # Configure console keymap to match original config
+  console.keyMap = lib.mkForce "br-abnt2";
+
+  # Enable automatic login for the user (matching original config)
   services.displayManager.autoLogin.enable = true;
   services.displayManager.autoLogin.user = "notroot";
 
-  # Workaround for GNOME autologin
+  # Workaround for GNOME autologin (from original config)
   systemd.services."getty@tty1".enable = false;
   systemd.services."autovt@tty1".enable = false;
 
-  # Enable ALL desktop packages for full desktop experience
+  # Exclude problematic packages from GNOME to work around Qt6 build issues
+  environment.gnome.excludePackages = with pkgs; [
+    qgnomeplatform  # Exclude the broken Qt6 package
+  ];
+
+  # Enable selected desktop packages (temporarily reduced due to Qt6 build issues)
   modules.packages = {
     browsers.enable = lib.mkForce true;
-    media.enable = lib.mkForce true;
-    gaming.enable = lib.mkForce true;
-    audioVideo.enable = lib.mkForce true;
+    media.enable = lib.mkForce true; # Re-enable with Qt6 workaround
+    gaming.enable = lib.mkForce false; # Keep disabled for server
+    audioVideo.enable = lib.mkForce true; # Re-enable with Qt6 workaround
 
     # Server-specific monitoring packages
     extraPackages = with pkgs; [

@@ -61,8 +61,8 @@ in {
     programs.zsh = mkIf cfg.zsh.enable {
       enable = true;
       enableCompletion = true;
-      autosuggestions.enable = true;
-      syntaxHighlighting.enable = true;
+      autosuggestions.enable = cfg.zsh.plugins.autosuggestions;
+      syntaxHighlighting.enable = false; # Disabled - manual loading in .zshrc to avoid conflicts
 
       # ZSH configuration that applies system-wide
       ohMyZsh = mkIf cfg.zsh.ohMyZsh.enable {
