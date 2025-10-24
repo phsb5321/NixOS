@@ -22,6 +22,26 @@
     };
   };
 
+  # Enable shell configuration
+  modules.shell = {
+    enable = true;
+    zsh = {
+      enable = true;
+      ohMyZsh.enable = true;
+      powerlevel10k.enable = true;
+      plugins = {
+        autosuggestions = true;
+        syntaxHighlighting = true;
+        youShouldUse = true;
+        fastSyntaxHighlighting = false;
+      };
+      modernTools = {
+        enable = true;
+        zoxide = true;
+      };
+    };
+  };
+
   # Enable dotfiles management
   modules.dotfiles = {
     enable = true;
@@ -195,9 +215,8 @@
     GNOME_SHELL_DISABLE_HARDWARE_ACCELERATION = lib.mkDefault "0";
   };
 
-  # User configuration
+  # User configuration (shell is configured via shell module)
   users = {
-    defaultUserShell = pkgs.zsh;
     users.notroot = {
       isNormalUser = true;
       description = "Pedro Balbino";
@@ -289,9 +308,8 @@
     thermald.enable = true;
   };
 
-  # Programs
+  # Programs (shell programs configured via shell module)
   programs = {
-    zsh.enable = true;
     nix-ld.enable = true;
     dconf.enable = true;
     thunderbird.enable = true;
