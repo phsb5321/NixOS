@@ -353,36 +353,21 @@ in {
         htop
         cmatrix
 
-        # Development Tools
+        # Basic Development Tools (main dev tools are in packages module)
         git
-        gh
-        gcc
-        stow
         xclip
-        lazygit
 
         # Remote Desktop & Network Tools
         remmina
 
-        # Terminals and Shells
-        zellij
+        # Core Network Tools
         sshfs
 
-        # Development
-        elixir
-        nodejs_22
-        go
-        terraform
-        elixir-ls
-        # nosql-workbench  # Temporarily disabled due to download issues
-        deno
+        # Core Development Tools (language-specific tools are in packages module)
         postgresql
         supabase-cli
-        # pkgs-unstable.zed-editor # Disabled due to hash mismatch - will re-enable after fix
         pkgs-unstable.ghostty
         pkgs-unstable.kitty
-        stockfish
-        chromium
 
         # Nix Tools
         alejandra
