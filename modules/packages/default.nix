@@ -9,7 +9,6 @@
 }:
 with lib; let
   cfg = config.modules.packages;
-  
 in {
   options.modules.packages = {
     enable = mkEnableOption "shared packages module";
@@ -50,7 +49,10 @@ in {
           rustc # Rust compiler
           cargo # Rust package manager
           go # Go programming language
+          elixir # Elixir dynamic programming language
+          deno # TypeScript runtime
           openjdk # OpenJDK Java runtime
+          terraform # Infrastructure as code
 
           # Development tools and compilers
           android-tools # Android development tools
@@ -62,6 +64,7 @@ in {
           ninja # Small build system with focus on speed
           pkg-config # Package configuration tool
           mermaid-cli # Mermaid CLI for generating diagrams
+          stockfish # Chess engine for development/testing
 
           # Language servers for Zed Editor
           nixd # Nix language server
@@ -80,6 +83,7 @@ in {
           pyright # Python language server
           ruff # Python linter and formatter
           black # Python code formatter
+          elixir-ls # Elixir language server
 
           # Dotfiles management
           chezmoi # Manage your dotfiles across multiple machines
@@ -92,6 +96,7 @@ in {
           lazygit # Simple terminal UI for git commands
           # gitui # Terminal UI for git - temporarily disabled due to compilation issues
           delta # Syntax-highlighting pager for git
+          stow # Symlink farm manager for dotfiles
 
           # Modern development utilities
           typst # Modern typesetting system
@@ -263,50 +268,38 @@ in {
       };
     };
 
-    # Terminal and shell tools (migrated from home-manager)
+    # Terminal applications and tools (shell config moved to shell module)
     terminal = {
-      enable = mkEnableOption "terminal and shell tools";
+      enable = mkEnableOption "terminal applications and tools";
       packages = mkOption {
         type = types.listOf types.package;
         default = with pkgs; [
-          # Fonts
+          # Fonts for terminal/desktop use
           nerd-fonts.jetbrains-mono
           noto-fonts-emoji
           noto-fonts
           noto-fonts-cjk-sans
 
-          # Shell and Terminal
-          zsh
-          oh-my-zsh # ZSH framework
-          zsh-powerlevel10k # Powerlevel10k theme
-          starship # Cross-shell prompt (alternative)
+          # Terminal applications
+          starship # Cross-shell prompt (alternative to p10k)
           grc # Generic colorizer
-          eza # Modern ls replacement
-          bat # Modern cat replacement
           vivid # LS_COLORS generator
-          zsh-syntax-highlighting
-          zsh-autosuggestions
-          zsh-you-should-use
-          zsh-fast-syntax-highlighting
-
-          # Development Tools (basic ones not covered in development packages)
+          neovim # Text editor
           ffmpeg # Media processing tool
-          zoxide # Smart directory jumper
-          neovim # Text editor (replaces nixvim)
 
-          # Applications (from home-manager)
-          yazi-unwrapped
-          texlive.combined.scheme-full
-          dbeaver-bin
-          amberol
-          remmina
-          obsidian
-          d2
-          ngrok
-          zellij
-          # vscode removed from here as it's already in development packages
+          # Applications
+          yazi-unwrapped # File manager
+          texlive.combined.scheme-full # LaTeX distribution
+          dbeaver-bin # Database management
+          amberol # Music player
+          remmina # Remote desktop
+          obsidian # Note-taking
+          d2 # Diagram scripting language
+          ngrok # Secure tunnels
+          zellij # Terminal multiplexer
+          chromium # Chromium browser for development
         ];
-        description = "List of terminal and shell packages to install";
+        description = "List of terminal applications and tools to install";
       };
     };
 
