@@ -333,7 +333,7 @@ in {
       # Memory analysis
       valgrind
       heaptrack
-      massif-visualizer
+      # massif-visualizer # Temporarily disabled due to build issues
 
       # Disk utilities
       ncdu
