@@ -66,7 +66,7 @@
       enable = true;
       wayland = config.modules.desktop.gnome.wayland.enable;
     };
-    
+
     services.desktopManager.gnome.enable = true;
 
     # Comprehensive XDG Desktop Portal configuration for Bruno file dialogs
@@ -78,14 +78,14 @@
       ];
       config = {
         common = {
-          default = [ "gnome" ];
-          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-          "org.freedesktop.impl.portal.Print" = [ "gtk" ];
+          default = ["gnome"];
+          "org.freedesktop.impl.portal.FileChooser" = ["gtk"];
+          "org.freedesktop.impl.portal.Print" = ["gtk"];
         };
         gnome = {
-          default = [ "gnome" "gtk" ];
-          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-          "org.freedesktop.impl.portal.Print" = [ "gtk" ];
+          default = ["gnome" "gtk"];
+          "org.freedesktop.impl.portal.FileChooser" = ["gtk"];
+          "org.freedesktop.impl.portal.Print" = ["gtk"];
         };
       };
     };
@@ -123,15 +123,15 @@
       NIXOS_OZONE_WL = "1";
       XDG_SESSION_TYPE = "wayland";
       XDG_CURRENT_DESKTOP = "GNOME";
-      
+
       # Portal support for file dialogs (crucial for Bruno)
       GTK_USE_PORTAL = "1";
-      
+
       # Wayland display configuration
       GDK_BACKEND = "wayland,x11";
       QT_QPA_PLATFORM = "wayland;xcb";
       MOZ_ENABLE_WAYLAND = "1";
-      
+
       # Theme configuration
       XCURSOR_THEME = config.modules.desktop.gnome.theme.cursorTheme;
       XCURSOR_SIZE = "24";
@@ -145,30 +145,29 @@
     '';
 
     # Core GNOME packages
-    environment.systemPackages = with pkgs;
-      [
-        # Essential GNOME packages
-        gnome-session
-        gnome-settings-daemon
-        gnome-control-center
-        gnome-tweaks
-        gnome-shell
+    environment.systemPackages = with pkgs; [
+      # Essential GNOME packages
+      gnome-session
+      gnome-settings-daemon
+      gnome-control-center
+      gnome-tweaks
+      gnome-shell
 
-        # GNOME applications
-        gnome-terminal
-        gnome-text-editor
-        nautilus
-        firefox
+      # GNOME applications
+      gnome-terminal
+      gnome-text-editor
+      nautilus
+      firefox
 
-        # Theme packages
-        arc-theme
-        papirus-icon-theme
-        bibata-cursors
-        adwaita-icon-theme
-        gnome-themes-extra
-        gtk-engine-murrine
-      ];
-      # Extension packages are now managed by the gnome-extensions module
+      # Theme packages
+      arc-theme
+      papirus-icon-theme
+      bibata-cursors
+      adwaita-icon-theme
+      gnome-themes-extra
+      gtk-engine-murrine
+    ];
+    # Extension packages are now managed by the gnome-extensions module
 
     # Extension configuration
     programs.dconf.profiles.user.databases = lib.mkIf config.modules.desktop.gnome.extensions.enable [
