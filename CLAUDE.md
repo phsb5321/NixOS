@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `./user-scripts/nixswitch` - Modern TUI-based rebuild script with auto-host detection, parallel processing, and error handling
 - `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop host  
 - `sudo nixos-rebuild switch --flake .#laptop` - Manual rebuild for laptop host
+- `sudo nixos-rebuild switch --flake .#server` - Manual rebuild for server host
 - `sudo nixos-rebuild test --flake .` - Test configuration without switching
 - `sudo nixos-rebuild build --flake .` - Build without switching
 
@@ -23,6 +24,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `nix flake check` - Validate flake syntax and configuration
 - `nix build .#nixosConfigurations.default.config.system.build.toplevel` - Build system configuration
 - `alejandra .` - Format Nix code
+- `nixpkgs-fmt .` - Alternative Nix formatter
+- `nix develop` - Enter development shell with linting tools (statix, deadnix)
 
 ### Dotfiles Management (chezmoi)
 - `dotfiles-init` - Initialize dotfiles management
@@ -68,8 +71,9 @@ Categorical package management with per-host enable/disable:
 - **terminal**: Shell tools, fonts, terminal applications
 
 #### Host Configurations
-- **default** (desktop): Gaming enabled, AMD GPU optimization, full development setup
-- **laptop**: Gaming disabled, Intel graphics, minimal package set, Tailscale enabled
+- **default** (desktop): Gaming enabled, AMD GPU optimization, full development setup, uses nixpkgs-unstable
+- **laptop**: Gaming disabled, Intel graphics, minimal package set, Tailscale enabled, uses stable nixpkgs
+- **server**: Minimal configuration, uses stable nixpkgs for reliability
 
 ### GPU Variants System
 The desktop host supports multiple GPU configurations:
@@ -83,6 +87,14 @@ The desktop host supports multiple GPU configurations:
 - Development tools integrated into main package modules
 - Language servers pre-configured for Zed editor
 
+### Shell Configuration (`modules/shell/`)
+- **Centralized ZSH Management**: All shell configuration is handled by the dedicated shell module
+- **PowerLevel10k Theme**: Properly configured with instant prompt support and Nix store paths
+- **Plugin System**: Modular plugin configuration (autosuggestions, syntax highlighting, you-should-use)
+- **Modern Tools**: Integrated modern CLI replacements (eza, bat, fd, ripgrep, zoxide, etc.)
+- **Per-Host Customization**: Shell features can be enabled/disabled per host
+- **Clean Dotfiles**: Separated `.zshenv` (environment) from `.zshrc` (interactive configuration)
+
 ### Key Design Principles
 1. **DRY Configuration**: Shared packages prevent duplication between hosts
 2. **Modular Architecture**: Each system area is independently configurable  
@@ -94,9 +106,11 @@ The desktop host supports multiple GPU configurations:
 
 ### Package Management
 - Uses both nixpkgs (stable) and nixpkgs-unstable (latest) inputs
+- Desktop uses nixpkgs-unstable for latest packages, laptop/server use stable
 - Packages are categorized and can be enabled/disabled per host
 - Add new categories in `modules/packages/default.nix` following existing patterns
 - Host-specific packages go in `extraPackages` array
+- Additional inputs: firefox-nightly, zen-browser, flake-utils
 
 ### Hardware Configuration  
 - Desktop uses AMD GPU with performance optimizations
