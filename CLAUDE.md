@@ -5,12 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Common Development Commands
 
 ### NixOS Rebuilds
-- `./user-scripts/nixswitch` - Modern TUI-based rebuild script with auto-host detection, parallel processing, and error handling
+- `./user-scripts/nixswitch server` - Modern TUI-based rebuild script for server host (RECOMMENDED)
+- `sudo nixos-rebuild switch --flake .#server` - Manual rebuild for server host (DEFAULT HOST)
 - `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop host  
 - `sudo nixos-rebuild switch --flake .#laptop` - Manual rebuild for laptop host
-- `sudo nixos-rebuild switch --flake .#server` - Manual rebuild for server host
-- `sudo nixos-rebuild test --flake .` - Test configuration without switching
-- `sudo nixos-rebuild build --flake .` - Build without switching
+- `sudo nixos-rebuild test --flake .#server` - Test server configuration without switching
+- `sudo nixos-rebuild build --flake .#server` - Build server configuration without switching
+
+**NOTE: This system is configured as a SERVER HOST. Always use server configuration for deployments.**
 
 ### Development Environments
 - `./user-scripts/nix-shell-selector.sh` - Interactive shell selector with multi-environment support
@@ -71,9 +73,11 @@ Categorical package management with per-host enable/disable:
 - **terminal**: Shell tools, fonts, terminal applications
 
 #### Host Configurations
+- **server**: Minimal configuration, uses stable nixpkgs for reliability (THIS HOST - DEFAULT)
 - **default** (desktop): Gaming enabled, AMD GPU optimization, full development setup, uses nixpkgs-unstable
 - **laptop**: Gaming disabled, Intel graphics, minimal package set, Tailscale enabled, uses stable nixpkgs
-- **server**: Minimal configuration, uses stable nixpkgs for reliability
+
+**IMPORTANT: This system is running as the SERVER host configuration. All rebuilds should target the server configuration.**
 
 ### GPU Variants System
 The desktop host supports multiple GPU configurations:
