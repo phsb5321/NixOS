@@ -100,6 +100,9 @@
     qgnomeplatform  # Exclude the broken Qt6 package
   ];
 
+  # Disable Qt theming to avoid qgnomeplatform Qt6 build issues
+  qt.enable = lib.mkForce false;
+
   # Enable selected desktop packages (temporarily reduced due to Qt6 build issues)
   modules.packages = {
     browsers.enable = lib.mkForce true;
