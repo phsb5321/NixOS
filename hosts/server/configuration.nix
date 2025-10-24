@@ -1,3 +1,5 @@
+# NixOS Server Configuration - Integrated with modular ecosystem
+# Uses X11 mode for VM compatibility but leverages shared modules
 {
   config,
   pkgs,
@@ -6,16 +8,61 @@
   inputs,
   systemVersion,
   hostname,
+  lib,
   ...
 }: {
   imports = [
     ./hardware-configuration.nix
-    ../../modules/core/default.nix
-    ../../modules/packages
+    ../../modules
+    ../shared/common.nix
   ];
 
-  # Server-specific configuration
-  nixpkgs.config.allowUnfree = true;
+  # Host-specific metadata
+  modules.networking.hostName = lib.mkForce hostname;
+
+  # Override shared networking config for server-specific needs
+  modules.networking = {
+    dns = {
+      enableSystemdResolved = lib.mkForce false; # Override for manual DNS
+      enableDNSOverTLS = lib.mkForce false;
+    };
+    firewall.openPorts = [22 3000]; # SSH and development server
+  };
+
+  # Manual DNS configuration for server stability
+  networking = {
+    nameservers = lib.mkForce ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
+    networkmanager.dns = lib.mkForce "none";
+  };
+
+  # Disable systemd-resolved to avoid conflicts
+  services.resolved.enable = lib.mkForce false;
+
+  # GNOME Desktop Environment - X11 mode for VM compatibility
+  modules.desktop.gnome = {
+    enable = true;
+    variant = "hardware";
+    wayland.enable = false; # Use X11 for better VM compatibility
+  };
+
+  # Force X11 backend for GNOME in VM environment
+  environment.sessionVariables = {
+    # Force GNOME to use X11 backend in VM
+    MUTTER_DEBUG_FORCE_KMS_MODE = "off";
+    MUTTER_DEBUG_FORCE_BACKEND = "x11";
+    # Disable Wayland environment variables from shared config
+    NIXOS_OZONE_WL = lib.mkForce "0";
+    XDG_SESSION_TYPE = lib.mkForce "x11";
+    GDK_BACKEND = lib.mkForce "x11";
+    QT_QPA_PLATFORM = lib.mkForce "xcb";
+  };
+
+  # Enable X server with VM-optimized drivers
+  services.xserver = {
+    enable = true;
+    # QXL is optimal for KVM/QEMU VMs, fallback to modesetting
+    videoDrivers = lib.mkForce ["qxl" "modesetting"];
+  };
 
   # Bootloader - GRUB for BIOS systems
   boot.loader.grub = {
@@ -24,76 +71,29 @@
     useOSProber = true;
   };
 
-  # Networking
-  networking = {
-    hostName = hostname;
-    networkmanager.enable = true;
-    
-    # DNS configuration for servers
-    nameservers = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" ];
-    networkmanager.dns = "none";
-  };
-
-  # Disable systemd-resolved to avoid conflicts
-  services.resolved.enable = false;
-
-  # Time zone
-  time.timeZone = "America/Recife";
-
-  # Internationalization
-  i18n = {
-    defaultLocale = "en_US.UTF-8";
-    extraLocaleSettings = {
-      LC_ADDRESS = "pt_BR.UTF-8";
-      LC_IDENTIFICATION = "pt_BR.UTF-8";
-      LC_MEASUREMENT = "pt_BR.UTF-8";
-      LC_MONETARY = "pt_BR.UTF-8";
-      LC_NAME = "pt_BR.UTF-8";
-      LC_NUMERIC = "pt_BR.UTF-8";
-      LC_PAPER = "pt_BR.UTF-8";
-      LC_TELEPHONE = "pt_BR.UTF-8";
-      LC_TIME = "pt_BR.UTF-8";
-    };
-  };
-
-  # Console configuration
-  console.keyMap = "br-abnt2";
-
-  # User account
-  users.users.notroot = {
-    isNormalUser = true;
-    description = "Pedro Balbino";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
-  };
-
-  # Enable SSH
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = true;
-      PermitRootLogin = "no";
-    };
-  };
+  # VM hardware optimization
+  services.qemuGuest.enable = true;
+  services.spice-vdagentd.enable = true;
 
   # Enable Docker
   virtualisation.docker.enable = true;
 
-  # Enable package management module
-  modules.packages = {
-    enable = true;
-    
-    # Core development tools
-    development.enable = true;
-    utilities.enable = true;
-    terminal.enable = true;
-    
-    # Disable desktop-oriented packages
-    browsers.enable = false;
-    media.enable = false;
-    gaming.enable = false;
-    audioVideo.enable = false;
+  # Enable automatic login for the user
+  services.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.user = "notroot";
 
-    # Server-specific packages
+  # Workaround for GNOME autologin
+  systemd.services."getty@tty1".enable = false;
+  systemd.services."autovt@tty1".enable = false;
+
+  # Enable ALL desktop packages for full desktop experience
+  modules.packages = {
+    browsers.enable = lib.mkForce true;
+    media.enable = lib.mkForce true;
+    gaming.enable = lib.mkForce true;
+    audioVideo.enable = lib.mkForce true;
+
+    # Server-specific monitoring packages
     extraPackages = with pkgs; [
       # Server monitoring and management
       iotop
@@ -101,16 +101,15 @@
       ncdu
       lsof
       strace
+      htop
+      btop
+
+      # Additional server tools
+      wget
+      git
+      claude-code
     ];
   };
 
-  # Firewall configuration
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [ 22 ]; # SSH
-    # Add other ports as needed
-  };
-
-  # System state version
-  system.stateVersion = systemVersion;
+  # Note: stateVersion is managed by the flake system
 }
