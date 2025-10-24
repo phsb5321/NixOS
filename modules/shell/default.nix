@@ -19,7 +19,7 @@ in {
 
     zsh = {
       enable = mkEnableOption "ZSH configuration" // {default = true;};
-      
+
       ohMyZsh = {
         enable = mkEnableOption "Oh My ZSH" // {default = true;};
         plugins = mkOption {
@@ -56,14 +56,14 @@ in {
   config = mkIf cfg.enable {
     # System-wide shell configuration
     users.defaultUserShell = cfg.defaultShell;
-    
+
     # Enable ZSH system-wide
     programs.zsh = mkIf cfg.zsh.enable {
       enable = true;
       enableCompletion = true;
       autosuggestions.enable = true;
       syntaxHighlighting.enable = true;
-      
+
       # ZSH configuration that applies system-wide
       ohMyZsh = mkIf cfg.zsh.ohMyZsh.enable {
         enable = true;
@@ -77,7 +77,7 @@ in {
         export HISTSIZE=10000
         export SAVEHIST=10000
         export HISTFILE="$HOME/.zsh_history"
-        
+
         # ZSH options
         setopt hist_ignore_dups
         setopt hist_ignore_space
@@ -93,7 +93,7 @@ in {
     };
 
     # Install shell packages
-    environment.systemPackages = with pkgs; 
+    environment.systemPackages = with pkgs;
       (optionals cfg.zsh.enable [
         zsh
         zsh-completions
@@ -118,25 +118,25 @@ in {
       ])
       ++ (optionals cfg.zsh.modernTools.enable [
         # Modern shell tools
-        eza        # Better ls
-        bat        # Better cat
-        fd         # Better find
-        ripgrep    # Better grep
-        fzf        # Fuzzy finder
-        tree       # Directory tree
-        htop       # Better top
-        btop       # Modern system monitor
-        dust       # Better du
-        procs      # Better ps
-        bottom     # Cross-platform system monitor
-        tokei      # Count lines of code
-        hyperfine  # Benchmarking tool
-        bandwhich  # Network utilization
-        broot      # Directory navigation
-        sd         # Better sed
-        tealdeer   # Better tldr
-        choose     # Better cut
-        dog        # Better dig
+        eza # Better ls
+        bat # Better cat
+        fd # Better find
+        ripgrep # Better grep
+        fzf # Fuzzy finder
+        tree # Directory tree
+        htop # Better top
+        btop # Modern system monitor
+        dust # Better du
+        procs # Better ps
+        bottom # Cross-platform system monitor
+        tokei # Count lines of code
+        hyperfine # Benchmarking tool
+        bandwhich # Network utilization
+        broot # Directory navigation
+        sd # Better sed
+        tealdeer # Better tldr
+        choose # Better cut
+        dog # Better dig
       ])
       ++ (optionals cfg.zsh.modernTools.zoxide [
         zoxide
