@@ -6,5 +6,6 @@
     ./networking
     ./desktop
     ./dotfiles
+    ./shell
   ];
 }
