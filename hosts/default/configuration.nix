@@ -73,7 +73,7 @@ in {
   # GNOME configuration - NixOS 25.11+ Wayland-only (X11 sessions removed in 25.11+)
   modules.desktop.gnome = {
     enable = true;
-    variant = "hardware"; # Back to hardware acceleration 
+    variant = "hardware"; # Back to hardware acceleration
     wayland.enable = true; # NixOS 25.11+ only supports Wayland
   };
 
@@ -83,7 +83,7 @@ in {
   modules.desktop.gnomeExtensions = {
     # Example: disable visual effects on desktop for performance
     # visual.enable = false;
-    
+
     # Example: add desktop-specific extensions
     # extraExtensions = {
     #   packages = with pkgs; [
@@ -125,8 +125,8 @@ in {
   hardware = {
     graphics = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
-      extraPackages = with pkgs; [amdvlk];
-      extraPackages32 = with pkgs; [driversi686Linux.amdvlk];
+      # RADV (Mesa RADV driver) is now the default and preferred AMD Vulkan driver
+      # amdvlk was deprecated and removed from nixpkgs
     };
     cpu.intel.updateMicrocode = true;
   };
@@ -236,7 +236,6 @@ in {
     enable = true;
     androidTools.enable = activeVariant.enableHardwareAccel;
   };
-
 
   # Document tools
   modules.core.documentTools = {
@@ -365,13 +364,13 @@ in {
 
   # Host-specific network configuration
   modules.networking.firewall.openPorts = [3000]; # Development server port
-  
+
   # Tailscale for remote access and mesh networking
   modules.networking.tailscale = {
     enable = true;
     useRoutingFeatures = "both"; # Can serve as exit node and use routes
     extraUpFlags = [
-      "--advertise-exit-node" 
+      "--advertise-exit-node"
       "--accept-routes"
     ];
   };
@@ -384,9 +383,7 @@ in {
     gamescopeSession.enable = true;
   };
 
-  # Host-specific shell configuration (optimized for desktop performance)
-  users.defaultUserShell = pkgs.zsh;
-  programs.zsh.enable = true;
+  # Shell configuration is now handled by the shell module
 
   # Host-specific security configuration
   security = {

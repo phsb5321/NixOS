@@ -62,7 +62,7 @@
   modules.desktop.gnomeExtensions = {
     # Example: disable system monitoring on laptop to save battery
     # systemMonitoring.enable = false;
-    
+
     # Example: add laptop-specific extensions
     # extraExtensions = {
     #   packages = with pkgs; [
