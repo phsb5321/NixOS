@@ -16,7 +16,7 @@
         default = true;
         description = "Enable essential GNOME extensions";
       };
-      
+
       list = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [

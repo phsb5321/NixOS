@@ -22,7 +22,6 @@
 
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
-
   };
 
   outputs = {
@@ -151,7 +150,7 @@
         system = "x86_64-linux";
         hostname = "nixos-server";
         configPath = "server";
-        nixpkgsInput = nixpkgs;  # Explicitly stable
+        nixpkgsInput = nixpkgs; # Explicitly stable
       };
     };
   in {
