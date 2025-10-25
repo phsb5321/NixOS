@@ -2,17 +2,39 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL: HOST CONFIGURATION WARNING ⚠️
+
+**THIS SYSTEM IS A SERVER HOST - NOT A DESKTOP HOST**
+
+**MANDATORY RULES:**
+1. **NEVER** run `nixos-rebuild switch --flake .#default` on this system
+2. **NEVER** deploy the default (desktop) host configuration
+3. **ALWAYS** use `.#server` for all builds and deployments
+4. The `default` host configuration is for desktop machines only
+5. The `server` host uses stable nixpkgs and minimal packages
+
+**Sudo password: 123** (for build/deployment commands)
+
+**CORRECT COMMANDS FOR THIS HOST:**
+- `sudo nixos-rebuild switch --flake .#nixos-server` ✅
+- `sudo nixos-rebuild build --flake .#nixos-server` ✅
+- `./user-scripts/nixswitch` ✅ (auto-detects host)
+
+**WRONG COMMANDS (WILL BREAK SYSTEM):**
+- `sudo nixos-rebuild switch --flake .#default` ❌
+- `sudo nixos-rebuild switch --flake .` ❌ (defaults to .#default)
+
 ## Common Development Commands
 
 ### NixOS Rebuilds
-- `./user-scripts/nixswitch server` - Modern TUI-based rebuild script for server host (RECOMMENDED)
-- `sudo nixos-rebuild switch --flake .#server` - Manual rebuild for server host (DEFAULT HOST)
-- `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop host  
+- `./user-scripts/nixswitch` - Modern TUI-based rebuild script (auto-detects host) (RECOMMENDED)
+- `sudo nixos-rebuild switch --flake .#nixos-server` - Manual rebuild for server host (DEFAULT HOST)
+- `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop host
 - `sudo nixos-rebuild switch --flake .#laptop` - Manual rebuild for laptop host
-- `sudo nixos-rebuild test --flake .#server` - Test server configuration without switching
-- `sudo nixos-rebuild build --flake .#server` - Build server configuration without switching
+- `sudo nixos-rebuild test --flake .#nixos-server` - Test server configuration without switching
+- `sudo nixos-rebuild build --flake .#nixos-server` - Build server configuration without switching
 
-**NOTE: This system is configured as a SERVER HOST. Always use server configuration for deployments.**
+**NOTE: This system is configured as a SERVER HOST. Always use nixos-server configuration for deployments.**
 
 ### Development Environments
 - `./user-scripts/nix-shell-selector.sh` - Interactive shell selector with multi-environment support
