@@ -57,19 +57,9 @@
   # Enable GNOME desktop
   modules.desktop.gnome.enable = true;
 
-  # Customize GNOME extensions for laptop
-  # All basic extensions are enabled by default via shared configuration
-  modules.desktop.gnomeExtensions = {
-    # Example: disable system monitoring on laptop to save battery
-    # systemMonitoring.enable = false;
-
-    # Example: add laptop-specific extensions
-    # extraExtensions = {
-    #   packages = with pkgs; [
-    #     gnomeExtensions.battery-health-charging  # Example laptop-specific extension
-    #   ];
-    # };
-  };
+  # GNOME extensions are now configured directly in the gnome.nix module
+  # Extensions can be customized by modifying modules.desktop.gnome.extensions.list
+  # All extensions are managed in modules/desktop/gnome.nix
 
   # Bootloader configuration
   boot.loader.systemd-boot.enable = true;
