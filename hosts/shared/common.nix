@@ -48,8 +48,8 @@
     enableHelperScripts = true;
   };
 
-  # Enable shared GNOME extensions for all GNOME hosts
-  modules.desktop.gnomeExtensions.enable = true;
+  # GNOME extensions are now configured directly in gnome.nix module
+  # modules.desktop.gnomeExtensions.enable = true;  # Removed - integrated into gnome.nix
 
   # Core configuration
   modules.core = {
