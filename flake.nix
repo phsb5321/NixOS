@@ -166,7 +166,7 @@
       };
 
       # Server using stable for reliability
-      server = {
+      nixos-server = {
         system = "x86_64-linux";
         hostname = "nixos-server";
         configPath = "server";
