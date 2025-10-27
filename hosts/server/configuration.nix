@@ -128,6 +128,12 @@
     torrentPort = 6881; # Torrent connection port
     openFirewall = true;
 
+    # Web UI configuration - NO AUTHENTICATION
+    webUI = {
+      bypassLocalAuth = true; # Disable login for all local network access
+      bypassAuthSubnetWhitelist = "192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12"; # Allow all private networks
+    };
+
     # Seeding limits
     settings = {
       maxRatio = 2.0; # Stop seeding after 2.0 ratio
