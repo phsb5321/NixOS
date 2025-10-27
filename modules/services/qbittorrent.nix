@@ -304,6 +304,10 @@ in {
       ]
       ++ lib.optionals cfg.webhook.enable [
         "f /var/log/qbittorrent-webhook.log 0644 ${cfg.user} ${cfg.group} -"
+      ]
+      ++ lib.optionals (config.modules.services.plex.enable or false) [
+        "f /var/log/plex-monitor.log 0644 ${cfg.user} ${cfg.group} -"
+        "f /var/log/plex-qbittorrent-integration.log 0644 ${cfg.user} ${cfg.group} -"
       ];
 
     # qBittorrent service
@@ -362,6 +366,48 @@ in {
     environment.systemPackages = with pkgs; [
       qbittorrent-nox
       curl # For webhooks
+      (python3.withPackages (ps: with ps; [requests])) # For monitor daemon
     ];
+
+    # Plex monitor daemon (automatically creates hardlinks for completed torrents)
+    systemd.services.plex-monitor = lib.mkIf (config.modules.services.plex.enable or false) {
+      description = "Plex-qBittorrent Integration Monitor";
+      after = ["qbittorrent.service" "plex.service"];
+      wants = ["qbittorrent.service" "plex.service"];
+      wantedBy = ["multi-user.target"];
+
+      environment = {
+        QBITTORRENT_URL = "http://localhost:${toString cfg.port}";
+        PLEX_URL = "http://localhost:32400";
+        PLEX_MOVIES_SECTION = "1";
+        PLEX_TV_SECTION = "2";
+        POLL_INTERVAL = "30"; # Check every 30 seconds
+      };
+
+      serviceConfig = {
+        Type = "simple";
+        User = cfg.user;
+        Group = cfg.group;
+        ExecStart = "${pkgs.python3.withPackages (ps: with ps; [requests])}/bin/python3 ${./qbittorrent-scripts/plex-monitor-daemon.py}";
+        Restart = "always";
+        RestartSec = "10s";
+
+        # Security
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        ProtectSystem = "strict";
+        ReadWritePaths = [
+          cfg.dataDir
+          cfg.downloadDir
+          cfg.incompleteDir
+          cfg.storage.mountPoint
+          "/var/log"
+        ];
+        ProtectHome = true;
+        ProtectKernelTunables = true;
+        ProtectControlGroups = true;
+        RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6"];
+      };
+    };
   };
 }
