@@ -150,6 +150,30 @@
     };
   };
 
+  # Plex Media Server configuration
+  modules.services.plex = {
+    enable = true;
+    openFirewall = true;
+
+    # Store Plex data and media on the 2TB disk
+    dataDir = "/mnt/torrents/plex";
+    mediaDir = "/mnt/torrents/plex-media";
+
+    # Enable libraries
+    libraries = {
+      movies = true;
+      tvShows = true;
+      music = false;
+    };
+
+    # Integration with qBittorrent
+    integration.qbittorrent = {
+      enable = true;
+      autoScan = true; # Automatically scan Plex when new media is added
+      useHardlinks = true; # Preserve seeding capability
+    };
+  };
+
   # Configure console keymap to match original config
   console.keyMap = lib.mkForce "br-abnt2";
 
