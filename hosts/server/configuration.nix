@@ -63,9 +63,10 @@
   };
 
   # Bootloader - GRUB for BIOS systems
+  # NOTE: Changed from /dev/sda to /dev/sdb because sda is the 2TB torrents disk
   boot.loader.grub = {
     enable = true;
-    device = "/dev/sda";
+    device = "/dev/sdb"; # System disk (128GB)
     useOSProber = true;
   };
 
@@ -101,6 +102,47 @@
 
   # Enable Docker
   virtualisation.docker.enable = true;
+
+  # qBittorrent configuration with 2TB disk storage
+  modules.services.qbittorrent = {
+    enable = true;
+    user = "qbittorrent";
+    group = "qbittorrent";
+
+    # Storage configuration for 2TB disk
+    storage = {
+      device = "/dev/sda"; # 2TB disk
+      mountPoint = "/mnt/torrents";
+      format = false; # Set to true ONLY on first setup (WARNING: destroys data!)
+      fsType = "ext4";
+    };
+
+    # Directory structure on the 2TB disk
+    dataDir = "/var/lib/qbittorrent"; # Config stays on system disk
+    downloadDir = "/mnt/torrents/completed";
+    incompleteDir = "/mnt/torrents/incomplete";
+    watchDir = "/mnt/torrents/watch";
+
+    # Network configuration
+    port = 8080; # Web UI port
+    torrentPort = 6881; # Torrent connection port
+    openFirewall = true;
+
+    # Seeding limits
+    settings = {
+      maxRatio = 2.0; # Stop seeding after 2.0 ratio
+      maxSeedingTime = 10080; # Stop seeding after 7 days (10080 minutes)
+      downloadLimit = null; # Unlimited download speed
+      uploadLimit = 1024; # Limit upload to 1MB/s (1024 KB/s)
+    };
+
+    # Webhook configuration for automation
+    webhook = {
+      enable = true;
+      url = ""; # Add your Discord/Slack webhook URL here
+      # The default script will log completions and optionally send webhook notifications
+    };
+  };
 
   # Configure console keymap to match original config
   console.keyMap = lib.mkForce "br-abnt2";
