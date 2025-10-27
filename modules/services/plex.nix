@@ -19,8 +19,8 @@ in {
 
     mediaDir = lib.mkOption {
       type = lib.types.path;
-      default = "/mnt/torrents/plex-media";
-      description = "Root directory for Plex media libraries";
+      default = "/mnt/torrents/plex";
+      description = "Root directory for Plex media libraries (must be on same filesystem as qBittorrent for hardlinks)";
     };
 
     openFirewall = lib.mkOption {
