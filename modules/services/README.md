@@ -236,3 +236,204 @@ The qBittorrent service runs with:
 | `settings.uploadLimit` | int? | null | Upload limit (KB/s) |
 
 See also: [qBittorrent Module Source](./qbittorrent.nix)
+
+---
+
+## Plex Media Server
+
+Plex organizes your personal media collection for streaming to any device.
+
+**Features:**
+- Automatic integration with qBittorrent
+- Hardlink-based media organization (preserves seeding)
+- Automatic library scanning on new downloads
+- Hardware transcoding support (PlexPass)
+- Shared storage with qBittorrent on 2TB disk
+
+**Quick Start:**
+
+```nix
+modules.services.plex = {
+  enable = true;
+  openFirewall = true;
+
+  # Store on 2TB disk with torrents
+  dataDir = "/mnt/torrents/plex";
+  mediaDir = "/mnt/torrents/plex-media";
+
+  # Enable libraries
+  libraries = {
+    movies = true;
+    tvShows = true;
+    music = false;
+  };
+
+  # Automatic qBittorrent integration
+  integration.qbittorrent = {
+    enable = true;
+    autoScan = true;
+    useHardlinks = true;
+  };
+};
+```
+
+**Initial Setup:**
+
+1. **Apply Configuration:**
+   ```bash
+   sudo nixos-rebuild switch --flake .#nixos-server
+   ```
+
+2. **Access Plex Web Setup:**
+   - URL: `http://server-ip:32400/web`
+   - Sign in with your Plex account (free or PlexPass)
+   - Follow the setup wizard
+
+3. **Add Media Libraries:**
+
+   **For Movies:**
+   - Name: "Movies"
+   - Folder: `/mnt/torrents/plex-media/Movies`
+   - Type: Movies
+
+   **For TV Shows:**
+   - Name: "TV Shows"
+   - Folder: `/mnt/torrents/plex-media/TV Shows`
+   - Type: TV Shows
+
+4. **Get Your Plex Token:**
+   ```bash
+   /etc/plex/get-token.sh  # Follow instructions
+   ```
+
+   Then save your token:
+   ```bash
+   echo "YOUR_TOKEN_HERE" | sudo tee /etc/plex/token
+   sudo chmod 600 /etc/plex/token
+   ```
+
+5. **Install Plex Integration Script:**
+   ```bash
+   sudo cp modules/services/qbittorrent-scripts/plex-integration.sh /usr/local/bin/
+   sudo chmod +x /usr/local/bin/plex-integration.sh
+   ```
+
+6. **Configure qBittorrent to Use It:**
+   - Open qBittorrent Web UI: `http://server-ip:8080`
+   - Go to: Tools → Options → Downloads
+   - Enable "Run external program on torrent completion"
+   - Command: `/usr/local/bin/plex-integration.sh "%N" "%L" "%D" "%F" "%Z" "%I"`
+   - Click Save
+
+**How It Works:**
+
+1. **Download completes** in qBittorrent
+2. **Script detects** if it's a movie or TV show
+3. **Creates hardlink** in Plex media directory:
+   ```
+   /mnt/torrents/completed/Movie.mkv  (original - still seeding)
+          ↓ (hardlink - same file, no extra space)
+   /mnt/torrents/plex-media/Movies/Movie.mkv  (for Plex)
+   ```
+4. **Triggers Plex** to scan the library via API
+5. **Movie appears** in Plex within seconds!
+
+**Directory Structure:**
+
+```
+/mnt/torrents/
+├── completed/              # qBittorrent finished downloads (seeding from here)
+│   └── Movie.2007.mkv
+├── incomplete/             # Active downloads
+├── watch/                  # Auto-import .torrent files
+├── plex-media/            # Plex media libraries
+│   ├── Movies/            # Hardlinked movies (Library #1)
+│   │   └── Movie.2007.mkv  # Same file as in completed/
+│   └── TV Shows/          # Hardlinked TV shows (Library #2)
+└── plex/                  # Plex configuration & metadata
+```
+
+**Advantages of Hardlinks:**
+
+✅ **No extra disk space** - Both files point to the same data
+✅ **Preserves seeding** - Original file stays in qBittorrent
+✅ **Instant operation** - No copying, just metadata update
+✅ **Independent management** - Can rename/organize in Plex without breaking torrents
+
+**Environment Variables:**
+
+Set these in your environment or systemd service:
+
+```bash
+export PLEX_URL="http://localhost:32400"
+export PLEX_TOKEN="your-token-here"
+export PLEX_MOVIES_SECTION="1"  # Get from Plex library settings
+export PLEX_TV_SECTION="2"
+```
+
+**Find Library Section IDs:**
+
+```bash
+curl -s "http://localhost:32400/library/sections?X-Plex-Token=YOUR_TOKEN" | grep -oP 'key="\K[^"]+' | head -10
+```
+
+Or check in Plex Web UI → Settings → Libraries → Click library → Look at URL
+
+**Manual Library Scan:**
+
+```bash
+# Scan all libraries
+curl "http://localhost:32400/library/sections/all/refresh?X-Plex-Token=YOUR_TOKEN"
+
+# Scan specific library (e.g., Movies = section 1)
+curl "http://localhost:32400/library/sections/1/refresh?X-Plex-Token=YOUR_TOKEN"
+```
+
+**Testing the Integration:**
+
+1. Add a test movie torrent in qBittorrent
+2. Wait for download to complete
+3. Check the logs:
+   ```bash
+   sudo tail -f /var/log/plex-qbittorrent-integration.log
+   ```
+4. Verify hardlink was created:
+   ```bash
+   ls -la /mnt/torrents/plex-media/Movies/
+   ```
+5. Check Plex Web UI - movie should appear automatically!
+
+**Troubleshooting:**
+
+1. **Movies not appearing in Plex:**
+   - Check script logs: `sudo cat /var/log/plex-qbittorrent-integration.log`
+   - Verify hardlinks were created: `ls -la /mnt/torrents/plex-media/Movies/`
+   - Manually trigger scan: `curl "http://localhost:32400/library/sections/1/refresh?X-Plex-Token=TOKEN"`
+
+2. **Hardlink creation fails:**
+   - Verify same filesystem: `df -h /mnt/torrents`
+   - Check permissions: `ls -la /mnt/torrents/plex-media/`
+   - Verify qBittorrent user is in plex group: `groups qbittorrent`
+
+3. **Plex not scanning:**
+   - Verify token is correct: `cat /etc/plex/token`
+   - Test API manually: `curl "http://localhost:32400/?X-Plex-Token=TOKEN"`
+   - Check Plex service: `sudo systemctl status plex`
+
+**Module Options Reference:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enable` | bool | false | Enable Plex Media Server |
+| `dataDir` | path | "/var/lib/plex" | Plex config/metadata directory |
+| `mediaDir` | path | "/mnt/torrents/plex-media" | Root media directory |
+| `openFirewall` | bool | true | Open Plex ports (32400) |
+| `hardwareAcceleration` | bool | false | Enable HW transcoding (PlexPass) |
+| `libraries.movies` | bool | true | Enable Movies library |
+| `libraries.tvShows` | bool | true | Enable TV Shows library |
+| `libraries.music` | bool | false | Enable Music library |
+| `integration.qbittorrent.enable` | bool | false | Enable qBittorrent integration |
+| `integration.qbittorrent.autoScan` | bool | true | Auto-scan on new media |
+| `integration.qbittorrent.useHardlinks` | bool | true | Use hardlinks |
+
+See also: [Plex Module Source](./plex.nix) | [Plex Integration Script](./qbittorrent-scripts/plex-integration.sh)
