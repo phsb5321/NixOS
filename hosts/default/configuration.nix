@@ -65,21 +65,11 @@ in {
     ./hardware-configuration.nix
     ../../modules
     ../shared/common.nix
+    ./gnome.nix
   ];
 
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;
-
-  # GNOME configuration - NixOS 25.11+ Wayland-only (X11 sessions removed in 25.11+)
-  modules.desktop.gnome = {
-    enable = true;
-    variant = "hardware"; # Back to hardware acceleration
-    wayland.enable = true; # NixOS 25.11+ only supports Wayland
-  };
-
-  # GNOME extensions are now configured directly in the gnome.nix module
-  # Extensions can be customized by modifying modules.desktop.gnome.extensions.list
-  # All extensions are managed in modules/desktop/gnome.nix
 
   # Boot configuration with variants
   boot = {
@@ -211,10 +201,6 @@ in {
       nano
       htop
     ];
-
-  # GNOME login fixes (NixOS Wiki solution for session registration failures)
-  systemd.services."getty@tty1".enable = false;
-  systemd.services."autovt@tty1".enable = false;
 
   # Host-specific module configuration
   modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
@@ -373,16 +359,6 @@ in {
 
   # Host-specific security configuration
   security = {
-    # Enable PAM for GNOME keyring and authentication
-    pam.services = {
-      gdm = {
-        enableGnomeKeyring = true;
-      };
-      gdm-password = {
-        enableGnomeKeyring = true;
-      };
-    };
-
     auditd.enable = activeVariant.enableHardwareAccel;
     audit = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
