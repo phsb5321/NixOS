@@ -207,11 +207,89 @@ The desktop host supports multiple GPU configurations:
 - GPU variant system allows fallback configurations for desktop (hardware/conservative/software)
 - Remote desktop support: VNC (port 5900) and RDP (port 3389) on desktop host
 
-### NixOS 25.11+ GNOME Configuration
-- **Wayland-only**: NixOS 25.11+ removes X11 session support entirely
+### GNOME Desktop Environment (Modular Architecture)
+
+#### Architecture Overview
+The GNOME configuration follows a **modular host-specific architecture** to eliminate duplication while allowing complete customization per host.
+
+```
+modules/desktop/gnome/
+├── base.nix        ← Shared infrastructure (GDM, services, portals, fonts)
+├── extensions.nix  ← Extension package installation
+└── default.nix     ← Main orchestrator (Wayland/X11, env vars)
+
+hosts/*/gnome.nix   ← Host-specific complete configurations
+```
+
+#### Shared Modules (`modules/desktop/gnome/`)
+
+**base.nix** - Core GNOME infrastructure:
+- Display manager (GDM)
+- Essential services (keyring, settings-daemon, evolution-data-server, etc.)
+- XDG desktop portals (file dialogs, screen sharing)
+- Base packages (gnome-shell, control-center, nautilus, etc.)
+- Fonts (Cantarell, Source Code Pro, Noto fonts)
+- Input device management (libinput)
+
+**extensions.nix** - Extension management:
+- Granular enable/disable options for each extension
+- Package installation when enabled
+- Available extensions: appIndicator, dashToDock, userThemes, justPerfection,
+  vitals, caffeine, clipboard, gsconnect, workspaceIndicator, soundOutput
+
+**default.nix** - Display protocol & environment:
+- Wayland/X11 switching logic
+- Session-specific environment variables
+- Portal service configuration
+- Theme management (icon theme, cursor theme)
+
+#### Host-Specific Configurations
+
+Each host defines its **complete GNOME configuration** in `hosts/<hostname>/gnome.nix`:
+
+**Desktop** (`hosts/default/gnome.nix`):
+- Wayland-only (NixOS 25.11+)
+- AMD RX 5700 XT optimizations (dynamic triple buffering, rt-scheduler)
+- Full extension set (10 extensions)
+- Gaming-focused favorite apps (Steam, etc.)
+- Performance-oriented settings
+
+**Laptop** (`hosts/laptop/gnome.nix`):
+- X11 for Intel GPU compatibility
+- Battery-saving settings (no triple buffering, 5min idle, suspend on AC)
+- Minimal extension set (9 extensions, no sound-output-device-chooser)
+- Power-conscious configuration
+- Workspaces only on primary display
+
+**Server** (`hosts/server/gnome.nix`):
+- X11 for Proxmox VM compatibility
+- VirtIO-GPU optimizations (GSK_RENDERER auto-detect for llvmpipe)
+- Minimal extension set (6 extensions, server-focused)
+- Always-on power settings (no idle, no sleep, ignore power button)
+- Fixed 2 workspaces
+
+#### Key Design Principles
+
+1. **No dconf Merging**: Each host defines one complete `programs.dconf.profiles.user.databases`
+   - Prevents GVariant construction errors from merging multiple databases
+   - Each host has full control over all dconf settings
+
+2. **Shared Infrastructure**: Base services and packages defined once in `base.nix`
+   - DRY principle for common GNOME components
+   - Consistent portal and service configuration
+
+3. **Extension Flexibility**: Enable/disable extensions per host
+   - Packages installed only when enabled
+   - Extension IDs managed in host-specific enabled-extensions list
+
+4. **Environment Isolation**: Host-specific environment variables override shared ones
+   - Example: Server uses `GSK_RENDERER = ""` for VM auto-detection
+   - Example: Desktop sets AMD GPU hardware acceleration vars
+
+#### GNOME Version Notes
+- **NixOS 25.11+**: X11 sessions still available when `wayland.enable = false`
 - **Portal Integration**: Comprehensive XDG desktop portal configuration for file dialogs
 - **Electron Support**: Proper NIXOS_OZONE_WL and GTK_USE_PORTAL configuration
-- **Multi-host**: Desktop (Wayland), Laptop (X11 for NVIDIA compatibility)
 
 ### Bruno API Client
 - Desktop: Wayland mode with enhanced portal configuration for file dialogs
