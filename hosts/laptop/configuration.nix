@@ -11,6 +11,7 @@
     ./hardware-configuration.nix
     ../../modules
     ../shared/common.nix
+    ./gnome.nix
   ];
 
   # Allow insecure packages for USB boot creation tool
@@ -123,11 +124,7 @@
     ];
   };
 
-  # Enable GNOME desktop
-  modules.desktop.gnome = {
-    enable = true;
-    wayland.enable = lib.mkForce false; # Force X11 for NVIDIA compatibility
-  };
+  # GNOME configuration is now in ./gnome.nix
 
   # Enable OpenGL/Vulkan for gaming
   hardware.graphics = {
