@@ -88,46 +88,25 @@ in {
       enable = true;
       wayland.enable = true;
 
-      variant = lib.mkDefault (
-        if cfg.variant == "gaming"
-        then "hardware"
-        else if cfg.variant == "ultrabook"
-        then "conservative"
-        else "hardware"
-      );
+      # Note: 'variant' option has been removed from GNOME module
+      # Hardware acceleration is now handled by GPU modules
 
-      # Laptop-specific extensions
+      # Laptop-specific extensions (using new boolean syntax)
       extensions = {
         enable = true;
-        list = lib.mkDefault (
-          (lib.optionals (!cfg.gnomeExtensions.minimal) [
-            # Core functionality
-            "dash-to-dock@micxgx.gmail.com"
-            "user-theme@gnome-shell-extensions.gcampax.github.com"
-            "just-perfection-desktop@just-perfection"
-            "appindicatorsupport@rgcjonas.gmail.com"
+        # Core extensions (enabled unless minimal mode)
+        appIndicator = lib.mkDefault (!cfg.gnomeExtensions.minimal);
+        dashToDock = lib.mkDefault (!cfg.gnomeExtensions.minimal);
+        userThemes = lib.mkDefault (!cfg.gnomeExtensions.minimal);
+        justPerfection = lib.mkDefault (!cfg.gnomeExtensions.minimal);
+        vitals = lib.mkDefault (!cfg.gnomeExtensions.minimal);
+        caffeine = lib.mkDefault (!cfg.gnomeExtensions.minimal);
 
-            # System monitoring
-            "Vitals@CoreCoding.com"
-
-            # Power management
-            "caffeine@patapon.info"
-            "battery-health-charging@maniacx.github.com"
-            "battery-time@alexlebens.github.io"
-          ])
-          ++ (lib.optionals cfg.gnomeExtensions.productivity [
-            # Productivity
-            "forge@jmmaranan.com" # Tiling
-            "clipboard-indicator@tudmotu.com"
-            "fuzzy-app-search@gnome-shell-extensions.Czarlie.gitlab.com"
-            "auto-move-windows@gnome-shell-extensions.gcampax.github.com"
-            "launch-new-instance@gnome-shell-extensions.gcampax.github.com"
-          ])
-          ++ (lib.optionals (cfg.variant == "ultrabook" && cfg.gnomeExtensions.minimal) [
-            # Ultra-minimal for battery life
-            "battery-indicator@jgotti.org"
-          ])
-        );
+        # Productivity extensions
+        clipboard = lib.mkDefault cfg.gnomeExtensions.productivity;
+        gsconnect = lib.mkDefault (cfg.gnomeExtensions.productivity && !cfg.gnomeExtensions.minimal);
+        workspaceIndicator = lib.mkDefault true;
+        soundOutput = lib.mkDefault false; # Not typically needed on laptops
       };
     };
 
