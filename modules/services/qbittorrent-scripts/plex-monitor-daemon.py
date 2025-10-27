@@ -98,9 +98,12 @@ class PlexMonitor:
 
     def is_movie(self, name: str, content_path: str) -> bool:
         """Detect if content is a movie"""
-        # Check for year pattern with flexible separators
-        # Matches: Movie.2007, Movie (2007), Movie.2007.1080p, Movie 2007, etc.
         import re
+
+        # Video file extensions (including Bluray formats)
+        video_extensions = ('.mkv', '.mp4', '.avi', '.mov', '.wmv', '.m4v', '.mpg', '.mpeg', '.iso', '.m2ts', '.ts')
+
+        # First check: Year pattern with flexible separators
         year_patterns = [
             r'\(19\d{2}\)',  # (1964), (2007)
             r'\(20\d{2}\)',  # (2010), (2024)
@@ -110,23 +113,42 @@ class PlexMonitor:
             r'[.\-\s](20\d{2})$',  # ends with year
         ]
 
-        if any(re.search(pattern, name) for pattern in year_patterns):
-            # Check if it's a video file (including Bluray formats)
-            video_extensions = ('.mkv', '.mp4', '.avi', '.mov', '.wmv', '.m4v', '.mpg', '.mpeg', '.iso', '.m2ts', '.ts')
+        has_year = any(re.search(pattern, name) for pattern in year_patterns)
+
+        # Check if it's a TV show first (to exclude from movie detection)
+        if self.is_tv_show(name):
+            return False
+
+        # If has year, check for video content
+        if has_year:
             if any(content_path.lower().endswith(ext) for ext in video_extensions):
                 return True
-            # Check if directory contains video files or is a Bluray/DVD structure
             if os.path.isdir(content_path):
                 try:
                     for root, dirs, files in os.walk(content_path):
-                        # Check for video files
                         if any(f.lower().endswith(video_extensions) for f in files):
                             return True
-                        # Check for Bluray/DVD structure (BDMV or VIDEO_TS folders)
                         if any(d in ['BDMV', 'VIDEO_TS', 'STREAM'] for d in dirs):
                             return True
                 except Exception:
                     pass
+
+        # Fallback: No year but is a video file -> assume it's a movie
+        # This handles files like "Coraline.mkv" or "MovieName.mp4"
+        if any(content_path.lower().endswith(ext) for ext in video_extensions):
+            return True
+
+        # Fallback: Directory with video files -> assume it's a movie
+        if os.path.isdir(content_path):
+            try:
+                for root, dirs, files in os.walk(content_path):
+                    if any(f.lower().endswith(video_extensions) for f in files):
+                        return True
+                    if any(d in ['BDMV', 'VIDEO_TS', 'STREAM'] for d in dirs):
+                        return True
+            except Exception:
+                pass
+
         return False
 
     def is_tv_show(self, name: str) -> bool:
