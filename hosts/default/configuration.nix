@@ -50,7 +50,7 @@
       gsconnect = true;
       workspaceIndicator = true;
       soundOutputChooser = false;
-      productivity = false; # Use individual toggles instead
+      productivity = false;
     };
 
     # Settings
@@ -151,7 +151,6 @@
       editor = true;
       applications = true;
     };
-
   };
 
   # ===== HOST-SPECIFIC PACKAGES =====
@@ -215,7 +214,7 @@
 
   modules.networking.firewall = {
     enable = true;
-    developmentPorts = [ 3000 3001 8080 8000 ];
+    developmentPorts = [3000 3001 8080 8000];
   };
 
   modules.networking.remoteDesktop = {
@@ -227,7 +226,7 @@
   # DNS configuration
   networking = {
     dhcpcd.extraConfig = "nohook resolv.conf";
-    nameservers = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1" ];
+    nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     firewall.checkReversePath = "loose";
     nftables.enable = true;
   };
@@ -235,8 +234,8 @@
   services.resolved = {
     enable = true;
     dnssec = "allow-downgrade";
-    domains = [ "~." ];
-    fallbackDns = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1" ];
+    domains = ["~."];
+    fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     extraConfig = ''
       DNSOverTLS=yes
       DNS=8.8.8.8 8.8.4.4 1.1.1.1 1.0.0.1
@@ -288,7 +287,7 @@
           markdownlint = true;
           vale = {
             enable = true;
-            styles = [ "google" "write-good" ];
+            styles = ["google" "write-good"];
           };
           linkCheck = true;
         };
@@ -341,7 +340,7 @@
       "fs.aio-max-nr" = 1048576;
     };
 
-    kernelModules = [ "kvm-intel" "amdgpu" ];
+    kernelModules = ["kvm-intel" "amdgpu"];
   };
 
   # ===== HARDWARE =====
@@ -388,7 +387,7 @@
       enable = true;
       backlogLimit = 8192;
       failureMode = "printk";
-      rules = [ "-a exit,always -F arch=b64 -S execve" ];
+      rules = ["-a exit,always -F arch=b64 -S execve"];
     };
 
     apparmor = {
@@ -405,8 +404,8 @@
   # AMD GPU optimization
   systemd.services.amd-gpu-optimization = {
     description = "AMD GPU Performance Optimization";
-    after = [ "graphical-session.target" ];
-    wantedBy = [ "multi-user.target" ];
+    after = ["graphical-session.target"];
+    wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -419,8 +418,8 @@
 
   # DNS health check
   systemd.timers.dns-health-check = {
-    wantedBy = [ "timers.target" ];
-    partOf = [ "dns-health-check.service" ];
+    wantedBy = ["timers.target"];
+    partOf = ["dns-health-check.service"];
     timerConfig = {
       OnCalendar = "*:0/5";
       Persistent = true;
