@@ -15,6 +15,7 @@
     ./hardware-configuration.nix
     ../../modules
     ../shared/common.nix
+    ./gnome.nix
   ];
 
   # Host-specific metadata
@@ -37,12 +38,6 @@
 
   # Disable systemd-resolved to avoid conflicts
   services.resolved.enable = lib.mkForce false;
-
-  # GNOME Desktop Environment - X11 mode for VM compatibility (like laptop)
-  modules.desktop.gnome = {
-    enable = true;
-    wayland.enable = false; # Disable Wayland - VMs work better with X11
-  };
 
   # Disable gaming module - not needed for server and prevents NVIDIA vars
   modules.core.gaming.enable = lib.mkForce false;
@@ -95,14 +90,13 @@
     ];
   };
 
-  # Proxmox VM-specific environment variables for graphics
+  # Proxmox VM-specific environment variables for graphics (override GNOME module)
   environment.sessionVariables = {
-    # Use NGL renderer for GTK4 applications in VM (fixes GNOME 47+ rendering issues)
-    GSK_RENDERER = "ngl";
     # Enable software rendering fallback for compatibility
     LIBGL_ALWAYS_SOFTWARE = "0";
     # Mesa DRI driver configuration for VMs
     MESA_LOADER_DRIVER_OVERRIDE = "virtio_gpu";
+    # GSK_RENDERER is now set in gnome.nix
   };
 
   # Enable Docker
@@ -114,10 +108,6 @@
   # Enable automatic login for the user (matching original config)
   services.displayManager.autoLogin.enable = true;
   services.displayManager.autoLogin.user = "notroot";
-
-  # Workaround for GNOME autologin (from NixOS wiki)
-  systemd.services."getty@tty1".enable = false;
-  systemd.services."autovt@tty1".enable = false;
 
   # Enable selected desktop packages
   modules.packages = {

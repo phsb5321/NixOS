@@ -10,6 +10,7 @@
     ./hardware-configuration.nix
     ../../modules
     ../shared/common.nix
+    ./gnome.nix
   ];
 
   # Core system configuration using modules
@@ -53,13 +54,6 @@
     audioVideo.enable = true;
     gaming.enable = false; # Disabled for laptop to save battery
   };
-
-  # Enable GNOME desktop
-  modules.desktop.gnome.enable = true;
-
-  # GNOME extensions are now configured directly in the gnome.nix module
-  # Extensions can be customized by modifying modules.desktop.gnome.extensions.list
-  # All extensions are managed in modules/desktop/gnome.nix
 
   # Bootloader configuration
   boot.loader.systemd-boot.enable = true;
