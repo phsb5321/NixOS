@@ -224,6 +224,22 @@
     enableNetworkManager = true;
   };
 
+  # Enable WPA3/SAE support in NetworkManager using iwd backend
+  networking.networkmanager.wifi.backend = "iwd";
+
+  modules.networking.wifi = {
+    enable = true;
+    enablePowersave = true; # For laptop battery life
+    networks = {
+      # WiFi network configuration
+      "LIVE TIM_4122" = {
+        psk = "benicio-tem-4-patas-cinzas";
+        priority = 100;
+        autoConnect = true;
+      };
+    };
+  };
+
   modules.networking.tailscale = {
     enable = true;
     useRoutingFeatures = "client";
@@ -299,6 +315,9 @@
   };
 
   # ===== HARDWARE =====
+  # Enable WiFi firmware
+  hardware.enableRedistributableFirmware = true;
+
   # OpenGL/Vulkan for gaming
   hardware.graphics = {
     enable = true;
