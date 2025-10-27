@@ -155,9 +155,9 @@
     enable = true;
     openFirewall = true;
 
-    # Store Plex data and media on the 2TB disk
-    dataDir = "/mnt/torrents/plex";
-    mediaDir = "/mnt/torrents/plex-media";
+    # Store Plex media on 2TB disk (must be on same filesystem for hardlinks)
+    dataDir = "/var/lib/plex"; # Config on system disk
+    mediaDir = "/mnt/torrents/plex"; # Media on 2TB disk (in separate subdirectory)
 
     # Enable libraries
     libraries = {
