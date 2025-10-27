@@ -11,6 +11,7 @@
     ./remote-desktop.nix
     ./dns.nix
     ./firewall.nix
+    ./wifi.nix
   ];
 }
 // (
