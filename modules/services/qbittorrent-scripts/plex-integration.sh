@@ -24,8 +24,8 @@ PLEX_TOKEN="${PLEX_TOKEN:-}"
 PLEX_MOVIES_SECTION="${PLEX_MOVIES_SECTION:-1}"
 PLEX_TV_SECTION="${PLEX_TV_SECTION:-2}"
 
-# Paths
-PLEX_MEDIA_ROOT="/mnt/torrents/plex-media"
+# Paths - Plex media directory on same filesystem as torrents (for hardlinks)
+PLEX_MEDIA_ROOT="/mnt/torrents/plex"
 MOVIES_DIR="${PLEX_MEDIA_ROOT}/Movies"
 TV_DIR="${PLEX_MEDIA_ROOT}/TV Shows"
 LOG_FILE="/var/log/plex-qbittorrent-integration.log"

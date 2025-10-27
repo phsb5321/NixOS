@@ -257,9 +257,9 @@ modules.services.plex = {
   enable = true;
   openFirewall = true;
 
-  # Store on 2TB disk with torrents
-  dataDir = "/mnt/torrents/plex";
-  mediaDir = "/mnt/torrents/plex-media";
+  # Store Plex media on same disk as torrents (for hardlinks)
+  dataDir = "/var/lib/plex"; # Config on system disk
+  mediaDir = "/mnt/torrents/plex"; # Media on 2TB disk (separate subdirectory)
 
   # Enable libraries
   libraries = {
@@ -293,12 +293,12 @@ modules.services.plex = {
 
    **For Movies:**
    - Name: "Movies"
-   - Folder: `/mnt/torrents/plex-media/Movies`
+   - Folder: `/mnt/torrents/plex/Movies`
    - Type: Movies
 
    **For TV Shows:**
    - Name: "TV Shows"
-   - Folder: `/mnt/torrents/plex-media/TV Shows`
+   - Folder: `/mnt/torrents/plex/TV Shows`
    - Type: TV Shows
 
 4. **Get Your Plex Token:**
@@ -333,7 +333,7 @@ modules.services.plex = {
    ```
    /mnt/torrents/completed/Movie.mkv  (original - still seeding)
           ↓ (hardlink - same file, no extra space)
-   /mnt/torrents/plex-media/Movies/Movie.mkv  (for Plex)
+   /mnt/torrents/plex/Movies/Movie.mkv  (for Plex)
    ```
 4. **Triggers Plex** to scan the library via API
 5. **Movie appears** in Plex within seconds!
@@ -341,17 +341,19 @@ modules.services.plex = {
 **Directory Structure:**
 
 ```
-/mnt/torrents/
-├── completed/              # qBittorrent finished downloads (seeding from here)
+/mnt/torrents/ (2TB disk /dev/sda)
+├── completed/         # qBittorrent finished downloads (seeding)
 │   └── Movie.2007.mkv
-├── incomplete/             # Active downloads
-├── watch/                  # Auto-import .torrent files
-├── plex-media/            # Plex media libraries
-│   ├── Movies/            # Hardlinked movies (Library #1)
-│   │   └── Movie.2007.mkv  # Same file as in completed/
-│   └── TV Shows/          # Hardlinked TV shows (Library #2)
-└── plex/                  # Plex configuration & metadata
+├── incomplete/        # Active downloads
+├── watch/             # Auto-import .torrent files
+└── plex/              # Plex media (separate subdirectory, same disk!)
+    ├── Movies/        # Hardlinked movies
+    │   └── Movie.2007.mkv  # Hardlink to ../completed/Movie.2007.mkv
+    └── TV Shows/      # Hardlinked TV shows
 ```
+
+**Key:** Plex media directory is a **subdirectory** of `/mnt/torrents/` to ensure both are on the same filesystem (required for hardlinks).
+Plex configuration and metadata are stored separately in `/var/lib/plex` on the system disk.
 
 **Advantages of Hardlinks:**
 
@@ -399,7 +401,7 @@ curl "http://localhost:32400/library/sections/1/refresh?X-Plex-Token=YOUR_TOKEN"
    ```
 4. Verify hardlink was created:
    ```bash
-   ls -la /mnt/torrents/plex-media/Movies/
+   ls -la /mnt/torrents/plex/Movies/
    ```
 5. Check Plex Web UI - movie should appear automatically!
 
@@ -407,12 +409,12 @@ curl "http://localhost:32400/library/sections/1/refresh?X-Plex-Token=YOUR_TOKEN"
 
 1. **Movies not appearing in Plex:**
    - Check script logs: `sudo cat /var/log/plex-qbittorrent-integration.log`
-   - Verify hardlinks were created: `ls -la /mnt/torrents/plex-media/Movies/`
+   - Verify hardlinks were created: `ls -la /mnt/torrents/plex/Movies/`
    - Manually trigger scan: `curl "http://localhost:32400/library/sections/1/refresh?X-Plex-Token=TOKEN"`
 
 2. **Hardlink creation fails:**
-   - Verify same filesystem: `df -h /mnt/torrents`
-   - Check permissions: `ls -la /mnt/torrents/plex-media/`
+   - Verify same filesystem: `df -h /mnt/torrents` (plex dir must be subdirectory!)
+   - Check permissions: `ls -la /mnt/torrents/plex/`
    - Verify qBittorrent user is in plex group: `groups qbittorrent`
 
 3. **Plex not scanning:**
@@ -426,7 +428,7 @@ curl "http://localhost:32400/library/sections/1/refresh?X-Plex-Token=YOUR_TOKEN"
 |--------|------|---------|-------------|
 | `enable` | bool | false | Enable Plex Media Server |
 | `dataDir` | path | "/var/lib/plex" | Plex config/metadata directory |
-| `mediaDir` | path | "/mnt/torrents/plex-media" | Root media directory |
+| `mediaDir` | path | "/mnt/torrents/plex" | Root media directory |
 | `openFirewall` | bool | true | Open Plex ports (32400) |
 | `hardwareAcceleration` | bool | false | Enable HW transcoding (PlexPass) |
 | `libraries.movies` | bool | true | Enable Movies library |
