@@ -329,38 +329,9 @@
     thunderbird.enable = true;
   };
 
-  # Base GNOME dconf configuration - shared settings
-  # Extension-specific configuration is handled in individual host files
-  programs.dconf.profiles.user.databases = [
-    {
-      settings = {
-        # Base GNOME interface settings
-        "org/gnome/desktop/interface" = {
-          show-battery-percentage = true;
-          clock-show-weekday = true;
-          clock-show-seconds = false;
-          locate-pointer = true;
-        };
-
-        # Base input configuration
-        "org/gnome/desktop/peripherals/keyboard" = {
-          numlock-state = true;
-          remember-numlock-state = true;
-        };
-
-        # Base privacy settings
-        "org/gnome/desktop/privacy" = {
-          report-technical-problems = false;
-          send-software-usage-stats = false;
-        };
-
-        # Base search settings
-        "org/gnome/desktop/search-providers" = {
-          disable-external = false;
-        };
-      };
-    }
-  ];
+  # Base GNOME dconf configuration - moved to host-specific gnome.nix files
+  # to avoid dconf database merging conflicts
+  # Each host defines its own complete dconf configuration
 
   # Security
   security = {

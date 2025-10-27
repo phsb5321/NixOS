@@ -67,19 +67,14 @@ in {
     ./hardware-configuration.nix
     ../../modules
     ../shared/common.nix
+    ./gnome.nix
   ];
 
 
-  # GNOME configuration - NixOS 25.11+ Wayland-only (X11 sessions removed in 25.11+)
-  modules.desktop.gnome = {
-    enable = true;
-    variant = "hardware"; # Back to hardware acceleration
-    wayland.enable = true; # NixOS 25.11+ only supports Wayland
-  };
+  # GNOME configuration is now in ./gnome.nix
 
   # Power management for gaming performance
   powerManagement.cpuFreqGovernor = "performance";
-
   # Boot configuration with variants
   boot = {
     # Temporary files and kernel optimization
@@ -234,10 +229,6 @@ in {
       nano
       htop
     ];
-
-  # GNOME login fixes (NixOS Wiki solution for session registration failures)
-  systemd.services."getty@tty1".enable = false;
-  systemd.services."autovt@tty1".enable = false;
 
   # Host-specific module configuration
   modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
@@ -417,16 +408,6 @@ in {
 
   # Host-specific security configuration
   security = {
-    # Enable PAM for GNOME keyring and authentication
-    pam.services = {
-      gdm = {
-        enableGnomeKeyring = true;
-      };
-      gdm-password = {
-        enableGnomeKeyring = true;
-      };
-    };
-
     auditd.enable = activeVariant.enableHardwareAccel;
     audit = lib.mkIf activeVariant.enableHardwareAccel {
       enable = true;
