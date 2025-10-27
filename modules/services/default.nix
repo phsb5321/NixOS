@@ -2,5 +2,6 @@
 {
   imports = [
     ./qbittorrent.nix
+    ./plex.nix
   ];
 }
