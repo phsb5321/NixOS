@@ -301,7 +301,7 @@ Each host defines its **complete GNOME configuration** in `hosts/<hostname>/gnom
 **Quick Status Checks:**
 ```bash
 # Check all media services
-sudo systemctl status qbittorrent plex plex-monitor
+sudo systemctl status qbittorrent plex plex-monitor audiobookshelf
 
 # Check mounts
 mount | grep -E "(torrents|AudioBooks)"
@@ -323,6 +323,7 @@ sudo systemctl restart mnt-torrents-plex-AudioBooks.mount
 **Access Services:**
 - qBittorrent Web UI: http://192.168.1.169:8080
 - Plex Web UI: http://192.168.1.169:32400/web
+- Audiobookshelf Web UI: http://192.168.1.169:13378 (RECOMMENDED for audiobooks)
 
 ### Dotfiles Integration
 - Project-local dotfiles using chezmoi stored in `~/NixOS/dotfiles/`
@@ -492,3 +493,45 @@ ls /mnt/torrents/plex/AudioBooks/
 - Scanner: Plex Music Scanner
 - Settings: Store track progress, use embedded tags
 - Full guide: `modules/services/AUDIOBOOKS-SETUP.md`
+
+### Audiobookshelf Configuration (RECOMMENDED)
+
+**Service:** `audiobookshelf.service`
+- Status: Auto-starts on boot, Docker container
+- Port: 13378
+- Data directory: /var/lib/audiobookshelf
+- Web UI: http://192.168.1.169:13378
+
+**Why Audiobookshelf:**
+- ✅ Purpose-built for audiobooks (not a workaround)
+- ✅ Superior metadata (Audible + Google Books + Open Library)
+- ✅ Automatic chapter detection and editing
+- ✅ Dedicated iOS/Android apps with offline listening
+- ✅ Better UI designed for audiobooks
+- ✅ Multi-user with cross-device progress sync
+- ✅ Actively developed (October 2025)
+
+**Configuration:**
+```nix
+modules.services.audiobookshelf = {
+  enable = true;
+  port = 13378;
+  audiobooksDir = "/mnt/torrents/plex/AudioBooks";  # Same SSHFS mount
+  dataDir = "/var/lib/audiobookshelf";
+};
+```
+
+**Initial Setup:**
+1. Access: http://192.168.1.169:13378
+2. Create admin account (first time)
+3. Add library: Books → `/audiobooks` folder
+4. Download mobile app for best experience
+
+**Service Management:**
+```bash
+sudo systemctl status audiobookshelf
+sudo docker logs audiobookshelf
+sudo systemctl restart audiobookshelf
+```
+
+**Full Guide:** `modules/services/AUDIOBOOKSHELF-SETUP.md`

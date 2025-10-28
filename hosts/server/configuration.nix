@@ -164,7 +164,7 @@
       movies = true;
       tvShows = true;
       music = false;
-      audiobooks = true; # Remote mount from audiobook server
+      audiobooks = true; # Remote mount from audiobook server (for Plex compatibility)
     };
 
     # Integration with qBittorrent
@@ -173,6 +173,18 @@
       autoScan = true; # Automatically scan Plex when new media is added
       useHardlinks = true; # Preserve seeding capability
     };
+  };
+
+  # Audiobookshelf - Modern audiobook server (RECOMMENDED for audiobooks)
+  modules.services.audiobookshelf = {
+    enable = true;
+    port = 13378; # Web UI port
+    openFirewall = true;
+
+    # Use the same SSHFS mount as Plex (read-only for audiobooks)
+    audiobooksDir = "/mnt/torrents/plex/AudioBooks";
+    podcastsDir = "/mnt/torrents/podcasts"; # Optional podcasts directory
+    dataDir = "/var/lib/audiobookshelf"; # Config and metadata on system disk
   };
 
   # SSHFS mount for AudioBooks from audiobook server (192.168.1.7)
