@@ -216,10 +216,14 @@ in {
         WebUI\Enabled=true
         WebUI\Port=${toString cfg.port}
         WebUI\Address=*
-        WebUI\LocalHostAuth=${if cfg.webUI.bypassLocalAuth then "false" else "true"}
+        WebUI\LocalHostAuth=${
+          if cfg.webUI.bypassLocalAuth
+          then "false"
+          else "true"
+        }
         ${lib.optionalString (cfg.webUI.bypassAuthSubnetWhitelist != "") ''
-        WebUI\AuthSubnetWhitelist=${cfg.webUI.bypassAuthSubnetWhitelist}
-        WebUI\AuthSubnetWhitelistEnabled=true
+          WebUI\AuthSubnetWhitelist=${cfg.webUI.bypassAuthSubnetWhitelist}
+          WebUI\AuthSubnetWhitelistEnabled=true
         ''}
         Downloads\SavePath=${cfg.downloadDir}
         Downloads\TempPath=${cfg.incompleteDir}
@@ -227,21 +231,21 @@ in {
         Downloads\ScanDirsV2=@Variant(\0\0\0\x1c\0\0\0\x1\0\0\0\x1a\0${builtins.replaceStrings ["/"] ["\\/"] cfg.watchDir}\0\0\0\x2\0\0\0\0)
         BitTorrent\Session\Port=${toString cfg.torrentPort}
         ${lib.optionalString (cfg.settings.maxRatio != null) ''
-        BitTorrent\MaxRatio=${toString cfg.settings.maxRatio}
-        BitTorrent\MaxRatioAction=0
+          BitTorrent\MaxRatio=${toString cfg.settings.maxRatio}
+          BitTorrent\MaxRatioAction=0
         ''}
         ${lib.optionalString (cfg.settings.maxSeedingTime != null) ''
-        BitTorrent\MaxSeedingMinutes=${toString cfg.settings.maxSeedingTime}
+          BitTorrent\MaxSeedingMinutes=${toString cfg.settings.maxSeedingTime}
         ''}
         ${lib.optionalString (cfg.settings.downloadLimit != null) ''
-        BitTorrent\Session\GlobalDLSpeedLimit=${toString (cfg.settings.downloadLimit * 1024)}
+          BitTorrent\Session\GlobalDLSpeedLimit=${toString (cfg.settings.downloadLimit * 1024)}
         ''}
         ${lib.optionalString (cfg.settings.uploadLimit != null) ''
-        BitTorrent\Session\GlobalUPSpeedLimit=${toString (cfg.settings.uploadLimit * 1024)}
+          BitTorrent\Session\GlobalUPSpeedLimit=${toString (cfg.settings.uploadLimit * 1024)}
         ''}
         ${lib.optionalString cfg.webhook.enable ''
-        Downloads\FinishedTorrentExportDir=
-        Downloads\TorrentExportDir=
+          Downloads\FinishedTorrentExportDir=
+          Downloads\TorrentExportDir=
         ''}
       '';
       mode = "0644";
