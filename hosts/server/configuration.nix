@@ -198,11 +198,19 @@
   };
 
   # Cloudflare Tunnel - Secure external access to Audiobookshelf
-  # Provides https://audiobooks.home301server.com.br
+  # Provides https://audiobooks.home301server.com.br/audiobookshelf/
   modules.services.cloudflareTunnel = {
     enable = true;
     tunnelName = "audiobookshelf";
     user = "notroot";
+  };
+
+  # Audiobookshelf Guardian - Health monitoring and protection
+  # Ensures Audiobookshelf stays accessible with correct configuration
+  modules.services.audiobookshelfGuardian = {
+    enable = true;
+    healthCheckInterval = 300; # Check every 5 minutes
+    enableAutoBackup = true; # Daily database backups
   };
 
   # SSHFS mount for AudioBooks from audiobook server (192.168.1.7)

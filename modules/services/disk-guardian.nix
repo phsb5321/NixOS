@@ -119,6 +119,34 @@
         log "WARNING: AudioBooks SSHFS mount is not mounted"
       fi
 
+      # Check Audiobookshelf Docker container
+      if command -v docker >/dev/null 2>&1; then
+        if ! docker ps --filter "name=audiobookshelf" --filter "status=running" --format "{{.Names}}" | grep -q "audiobookshelf"; then
+          log "ERROR: Audiobookshelf container is not running!"
+          # Try to restart the service
+          if systemctl restart audiobookshelf 2>/dev/null; then
+            log "SUCCESS: Audiobookshelf service restarted"
+          else
+            log "FAILED: Could not restart Audiobookshelf"
+          fi
+        else
+          # Container is running, check if it's responding
+          if ! timeout 3 curl -s http://localhost:13378/audiobookshelf/ >/dev/null 2>&1; then
+            log "WARNING: Audiobookshelf container running but not responding on port 13378"
+          fi
+        fi
+      fi
+
+      # Check Cloudflare Tunnel
+      if ! systemctl is-active --quiet cloudflared-tunnel; then
+        log "ERROR: Cloudflare Tunnel is not running!"
+        if systemctl restart cloudflared-tunnel 2>/dev/null; then
+          log "SUCCESS: Cloudflare Tunnel restarted"
+        else
+          log "FAILED: Could not restart Cloudflare Tunnel"
+        fi
+      fi
+
       sleep "$CHECK_INTERVAL"
     done
   '';
