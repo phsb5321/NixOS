@@ -65,11 +65,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a modular NixOS flake configuration supporting multiple hosts with shared package management:
 
 - **flake.nix**: Main flake entry point with nixpkgs-unstable for latest packages
-- **hosts/**: Host-specific configurations (default=desktop, laptop)
+- **hosts/**: Host-specific configurations (default=desktop, laptop, server)
 - **modules/**: Shared system modules with categorical organization
+  - `core/` - Base system configuration
+  - `packages/` - Categorical package management
+  - `desktop/` - Desktop environment (GNOME)
+  - `services/` - Server services (qBittorrent, Plex)
+  - `networking/` - Network configuration
+  - `shell/` - Shell configuration (ZSH, plugins)
+  - `dotfiles/` - Dotfiles management
 - **shells/**: Development environment shells for different languages
 - **user-scripts/**: Custom automation scripts (nixswitch, nix-shell-selector)
 - **dotfiles/**: Chezmoi-managed dotfiles stored in project
+- **plex-qbittorrent-scripts/**: External GitHub repo for media automation scripts
 
 ### Module System
 The configuration uses a modular approach with:
@@ -93,6 +101,48 @@ Categorical package management with per-host enable/disable:
 - **gaming**: Steam, Lutris, Wine, performance tools
 - **audioVideo**: PipeWire, EasyEffects, audio tools
 - **terminal**: Shell tools, fonts, terminal applications
+
+#### Services Module (`modules/services/`)
+Server services and daemons for media management:
+
+**qBittorrent** (`modules/services/qbittorrent.nix`):
+- Headless torrent client with Web UI (port 8080)
+- Dedicated 2TB disk storage configuration
+- Automatic filesystem mounting and formatting
+- Configurable seeding limits (ratio and time-based)
+- Bandwidth controls (upload/download limits)
+- Security hardening with systemd restrictions
+- Firewall integration
+- Watch directory for auto-importing .torrent files
+- No authentication for LAN access (192.168.0.0/16)
+- Web UI: http://server-ip:8080
+
+**Plex Media Server** (`modules/services/plex.nix`):
+- Media server with web UI (port 32400)
+- Automatic qBittorrent integration via monitor daemon
+- Hardlink-based media organization (preserves seeding)
+- Automatic library scanning via API
+- Support for Movies, TV Shows, Music, and AudioBooks libraries
+- Hardware transcoding support (PlexPass optional)
+- Shared 2TB disk storage with qBittorrent
+- Web UI: http://server-ip:32400/web
+
+**Plex Monitor Daemon** (`modules/services/qbittorrent-scripts/plex-monitor-daemon.py`):
+- Python daemon that continuously monitors qBittorrent API
+- Auto-detects completed movies and TV shows
+- Creates hardlinks in Plex media directories automatically
+- Runs as systemd service (polls every 30 seconds)
+- Smart detection: year patterns, video extensions, Bluray/DVD structures
+- Maintains state to avoid reprocessing
+- Supports movies with and without years in filename
+- Automatic Plex library scanning (when token configured)
+- Logs to /var/log/plex-monitor.log
+
+**Integration Features**:
+- Movies automatically appear in Plex after download completes
+- No duplicate files (hardlinks use no extra space)
+- Original torrents continue seeding in qBittorrent
+- Both services auto-start on boot and survive rebuilds
 
 #### Host Configurations
 - **server**: Minimal configuration, uses stable nixpkgs for reliability (THIS HOST - DEFAULT)
@@ -232,6 +282,48 @@ Each host defines its **complete GNOME configuration** in `hosts/<hostname>/gnom
 - Laptop: X11 mode for better file picker compatibility
 - Portal backend: GTK FileChooser interface for Electron applications
 
+### External Resources
+
+**GitHub Repositories:**
+- **Main NixOS Config**: https://github.com/phsb5321/NixOS
+- **Plex Integration Scripts**: https://github.com/phsb5321/plex-qbittorrent-scripts
+  - plex-monitor-daemon.py - Continuous monitoring daemon
+  - plex-integration.sh - qBittorrent completion hook
+  - completion-handler.sh - Advanced handler with webhooks
+
+**Documentation:**
+- qBittorrent & Plex: `modules/services/README.md`
+- AudioBooks Setup: `modules/services/AUDIOBOOKS-SETUP.md`
+- GNOME Architecture: `modules/desktop/gnome/README.md`
+
+### Server Service Management
+
+**Quick Status Checks:**
+```bash
+# Check all media services
+sudo systemctl status qbittorrent plex plex-monitor
+
+# Check mounts
+mount | grep -E "(torrents|AudioBooks)"
+df -h /mnt/torrents
+
+# View logs
+sudo journalctl -u qbittorrent -f
+sudo tail -f /var/log/plex-monitor.log
+
+# Restart services
+sudo systemctl restart qbittorrent
+sudo systemctl restart plex
+sudo systemctl restart plex-monitor
+
+# Remount AudioBooks
+sudo systemctl restart mnt-torrents-plex-AudioBooks.mount
+```
+
+**Access Services:**
+- qBittorrent Web UI: http://192.168.1.169:8080
+- Plex Web UI: http://192.168.1.169:32400/web
+
 ### Dotfiles Integration
 - Project-local dotfiles using chezmoi stored in `~/NixOS/dotfiles/`
 - Independent of NixOS rebuilds for instant configuration changes
@@ -244,3 +336,159 @@ Each host defines its **complete GNOME configuration** in `hosts/<hostname>/gnom
 - Dotfiles changes apply immediately without rebuilds
 - Language servers and tools are pre-configured for modern development
 - Zed Editor with Claude Code ACP agent integration
+
+## Server-Specific Configuration (THIS HOST)
+
+### Storage Configuration
+The server uses a dedicated 2TB disk (/dev/sda) for media storage:
+
+**Disk Layout:**
+- `/dev/sdb` (128GB) - System disk (root filesystem, bootloader)
+- `/dev/sda` (2TB) - Media disk (torrents, Plex media)
+  - Mounted at: `/mnt/torrents`
+  - Filesystem: ext4
+  - Auto-mounts on boot (configured in fileSystems)
+
+**Directory Structure:**
+```
+/mnt/torrents/ (2TB disk)
+├── completed/         # qBittorrent finished downloads (seeding)
+├── incomplete/        # Active downloads
+├── watch/             # Drop .torrent files for auto-import
+└── plex/              # Plex media libraries
+    ├── Movies/        # Hardlinked from completed/ (173 GB, 13+ movies)
+    ├── TV Shows/      # Auto-populated when TV shows download
+    └── AudioBooks/    # SSHFS mount from audiobook server
+```
+
+### qBittorrent Configuration
+
+**Service:** `qbittorrent.service`
+- Status: Auto-starts on boot, always running
+- User: qbittorrent:qbittorrent
+- Data directory: /var/lib/qbittorrent
+- Web UI: http://192.168.1.169:8080 (no authentication)
+
+**Configuration:**
+```nix
+modules.services.qbittorrent = {
+  enable = true;
+  storage.device = "/dev/sda";  # 2TB disk
+  downloadDir = "/mnt/torrents/completed";
+  incompleteDir = "/mnt/torrents/incomplete";
+  port = 8080;  # Web UI
+  torrentPort = 6881;
+  openFirewall = true;
+
+  settings = {
+    maxRatio = 2.0;
+    maxSeedingTime = 10080;  # 7 days
+    uploadLimit = 1024;  # 1 MB/s
+  };
+
+  webUI.bypassLocalAuth = true;  # No password for LAN
+};
+```
+
+**Important Files:**
+- Config: /var/lib/qbittorrent/qBittorrent/config/qBittorrent.conf
+- Logs: Check with `sudo journalctl -u qbittorrent -f`
+- SSH Key: /var/lib/qbittorrent/.ssh/id_ed25519 (for AudioBooks mount)
+
+### Plex Media Server Configuration
+
+**Service:** `plex.service`
+- Status: Auto-starts on boot, always running
+- User: plex:plex
+- Data directory: /var/lib/plex
+- Media directory: /mnt/torrents/plex
+- Web UI: http://192.168.1.169:32400/web
+
+**Configuration:**
+```nix
+modules.services.plex = {
+  enable = true;
+  dataDir = "/var/lib/plex";
+  mediaDir = "/mnt/torrents/plex";
+  openFirewall = true;
+
+  libraries = {
+    movies = true;
+    tvShows = true;
+    audiobooks = true;
+  };
+
+  integration.qbittorrent = {
+    enable = true;
+    autoScan = true;
+    useHardlinks = true;
+  };
+};
+```
+
+**Libraries to Configure in Plex Web UI:**
+1. **Movies**: `/mnt/torrents/plex/Movies` (13+ movies, 173 GB)
+2. **TV Shows**: `/mnt/torrents/plex/TV Shows` (auto-populated)
+3. **AudioBooks**: `/mnt/torrents/plex/AudioBooks` (57 audiobooks, 26 GB via SSHFS)
+
+**Important Files:**
+- Plex plugins: /var/lib/plex/Plex Media Server/Plug-ins/
+- Audnexus agent: /var/lib/plex/Plex Media Server/Plug-ins/Audnexus.bundle/
+- Plex token: /etc/plex/token (create this after first Plex setup)
+
+### Plex Monitor Daemon
+
+**Service:** `plex-monitor.service`
+- Status: Auto-starts on boot, polls qBittorrent every 30 seconds
+- User: qbittorrent:qbittorrent
+- Log: /var/log/plex-monitor.log
+
+**How It Works:**
+1. Monitors qBittorrent API for completed torrents
+2. Detects if content is a movie or TV show
+3. Creates hardlinks in `/mnt/torrents/plex/Movies/` or `/mnt/torrents/plex/TV Shows/`
+4. Triggers Plex library scan via API
+5. Maintains state in /var/lib/qbittorrent/processed_torrents.json
+
+**Monitor Logs:**
+```bash
+sudo tail -f /var/log/plex-monitor.log
+sudo systemctl status plex-monitor
+```
+
+### AudioBooks SSHFS Mount
+
+**Remote Server:** 192.168.1.7 (audiobook host)
+- Username: notroot
+- Password: 123
+- Remote path: /home/notroot/Documents/PLEX_AUDIOBOOK/temp/untagged
+
+**Mount Configuration:**
+- Local mount: /mnt/torrents/plex/AudioBooks
+- Type: SSHFS (fuse.sshfs)
+- Authentication: SSH key (/var/lib/qbittorrent/.ssh/id_ed25519)
+- Auto-mount: Yes (systemd automount)
+- Auto-reconnect: Every 15 seconds if connection lost
+
+**Systemd Units:**
+- `mnt-torrents-plex-AudioBooks.mount` - SSHFS mount service
+- `mnt-torrents-plex-AudioBooks.automount` - Automatic mounting on access
+
+**Check Mount Status:**
+```bash
+sudo systemctl status mnt-torrents-plex-AudioBooks.mount
+mount | grep AudioBooks
+ls /mnt/torrents/plex/AudioBooks/
+```
+
+**SSH Key Management:**
+- Key location: /var/lib/qbittorrent/.ssh/id_ed25519
+- Public key already added to audiobook server
+- Passwordless authentication configured
+
+**Plex AudioBooks Setup:**
+- Library type: Music
+- Agent: Audnexus (installed in Plex Plug-ins)
+- Scanner: Plex Music Scanner
+- Settings: Store track progress, use embedded tags
+- Full guide: `modules/services/AUDIOBOOKS-SETUP.md`
