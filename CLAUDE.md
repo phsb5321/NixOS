@@ -323,7 +323,8 @@ sudo systemctl restart mnt-torrents-plex-AudioBooks.mount
 **Access Services:**
 - qBittorrent Web UI: http://192.168.1.169:8080
 - Plex Web UI: http://192.168.1.169:32400/web
-- Audiobookshelf Web UI: http://192.168.1.169:13378 (RECOMMENDED for audiobooks)
+- Audiobookshelf Web UI: https://audiobooks.home301server.com.br (RECOMMENDED for audiobooks)
+  - Local: http://192.168.1.169:13378
 
 ### Dotfiles Integration
 - Project-local dotfiles using chezmoi stored in `~/NixOS/dotfiles/`
@@ -500,7 +501,8 @@ ls /mnt/torrents/plex/AudioBooks/
 - Status: Auto-starts on boot, Docker container
 - Port: 13378
 - Data directory: /var/lib/audiobookshelf
-- Web UI: http://192.168.1.169:13378
+- Web UI (Local): http://192.168.1.169:13378
+- Web UI (External): https://audiobooks.home301server.com.br
 
 **Why Audiobookshelf:**
 - ✅ Purpose-built for audiobooks (not a workaround)
@@ -522,10 +524,17 @@ modules.services.audiobookshelf = {
 ```
 
 **Initial Setup:**
-1. Access: http://192.168.1.169:13378
+1. Access: https://audiobooks.home301server.com.br (or http://192.168.1.169:13378 locally)
 2. Create admin account (first time)
 3. Add library: Books → `/audiobooks` folder
 4. Download mobile app for best experience
+
+**Cloudflare Tunnel:**
+- Tunnel ID: 7d1704a0-512f-4a54-92c4-d9bf0b4561c3
+- Public Domain: audiobooks.home301server.com.br
+- Config: ~/.cloudflared/config.yml
+- Credentials: ~/.cloudflared/7d1704a0-512f-4a54-92c4-d9bf0b4561c3.json
+- Running in background (to be added to systemd)
 
 **Service Management:**
 ```bash
