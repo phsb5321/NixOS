@@ -323,10 +323,11 @@ sudo systemctl restart mnt-torrents-plex-AudioBooks.mount
 **Access Services:**
 - qBittorrent Web UI: http://192.168.1.169:8080
 - Plex Web UI: http://192.168.1.169:32400/web
-- Audiobookshelf Web UI: https://audiobooks.home301server.com.br/audiobookshelf/ ✅ (RECOMMENDED for audiobooks)
-  - **IMPORTANT:** Must include `/audiobookshelf/` path in URL!
+- Audiobookshelf Web UI: https://audiobooks.home301server.com.br/audiobookshelf/ ✅ (RECOMMENDED)
+  - **CRITICAL:** Must include `/audiobookshelf/` path in URL!
   - Local: http://192.168.1.169:13378/audiobookshelf/
   - Cloudflare Tunnel: Active with HTTP/1.1 origin
+  - **Protected by Audiobookshelf Guardian** (health checks every 5 min, daily backups)
 
 ### Disaster Recovery & System Protection
 
@@ -671,3 +672,165 @@ sudo systemctl restart audiobookshelf
 ```
 
 **Full Guide:** `modules/services/AUDIOBOOKSHELF-SETUP.md`
+### Audiobookshelf Protection System
+
+**CRITICAL:** Audiobookshelf will ONLY work at https://audiobooks.home301server.com.br/audiobookshelf/
+
+The `/audiobookshelf/` path is **hardcoded** in the Docker image and cannot be changed.
+
+#### Audiobookshelf Guardian (Protection Service)
+
+The Audiobookshelf Guardian service ensures the application stays healthy and accessible:
+
+**Features:**
+- ✅ **Health checks every 5 minutes** - Verifies Docker container, local access, JavaScript assets
+- ✅ **Daily automatic backups** - Database backed up to `/var/lib/audiobookshelf/backups/` (keeps last 7)
+- ✅ **Automatic recovery** - Restarts container if it stops responding
+- ✅ **Configuration validation** - Ensures correct ROUTER_BASE_PATH setting
+- ✅ **Cloudflare Tunnel monitoring** - Verifies external access is working
+
+**Monitor Guardian:**
+```bash
+# View health check status
+systemctl status audiobookshelf-health-check.timer
+
+# View backup status
+systemctl status audiobookshelf-backup.timer
+
+# Check guardian logs
+tail -f /var/log/audiobookshelf-guardian.log
+
+# Manual health check
+sudo systemctl start audiobookshelf-health-check.service
+
+# View backups
+ls -lh /var/lib/audiobookshelf/backups/
+```
+
+**Health Check Tests:**
+1. ✓ Docker container is running
+2. ✓ Local access working (http://localhost:13378/audiobookshelf/)
+3. ✓ JavaScript assets accessible (/_nuxt/*.js)
+4. ✓ Config directory exists
+5. ✓ AudioBooks directory accessible
+6. ✓ Cloudflare Tunnel is active
+7. ✓ Container ROUTER_BASE_PATH configuration
+
+#### Disk Guardian Integration
+
+The Disk Guardian also monitors Audiobookshelf every 60 seconds:
+
+**Monitors:**
+- ✅ Docker container running status
+- ✅ HTTP response on port 13378
+- ✅ Automatic container restart if stopped
+- ✅ Cloudflare Tunnel status
+- ✅ Automatic tunnel restart if stopped
+
+**Check monitoring:**
+```bash
+tail -f /var/log/disk-guardian.log | grep -E "(Audiobookshelf|Cloudflare)"
+```
+
+#### What Will NEVER Break Audiobookshelf Again
+
+**1. Wrong URL Path** ❌ PREVENTED
+- Guardian validates `/audiobookshelf/` path is working
+- Documentation clearly states the correct URL
+- Health checks test both HTML and JavaScript assets
+
+**2. Container Stops** ❌ PREVENTED
+- Disk Guardian monitors container every 60 seconds
+- Automatic restart if container stops
+- Both systemd and Docker auto-restart enabled
+
+**3. Data Loss** ❌ PREVENTED
+- Daily automatic database backups
+- Keeps last 7 backups (rotating cleanup)
+- Backups stored in `/var/lib/audiobookshelf/backups/`
+
+**4. Configuration Changes** ❌ PREVENTED
+- NixOS module locks configuration
+- ROUTER_BASE_PATH removed (uses default)
+- Systemd service ensures consistent Docker run command
+
+**5. Cloudflare Tunnel Failure** ❌ PREVENTED
+- Disk Guardian monitors tunnel every 60 seconds
+- Automatic restart if tunnel stops
+- Systemd ensures tunnel starts on boot
+
+**6. AudioBooks Mount Failure** ❌ PREVENTED
+- Disk Guardian monitors SSHFS mount
+- Automatic remount attempts
+- Health check validates directory accessibility
+
+#### Recovery from Complete Failure
+
+If Audiobookshelf completely breaks, here's how to recover:
+
+**1. Check Guardian Status:**
+```bash
+sudo systemctl status audiobookshelf-health-check.timer
+sudo tail -50 /var/log/audiobookshelf-guardian.log
+```
+
+**2. Check Service and Container:**
+```bash
+sudo systemctl status audiobookshelf
+sudo docker ps -a | grep audiobookshelf
+sudo docker logs audiobookshelf
+```
+
+**3. Restart Everything:**
+```bash
+# Restart Audiobookshelf
+sudo systemctl restart audiobookshelf
+
+# Restart Cloudflare Tunnel
+sudo systemctl restart cloudflared-tunnel
+
+# Run health check
+sudo systemctl start audiobookshelf-health-check.service
+```
+
+**4. Restore from Backup (if needed):**
+```bash
+# Stop service
+sudo systemctl stop audiobookshelf
+
+# List backups
+ls -lh /var/lib/audiobookshelf/backups/
+
+# Restore database (replace TIMESTAMP with actual backup)
+sudo cp /var/lib/audiobookshelf/backups/absdatabase_TIMESTAMP.sqlite \
+       /var/lib/audiobookshelf/config/absdatabase.sqlite
+
+# Start service
+sudo systemctl start audiobookshelf
+```
+
+**5. Complete Reset (nuclear option):**
+```bash
+# Stop and remove everything
+sudo systemctl stop audiobookshelf
+sudo docker rm -f audiobookshelf
+
+# Clear data (WARNING: loses all settings!)
+sudo rm -rf /var/lib/audiobookshelf/*
+
+# Rebuild
+sudo nixos-rebuild switch --flake .#nixos-server
+```
+
+#### Correct URL Reference Card
+
+**ALWAYS use these URLs:**
+
+✅ **External:** https://audiobooks.home301server.com.br/audiobookshelf/  
+✅ **Local:** http://192.168.1.169:13378/audiobookshelf/
+
+❌ **WRONG (will hang forever):**
+- https://audiobooks.home301server.com.br/ (missing /audiobookshelf/)
+- http://192.168.1.169:13378/ (missing /audiobookshelf/)
+
+**Why?** The Audiobookshelf Docker image has this path hardcoded. It cannot be changed.
