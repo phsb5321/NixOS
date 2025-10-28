@@ -3,5 +3,6 @@
   imports = [
     ./qbittorrent.nix
     ./plex.nix
+    ./audiobookshelf.nix
   ];
 }

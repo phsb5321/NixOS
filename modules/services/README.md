@@ -439,3 +439,22 @@ curl "http://localhost:32400/library/sections/1/refresh?X-Plex-Token=YOUR_TOKEN"
 | `integration.qbittorrent.useHardlinks` | bool | true | Use hardlinks |
 
 See also: [Plex Module Source](./plex.nix) | [Plex Integration Script](./qbittorrent-scripts/plex-integration.sh)
+
+
+---
+
+## Audiobookshelf
+
+Modern, purpose-built audiobook and podcast server - **RECOMMENDED for audiobooks**.
+
+**Quick Start:** http://192.168.1.169:13378
+
+See: [Audiobookshelf Setup Guide](./AUDIOBOOKSHELF-SETUP.md) for complete documentation.
+
+**Why Better Than Plex:**
+✅ 3 metadata sources (Audible + Google Books + Open Library)
+✅ Automatic chapter detection and editing
+✅ Dedicated iOS/Android apps
+✅ Purpose-built interface
+✅ Actively developed (2025)
+
