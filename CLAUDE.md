@@ -529,12 +529,18 @@ modules.services.audiobookshelf = {
 3. Add library: Books → `/audiobooks` folder
 4. Download mobile app for best experience
 
-**Cloudflare Tunnel:**
+**Cloudflare Tunnel Configuration:**
 - Tunnel ID: 7d1704a0-512f-4a54-92c4-d9bf0b4561c3
 - Public Domain: audiobooks.home301server.com.br
 - Config: ~/.cloudflared/config.yml
 - Credentials: ~/.cloudflared/7d1704a0-512f-4a54-92c4-d9bf0b4561c3.json
-- Running in background (to be added to systemd)
+- Status: Running (start with: cloudflared tunnel --config ~/.cloudflared/config.yml run audiobookshelf)
+- Connected to: 4 Cloudflare edge locations
+
+**First-Time Setup:**
+The "Server is not initialized" message is NORMAL - this is the admin account
+creation screen. Access https://audiobooks.home301server.com.br and create
+your account to initialize the server.
 
 **Service Management:**
 ```bash
