@@ -164,6 +164,7 @@
       movies = true;
       tvShows = true;
       music = false;
+      audiobooks = true; # Remote mount from audiobook server
     };
 
     # Integration with qBittorrent
@@ -173,6 +174,24 @@
       useHardlinks = true; # Preserve seeding capability
     };
   };
+
+  # SSHFS mount for AudioBooks from audiobook server (192.168.1.7)
+  systemd.mounts = [
+    {
+      what = "notroot@192.168.1.7:/home/notroot/Documents/PLEX_AUDIOBOOK/temp/untagged";
+      where = "/mnt/torrents/plex/AudioBooks";
+      type = "fuse.sshfs";
+      options = "allow_other,default_permissions,_netdev,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,IdentityFile=/var/lib/qbittorrent/.ssh/id_ed25519,UserKnownHostsFile=/var/lib/qbittorrent/.ssh/known_hosts,StrictHostKeyChecking=no,uid=193,gid=193,umask=002";
+      wantedBy = ["multi-user.target"];
+    }
+  ];
+
+  systemd.automounts = [
+    {
+      where = "/mnt/torrents/plex/AudioBooks";
+      wantedBy = ["multi-user.target"];
+    }
+  ];
 
   # Configure console keymap to match original config
   console.keyMap = lib.mkForce "br-abnt2";
@@ -203,6 +222,8 @@
       wget
       git
       claude-code
+      sshpass # For SSH automation
+      sshfs # For mounting remote filesystems
 
       # Proxmox VM guest tools
       qemu-utils
