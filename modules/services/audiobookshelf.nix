@@ -82,6 +82,7 @@ in {
             --name audiobookshelf \
             --restart unless-stopped \
             -p ${toString cfg.port}:80 \
+            -e ROUTER_BASE_PATH="" \
             -v ${cfg.dataDir}/config:/config \
             -v ${cfg.dataDir}/metadata:/metadata \
             -v ${cfg.audiobooksDir}:/audiobooks:ro \
