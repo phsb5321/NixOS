@@ -145,8 +145,8 @@ in {
     storage = {
       device = lib.mkOption {
         type = lib.types.str;
-        default = "/dev/sda";
-        description = "Block device to use for torrent storage";
+        default = "";
+        description = "Block device to use for torrent storage (e.g., /dev/sda or UUID=...)";
       };
 
       mountPoint = lib.mkOption {

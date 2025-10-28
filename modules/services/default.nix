@@ -4,5 +4,7 @@
     ./qbittorrent.nix
     ./plex.nix
     ./audiobookshelf.nix
+    ./disk-guardian.nix
+    ./cloudflare-tunnel.nix
   ];
 }
