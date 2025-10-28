@@ -63,10 +63,10 @@
   };
 
   # Bootloader - GRUB for BIOS systems
-  # NOTE: Changed from /dev/sda to /dev/sdb because sda is the 2TB torrents disk
+  # Use /dev/sda (128GB system disk) for bootloader
   boot.loader.grub = {
     enable = true;
-    device = "/dev/sdb"; # System disk (128GB)
+    device = "/dev/sda"; # System disk (128GB)
     useOSProber = true;
   };
 
@@ -110,8 +110,9 @@
     group = "qbittorrent";
 
     # Storage configuration for 2TB disk
+    # Using UUID to prevent disk ordering issues (UUID is stable across reboots)
     storage = {
-      device = "/dev/sda"; # 2TB disk
+      device = "/dev/disk/by-uuid/b51ce311-3e53-4541-b793-96a2615ae16e"; # 2TB torrents disk
       mountPoint = "/mnt/torrents";
       format = false; # Set to true ONLY on first setup (WARNING: destroys data!)
       fsType = "ext4";
@@ -185,6 +186,23 @@
     audiobooksDir = "/mnt/torrents/plex/AudioBooks";
     podcastsDir = "/mnt/torrents/podcasts"; # Optional podcasts directory
     dataDir = "/var/lib/audiobookshelf"; # Config and metadata on system disk
+  };
+
+  # Disk Guardian - Comprehensive disk monitoring and verification
+  # Prevents mount failures from breaking the system
+  modules.services.diskGuardian = {
+    enable = true;
+    enableBootVerification = true; # Verify disks on boot
+    enableContinuousMonitoring = true; # Monitor mount health
+    monitorInterval = 60; # Check every 60 seconds
+  };
+
+  # Cloudflare Tunnel - Secure external access to Audiobookshelf
+  # Provides https://audiobooks.home301server.com.br
+  modules.services.cloudflareTunnel = {
+    enable = true;
+    tunnelName = "audiobookshelf";
+    user = "notroot";
   };
 
   # SSHFS mount for AudioBooks from audiobook server (192.168.1.7)

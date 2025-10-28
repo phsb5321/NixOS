@@ -323,8 +323,119 @@ sudo systemctl restart mnt-torrents-plex-AudioBooks.mount
 **Access Services:**
 - qBittorrent Web UI: http://192.168.1.169:8080
 - Plex Web UI: http://192.168.1.169:32400/web
-- Audiobookshelf Web UI: https://audiobooks.home301server.com.br (RECOMMENDED for audiobooks)
+- Audiobookshelf Web UI: https://audiobooks.home301server.com.br ✅ (RECOMMENDED for audiobooks)
   - Local: http://192.168.1.169:13378
+  - Cloudflare Tunnel: Active with HTTP/1.1 origin (fixed HTTP/2 compatibility issue)
+
+### Disaster Recovery & System Protection
+
+#### Disk Guardian Protection System
+The server now includes **Disk Guardian**, a comprehensive monitoring system that prevents disk mounting failures:
+
+**Features:**
+- ✅ **Boot-time verification**: Validates disk UUIDs before starting services
+- ✅ **Continuous monitoring**: Checks mount health every 60 seconds
+- ✅ **Automatic remounting**: Attempts to remount failed mounts
+- ✅ **Alert logging**: Records all issues to `/var/log/disk-guardian.log`
+
+**Check Disk Guardian Status:**
+```bash
+sudo systemctl status disk-guardian-verify  # Boot verification
+sudo systemctl status disk-guardian-monitor # Continuous monitoring
+sudo tail -f /var/log/disk-guardian.log     # View logs
+```
+
+#### Recovery from Disk Ordering Issues (October 2025 Incident)
+
+**What Happened:**
+On Oct 28, 2025, the system failed to boot because disk device names swapped:
+- `/dev/sda` and `/dev/sdb` switched positions after reboot
+- Configuration was trying to mount the wrong disk for torrents storage
+- System entered "degraded" state with mount failures
+- All data was preserved (no data loss)
+
+**Root Cause:**
+Hardware device names (`/dev/sda`, `/dev/sdb`) are **not stable** and can change between reboots based on BIOS/UEFI detection order.
+
+**Permanent Fix Applied:**
+1. **UUID-based mounting** for torrents disk: `/dev/disk/by-uuid/b51ce311-3e53-4541-b793-96a2615ae16e`
+2. **Disk Guardian service** to verify disks on boot and monitor continuously
+3. **Updated GRUB bootloader** to use correct system disk
+
+**If This Happens Again:**
+
+1. **Check system status:**
+```bash
+systemctl is-system-running              # Should show "running" not "degraded"
+journalctl -p err -b --no-pager | tail -50  # Check for errors
+lsblk -f                                 # Check disk layout
+```
+
+2. **Verify disk assignments:**
+```bash
+lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,UUID  # Check disk sizes and UUIDs
+blkid                                    # List all UUIDs
+mount | grep torrents                    # Check if torrents disk is mounted
+```
+
+3. **Expected UUIDs:**
+   - System disk (128GB): `740d22cb-2333-47fd-bb66-92d573e66605`
+   - Torrents disk (2TB): `b51ce311-3e53-4541-b793-96a2615ae16e`
+
+4. **Manual recovery (if needed):**
+```bash
+# Identify correct disk by size
+lsblk -o NAME,SIZE
+
+# Mount torrents disk manually (replace X with correct device)
+sudo mount /dev/sdX /mnt/torrents
+
+# Restart services
+sudo systemctl restart qbittorrent plex audiobookshelf
+```
+
+5. **Verify data integrity:**
+```bash
+# Check completed downloads
+sudo du -sh /mnt/torrents/completed
+
+# Count movies
+sudo find /mnt/torrents/plex/Movies -type f -name "*.mkv" -o -name "*.mp4" | wc -l
+
+# Verify hardlinks (should show "Links: 2")
+sudo stat /mnt/torrents/completed/[some-movie].mkv
+sudo stat /mnt/torrents/plex/Movies/[same-movie].mkv
+```
+
+#### System Health Checks
+
+**Daily Health Check Commands:**
+```bash
+# Overall system status
+systemctl is-system-running
+uptime
+
+# Disk space
+df -h /mnt/torrents
+lsblk -o NAME,SIZE,FSUSE%
+
+# Service status
+sudo systemctl status qbittorrent plex audiobookshelf disk-guardian-monitor
+
+# Mount verification
+mount | grep -E "(torrents|AudioBooks)"
+sudo ls /mnt/torrents/completed /mnt/torrents/plex/Movies
+
+# Check for errors
+journalctl -p err --since "24 hours ago" --no-pager
+sudo tail -50 /var/log/disk-guardian.log
+```
+
+**Expected Data (as of Oct 28, 2025):**
+- Torrents disk usage: ~260GB / 2TB (13%)
+- Movies in library: 14+ films
+- AudioBooks: 57+ audiobooks via SSHFS
+- Services: All running without errors
 
 ### Dotfiles Integration
 - Project-local dotfiles using chezmoi stored in `~/NixOS/dotfiles/`
@@ -342,11 +453,20 @@ sudo systemctl restart mnt-torrents-plex-AudioBooks.mount
 ## Server-Specific Configuration (THIS HOST)
 
 ### Storage Configuration
-The server uses a dedicated 2TB disk (/dev/sda) for media storage:
+The server uses a dedicated 2TB disk for media storage:
+
+**IMPORTANT: This system uses UUID-based mounting to prevent disk ordering issues!**
 
 **Disk Layout:**
-- `/dev/sdb` (128GB) - System disk (root filesystem, bootloader)
-- `/dev/sda` (2TB) - Media disk (torrents, Plex media)
+- 128GB disk - System disk (root filesystem, bootloader)
+  - Current device: `/dev/sda` (can change!)
+  - UUID: `740d22cb-2333-47fd-bb66-92d573e66605`
+- 2TB disk - Media disk (torrents, Plex media)
+  - Current device: `/dev/sdb` (can change!)
+  - UUID: `b51ce311-3e53-4541-b793-96a2615ae16e` (used in configuration)
+
+**WARNING:** Device names (`/dev/sda`, `/dev/sdb`) are NOT stable and can swap between reboots.
+Always use UUIDs in configuration files!
   - Mounted at: `/mnt/torrents`
   - Filesystem: ext4
   - Auto-mounts on boot (configured in fileSystems)
