@@ -323,9 +323,10 @@ sudo systemctl restart mnt-torrents-plex-AudioBooks.mount
 **Access Services:**
 - qBittorrent Web UI: http://192.168.1.169:8080
 - Plex Web UI: http://192.168.1.169:32400/web
-- Audiobookshelf Web UI: https://audiobooks.home301server.com.br ✅ (RECOMMENDED for audiobooks)
-  - Local: http://192.168.1.169:13378
-  - Cloudflare Tunnel: Active with HTTP/1.1 origin (fixed HTTP/2 compatibility issue)
+- Audiobookshelf Web UI: https://audiobooks.home301server.com.br/audiobookshelf/ ✅ (RECOMMENDED for audiobooks)
+  - **IMPORTANT:** Must include `/audiobookshelf/` path in URL!
+  - Local: http://192.168.1.169:13378/audiobookshelf/
+  - Cloudflare Tunnel: Active with HTTP/1.1 origin
 
 ### Disaster Recovery & System Protection
 
