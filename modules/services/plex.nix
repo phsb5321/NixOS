@@ -72,6 +72,12 @@ in {
         default = false;
         description = "Enable Music library";
       };
+
+      audiobooks = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable AudioBooks library";
+      };
     };
 
     integration = {
@@ -127,6 +133,9 @@ in {
       ]
       ++ lib.optionals cfg.libraries.music [
         "d ${cfg.mediaDir}/Music 0755 ${plexUser} ${plexGroup} -"
+      ]
+      ++ lib.optionals cfg.libraries.audiobooks [
+        "d ${cfg.mediaDir}/AudioBooks 0775 ${plexUser} ${plexGroup} -"
       ];
 
     # Add qBittorrent user to Plex group for file access
