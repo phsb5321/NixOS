@@ -132,11 +132,20 @@ Server services and daemons for media management:
 - Auto-detects completed movies and TV shows
 - Creates hardlinks in Plex media directories automatically
 - Runs as systemd service (polls every 30 seconds)
-- Smart detection: year patterns, video extensions, Bluray/DVD structures
+- Smart detection: year patterns for movies, S##E## patterns for TV shows
 - Maintains state to avoid reprocessing
 - Supports movies with and without years in filename
+- **TV Show Support**: Detects S01E01, s01e01, and 1x01 formats
+- **Smart Organization**: Creates proper Plex structure (Show Name/Season XX/)
+- **Season Pack Support**: Extracts all episodes from season pack directories
 - Automatic Plex library scanning (when token configured)
 - Logs to /var/log/plex-monitor.log
+
+**TV Show Detection Examples:**
+- `Shameless.S01E01.Pilot.mkv` → `/TV Shows/Shameless/Season 01/`
+- `The.Office.US.S02E05.mkv` → `/TV Shows/The Office US/Season 02/`
+- `Breaking.Bad.s03e07.mkv` → `/TV Shows/Breaking Bad/Season 03/`
+- `Friends.1x05.mkv` → `/TV Shows/Friends/Season 01/`
 
 **Integration Features**:
 - Movies automatically appear in Plex after download completes

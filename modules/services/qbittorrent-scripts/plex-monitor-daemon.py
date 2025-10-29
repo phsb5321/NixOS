@@ -161,44 +161,109 @@ class PlexMonitor:
         ]
         return any(re.search(pattern, name) for pattern in patterns)
 
-    def create_hardlink(self, source: Path, target: Path) -> bool:
-        """Create hardlink from source to target"""
+    def extract_show_info(self, name: str) -> tuple:
+        """
+        Extract show name and season number from filename.
+        Returns: (show_name, season_number)
+
+        Examples:
+          Shameless.S01E01.Pilot.mkv -> ("Shameless", "01")
+          The.Office.US.S02E05.mkv -> ("The Office US", "02")
+          Friends.1x05.mkv -> ("Friends", "01")
+        """
+        import re
+
+        # Try S##E## format first (most common)
+        season_match = re.search(r'[Ss](\d{2})[Ee]\d{2}', name)
+        if season_match:
+            season_num = season_match.group(1)
+            # Extract show name (everything before the season pattern)
+            show_name = name[:season_match.start()]
+            # Clean up show name
+            show_name = re.sub(r'[._-]+$', '', show_name)  # Remove trailing separators
+            show_name = show_name.replace('.', ' ').replace('_', ' ').strip()
+            return (show_name, season_num)
+
+        # Try #x## format
+        season_match = re.search(r'(\d{1,2})x\d{2}', name)
+        if season_match:
+            season_num = season_match.group(1).zfill(2)  # Pad to 2 digits
+            show_name = name[:season_match.start()]
+            show_name = re.sub(r'[._-]+$', '', show_name)
+            show_name = show_name.replace('.', ' ').replace('_', ' ').strip()
+            return (show_name, season_num)
+
+        # Fallback: couldn't extract info
+        return (None, None)
+
+    def create_hardlink(self, source: Path, target: Path, show_name: str = None, season_num: str = None) -> bool:
+        """
+        Create hardlink from source to target.
+        For TV shows, organizes into Show Name/Season XX/ structure.
+        """
         try:
             # Ensure source exists
             if not source.exists():
                 logger.error(f"Source does not exist: {source}")
                 return False
 
+            # For TV shows, create proper directory structure
+            if show_name and season_num:
+                # Create: /TV Shows/Show Name/Season XX/
+                show_dir = target / show_name
+                season_dir = show_dir / f"Season {season_num}"
+                season_dir.mkdir(parents=True, exist_ok=True)
+                target = season_dir
+                logger.info(f"Organizing into: {show_name}/Season {season_num}/")
+
             # Ensure target parent directory exists
             target.parent.mkdir(parents=True, exist_ok=True)
 
             if source.is_dir():
-                # For directories, create hardlinks for all files recursively
+                # For directories (season packs), create hardlinks for all files
                 logger.info(f"Creating hardlinks for directory: {source.name}")
-                target_base = target / source.name
-                target_base.mkdir(parents=True, exist_ok=True)
 
-                for root, dirs, files in os.walk(source):
-                    rel_root = Path(root).relative_to(source)
-                    target_root = target_base / rel_root
+                # For TV shows, link files directly into season folder (not nested)
+                if show_name and season_num:
+                    for root, dirs, files in os.walk(source):
+                        for f in files:
+                            # Only link video files to avoid clutter
+                            if f.lower().endswith(('.mkv', '.mp4', '.avi', '.mov', '.wmv', '.m4v', '.mpg', '.mpeg')):
+                                src_file = Path(root) / f
+                                tgt_file = target / f
 
-                    # Create subdirectories
-                    for d in dirs:
-                        (target_root / d).mkdir(parents=True, exist_ok=True)
+                                if not tgt_file.exists():
+                                    try:
+                                        os.link(src_file, tgt_file)
+                                        logger.debug(f"Linked: {f}")
+                                    except Exception as e:
+                                        logger.warning(f"Failed to link {f}: {e}")
+                else:
+                    # Movies: keep original directory structure
+                    target_base = target / source.name
+                    target_base.mkdir(parents=True, exist_ok=True)
 
-                    # Create hardlinks for files
-                    for f in files:
-                        src_file = Path(root) / f
-                        tgt_file = target_root / f
+                    for root, dirs, files in os.walk(source):
+                        rel_root = Path(root).relative_to(source)
+                        target_root = target_base / rel_root
 
-                        if not tgt_file.exists():
-                            try:
-                                os.link(src_file, tgt_file)
-                                logger.debug(f"Linked: {f}")
-                            except Exception as e:
-                                logger.warning(f"Failed to link {f}: {e}")
+                        # Create subdirectories
+                        for d in dirs:
+                            (target_root / d).mkdir(parents=True, exist_ok=True)
 
-                logger.info(f"✅ Directory hardlinked: {source.name} -> {target_base}")
+                        # Create hardlinks for files
+                        for f in files:
+                            src_file = Path(root) / f
+                            tgt_file = target_root / f
+
+                            if not tgt_file.exists():
+                                try:
+                                    os.link(src_file, tgt_file)
+                                    logger.debug(f"Linked: {f}")
+                                except Exception as e:
+                                    logger.warning(f"Failed to link {f}: {e}")
+
+                logger.info(f"✅ Directory hardlinked successfully")
                 return True
             else:
                 # Single file
@@ -260,9 +325,20 @@ class PlexMonitor:
 
         elif self.is_tv_show(name):
             logger.info(f"📺 Detected TV show: {name}")
-            if self.create_hardlink(source, TV_DIR):
-                self.scan_plex_library(PLEX_TV_SECTION, "TV Shows")
-                processed = True
+            # Extract show name and season
+            show_name, season_num = self.extract_show_info(name)
+
+            if show_name and season_num:
+                logger.info(f"   Show: {show_name}, Season: {season_num}")
+                if self.create_hardlink(source, TV_DIR, show_name, season_num):
+                    self.scan_plex_library(PLEX_TV_SECTION, "TV Shows")
+                    processed = True
+            else:
+                logger.warning(f"Could not extract show info from: {name}")
+                # Fallback: create without proper structure
+                if self.create_hardlink(source, TV_DIR):
+                    self.scan_plex_library(PLEX_TV_SECTION, "TV Shows")
+                    processed = True
 
         else:
             logger.info(f"ℹ️  Media type not detected: {name}")
