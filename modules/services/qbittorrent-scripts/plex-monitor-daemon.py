@@ -116,7 +116,7 @@ class PlexMonitor:
         has_year = any(re.search(pattern, name) for pattern in year_patterns)
 
         # Check if it's a TV show first (to exclude from movie detection)
-        if self.is_tv_show(name):
+        if self.is_tv_show(name, content_path):
             return False
 
         # If has year, check for video content
@@ -151,25 +151,51 @@ class PlexMonitor:
 
         return False
 
-    def is_tv_show(self, name: str) -> bool:
-        """Detect if content is a TV show"""
+    def is_tv_show(self, name: str, content_path: str = None) -> bool:
+        """
+        Detect if content is a TV show.
+        Checks both torrent name and file contents for season/episode patterns.
+        """
         import re
-        # Check for season/episode patterns
+
+        # Check for season/episode patterns in name
         patterns = [
             r'[Ss]\d{2}[Ee]\d{2}',  # S01E01
             r'\d{1,2}x\d{2}',       # 1x01
+            r'[Ss]\d{2}[^Ee]',      # S01 (season pack without episode)
+            r'[Ss]eason\s*\d{1,2}', # Season 01, season 1
         ]
-        return any(re.search(pattern, name) for pattern in patterns)
 
-    def extract_show_info(self, name: str) -> tuple:
+        if any(re.search(pattern, name) for pattern in patterns):
+            return True
+
+        # Fallback: Check file contents if torrent name doesn't match
+        # This handles torrents named "Show Name Season 1 Complete"
+        if content_path and os.path.isdir(content_path):
+            try:
+                for root, dirs, files in os.walk(content_path):
+                    for f in files:
+                        if any(re.search(r'[Ss]\d{2}[Ee]\d{2}', f) for _ in [1]):
+                            logger.debug(f"Detected TV show from file: {f}")
+                            return True
+                    # Only check first level to avoid deep recursion
+                    break
+            except Exception as e:
+                logger.debug(f"Error checking files: {e}")
+
+        return False
+
+    def extract_show_info(self, name: str, content_path: str = None) -> tuple:
         """
         Extract show name and season number from filename.
         Returns: (show_name, season_number)
 
         Examples:
           Shameless.S01E01.Pilot.mkv -> ("Shameless", "01")
+          Shameless.S01.1080p.mkv -> ("Shameless", "01")
           The.Office.US.S02E05.mkv -> ("The Office US", "02")
           Friends.1x05.mkv -> ("Friends", "01")
+          Shameless Season 1 Complete -> ("Shameless", "01")
         """
         import re
 
@@ -177,21 +203,52 @@ class PlexMonitor:
         season_match = re.search(r'[Ss](\d{2})[Ee]\d{2}', name)
         if season_match:
             season_num = season_match.group(1)
-            # Extract show name (everything before the season pattern)
             show_name = name[:season_match.start()]
-            # Clean up show name
-            show_name = re.sub(r'[._-]+$', '', show_name)  # Remove trailing separators
+            show_name = re.sub(r'[._-]+$', '', show_name)
+            show_name = show_name.replace('.', ' ').replace('_', ' ').strip()
+            return (show_name, season_num)
+
+        # Try S## only (season pack without episode number)
+        season_match = re.search(r'[Ss](\d{2})', name)
+        if season_match:
+            season_num = season_match.group(1)
+            show_name = name[:season_match.start()]
+            show_name = re.sub(r'[._-]+$', '', show_name)
             show_name = show_name.replace('.', ' ').replace('_', ' ').strip()
             return (show_name, season_num)
 
         # Try #x## format
         season_match = re.search(r'(\d{1,2})x\d{2}', name)
         if season_match:
-            season_num = season_match.group(1).zfill(2)  # Pad to 2 digits
+            season_num = season_match.group(1).zfill(2)
             show_name = name[:season_match.start()]
             show_name = re.sub(r'[._-]+$', '', show_name)
             show_name = show_name.replace('.', ' ').replace('_', ' ').strip()
             return (show_name, season_num)
+
+        # Try "Season X" format
+        season_match = re.search(r'[Ss]eason\s*(\d{1,2})', name)
+        if season_match:
+            season_num = season_match.group(1).zfill(2)
+            show_name = name[:season_match.start()]
+            show_name = re.sub(r'[._-]+$', '', show_name)
+            show_name = show_name.replace('.', ' ').replace('_', ' ').strip()
+            return (show_name, season_num)
+
+        # Fallback: Check first file in directory
+        if content_path and os.path.isdir(content_path):
+            try:
+                for root, dirs, files in os.walk(content_path):
+                    for f in files:
+                        if f.lower().endswith(('.mkv', '.mp4', '.avi')):
+                            # Try to extract from first video file
+                            result = self.extract_show_info(f)
+                            if result[0] is not None:
+                                logger.info(f"Extracted show info from file: {f}")
+                                return result
+                    break
+            except Exception:
+                pass
 
         # Fallback: couldn't extract info
         return (None, None)
@@ -323,10 +380,10 @@ class PlexMonitor:
                 self.scan_plex_library(PLEX_MOVIES_SECTION, "Movies")
                 processed = True
 
-        elif self.is_tv_show(name):
+        elif self.is_tv_show(name, content_path):
             logger.info(f"📺 Detected TV show: {name}")
             # Extract show name and season
-            show_name, season_num = self.extract_show_info(name)
+            show_name, season_num = self.extract_show_info(name, content_path)
 
             if show_name and season_num:
                 logger.info(f"   Show: {show_name}, Season: {season_num}")

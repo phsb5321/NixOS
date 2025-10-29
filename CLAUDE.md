@@ -143,9 +143,17 @@ Server services and daemons for media management:
 
 **TV Show Detection Examples:**
 - `Shameless.S01E01.Pilot.mkv` → `/TV Shows/Shameless/Season 01/`
+- `Shameless.S01.1080p.WEB-DL` (season pack) → `/TV Shows/Shameless/Season 01/`
+- `Shameless Season 1 Complete` → `/TV Shows/Shameless/Season 01/` (detects from files)
 - `The.Office.US.S02E05.mkv` → `/TV Shows/The Office US/Season 02/`
 - `Breaking.Bad.s03e07.mkv` → `/TV Shows/Breaking Bad/Season 03/`
 - `Friends.1x05.mkv` → `/TV Shows/Friends/Season 01/`
+
+**Supported Season Pack Formats:**
+- Torrent with S## in name (e.g., "Shameless.S01.1080p")
+- Torrent with "Season X" in name (e.g., "Shameless Season 1 Complete")
+- Torrent with S##E## in name (e.g., "Shameless.S01E01-E12")
+- Torrent with episode files inside (fallback detection from file names)
 
 **Integration Features**:
 - Movies automatically appear in Plex after download completes
