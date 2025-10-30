@@ -851,3 +851,31 @@ sudo nixos-rebuild switch --flake .#nixos-server
 - http://192.168.1.169:13378/ (missing /audiobookshelf/)
 
 **Why?** The Audiobookshelf Docker image has this path hardcoded. It cannot be changed.
+
+### Remote AudioBooks Server Status
+
+**Remote Server:** 192.168.1.7 (audiobook host)
+- **Status:** Check with `ping 192.168.1.7`
+- If unreachable: Audiobookshelf will start WITHOUT audiobooks library
+- If accessible: SSHFS mount will auto-connect
+
+**Reconnect AudioBooks Mount (when server comes back online):**
+```bash
+# 1. Verify server is reachable
+ping -c 3 192.168.1.7
+
+# 2. Test SSH access
+ssh -i /var/lib/qbittorrent/.ssh/id_ed25519 notroot@192.168.1.7 'ls /home/notroot/Documents/PLEX_AUDIOBOOK/temp/untagged'
+
+# 3. Restart SSHFS mount
+sudo systemctl restart mnt-torrents-plex-AudioBooks.mount
+mount | grep AudioBooks
+
+# 4. Restart Audiobookshelf to pick up the mount
+sudo systemctl restart audiobookshelf
+
+# 5. Verify audiobooks are accessible
+sudo ls /mnt/torrents/plex/AudioBooks/
+```
+
+**Note:** Audiobookshelf will work fine without the remote mount - it just won't show the audiobooks library until reconnected.
