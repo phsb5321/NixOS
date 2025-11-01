@@ -56,6 +56,7 @@
     pkgsConfig = {
       allowUnfree = true;
       allowUnfreePredicate = _: true;
+      allowBroken = true; # Temporarily allow broken packages during upgrade
     };
 
     # Helper function to create a NixOS system
