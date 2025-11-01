@@ -141,11 +141,11 @@
 
     # Define all your hosts here
     hosts = {
-      # Primary desktop system (default)
-      default = {
+      # Primary desktop system
+      desktop = {
         system = "x86_64-linux";
         hostname = "nixos-desktop";
-        configPath = "default"; # Maps to hosts/default/
+        configPath = "desktop"; # Maps to hosts/desktop/
         nixpkgsInput = nixpkgs-unstable; # Use unstable as the main channel
       };
 
@@ -169,9 +169,11 @@
     # NixOS Configurations - Generated from hosts definition
     nixosConfigurations = nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts // {
       # Compatibility aliases for systems with different hostnames
-      nixos = mkNixosSystem hosts.default;
-      nixos-desktop = mkNixosSystem hosts.default;
+      nixos = mkNixosSystem hosts.desktop;
+      nixos-desktop = mkNixosSystem hosts.desktop;
       nixos-laptop = mkNixosSystem hosts.laptop;
+      # Legacy alias for backward compatibility
+      default = mkNixosSystem hosts.desktop;
     };
 
     # Formatter for each system (using alejandra for better formatting)
@@ -279,7 +281,7 @@
         # Script to deploy to a specific host
         deploy = pkgs.writeShellScriptBin "deploy" ''
           set -e
-          HOST=''${1:-default}
+          HOST=''${1:-desktop}
 
           if [ -z "$HOST" ]; then
             echo "Usage: $0 <hostname>"
@@ -294,7 +296,7 @@
         # Script to build without switching
         build = pkgs.writeShellScriptBin "build" ''
           set -e
-          HOST=''${1:-default}
+          HOST=''${1:-desktop}
           echo "Building configuration for $HOST..."
           nixos-rebuild build --flake .#$HOST
         '';

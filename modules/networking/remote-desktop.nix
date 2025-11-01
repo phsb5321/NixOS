@@ -22,7 +22,7 @@ in {
         type = types.listOf types.package;
         default = with pkgs; [
           remmina         # Multi-protocol remote desktop client
-          freerdp3        # Latest FreeRDP for best compatibility
+          freerdp         # FreeRDP for RDP connectivity
           tigervnc        # VNC client
           gnome-connections # GNOME's native remote desktop client
         ];

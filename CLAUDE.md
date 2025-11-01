@@ -49,8 +49,8 @@ Comprehensive documentation of the completed refactoring:
 main (protected)
   ├── develop (ACTIVE - contains all refactoring work)
   │   ├── refactor/architecture-v2 (MERGED via fast-forward ✅)
-  │   ├── host/default (desktop - now obsolete, can be archived)
-  │   └── host/laptop (laptop - now obsolete, can be archived)
+  │   ├── host/desktop (desktop - formerly host/default)
+  │   └── host/laptop (laptop)
 ```
 
 ### Integration Complete ✅
@@ -74,9 +74,9 @@ The refactoring has been successfully merged to develop:
 
 **Next Actions:**
 1. ✅ DONE: Merge `refactor/architecture-v2` → `develop`
-2. Test on both desktop and laptop systems (recommended)
-3. Merge `develop` → `main` when verified stable
-4. Archive obsolete branches (`host/default`, `host/laptop`)
+2. ✅ DONE: Rename default host to desktop
+3. Test on both desktop and laptop systems (recommended)
+4. Merge `develop` → `main` when verified stable
 
 ### Refactoring Milestones - All Complete ✅
 
@@ -248,7 +248,7 @@ The refactoring has been successfully merged to develop:
 
 ### NixOS Rebuilds
 - `./user-scripts/nixswitch` - Modern TUI-based rebuild script with auto-host detection, parallel processing, and error handling
-- `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop host  
+- `sudo nixos-rebuild switch --flake .#desktop` - Manual rebuild for desktop host
 - `sudo nixos-rebuild switch --flake .#laptop` - Manual rebuild for laptop host
 - `sudo nixos-rebuild test --flake .` - Test configuration without switching
 - `sudo nixos-rebuild build --flake .` - Build without switching
@@ -263,7 +263,7 @@ The refactoring has been successfully merged to develop:
 ### Flake Operations
 - `nix flake update` - Update all flake inputs
 - `nix flake check` - Validate flake syntax and configuration
-- `nix build .#nixosConfigurations.default.config.system.build.toplevel` - Build system configuration
+- `nix build .#nixosConfigurations.desktop.config.system.build.toplevel` - Build system configuration
 - `alejandra .` - Format Nix code
 
 ### System Maintenance
@@ -299,13 +299,13 @@ The refactoring has been successfully merged to develop:
 This is a modular NixOS flake configuration supporting multiple hosts with shared package management:
 
 - **flake.nix**: Main flake entry point with nixpkgs-unstable for latest packages
-- **hosts/**: Host-specific configurations (default=desktop, laptop)
-  - **hosts/shared/common.nix**: ⚠️ Will be replaced by role modules in refactor
+- **hosts/**: Host-specific configurations (desktop, laptop)
+  - Role-based modular architecture (replaced hosts/shared/common.nix)
 - **modules/**: Shared system modules with categorical organization
-  - **modules/packages/default.nix**: ⚠️ Will be split into multiple files in refactor
+  - Modular package categories (replaced monolithic default.nix)
 - **shells/**: Development environment shells for different languages
 - **user-scripts/**: Custom automation scripts (nixswitch, nix-shell-selector)
-- **dotfiles/**: Chezmoi-managed dotfiles stored in project (needs initialization)
+- **dotfiles/**: Chezmoi-managed dotfiles stored in project (initialized)
 
 ### Module System
 The configuration uses a modular approach with:
@@ -342,7 +342,7 @@ Categorical package management with per-host enable/disable:
 - **terminal**: Shell tools, fonts, terminal applications
 
 #### Host Configurations
-- **default** (desktop): Gaming enabled, AMD GPU optimization, full development setup, remote desktop (VNC/RDP)
+- **desktop**: Gaming enabled, AMD GPU optimization, full development setup, remote desktop (VNC/RDP)
 - **laptop**: Gaming disabled, Intel graphics, minimal package set, Tailscale enabled
 
 #### Profiles System (`modules/profiles/`)
@@ -429,16 +429,16 @@ This repository uses a structured branch workflow for managing multi-host config
 
 - **main**: Production-ready stable configuration (protected, requires PR approval)
 - **develop**: Integration branch for features affecting multiple hosts or shared modules
-- **host/default**: Desktop-specific changes (AMD GPU, gaming, performance)
+- **host/desktop**: Desktop-specific changes (AMD GPU, gaming, performance) - formerly host/default
 - **host/laptop**: Laptop-specific changes (Intel/NVIDIA GPU, power management)
 
 ### Working with Branches
 ```bash
 # Host-specific changes
-git checkout host/default  # or host/laptop
-sudo nixos-rebuild switch --flake .#default
+git checkout host/desktop  # or host/laptop
+sudo nixos-rebuild switch --flake .#desktop
 git commit -m "feat(desktop): description"
-git push origin host/default
+git push origin host/desktop
 # Create PR: host/* → develop
 
 # Shared module changes
