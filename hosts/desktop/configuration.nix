@@ -182,7 +182,7 @@
 
     # Memory analysis
     heaptrack
-    massif-visualizer
+    # massif-visualizer # Temporarily disabled: broken CMake compatibility in nixpkgs-unstable
 
     # Disk utilities
     ncdu
