@@ -49,6 +49,7 @@ in {
         vulkan-tools
         vulkan-validation-layers
         mesa
+        rocmPackages.clr.icd  # Better OpenCL support
       ];
 
       # 32-bit support
@@ -79,6 +80,10 @@ in {
 
         # Vulkan driver
         "AMD_VULKAN_ICD" = lib.mkDefault "RADV";
+
+        # RADV performance optimizations
+        "RADV_PERFTEST" = lib.mkDefault "gpl,nggc";  # Graphics pipeline library + NGG culling
+        "RADV_DEBUG" = lib.mkDefault "zerovram";      # Reduce VRAM usage
       };
 
       # Useful AMD GPU tools
