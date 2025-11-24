@@ -67,6 +67,10 @@ in {
         GTK_CSD = "1";
         CLUTTER_BACKEND = "wayland";
         WLR_DRM_NO_ATOMIC = "1";
+
+        # Performance optimizations
+        MUTTER_DEBUG_FORCE_KMS_MODE = "simple";  # Better GPU compatibility
+        CLUTTER_PAINT = "disable-clipped-redraws:disable-culling";  # Reduce redraws
       })
 
       # Electron Wayland support
