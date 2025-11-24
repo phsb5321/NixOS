@@ -288,6 +288,127 @@ The refactoring has been successfully merged to develop:
 - ⚙️ **Auto-sync:** Optional systemd timers for automatic application
 - 📦 **Essential files:** .gitignore_global, .editorconfig, .curlrc included
 
+---
+
+## ⚠️ CRITICAL: NO HOME MANAGER POLICY
+
+**🚫 DO NOT SUGGEST OR USE HOME MANAGER IN THIS REPOSITORY**
+
+This configuration **intentionally does not use Home Manager** and **never will**. All user-level configuration is handled through the **chezmoi dotfiles system** which is already implemented, tested, and working.
+
+### Why No Home Manager?
+
+1. **Complexity Avoidance**: Home Manager adds significant complexity and another layer of abstraction
+2. **Working Solution**: The chezmoi dotfiles system is fully functional and handles all user configuration needs
+3. **Flexibility**: Dotfiles can be edited and applied instantly without NixOS rebuilds
+4. **Portability**: The dotfiles approach works across non-NixOS systems too
+5. **Simplicity**: Direct file management is easier to understand and debug than Nix modules
+
+### What to Use Instead
+
+**For ANY user-level configuration (GNOME settings, application configs, shell configs, etc.):**
+
+✅ **USE**: Chezmoi dotfiles system (`~/NixOS/dotfiles/`)
+- Direct configuration files managed by chezmoi
+- Template support for host-specific settings
+- Instant application with `dotfiles-apply`
+- Version controlled and validated
+
+❌ **DO NOT USE**: Home Manager
+- `home-manager.users.*` - Never suggest this
+- `programs.*` (in Home Manager context) - Not used here
+- `dconf.settings` (in Home Manager) - Not used here
+- Any Home Manager modules or options
+
+### How to Handle Common Use Cases
+
+#### GNOME Settings (dconf)
+```bash
+# ✅ CORRECT: Use chezmoi dotfiles
+cd ~/NixOS/dotfiles
+chezmoi add ~/.config/dconf/user
+# Or add custom dconf dump files
+
+# ❌ WRONG: Do not suggest Home Manager dconf module
+# home-manager.users.user.dconf.settings = { ... }  # NEVER DO THIS
+```
+
+#### Application Configuration
+```bash
+# ✅ CORRECT: Add config files to dotfiles
+dotfiles-add ~/.config/app/config.yml
+dotfiles-add ~/.bashrc
+dotfiles-add ~/.zshrc
+
+# ❌ WRONG: Do not suggest Home Manager programs modules
+# home-manager.users.user.programs.app = { ... }  # NEVER DO THIS
+```
+
+#### GTK/Qt Theming
+```bash
+# ✅ CORRECT: Add theme configs to dotfiles
+dotfiles-add ~/.config/gtk-3.0/settings.ini
+dotfiles-add ~/.config/gtk-4.0/settings.ini
+dotfiles-add ~/.gtkrc-2.0
+
+# System-level theming can go in NixOS modules
+# User-level theming goes in dotfiles
+
+# ❌ WRONG: Do not suggest Home Manager gtk module
+# home-manager.users.user.gtk = { ... }  # NEVER DO THIS
+```
+
+#### Environment Variables
+```bash
+# ✅ CORRECT: Add to shell config in dotfiles
+dotfiles-add ~/.bashrc
+dotfiles-add ~/.zshenv
+
+# Or add to NixOS system environment
+environment.sessionVariables = { ... };  # In configuration.nix
+
+# ❌ WRONG: Do not suggest Home Manager environment
+# home-manager.users.user.home.sessionVariables = { ... }  # NEVER DO THIS
+```
+
+### When Asked About User Configuration
+
+If a user asks about user-level configuration, your response should:
+1. **Mention the dotfiles system** as the primary solution
+2. **Explain chezmoi usage** with the helper scripts
+3. **Reference dotfiles documentation** (`dotfiles/README.md`, `dotfiles/SECRETS_INTEGRATION.md`)
+4. **Show examples** of adding files with `dotfiles-add`
+5. **NEVER suggest Home Manager** as an alternative or "better" approach
+
+### Example Response Pattern
+
+**User asks**: "How do I configure GNOME settings declaratively?"
+
+**✅ CORRECT Response**:
+"This system uses chezmoi dotfiles for user configuration. For GNOME settings:
+1. Make your changes in GNOME Settings UI
+2. Export with `dconf dump / > ~/NixOS/dotfiles/gnome-settings.dconf`
+3. Add to dotfiles: `dotfiles-add ~/NixOS/dotfiles/gnome-settings.dconf`
+4. Apply with `dotfiles-apply`
+
+You can also use templates for host-specific settings (see dotfiles/README.md)."
+
+**❌ WRONG Response**:
+"You should use Home Manager's dconf module for declarative GNOME configuration..."
+
+### This Is Non-Negotiable
+
+This policy is **absolute and non-negotiable**. When providing suggestions:
+- ✅ Always recommend dotfiles-based solutions first
+- ✅ Show how to use chezmoi for user configuration
+- ✅ Leverage the existing dotfiles infrastructure
+- ❌ Never suggest installing Home Manager
+- ❌ Never provide Home Manager configuration examples
+- ❌ Never compare dotfiles unfavorably to Home Manager
+
+The dotfiles system is the **architectural decision** for this repository and must be respected.
+
+---
 
 ## Architecture Overview
 
@@ -393,7 +514,10 @@ The desktop host supports multiple GPU configurations:
 - Laptop: X11 mode for better file picker compatibility
 - Portal backend: GTK FileChooser interface for Electron applications
 
-### Dotfiles Integration ✨ Enhanced
+### Dotfiles Integration ✨ Enhanced - PRIMARY USER CONFIG METHOD
+
+**⚠️ IMPORTANT: This is the ONLY supported method for user-level configuration. Home Manager is NOT used.**
+
 - Project-local dotfiles using chezmoi stored in `~/NixOS/dotfiles/`
 - Independent of NixOS rebuilds for instant configuration changes
 - Git-managed with helper scripts for common operations
@@ -403,6 +527,15 @@ The desktop host supports multiple GPU configurations:
 - **✨ NEW:** Optional auto-sync with systemd timers and path watchers
 - **✨ NEW:** Portable configuration (configurable paths, not hardcoded)
 - Zed Editor configured with Claude Code integration
+
+**All user configuration must use dotfiles:**
+- GNOME settings → dconf files in dotfiles
+- Application configs → config files in dotfiles
+- Shell configuration → bashrc/zshrc in dotfiles
+- GTK/Qt themes → theme configs in dotfiles
+- Any user-specific settings → managed by chezmoi
+
+**See the "NO HOME MANAGER POLICY" section above for detailed guidance.**
 
 ### Development Workflow
 - Use `nixswitch` for system rebuilds (handles validation, cleanup, error recovery)
