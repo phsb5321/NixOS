@@ -102,11 +102,53 @@ in {
       glib-networking.enable = true;
       sushi.enable = true;
       tinysparql.enable = true;
+
+      # Disable bloat
+      core-apps.enable = false;
+      games.enable = false;
+      core-developer-tools.enable = false;
     };
 
     # Additional services
     services.geoclue2.enable = lib.mkIf cfg.coreServices true;
     services.upower.enable = lib.mkIf cfg.coreServices true;
+
+    # Exclude unwanted GNOME packages
+    environment.gnome.excludePackages = with pkgs; [
+      # Apps
+      gnome-photos
+      gnome-tour
+      cheese          # Webcam app
+      gnome-music
+      gedit
+      epiphany        # GNOME Web browser
+      geary           # Email client
+      gnome-characters
+      totem           # Video player
+      gnome-calendar
+      gnome-contacts
+      gnome-maps
+
+      # Games
+      tali            # Poker game
+      iagno           # Go game
+      hitori          # Sudoku game
+      atomix          # Puzzle game
+      gnome-chess
+      gnome-mahjongg
+      gnome-mines
+      gnome-sudoku
+      gnome-tetravex
+      quadrapassel    # Tetris
+      five-or-more
+      four-in-a-row
+      gnome-taquin
+      gnome-klotski
+      gnome-nibbles
+      gnome-robots
+      lightsoff
+      swell-foop
+    ];
 
     # dconf support
     programs.dconf.enable = true;
@@ -184,6 +226,7 @@ in {
         adwaita-icon-theme
         gnome-themes-extra
         gtk-engine-murrine
+        adw-gtk3  # Adwaita-like theme for GTK3
       ]);
   };
 }
