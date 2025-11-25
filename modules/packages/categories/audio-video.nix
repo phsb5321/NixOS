@@ -1,8 +1,11 @@
 # ~/NixOS/modules/packages/categories/audio-video.nix
 # Audio and video tools
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.modules.packages.audioVideo;
 in {
   options.modules.packages.audioVideo = {
@@ -45,12 +48,12 @@ in {
         pipewire
         wireplumber
       ]
-      ++ lib.optionals cfg.audioEffects [ easyeffects ]
+      ++ lib.optionals cfg.audioEffects [easyeffects]
       ++ lib.optionals cfg.audioControl [
         pavucontrol
         helvum
       ]
-      ++ lib.optionals cfg.webcam [ guvcview ]
+      ++ lib.optionals cfg.webcam [guvcview]
       ++ cfg.extraPackages;
   };
 }

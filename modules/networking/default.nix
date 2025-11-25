@@ -91,7 +91,6 @@
         };
       };
 
-
       monitoring = {
         enable = mkOption {
           type = types.bool;
@@ -146,7 +145,6 @@
           DNSStubListener=yes
         '';
       };
-
 
       # ———————————————————————————————————————
       # Network monitoring and reliability

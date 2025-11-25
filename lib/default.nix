@@ -1,14 +1,17 @@
 # ~/NixOS/lib/default.nix
 # Library functions for NixOS configuration
-{ lib, inputs, ... }:
-
 {
+  lib,
+  inputs,
+  ...
+}: {
   # Import all lib modules
-  builders = import ./builders.nix { inherit lib inputs; };
-  utils = import ./utils.nix { inherit lib; };
+  builders = import ./builders.nix {inherit lib inputs;};
+  utils = import ./utils.nix {inherit lib;};
 
   # Re-export commonly used nixpkgs lib functions
-  inherit (lib)
+  inherit
+    (lib)
     mkIf
     mkDefault
     mkForce

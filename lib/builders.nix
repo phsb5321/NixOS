@@ -1,8 +1,9 @@
 # ~/NixOS/lib/builders.nix
 # System builder functions for NixOS configuration
-{ lib, inputs }:
-
 {
+  lib,
+  inputs,
+}: {
   # Build a NixOS system with sensible defaults
   mkSystem = {
     hostname,
@@ -42,31 +43,33 @@
         stablePkgs = pkgs;
       };
 
-      modules = [
-        # Base configuration
-        {
-          nixpkgs.config = pkgsConfig;
-          nix.settings = {
-            experimental-features = [ "nix-command" "flakes" ];
-            auto-optimise-store = true;
-          };
-          nix.gc = {
-            automatic = true;
-            dates = "weekly";
-            options = "--delete-older-than 7d";
-          };
-          system.stateVersion = systemVersion;
-          networking.hostName = lib.mkDefault hostname;
-        }
+      modules =
+        [
+          # Base configuration
+          {
+            nixpkgs.config = pkgsConfig;
+            nix.settings = {
+              experimental-features = ["nix-command" "flakes"];
+              auto-optimise-store = true;
+            };
+            nix.gc = {
+              automatic = true;
+              dates = "weekly";
+              options = "--delete-older-than 7d";
+            };
+            system.stateVersion = systemVersion;
+            networking.hostName = lib.mkDefault hostname;
+          }
 
-        # Import all modules
-        ../modules
+          # Import all modules
+          ../modules
 
-        # Role-based configuration
-        { modules.roles.${role}.enable = true; }
+          # Role-based configuration
+          {modules.roles.${role}.enable = true;}
 
-        # Hardware modules
-      ] ++ hardware ++ extraModules;
+          # Hardware modules
+        ]
+        ++ hardware ++ extraModules;
     };
 
   # Helper to create package category modules
@@ -75,15 +78,23 @@
     description ? "packages for ${name}",
     packages,
     extraOptions ? {},
-  }: { config, lib, pkgs, pkgs-unstable, ... }: {
-    options.modules.packages.${name} = {
-      enable = lib.mkEnableOption "${name} packages";
-      packages = lib.mkOption {
-        type = lib.types.listOf lib.types.package;
-        default = packages;
-        description = "List of ${description}";
-      };
-    } // extraOptions;
+  }: {
+    config,
+    lib,
+    pkgs,
+    pkgs-unstable,
+    ...
+  }: {
+    options.modules.packages.${name} =
+      {
+        enable = lib.mkEnableOption "${name} packages";
+        packages = lib.mkOption {
+          type = lib.types.listOf lib.types.package;
+          default = packages;
+          description = "List of ${description}";
+        };
+      }
+      // extraOptions;
 
     config = lib.mkIf config.modules.packages.${name}.enable {
       environment.systemPackages = config.modules.packages.${name}.packages;

@@ -260,7 +260,7 @@ in {
               pkgs.python3Packages.pygments # Syntax highlighting
 
               # Bibliography and reference management
-              pkgs.jabref # Bibliography reference manager
+              # pkgs.jabref # Bibliography reference manager (temporarily disabled - OpenJDK 21.0.9 build issue)
 
               # Math and science tools
               pkgs.gnuplot # Plotting utility
