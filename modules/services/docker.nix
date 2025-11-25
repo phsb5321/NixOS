@@ -1,8 +1,10 @@
 # ~/NixOS/modules/services/docker.nix
 # Docker container service configuration
-{ config, lib, ... }:
-
 {
+  config,
+  lib,
+  ...
+}: {
   options.modules.services.docker = {
     enable = lib.mkEnableOption "Docker container service";
   };

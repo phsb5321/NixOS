@@ -1,8 +1,11 @@
 # ~/NixOS/modules/gpu/intel.nix
 # Intel integrated GPU module
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.modules.gpu.intel;
 in {
   options.modules.gpu.intel = {
@@ -23,11 +26,11 @@ in {
 
   config = lib.mkIf cfg.enable {
     # Intel GPU kernel module
-    boot.initrd.kernelModules = [ "i915" ];
+    boot.initrd.kernelModules = ["i915"];
 
     # Intel GPU kernel parameters
     boot.kernelParams = [
-      "i915.enable_guc=3"  # Enable GuC and HuC firmware loading
+      "i915.enable_guc=3" # Enable GuC and HuC firmware loading
     ];
 
     # Graphics hardware
@@ -36,15 +39,17 @@ in {
 
       extraPackages = with pkgs; [
         # VA-API drivers (choose based on generation)
-        (if (builtins.elem cfg.generation ["haswell" "broadwell" "skylake" "kabylake" "coffeelake"])
-         then intel-media-driver  # Newer driver for Gen 8+
-         else intel-vaapi-driver) # Legacy driver for older generations
+        (
+          if (builtins.elem cfg.generation ["haswell" "broadwell" "skylake" "kabylake" "coffeelake"])
+          then intel-media-driver # Newer driver for Gen 8+
+          else intel-vaapi-driver
+        ) # Legacy driver for older generations
 
         # Additional Intel packages
         libva
         libva-utils
-        intel-media-driver  # iHD driver for newer Intel
-        intel-vaapi-driver  # i965 driver for older Intel
+        intel-media-driver # iHD driver for newer Intel
+        intel-vaapi-driver # i965 driver for older Intel
         vulkan-tools
         vulkan-validation-layers
         mesa
@@ -52,7 +57,7 @@ in {
     };
 
     # Video driver
-    services.xserver.videoDrivers = [ "intel" ];
+    services.xserver.videoDrivers = ["intel"];
 
     # Environment variables
     environment.variables = {

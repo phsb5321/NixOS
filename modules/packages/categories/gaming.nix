@@ -1,8 +1,11 @@
 # ~/NixOS/modules/packages/categories/gaming.nix
 # Gaming packages and tools
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.modules.packages.gaming;
 in {
   options.modules.packages.gaming = {
@@ -47,20 +50,18 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-      # Performance tools
+    # Performance tools
       (lib.optionals cfg.performance [
         gamemode
         gamescope
         mangohud
         btop
       ])
-
       # Game launchers
       ++ (lib.optionals cfg.launchers [
         heroic
         lutris
       ])
-
       # Wine and compatibility
       ++ (lib.optionals cfg.wine [
         protontricks
@@ -69,17 +70,14 @@ in {
         wine-staging
         dxvk
       ])
-
       # GPU control
       ++ (lib.optionals cfg.gpuControl [
         corectrl
       ])
-
       # Minecraft
       ++ (lib.optionals cfg.minecraft [
         prismlauncher
       ])
-
       # Extra packages
       ++ cfg.extraPackages;
   };

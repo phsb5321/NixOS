@@ -1,8 +1,11 @@
 # ~/NixOS/modules/packages/categories/utilities.nix
 # System utilities and tools
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.modules.packages.utilities;
 in {
   options.modules.packages.utilities = {
@@ -59,40 +62,34 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-      # Disk management
+    # Disk management
       (lib.optionals cfg.diskManagement [
         gparted
         baobab
         lsof
       ])
-
       # File sync
       ++ (lib.optionals cfg.fileSync [
         syncthing
       ])
-
       # Compression
       ++ (lib.optionals cfg.compression [
         pigz
         unzip
       ])
-
       # Security
       ++ (lib.optionals cfg.security [
         seahorse
         bleachbit
       ])
-
       # PDF viewer
       ++ (lib.optionals cfg.pdfViewer [
         kdePackages.okular
       ])
-
       # Messaging
       ++ (lib.optionals cfg.messaging [
         ferdium
       ])
-
       # Fonts
       ++ (lib.optionals cfg.fonts [
         cantarell-fonts
@@ -101,7 +98,6 @@ in {
         noto-fonts-cjk-sans
         noto-fonts-color-emoji
       ])
-
       # Extra packages
       ++ cfg.extraPackages;
   };
