@@ -159,7 +159,7 @@ in {
     # Enable AMD GPU optimizations for RX 5700 XT
     modules.hardware.amdgpu = {
       enable = true;
-      model = "navi10";  # RX 5700 XT uses Navi 10
+      model = "navi10"; # RX 5700 XT uses Navi 10
       powerManagement = true;
     };
 
@@ -283,7 +283,7 @@ in {
     # Basic systemd-resolved configuration (detailed DNS config in host-specific files)
     services.resolved = {
       enable = true;
-      fallbackDns = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" ];
+      fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
     };
 
     # Virtualization configuration

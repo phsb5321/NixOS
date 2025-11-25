@@ -13,79 +13,79 @@ with lib; let
 
   # Script to initialize chezmoi with our custom source directory
   initScript = pkgs.writeShellScriptBin "dotfiles-init" ''
-        #!/usr/bin/env bash
-        set -euo pipefail
+            #!/usr/bin/env bash
+            set -euo pipefail
 
-        echo "🧰 Initializing Chezmoi with NixOS Project Dotfiles"
-        echo "=================================================="
+            echo "🧰 Initializing Chezmoi with NixOS Project Dotfiles"
+            echo "=================================================="
 
-        # Check if chezmoi is available
-        if ! command -v chezmoi &> /dev/null; then
-            echo "❌ chezmoi is not installed. Please rebuild your NixOS configuration."
-            exit 1
-        fi
+            # Check if chezmoi is available
+            if ! command -v chezmoi &> /dev/null; then
+                echo "❌ chezmoi is not installed. Please rebuild your NixOS configuration."
+                exit 1
+            fi
 
-        # Path to our dotfiles directory
-        DOTFILES_DIR="${dotfilesPath}"
-        USERNAME="${cfg.username}"
+            # Path to our dotfiles directory
+            DOTFILES_DIR="${dotfilesPath}"
+            USERNAME="${cfg.username}"
 
-        if [[ ! -d "$DOTFILES_DIR" ]]; then
-            echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
-            exit 1
-        fi
+            if [[ ! -d "$DOTFILES_DIR" ]]; then
+                echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+                exit 1
+            fi
 
-        echo "📁 Using dotfiles from: $DOTFILES_DIR"
+            echo "📁 Using dotfiles from: $DOTFILES_DIR"
 
-        # Ensure config directory exists
-        mkdir -p ~/.config/chezmoi
+            # Ensure config directory exists
+            mkdir -p ~/.config/chezmoi
 
-        # Create chezmoi configuration
-        cat > ~/.config/chezmoi/chezmoi.toml <<EOF
-# Chezmoi configuration for NixOS project
-# This configures chezmoi to use the dotfiles directory within the project
+            # Create chezmoi configuration
+            cat > ~/.config/chezmoi/chezmoi.toml <<EOF
+    # Chezmoi configuration for NixOS project
+    # This configures chezmoi to use the dotfiles directory within the project
 
-# Set the source directory to our NixOS dotfiles
-sourceDir = "$DOTFILES_DIR"
+    # Set the source directory to our NixOS dotfiles
+    sourceDir = "$DOTFILES_DIR"
 
-[data]
-    # Hostname for templating
-    hostname = "{{ .chezmoi.hostname }}"
-    # Username for templating
-    username = "{{ .chezmoi.username }}"
-    # OS for templating
-    os = "{{ .chezmoi.os }}"
-    # Architecture for templating
-    arch = "{{ .chezmoi.arch }}"
-    # Host type detection
-    isDesktop = {{ if eq .chezmoi.hostname "nixos" }}true{{ else }}false{{ end }}
-    isLaptop = {{ if eq .chezmoi.hostname "laptop" }}true{{ else }}false{{ end }}
+    [data]
+        # Hostname for templating
+        hostname = "{{ .chezmoi.hostname }}"
+        # Username for templating
+        username = "{{ .chezmoi.username }}"
+        # OS for templating
+        os = "{{ .chezmoi.os }}"
+        # Architecture for templating
+        arch = "{{ .chezmoi.arch }}"
+        # Host type detection
+        isDesktop = {{ if eq .chezmoi.hostname "nixos" }}true{{ else }}false{{ end }}
+        isLaptop = {{ if eq .chezmoi.hostname "laptop" }}true{{ else }}false{{ end }}
 
-[git]
-    # Auto-commit changes to dotfiles
-    autoCommit = true
-    # Auto-push changes (set to false initially for safety)
-    autoPush = false
+    [git]
+        # Auto-commit changes to dotfiles
+        autoCommit = true
+        # Auto-push changes (set to false initially for safety)
+        autoPush = false
 
-[edit]
-    # Use VS Code as the default editor for dotfiles
-    command = "code"
-    args = ["--wait"]
+    [edit]
+        # Use VS Code as the default editor for dotfiles
+        command = "code"
+        args = ["--wait"]
 
-[diff]
-    # Use VS Code for diffs
-    command = "code"
-    args = ["--wait", "--diff"]
-EOF
+    [diff]
+        # Use VS Code for diffs
+        command = "code"
+        args = ["--wait", "--diff"]
+    EOF
 
-        # Apply dotfiles
-        echo "🔄 Applying dotfiles..."
-        chezmoi apply
+            # Apply dotfiles
+            echo "🔄 Applying dotfiles..."
+            chezmoi apply
 
-        echo "✅ Dotfiles initialized and applied successfully!"
-        echo "💡 Source directory: $DOTFILES_DIR"
-        echo "💡 Edit dotfiles: code $DOTFILES_DIR"
-        echo "💡 Apply changes: dotfiles-apply"
-        echo "💡 Check status: chezmoi status"
+            echo "✅ Dotfiles initialized and applied successfully!"
+            echo "💡 Source directory: $DOTFILES_DIR"
+            echo "💡 Edit dotfiles: code $DOTFILES_DIR"
+            echo "💡 Apply changes: dotfiles-apply"
+            echo "💡 Check status: chezmoi status"
   '';
 
   # Script to apply dotfile changes

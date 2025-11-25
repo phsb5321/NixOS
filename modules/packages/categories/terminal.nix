@@ -1,8 +1,11 @@
 # ~/NixOS/modules/packages/categories/terminal.nix
 # Terminal and shell tools
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.modules.packages.terminal;
 in {
   options.modules.packages.terminal = {
@@ -59,34 +62,30 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-      # Fonts
+    # Fonts
       (lib.optionals cfg.fonts [
         nerd-fonts.jetbrains-mono
         noto-fonts-color-emoji
         noto-fonts
         noto-fonts-cjk-sans
       ])
-
       # Shell
       ++ (lib.optionals cfg.shell [
         zsh
         oh-my-zsh
       ])
-
       # Theme
       ++ (lib.optionals cfg.theme [
         zsh-powerlevel10k
         starship
         grc
       ])
-
       # Modern tools
       ++ (lib.optionals cfg.modernTools [
         eza
         bat
         vivid
       ])
-
       # Plugins
       ++ (lib.optionals cfg.plugins [
         zsh-syntax-highlighting
@@ -94,14 +93,12 @@ in {
         zsh-you-should-use
         zsh-fast-syntax-highlighting
       ])
-
       # Editor
       ++ (lib.optionals cfg.editor [
         neovim
         ffmpeg
         zoxide
       ])
-
       # Applications
       ++ (lib.optionals cfg.applications [
         yazi-unwrapped
@@ -114,7 +111,6 @@ in {
         ngrok
         zellij
       ])
-
       # Extra packages
       ++ cfg.extraPackages;
   };
