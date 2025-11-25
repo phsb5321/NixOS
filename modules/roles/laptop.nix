@@ -1,13 +1,15 @@
 # ~/NixOS/modules/roles/laptop.nix
 # Laptop role - power management, minimal features
-{ config, lib, ... }:
-
 {
+  config,
+  lib,
+  ...
+}: {
   options.modules.roles.laptop = {
     enable = lib.mkEnableOption "laptop role";
 
     variant = lib.mkOption {
-      type = lib.types.enum [ "standard" "ultrabook" "gaming" "workstation" ];
+      type = lib.types.enum ["standard" "ultrabook" "gaming" "workstation"];
       default = "standard";
       description = "Laptop variant type for optimizations";
     };
@@ -17,7 +19,7 @@
     # Services - minimal set for laptop
     modules.services = {
       ssh.enable = true;
-      printing.enable = lib.mkDefault false;  # Disable on laptop by default
+      printing.enable = lib.mkDefault false; # Disable on laptop by default
     };
 
     # Dotfiles
@@ -29,7 +31,7 @@
       bluetooth.enable = true;
       graphics = {
         enable = true;
-        enable32Bit = false;  # Save space on laptop
+        enable32Bit = false; # Save space on laptop
       };
     };
 
@@ -38,9 +40,16 @@
       isNormalUser = true;
       description = "Pedro Balbino";
       extraGroups = [
-        "networkmanager" "wheel" "audio" "video"
-        "disk" "input" "bluetooth"
-        "render" "kvm" "pipewire"
+        "networkmanager"
+        "wheel"
+        "audio"
+        "video"
+        "disk"
+        "input"
+        "bluetooth"
+        "render"
+        "kvm"
+        "pipewire"
       ];
     };
 

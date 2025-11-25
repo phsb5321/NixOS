@@ -19,13 +19,13 @@ in {
 
     primaryServers = mkOption {
       type = types.listOf types.str;
-      default = [ "8.8.8.8" "8.8.4.4" ];
+      default = ["8.8.8.8" "8.8.4.4"];
       description = "Primary DNS servers";
     };
 
     fallbackServers = mkOption {
       type = types.listOf types.str;
-      default = [ "1.1.1.1" "1.0.0.1" ];
+      default = ["1.1.1.1" "1.0.0.1"];
       description = "Fallback DNS servers";
     };
 
@@ -56,7 +56,7 @@ in {
 
       testDomains = mkOption {
         type = types.listOf types.str;
-        default = [ "google.com" "github.com" "nixos.org" ];
+        default = ["google.com" "github.com" "nixos.org"];
         description = "Domains to test for DNS health checks";
       };
     };
@@ -71,7 +71,10 @@ in {
       fallbackDns = cfg.primaryServers ++ cfg.fallbackServers;
 
       # Security and performance settings
-      dnssec = if cfg.enableDnssec then "allow-downgrade" else "false";
+      dnssec =
+        if cfg.enableDnssec
+        then "allow-downgrade"
+        else "false";
 
       # Tailscale-compatible configuration
       extraConfig = ''
@@ -81,8 +84,16 @@ in {
         Domains=~.
 
         # Security settings
-        DNSSEC=${if cfg.enableDnssec then "allow-downgrade" else "false"}
-        DNSOverTLS=${if cfg.enableDoT then "yes" else "no"}
+        DNSSEC=${
+          if cfg.enableDnssec
+          then "allow-downgrade"
+          else "false"
+        }
+        DNSOverTLS=${
+          if cfg.enableDoT
+          then "yes"
+          else "no"
+        }
 
         # Tailscale compatibility settings
         DNSStubListener=yes
@@ -97,12 +108,12 @@ in {
 
     # DNS health monitoring system
     systemd.timers.dns-health-check = lib.mkIf cfg.healthCheck.enable {
-      wantedBy = [ "timers.target" ];
-      partOf = [ "dns-health-check.service" ];
+      wantedBy = ["timers.target"];
+      partOf = ["dns-health-check.service"];
       timerConfig = {
         OnCalendar = cfg.healthCheck.interval;
         Persistent = true;
-        RandomizedDelaySec = "30s";  # Avoid thundering herd
+        RandomizedDelaySec = "30s"; # Avoid thundering herd
       };
     };
 
@@ -123,11 +134,12 @@ in {
         total_domains=${toString (lib.length cfg.healthCheck.testDomains)}
 
         ${lib.concatMapStringsSep "\n" (domain: ''
-          if ! ${pkgs.systemd}/bin/resolvectl query ${domain} >/dev/null 2>&1; then
-            echo "DNS resolution failed for ${domain}"
-            failed_domains=$((failed_domains + 1))
-          fi
-        '') cfg.healthCheck.testDomains}
+            if ! ${pkgs.systemd}/bin/resolvectl query ${domain} >/dev/null 2>&1; then
+              echo "DNS resolution failed for ${domain}"
+              failed_domains=$((failed_domains + 1))
+            fi
+          '')
+          cfg.healthCheck.testDomains}
 
         # If more than half of domains fail, restart DNS services
         if [ "$failed_domains" -gt $((total_domains / 2)) ]; then
@@ -137,10 +149,10 @@ in {
 
           # Restart Tailscale if it's running and Tailscale compatibility is enabled
           ${lib.optionalString cfg.tailscaleCompatible ''
-            if systemctl is-active --quiet tailscaled; then
-              ${pkgs.tailscale}/bin/tailscale down && ${pkgs.tailscale}/bin/tailscale up
-            fi
-          ''}
+          if systemctl is-active --quiet tailscaled; then
+            ${pkgs.tailscale}/bin/tailscale down && ${pkgs.tailscale}/bin/tailscale up
+          fi
+        ''}
         else
           echo "DNS health check passed ($((total_domains - failed_domains))/$total_domains domains working)"
         fi
@@ -162,10 +174,10 @@ in {
 
     # Network debugging tools
     environment.systemPackages = with pkgs; [
-      dnsutils      # dig, nslookup
-      bind          # DNS tools
-      dogdns        # Modern DNS lookup tool
-      q             # DNS query tool
+      dnsutils # dig, nslookup
+      bind # DNS tools
+      dogdns # Modern DNS lookup tool
+      q # DNS query tool
     ];
   };
 }

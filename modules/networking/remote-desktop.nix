@@ -21,9 +21,9 @@ in {
       tools = mkOption {
         type = types.listOf types.package;
         default = with pkgs; [
-          remmina         # Multi-protocol remote desktop client
-          freerdp         # FreeRDP for RDP connectivity
-          tigervnc        # VNC client
+          remmina # Multi-protocol remote desktop client
+          freerdp # FreeRDP for RDP connectivity
+          tigervnc # VNC client
           gnome-connections # GNOME's native remote desktop client
         ];
         description = "Remote desktop client packages to install";
@@ -85,12 +85,14 @@ in {
     # Combined client and server packages
     environment.systemPackages =
       lib.optionals cfg.client.enable cfg.client.tools
-      ++ lib.optionals cfg.server.enable (with pkgs; [
-        # Server management tools
-        tigervnc  # Also includes vncserver
-      ] ++ lib.optionals cfg.server.rdp.enable [
-        xrdp
-      ]);
+      ++ lib.optionals cfg.server.enable (with pkgs;
+        [
+          # Server management tools
+          tigervnc # Also includes vncserver
+        ]
+        ++ lib.optionals cfg.server.rdp.enable [
+          xrdp
+        ]);
 
     # GNOME Remote Desktop (modern approach for Wayland)
     services.gnome.gnome-remote-desktop.enable =
@@ -116,8 +118,8 @@ in {
     # Firewall configuration
     networking.firewall = lib.mkIf cfg.firewall.openPorts {
       allowedTCPPorts =
-        lib.optionals cfg.server.vnc.enable [ cfg.server.vnc.port ]
-        ++ lib.optionals cfg.server.rdp.enable [ cfg.server.rdp.port ];
+        lib.optionals cfg.server.vnc.enable [cfg.server.vnc.port]
+        ++ lib.optionals cfg.server.rdp.enable [cfg.server.rdp.port];
     };
 
     # Enable required system services for remote desktop
@@ -138,7 +140,6 @@ in {
         xdg-desktop-portal-gtk
       ];
     };
-
 
     # Session variables for better remote desktop experience
     environment.sessionVariables = lib.mkIf cfg.server.enable {

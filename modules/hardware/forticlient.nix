@@ -1,13 +1,14 @@
 # modules/hardware/forticlient.nix
 # FortiClient VPN configuration for laptop
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-  cfg = config.modules.hardware.forticlient;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
+  cfg = config.modules.hardware.forticlient;
+in {
   options.modules.hardware.forticlient = {
     enable = mkEnableOption "FortiClient VPN support";
 
@@ -39,7 +40,7 @@ in
     # Install openfortivpn and GUI tools
     environment.systemPackages = with pkgs; [
       openfortivpn
-      openfortivpn-webview  # For SAML authentication if needed
+      openfortivpn-webview # For SAML authentication if needed
 
       # Additional networking tools
       networkmanager-fortisslvpn
@@ -75,9 +76,9 @@ in
     # Create systemd service for openfortivpn
     systemd.services.openfortivpn = mkIf cfg.autoStart {
       description = "OpenFortiVPN Client";
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
-      wantedBy = mkIf cfg.autoStart [ "multi-user.target" ];
+      after = ["network-online.target"];
+      wants = ["network-online.target"];
+      wantedBy = mkIf cfg.autoStart ["multi-user.target"];
 
       serviceConfig = {
         Type = "simple";
@@ -89,16 +90,16 @@ in
     };
 
     # Add user to networkmanager group for VPN management
-    users.groups.networkmanager.members = [ "notroot" ];
+    users.groups.networkmanager.members = ["notroot"];
 
     # Enable required kernel modules
-    boot.kernelModules = [ "ppp_async" "ppp_deflate" "ppp_mppe" ];
+    boot.kernelModules = ["ppp_async" "ppp_deflate" "ppp_mppe"];
 
     # Firewall rules for VPN
     networking.firewall = {
       # Allow VPN traffic
-      allowedTCPPorts = mkIf (cfg.serverConfig ? port) [ cfg.serverConfig.port ];
-      allowedUDPPorts = mkIf (cfg.serverConfig ? port) [ cfg.serverConfig.port ];
+      allowedTCPPorts = mkIf (cfg.serverConfig ? port) [cfg.serverConfig.port];
+      allowedUDPPorts = mkIf (cfg.serverConfig ? port) [cfg.serverConfig.port];
 
       # Enable NAT traversal
       extraCommands = ''

@@ -1,8 +1,11 @@
 # ~/NixOS/modules/desktop/gnome/base.nix
 # Base GNOME desktop environment configuration
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.modules.desktop.gnome;
 in {
   options.modules.desktop.gnome = {
@@ -118,28 +121,28 @@ in {
       # Apps
       gnome-photos
       gnome-tour
-      cheese          # Webcam app
+      cheese # Webcam app
       gnome-music
       gedit
-      epiphany        # GNOME Web browser
-      geary           # Email client
+      epiphany # GNOME Web browser
+      geary # Email client
       gnome-characters
-      totem           # Video player
+      totem # Video player
       gnome-calendar
       gnome-contacts
       gnome-maps
 
       # Games
-      tali            # Poker game
-      iagno           # Go game
-      hitori          # Sudoku game
-      atomix          # Puzzle game
+      tali # Poker game
+      iagno # Go game
+      hitori # Sudoku game
+      atomix # Puzzle game
       gnome-chess
       gnome-mahjongg
       gnome-mines
       gnome-sudoku
       gnome-tetravex
-      quadrapassel    # Tetris
+      quadrapassel # Tetris
       five-or-more
       four-in-a-row
       gnome-taquin
@@ -198,7 +201,7 @@ in {
 
     # Core GNOME packages
     environment.systemPackages = with pkgs;
-      # Essential packages
+    # Essential packages
       (lib.optionals cfg.coreApplications [
         gnome-session
         gnome-settings-daemon
@@ -209,7 +212,6 @@ in {
         gnome-text-editor
         nautilus
       ])
-
       # Portal packages
       ++ (lib.optionals cfg.portal [
         xdg-desktop-portal
@@ -217,7 +219,6 @@ in {
         xdg-desktop-portal-gtk
         gnome-remote-desktop
       ])
-
       # Theme packages
       ++ (lib.optionals cfg.themes [
         arc-theme
@@ -226,7 +227,7 @@ in {
         adwaita-icon-theme
         gnome-themes-extra
         gtk-engine-murrine
-        adw-gtk3  # Adwaita-like theme for GTK3
+        adw-gtk3 # Adwaita-like theme for GTK3
       ]);
   };
 }
