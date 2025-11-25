@@ -1,13 +1,13 @@
 # ~/NixOS/modules/services/ssh.nix
 # SSH service configuration
-{ config, lib, ... }:
-
-with lib;
-
-let
-  cfg = config.modules.services.ssh;
-in
 {
+  config,
+  lib,
+  ...
+}:
+with lib; let
+  cfg = config.modules.services.ssh;
+in {
   options.modules.services.ssh = {
     enable = mkEnableOption "SSH service";
 

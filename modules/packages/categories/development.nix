@@ -1,8 +1,12 @@
 # ~/NixOS/modules/packages/categories/development.nix
 # Development tools and packages
-{ config, lib, pkgs, pkgs-unstable, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  pkgs-unstable,
+  ...
+}: let
   cfg = config.modules.packages.development;
 in {
   options.modules.packages.development = {
@@ -83,19 +87,17 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-      # Code editors
+    # Code editors
       (lib.optionals cfg.editors [
         pkgs-unstable.vscode
         code-cursor
         pkgs-unstable.zed-editor
       ])
-
       # API testing
       ++ (lib.optionals cfg.apiTools [
         bruno
         bruno-cli
       ])
-
       # Language runtimes
       ++ (lib.optionals cfg.runtimes [
         nodejs
@@ -105,7 +107,6 @@ in {
         go
         openjdk
       ])
-
       # Compilers and build tools
       ++ (lib.optionals cfg.compilers [
         android-tools
@@ -118,7 +119,6 @@ in {
         pkg-config
         mermaid-cli
       ])
-
       # Language servers and formatters
       ++ (lib.optionals cfg.languageServers [
         nixd
@@ -138,7 +138,6 @@ in {
         ruff
         black
       ])
-
       # Version control
       ++ (lib.optionals cfg.versionControl [
         chezmoi
@@ -149,7 +148,6 @@ in {
         lazygit
         delta
       ])
-
       # Modern utilities
       ++ (lib.optionals cfg.utilities [
         typst
@@ -168,19 +166,16 @@ in {
         htop
         btop
       ])
-
       # Database tools
       ++ (lib.optionals cfg.database [
         sqlite
         sqlite-utils
       ])
-
       # Container and cloud tools
       ++ (lib.optionals cfg.containers [
         docker-compose
         kubectl
       ])
-
       # Debugging and profiling
       ++ (lib.optionals cfg.debugging [
         valgrind
@@ -188,14 +183,12 @@ in {
         ltrace
         perf-tools
       ])
-
       # Network tools
       ++ (lib.optionals cfg.networking [
         nmap
         wireshark
         tcpdump
       ])
-
       # Extra packages
       ++ cfg.extraPackages;
   };

@@ -1,8 +1,10 @@
 # ~/NixOS/modules/roles/minimal.nix
 # Minimal role - basic system only
-{ config, lib, ... }:
-
 {
+  config,
+  lib,
+  ...
+}: {
   options.modules.roles.minimal = {
     enable = lib.mkEnableOption "minimal installation role";
   };
@@ -24,7 +26,7 @@
     users.users.notroot = {
       isNormalUser = true;
       description = "Pedro Balbino";
-      extraGroups = [ "wheel" ];
+      extraGroups = ["wheel"];
     };
 
     # Base programs

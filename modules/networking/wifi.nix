@@ -59,33 +59,39 @@ in {
     ];
 
     # Configure WiFi networks through NetworkManager
-    environment.etc = lib.mapAttrs' (name: network: {
-      name = "NetworkManager/system-connections/${name}.nmconnection";
-      value = {
-        mode = "0600";
-        text = ''
-          [connection]
-          id=${name}
-          type=wifi
-          autoconnect=${if network.autoConnect then "true" else "false"}
-          autoconnect-priority=${toString network.priority}
+    environment.etc =
+      lib.mapAttrs' (name: network: {
+        name = "NetworkManager/system-connections/${name}.nmconnection";
+        value = {
+          mode = "0600";
+          text = ''
+            [connection]
+            id=${name}
+            type=wifi
+            autoconnect=${
+              if network.autoConnect
+              then "true"
+              else "false"
+            }
+            autoconnect-priority=${toString network.priority}
 
-          [wifi]
-          mode=infrastructure
-          ssid=${name}
+            [wifi]
+            mode=infrastructure
+            ssid=${name}
 
-          [wifi-security]
-          key-mgmt=wpa-psk;sae
-          psk=${network.psk}
-          ieee80211w=1
+            [wifi-security]
+            key-mgmt=wpa-psk;sae
+            psk=${network.psk}
+            ieee80211w=1
 
-          [ipv4]
-          method=auto
+            [ipv4]
+            method=auto
 
-          [ipv6]
-          method=auto
-        '';
-      };
-    }) cfg.networks;
+            [ipv6]
+            method=auto
+          '';
+        };
+      })
+      cfg.networks;
   };
 }

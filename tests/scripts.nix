@@ -1,8 +1,6 @@
 # ~/NixOS/tests/scripts.nix
 # Test scripts that can be added to flake packages output
-{ pkgs }:
-
-{
+{pkgs}: {
   # Formatting check
   format-check = pkgs.writeShellScriptBin "format-check" ''
     set -euo pipefail
