@@ -1,26 +1,24 @@
-# ~/NixOS/hosts/laptop/configuration.nix
-# Laptop host configuration using modular profile system
+# NixOS Laptop Configuration - Role-Based (New Architecture)
+# This is the new modular configuration using laptop profile and role-based modules
 {
   config,
   pkgs,
-  systemVersion,
   lib,
+  systemVersion,
   ...
 }: {
   imports = [
     ./hardware-configuration.nix
     ../../modules
-    ../shared/common.nix
-    ./gnome.nix
   ];
 
   # Allow insecure packages for USB boot creation tool
-  # TODO: Monitor for secure ventoy releases and remove this exception
   nixpkgs.config.permittedInsecurePackages = [
-    "ventoy-1.1.07" # Required for ventoy-full package - bootable USB creation
+    "ventoy-1.1.07" # Required for ventoy-full package
   ];
 
-  # Use the laptop profile for automatic configuration
+  # ===== LAPTOP PROFILE =====
+  # Laptop profile with standard variant for balanced performance/battery
   modules.profiles.laptop = {
     enable = true;
     variant = "standard"; # Options: "ultrabook", "gaming", "workstation", "standard"
@@ -31,172 +29,331 @@
     };
   };
 
-  # Host-specific overrides
+  # ===== GNOME DESKTOP =====
+  modules.desktop.gnome = {
+    enable = true;
+
+    # Base configuration
+    displayManager = true;
+    coreServices = true;
+    coreApplications = true;
+    themes = true;
+    portal = true;
+    powerManagement = true;
+
+    # Extensions
+    extensions = {
+      enable = true;
+      appIndicator = true;
+      dashToDock = true;
+      userThemes = true;
+      justPerfection = true;
+      vitals = true;
+      caffeine = true;
+      clipboard = true;
+      gsconnect = true;
+      workspaceIndicator = true;
+    };
+
+    # Settings
+    settings = {
+      enable = true;
+      darkMode = true;
+      animations = true;
+      hotCorners = false;
+      batteryPercentage = true;
+      weekday = true;
+    };
+
+    # Wayland configuration - Force X11 for NVIDIA compatibility
+    wayland = {
+      enable = lib.mkForce false; # Use X11 for NVIDIA laptop
+      electronSupport = false;
+      screenSharing = false;
+      variant = "software";
+    };
+  };
+
+  # ===== PACKAGE CONFIGURATION =====
+  modules.packages = {
+    # Browsers
+    browsers = {
+      enable = true;
+      chrome = true;
+      brave = true;
+      librewolf = true;
+      zen = false; # Less critical for laptop
+    };
+
+    # Development tools
+    development = {
+      enable = true;
+      editors = true;
+      apiTools = true;
+      runtimes = true;
+      compilers = true;
+      languageServers = true;
+      versionControl = true;
+      utilities = true;
+      database = true;
+      containers = true;
+      debugging = true;
+      networking = true;
+    };
+
+    # Media
+    media = {
+      enable = true;
+      vlc = true;
+      spotify = true;
+      discord = true;
+      streaming = false; # Less critical for laptop
+      imageEditing = true;
+    };
+
+    # Gaming - Steam integration
+    gaming = {
+      enable = true;
+      performance = true;
+      launchers = true;
+      wine = true;
+      gpuControl = false; # NVIDIA disabled
+      minecraft = false;
+    };
+
+    # Utilities
+    utilities = {
+      enable = true;
+      diskManagement = true;
+      fileSync = false; # Syncthing handled by profile
+      compression = true;
+      security = true;
+      pdfViewer = true;
+      messaging = true;
+      fonts = true;
+    };
+
+    # Audio/Video
+    audioVideo = {
+      enable = true;
+      pipewire = true;
+      audioEffects = true;
+      audioControl = true;
+      webcam = true;
+    };
+
+    # Terminal
+    terminal = {
+      enable = true;
+      fonts = true;
+      shell = true;
+      theme = true;
+      modernTools = true;
+      plugins = true;
+      editor = true;
+      applications = true;
+    };
+  };
+
+  # ===== HOST-SPECIFIC PACKAGES =====
+  environment.systemPackages = with pkgs; [
+    # Development tools
+    insomnia
+    mongodb-compass
+
+    # Fun extension
+    gnomeExtensions.runcat # Running cat shows CPU usage
+
+    # Communication
+    slack
+    teams-for-linux
+    zoom-us
+
+    # Productivity
+    obsidian
+    logseq
+
+    # Cloud CLI
+    google-cloud-sdk
+
+    # Containerization
+    podman-compose
+
+    # Utilities
+    ventoy-full # Bootable USB creation
+
+    # AI Development
+    claude-code
+
+    # NVIDIA tools (for when discrete GPU is used manually)
+    nvidia-system-monitor-qt
+    nvtopPackages.full
+
+    # Laptop-specific tools
+    fprintd # Fingerprint support
+    iw # WiFi management
+    wirelesstools
+  ];
+
+  # ===== SERVICES =====
+  # Fingerprint reader
+  services.fprintd.enable = true;
+
+  # Thunderbolt support
+  services.hardware.bolt.enable = true;
+
+  # Location services
+  services.geoclue2.enable = true;
+
+  # Printing
+  services.printing = {
+    enable = true;
+    drivers = [
+      pkgs.hplip
+      pkgs.gutenprint
+    ];
+  };
+
+  # SSD optimization
+  services.fstrim.enable = true;
+
+  # ===== NETWORKING =====
+  modules.networking = {
+    enable = true;
+    hostName = "nixos-laptop";
+    enableNetworkManager = true;
+  };
+
+  # Enable WPA3/SAE support in NetworkManager using iwd backend
+  networking.networkmanager.wifi.backend = "iwd";
+
+  modules.networking.wifi = {
+    enable = true;
+    enablePowersave = true; # For laptop battery life
+    networks = {
+      # WiFi network configuration
+      "LIVE TIM_4122" = {
+        psk = "benicio-tem-4-patas-cinzas";
+        priority = 100;
+        autoConnect = true;
+      };
+    };
+  };
+
+  modules.networking.tailscale = {
+    enable = true;
+    useRoutingFeatures = "client";
+    extraUpFlags = [
+      "--accept-routes"
+      "--accept-dns"
+    ];
+  };
+
+  modules.networking.firewall = {
+    enable = true;
+    allowedServices = ["ssh"];
+    developmentPorts = [3000 8080];
+    tailscaleCompatible = true;
+  };
+
+  modules.networking.remoteDesktop = {
+    enable = true;
+    client.enable = true;
+    server.enable = false;
+    firewall.openPorts = false;
+  };
+
+  # ===== CORE MODULES =====
   modules.core = {
     enable = true;
     stateVersion = systemVersion;
-
-    # Brazil locale settings
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
 
-    # Enable explicit keyboard configuration for laptop (ABNT2)
+    # ABNT2 keyboard for Brazil
     keyboard = {
       enable = true;
       variant = ",abnt2";
     };
 
-    # Enable gaming for Steam integration
+    # Gaming for Steam
     gaming = {
       enable = true;
       enableSteam = true;
     };
-  };
 
-  # Networking configuration with Tailscale
-  modules.networking = {
-    enable = true;
-    hostName = "nixos-laptop";
-    enableNetworkManager = true;
-
-
-    # Tailscale for secure mobile connectivity
-    tailscale = {
+    pipewire = {
       enable = true;
-      useRoutingFeatures = "client"; # Can use exit nodes and subnet routes
-      extraUpFlags = [
-        "--accept-routes"
-        "--accept-dns"
-      ];
+      highQualityAudio = true;
+      bluetooth.enable = true;
+      bluetooth.highQualityProfiles = true;
+      lowLatency = false;
+      tools.enable = true;
+    };
+
+    documentTools = {
+      enable = true;
+      latex = {
+        enable = true;
+        minimal = false;
+      };
+      markdown = {
+        enable = true;
+        lsp = true;
+        linting.enable = true;
+        formatting.enable = true;
+        preview.enable = true;
+        utilities.enable = true;
+      };
     };
   };
 
-  # Package configuration with laptop optimizations
-  modules.packages = {
+  # ===== DOTFILES =====
+  modules.dotfiles = {
     enable = true;
-    browsers.enable = true;
-    development.enable = true;
-    utilities.enable = true;
-    terminal.enable = true;
-    media.enable = true;
-    audioVideo.enable = true;
-    gaming.enable = true; # Enable for Steam integration
-
-    # Additional laptop-specific packages
-    extraPackages = with pkgs; [
-      # Development tools for workstation variant
-      insomnia
-      mongodb-compass
-
-      # The fun cat extension you requested!
-      gnomeExtensions.runcat # Running cat shows CPU usage
-
-      # Communication tools
-      slack
-      teams-for-linux
-      zoom-us
-
-      # Note-taking and productivity
-      obsidian
-      logseq
-
-      # Cloud CLI tools
-      google-cloud-sdk
-
-      # Containerization
-      podman-compose
-
-      # Additional utilities
-      ventoy-full # For creating bootable USB drives
-      # etcher # Alternative USB flashing tool - package not found
-
-      # AI Development Tools
-      claude-code # Claude Code terminal-based coding assistant (binary name: claude)
-      # Usage: claude --help for options, claude for interactive mode
-      # Note: Also install Claude Code VS Code extension manually:
-      # - Open VS Code Extensions (Ctrl+Shift+X)
-      # - Search for "claude-code" by Anthropic
-      # - Install the extension for IDE integration
-
-      # NVIDIA tools for manual gaming usage
-      nvidia-system-monitor-qt
-      nvtopPackages.full
-    ];
+    enableHelperScripts = true;
   };
 
-  # GNOME configuration is now in ./gnome.nix
+  # ===== HARDWARE =====
+  # Enable WiFi firmware
+  hardware.enableRedistributableFirmware = true;
 
-  # Enable OpenGL/Vulkan for gaming
+  # OpenGL/Vulkan for gaming
   hardware.graphics = {
     enable = true;
-    enable32Bit = true; # Required for Steam and 32-bit games
+    enable32Bit = true; # For Steam and 32-bit games
   };
 
-  # Firewall configuration for laptop (more secure on public WiFi)
-  modules.networking.firewall = {
-    enable = true;
-    allowedServices = [ "ssh" ];
-    developmentPorts = [ 3000 8080 ];
-    tailscaleCompatible = lib.mkForce true;  # Since Tailscale is enabled
-  };
-
-  # Remote Desktop Configuration
-  modules.networking.remoteDesktop = {
-    enable = true;
-    client.enable = true;  # Enable VNC/RDP client tools
-    server = {
-      enable = false;  # Set to true if you want to access this machine remotely
-      gnomeRemoteDesktop = true;  # Use GNOME's modern remote desktop
-      vnc.enable = false;  # Traditional VNC server
-      rdp.enable = false;  # xrdp server
-    };
-    firewall.openPorts = false;  # Set to true when server is enabled
-  };
-
-  # Hardware-specific overrides
+  # Laptop hardware module (already configured by profile, but can override)
   modules.hardware.laptop = {
     enable = true;
 
-    # Disable hybrid graphics - causing blank screen issues
+    # Disable hybrid graphics - causes blank screen
     graphics = {
-      hybridGraphics = false; # Disable NVIDIA to restore display
-      intelBusId = "PCI:0:2:0"; # Intel UHD Graphics
-      nvidiaBusId = "PCI:1:0:0"; # GeForce GTX 1650 Mobile
+      hybridGraphics = false; # NVIDIA disabled
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
     };
 
-    batteryManagement.chargeThreshold = 85; # Preserve battery health
+    batteryManagement.chargeThreshold = 85;
 
     powerManagement = {
       profile = "balanced";
       suspendTimeout = 900; # 15 minutes
     };
-
-    # Additional laptop hardware packages
-    extraPackages = with pkgs; [
-      # Fingerprint support (if available)
-      fprintd
-
-      # Better WiFi management
-      iw
-      wirelesstools
-    ];
   };
 
-  # NVIDIA Configuration is now handled by modules.hardware.laptop
-
-  # Boot configuration optimized for laptops
+  # ===== BOOT CONFIGURATION =====
   boot = {
-    # Use systemd-boot for UEFI systems
     loader = {
       systemd-boot = {
         enable = true;
-        configurationLimit = 10; # Keep last 10 generations
+        configurationLimit = 10;
       };
       efi.canTouchEfiVariables = true;
-      timeout = 3; # Boot menu timeout in seconds
+      timeout = 3;
     };
 
-    # Quiet boot for better laptop experience
     kernelParams = [
       "quiet"
       "splash"
@@ -205,54 +362,30 @@
       "nvme.noacpi=1" # Better NVMe power management
     ];
 
-    # Plymouth for graphical boot
     plymouth = {
       enable = true;
       theme = "breeze";
     };
 
-    # Faster boot times
     initrd.systemd.enable = true;
   };
 
-  # Services specific to laptop use cases
-  services = {
-    # Enable fingerprint reader if available
-    fprintd.enable = true;
-
-    # Better laptop integration
-    hardware.bolt.enable = true; # Thunderbolt support
-
-    # Enable location services for weather, maps, etc.
-    geoclue2.enable = true;
-
-    # Printing support (often needed on laptops)
-    printing = {
-      enable = true;
-      drivers = [
-        pkgs.hplip
-        pkgs.gutenprint
-      ];
-    };
-
-    # Optimize SSD performance
-    fstrim.enable = true;
-  };
-
-  # User configuration
+  # ===== USER CONFIGURATION =====
   users.users.notroot = {
+    isNormalUser = true;
+    description = "Not Root";
     extraGroups = [
       "networkmanager"
       "wheel"
-      "video" # For brightness control
-      "input" # For touchpad gestures
-      "power" # For power management
+      "video" # Brightness control
+      "input" # Touchpad gestures
+      "power" # Power management
     ];
   };
 
-  # Environment variables for laptop usage
+  # ===== ENVIRONMENT VARIABLES =====
   environment.sessionVariables = {
-    # Better touchpad gestures in Firefox
+    # Touchpad gestures in Firefox
     MOZ_USE_XINPUT2 = "1";
 
     # Electron apps scaling
@@ -263,11 +396,11 @@
     STEAM_RUNTIME = "1";
     STEAM_RUNTIME_HEAVY = "1";
 
-    # DXVK optimizations for laptop
+    # DXVK optimizations
     DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
     DXVK_LOG_LEVEL = "warn";
   };
 
-  # System state version
+  # ===== SYSTEM STATE VERSION =====
   system.stateVersion = systemVersion;
 }

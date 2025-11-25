@@ -46,7 +46,6 @@
     (mkPackageGroup "Build Tools" [
       pkgs.gcc
       pkgs.gnumake
-      pkgs.nodePackages.webpack
     ])
     (mkPackageGroup "Utility Tools" [
       pkgs.jq
@@ -113,7 +112,7 @@ in
       echo "🚀 ✨ JavaScript/TypeScript Development Environment ✨ 🚀"
       echo ""
       echo "📦 Node.js • pnpm • yarn • bun • 🦕 deno"
-      echo "🔧 TypeScript • ESLint • Prettier • Biome.js • Webpack • Nodemon"
+      echo "🔧 TypeScript • ESLint • Prettier • Biome.js • Nodemon"
       echo "🧪 Playwright • Cypress • Testing Ready"
       echo "🗄️  Prisma • PostgreSQL • Database Tools"
       echo "🏗️  NestJS CLI • Vercel CLI • Build Tools"
