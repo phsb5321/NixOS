@@ -1,8 +1,10 @@
 # ~/NixOS/tests/default.nix
 # Testing infrastructure
-{ pkgs, lib, ... }:
-
 {
+  pkgs,
+  lib,
+  ...
+}: {
   imports = [
     ./formatting.nix
     ./boot-test.nix

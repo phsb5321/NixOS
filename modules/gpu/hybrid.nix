@@ -1,8 +1,11 @@
 # ~/NixOS/modules/gpu/hybrid.nix
 # Hybrid GPU module (NVIDIA + Intel switching)
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.modules.gpu.hybrid;
 in {
   options.modules.gpu.hybrid = {
@@ -38,7 +41,7 @@ in {
         # Offload mode - NVIDIA GPU used on-demand
         offload = lib.mkIf (cfg.offloadMode == "offload") {
           enable = true;
-          enableOffloadCmd = true;  # Provides nvidia-offload command
+          enableOffloadCmd = true; # Provides nvidia-offload command
         };
 
         # Sync mode - Both GPUs always active
@@ -57,7 +60,7 @@ in {
       # Power management for battery life
       powerManagement = lib.mkIf cfg.powerManagement {
         enable = true;
-        finegrained = (cfg.offloadMode == "offload");
+        finegrained = cfg.offloadMode == "offload";
       };
     };
 

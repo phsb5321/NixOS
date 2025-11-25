@@ -1,8 +1,12 @@
 # ~/NixOS/modules/packages/categories/media.nix
 # Media and entertainment packages
-{ config, lib, pkgs, pkgs-unstable, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  pkgs-unstable,
+  ...
+}: let
   cfg = config.modules.packages.media;
 in {
   options.modules.packages.media = {
@@ -47,15 +51,15 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-      lib.optionals cfg.vlc [ vlc ]
+      lib.optionals cfg.vlc [vlc]
       ++ lib.optionals cfg.spotify [
         pkgs-unstable.spotify
         spot
         ncspot
       ]
-      ++ lib.optionals cfg.discord [ vesktop ]
-      ++ lib.optionals cfg.streaming [ obs-studio ]
-      ++ lib.optionals cfg.imageEditing [ gimp ]
+      ++ lib.optionals cfg.discord [vesktop]
+      ++ lib.optionals cfg.streaming [obs-studio]
+      ++ lib.optionals cfg.imageEditing [gimp]
       ++ cfg.extraPackages;
   };
 }

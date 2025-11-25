@@ -251,8 +251,8 @@
 
   modules.networking.firewall = {
     enable = true;
-    allowedServices = [ "ssh" ];
-    developmentPorts = [ 3000 8080 ];
+    allowedServices = ["ssh"];
+    developmentPorts = [3000 8080];
     tailscaleCompatible = true;
   };
 
