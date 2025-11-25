@@ -18,15 +18,15 @@ This task list breaks down the codebase reduction feature into ~150 actionable t
 
 ### Baseline Metrics & Validation
 
-- [ ] [T001] [P1] [US1] Generate baseline line count metrics for all modules (file: metrics-baseline.txt)
-- [ ] [T002] [P1] [US1] Document current total lines: `wc -l modules/**/*.nix` (file: metrics-baseline.txt)
-- [ ] [T003] [P1] [US1] Create per-category line counts for progress tracking (file: metrics-baseline.txt)
-- [ ] [T004] [P1] [US1] Build desktop configuration and capture system path (file: baseline-desktop-path.txt)
+- [X] [T001] [P1] [US1] Generate baseline line count metrics for all modules (file: metrics-baseline.txt)
+- [X] [T002] [P1] [US1] Document current total lines: `wc -l modules/**/*.nix` (file: metrics-baseline.txt)
+- [X] [T003] [P1] [US1] Create per-category line counts for progress tracking (file: metrics-baseline.txt)
+- [X] [T004] [P1] [US1] Build desktop configuration and capture system path (file: baseline-desktop-path.txt)
 - [ ] [T005] [P1] [US1] Build laptop configuration and capture system path (file: baseline-laptop-path.txt)
-- [ ] [T006] [P1] [US1] Capture desktop system derivation: `nix derivation show $(readlink -f /run/current-system)` (file: baseline-desktop-derivation.json)
-- [ ] [T007] [P1] [US1] Capture desktop enabled services: `systemctl list-units --state=active` (file: baseline-desktop-services.txt)
-- [ ] [T008] [P1] [US1] Run initial flake check and document status (file: baseline-flake-check.log)
-- [ ] [T009] [P1] [US1] Measure baseline build time for desktop config (file: metrics-baseline.txt)
+- [X] [T006] [P1] [US1] Capture desktop system derivation: `nix derivation show $(readlink -f /run/current-system)` (file: baseline-desktop-derivation.json)
+- [X] [T007] [P1] [US1] Capture desktop enabled services: `systemctl list-units --state=active` (file: baseline-desktop-services.txt)
+- [X] [T008] [P1] [US1] Run initial flake check and document status (file: baseline-flake-check.log)
+- [X] [T009] [P1] [US1] Measure baseline build time for desktop config (file: metrics-baseline.txt)
 - [ ] [T010] [P1] [US1] Measure baseline build time for laptop config (file: metrics-baseline.txt)
 
 ---

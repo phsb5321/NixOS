@@ -1,0 +1,39 @@
+=== Baseline Metrics - NixOS Codebase Reduction ===
+Generated: ter 25 nov 2025 17:34:23 -03
+
+## Total Line Count
+  6041 total
+
+## Per-Category Line Counts
+- core: 9 files, 1794 lines
+- desktop: 5 files, 494 lines
+- dotfiles: 2 files, 451 lines
+- gpu: 5 files, 375 lines
+- hardware: 4 files, 632 lines
+- networking: 6 files, 922 lines
+- packages: 8 files, 691 lines
+- profiles: 2 files, 186 lines
+- roles: 5 files, 223 lines
+- secrets: 1 files, 76 lines
+- services: 5 files, 181 lines
+
+## Largest Modules (Top 15)
+   415 modules/core/default.nix
+   407 modules/hardware/laptop.nix
+   398 modules/core/document-tools.nix
+   396 modules/dotfiles/default.nix
+   233 modules/desktop/gnome/base.nix
+   224 modules/core/networking.nix
+   200 modules/networking/default.nix
+   195 modules/packages/categories/development.nix
+   183 modules/networking/dns.nix
+   180 modules/profiles/laptop.nix
+   176 modules/networking/firewall.nix
+   174 modules/core/pipewire.nix
+   155 modules/core/gaming.nix
+   155 modules/core/fonts.nix
+   150 modules/networking/remote-desktop.nix
+=== Build Time Baseline ===
+
+## Desktop Build
+Starting desktop build at: ter 25 nov 2025 17:37:15 -03
