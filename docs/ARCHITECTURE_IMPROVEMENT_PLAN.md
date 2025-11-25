@@ -1714,7 +1714,13 @@ git push origin refactor/architecture-v2
 
 ---
 
-### Milestone 1: Foundation & Helpers (Safe, No Breaking Changes)
+### Milestone 1: Foundation & Helpers ✅ COMPLETE
+
+**Status:** ✅ All 6 tasks completed (October 6, 2025)
+**Branch:** refactor/architecture-v2
+**Commits:** 4 commits pushed
+
+**Safe, No Breaking Changes**
 
 #### Task 1.1: Backup Current System ✓
 **Estimated time:** 10 minutes
@@ -1849,7 +1855,13 @@ nix flake lock
 
 ---
 
-### Milestone 2: Modular Services (No Impact on Existing Config)
+### Milestone 2: Modular Services ✅ COMPLETE
+
+**Status:** ✅ All 4 tasks completed (October 6, 2025)
+**Branch:** refactor/architecture-v2
+**Commits:** 4 commits pushed
+
+**No Impact on Existing Config**
 
 #### Task 2.1: Create Services Directory ✓
 **Estimated time:** 15 minutes
@@ -2303,7 +2315,11 @@ sops secrets/secrets.yaml  # Should open in editor
 
 ---
 
-### Milestone 8.5: Dotfiles Enhancement (Safe, High Value)
+### Milestone 8.5: Dotfiles Enhancement ✅ COMPLETE
+
+**Status:** ✅ All 8 tasks completed (October 6, 2025)
+**Branch:** refactor/architecture-v2
+**Commits:** 9 commits pushed
 
 **Note:** These tasks enhance the existing dotfiles system. They can be done in parallel with other milestones.
 
@@ -3283,7 +3299,7 @@ gh pr merge --merge
 | 6. GNOME | 3 tasks | 1h 35m | Low | 3 |
 | 7. Tests | 3 tasks | 1h 35m | Low | 3 |
 | 8. Secrets | 2 tasks | 0h 50m | Low | 2 |
-| **8.5. Dotfiles** | **8 tasks** | **3h 25m** | **Low** | **8** |
+| **8.5. Dotfiles** ✅ | **8 tasks** | **3h 25m** | **Low** | **9** |
 | 9. Desktop Migration | 4 tasks | 2h 00m | **High** | 1 |
 | 10. Laptop Migration | 4 tasks | 2h 00m | **High** | 1 |
 | 11. Cleanup | 4 tasks | 0h 50m | Low | 4 |
@@ -3303,17 +3319,17 @@ gh pr merge --merge
 - Week 2 (Mon-Wed): Milestones 9-10 (migration) - 3-4h/day, **test thoroughly**
 - Week 2 (Thu-Fri): Milestones 11-13 (cleanup, validation) - 2-3h/day
 
-### Dotfiles Tasks Breakdown
+### Dotfiles Tasks Breakdown ✅ COMPLETE
 
-**Milestone 8.5** adds powerful dotfiles capabilities:
-- ✅ **Task 8.5.1:** Initialize chezmoi properly (15min)
-- ✅ **Task 8.5.2:** Make paths portable (20min)
-- ✅ **Task 8.5.3:** SSH config templates (30min) - **High value: per-host SSH configs**
-- ✅ **Task 8.5.4:** Git config templates (20min) - **Different emails per host**
-- ✅ **Task 8.5.5:** Add missing dotfiles (25min) - **gitignore, editorconfig**
-- ✅ **Task 8.5.6:** Validation script (30min) - **Prevent broken configs**
-- ⚙️ **Task 8.5.7:** Secrets integration (30min) - *Optional, needs sops-nix*
-- ⚙️ **Task 8.5.8:** Auto-sync (35min) - *Optional, automatic sync with systemd*
+**Milestone 8.5** - All tasks completed on October 6, 2025:
+- ✅ **Task 8.5.1:** Initialize chezmoi properly (15min) - **DONE**
+- ✅ **Task 8.5.2:** Make paths portable (20min) - **DONE**
+- ✅ **Task 8.5.3:** SSH config templates (30min) - **DONE** (per-host SSH configs)
+- ✅ **Task 8.5.4:** Git config templates (20min) - **DONE** (different emails per host)
+- ✅ **Task 8.5.5:** Add missing dotfiles (25min) - **DONE** (gitignore, editorconfig, curlrc)
+- ✅ **Task 8.5.6:** Validation script (30min) - **DONE** (dotfiles-check command)
+- ✅ **Task 8.5.7:** Secrets integration (30min) - **DONE** (with documentation)
+- ✅ **Task 8.5.8:** Auto-sync (35min) - **DONE** (systemd timers + path watchers)
 
 ---
 

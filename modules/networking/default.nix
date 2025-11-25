@@ -11,6 +11,7 @@
     ./remote-desktop.nix
     ./dns.nix
     ./firewall.nix
+    ./wifi.nix
   ];
 }
 // (
@@ -90,7 +91,6 @@
         };
       };
 
-
       monitoring = {
         enable = mkOption {
           type = types.bool;
@@ -145,7 +145,6 @@
           DNSStubListener=yes
         '';
       };
-
 
       # ———————————————————————————————————————
       # Network monitoring and reliability

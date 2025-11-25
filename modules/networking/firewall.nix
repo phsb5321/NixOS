@@ -25,19 +25,19 @@ in {
 
     trustedNetworks = mkOption {
       type = types.listOf types.str;
-      default = [ "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16" ];
+      default = ["10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16"];
       description = "Trusted private networks";
     };
 
     allowedServices = mkOption {
       type = types.listOf types.str;
-      default = [ "ssh" ];
+      default = ["ssh"];
       description = "Services to allow through firewall (ssh, http, https, vnc, rdp)";
     };
 
     developmentPorts = mkOption {
       type = types.listOf types.int;
-      default = [ 3000 3001 8080 8000 ];
+      default = [3000 3001 8080 8000];
       description = "Development server ports to open";
     };
   };
@@ -55,11 +55,11 @@ in {
 
       # Allow common services
       allowedTCPPorts =
-        lib.optionals (lib.elem "ssh" cfg.allowedServices) [ 22 ]
-        ++ lib.optionals (lib.elem "http" cfg.allowedServices) [ 80 ]
-        ++ lib.optionals (lib.elem "https" cfg.allowedServices) [ 443 ]
-        ++ lib.optionals (lib.elem "vnc" cfg.allowedServices) [ 5900 5901 ] # VNC ports
-        ++ lib.optionals (lib.elem "rdp" cfg.allowedServices) [ 3389 ] # RDP port
+        lib.optionals (lib.elem "ssh" cfg.allowedServices) [22]
+        ++ lib.optionals (lib.elem "http" cfg.allowedServices) [80]
+        ++ lib.optionals (lib.elem "https" cfg.allowedServices) [443]
+        ++ lib.optionals (lib.elem "vnc" cfg.allowedServices) [5900 5901] # VNC ports
+        ++ lib.optionals (lib.elem "rdp" cfg.allowedServices) [3389] # RDP port
         ++ cfg.developmentPorts;
 
       allowedUDPPorts = [
@@ -71,8 +71,8 @@ in {
       trustedInterfaces = lib.mkIf cfg.tailscaleCompatible [
         "tailscale0"
         "docker0"
-        "br-+"  # Docker bridge networks
-        "lo"    # Loopback
+        "br-+" # Docker bridge networks
+        "lo" # Loopback
       ];
 
       # Allow ping for network diagnostics
@@ -115,9 +115,9 @@ in {
             iifname "lo" accept
 
             ${lib.optionalString cfg.tailscaleCompatible ''
-              # Allow Tailscale
-              iifname "tailscale0" accept
-            ''}
+          # Allow Tailscale
+          iifname "tailscale0" accept
+        ''}
 
             # Allow established and related connections
             ct state {established, related} accept
@@ -134,10 +134,10 @@ in {
             type filter hook forward priority filter;
 
             ${lib.optionalString cfg.tailscaleCompatible ''
-              # Allow Tailscale forwarding
-              iifname "tailscale0" accept
-              oifname "tailscale0" accept
-            ''}
+          # Allow Tailscale forwarding
+          iifname "tailscale0" accept
+          oifname "tailscale0" accept
+        ''}
 
             # Allow established and related
             ct state {established, related} accept
@@ -160,8 +160,8 @@ in {
       nftables
 
       # Network analysis
-      inetutils  # provides network utilities
-      iproute2  # provides ss
+      inetutils # provides network utilities
+      iproute2 # provides ss
       lsof
 
       # Traffic monitoring

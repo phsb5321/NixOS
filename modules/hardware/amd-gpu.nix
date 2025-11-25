@@ -28,12 +28,12 @@ in {
     # AMD GPU kernel configuration
     boot = {
       # Early KMS for faster boot and better Wayland integration
-      initrd.kernelModules = [ "amdgpu" ];
+      initrd.kernelModules = ["amdgpu"];
 
       # Kernel parameters optimized for AMD RX 5700 XT
       kernelParams = [
-        "amdgpu.dc=1"           # Display Core (required for Wayland)
-        "amdgpu.dpm=1"          # Dynamic Power Management
+        "amdgpu.dc=1" # Display Core (required for Wayland)
+        "amdgpu.dpm=1" # Dynamic Power Management
         "amdgpu.gpu_recovery=1" # GPU hang recovery
       ];
     };
@@ -49,6 +49,7 @@ in {
         vulkan-tools
         vulkan-validation-layers
         mesa
+        rocmPackages.clr.icd # Better OpenCL support
       ];
 
       # 32-bit support
@@ -60,7 +61,7 @@ in {
     # Services configuration
     services = {
       # AMD GPU driver
-      xserver.videoDrivers = [ "amdgpu" ];
+      xserver.videoDrivers = ["amdgpu"];
 
       # Udev rules for GPU access
       udev.extraRules = ''
@@ -79,13 +80,17 @@ in {
 
         # Vulkan driver
         "AMD_VULKAN_ICD" = lib.mkDefault "RADV";
+
+        # RADV performance optimizations
+        "RADV_PERFTEST" = lib.mkDefault "gpl,nggc"; # Graphics pipeline library + NGG culling
+        "RADV_DEBUG" = lib.mkDefault "zerovram"; # Reduce VRAM usage
       };
 
       # Useful AMD GPU tools
       systemPackages = with pkgs; [
-        radeontop     # GPU monitoring
-        vulkan-tools  # Vulkan utilities
-        mesa-demos    # OpenGL testing
+        radeontop # GPU monitoring
+        vulkan-tools # Vulkan utilities
+        mesa-demos # OpenGL testing
       ];
     };
 
@@ -96,7 +101,7 @@ in {
     };
 
     users.users.notroot = {
-      extraGroups = [ "video" "render" ];
+      extraGroups = ["video" "render"];
     };
   };
 }

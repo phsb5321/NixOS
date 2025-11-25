@@ -2,5 +2,6 @@
 {
   imports = [
     ./laptop.nix
+    ./forticlient.nix
   ];
 }

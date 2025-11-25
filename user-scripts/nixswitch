@@ -64,7 +64,7 @@ progress_group() {
 detect_host() {
     case "$(hostname)" in
         *laptop*|*mobile*|nixos-laptop) echo "laptop" ;;
-        *) echo "default" ;;
+        *) echo "desktop" ;;
     esac
 }
 
@@ -366,8 +366,8 @@ show_help() {
     echo "  --help/-h                Show this help"
     echo "  --non-interactive/-y     Skip confirmations"
     echo "  --commit-message MSG     Custom commit message"
-    echo "  default/laptop           Specify host (auto-detected if omitted)"
-    echo "  default-unstable         Use unstable packages for latest software"
+    echo "  desktop/laptop           Specify host (auto-detected if omitted)"
+    echo "  desktop-unstable         Use unstable packages for latest software (desktop)"
     echo "  laptop-unstable          Use unstable packages on laptop"
     echo
     gum style --foreground 84 "Features: Auto-detection • Parallel processing • Beautiful TUI • Git integration"
@@ -468,7 +468,7 @@ main() {
     if [[ ! -d "$config_path" ]]; then
         error "Host configuration '$config_path' not found"
         info "Available hosts: $(ls hosts/ | tr '\n' ' ')"
-        info "Available configurations: default, laptop, default-unstable, laptop-unstable"
+        info "Available configurations: desktop, laptop, desktop-unstable, laptop-unstable"
         exit 1
     fi
     
@@ -521,7 +521,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -y|--non-interactive) NON_INTERACTIVE=true; shift ;;
         --commit-message) COMMIT_MESSAGE="$2"; shift 2 ;;
-        default|laptop|default-unstable|laptop-unstable) SPECIFIED_HOST="$1"; shift ;;
+        desktop|laptop|desktop-unstable|laptop-unstable) SPECIFIED_HOST="$1"; shift ;;
+        default|default-unstable)
+            warn "Host 'default' has been renamed to 'desktop'. Using 'desktop' instead."
+            SPECIFIED_HOST="${1/default/desktop}"; shift ;;
         *) error "Unknown option: $1"; show_help; exit 1 ;;
     esac
 done
