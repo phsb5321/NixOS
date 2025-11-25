@@ -35,32 +35,32 @@ This task list breaks down the codebase reduction feature into ~150 actionable t
 
 ### Core Helper Functions (lib/builders.nix)
 
-- [ ] [T011] [P2] [US2] Create `mkCategoryModule` builder for package categories (file: lib/builders.nix)
-- [ ] [T012] [P2] [US2] Add docstring to `mkCategoryModule` with signature and usage example (file: lib/builders.nix)
-- [ ] [T013] [P2] [US2] Create `mkServiceModule` builder for simple service modules (file: lib/builders.nix)
-- [ ] [T014] [P2] [US2] Add docstring to `mkServiceModule` with signature and usage example (file: lib/builders.nix)
-- [ ] [T015] [P2] [US2] Create `mkGPUModule` builder for GPU configuration modules (file: lib/builders.nix)
-- [ ] [T016] [P2] [US2] Add docstring to `mkGPUModule` with signature and usage example (file: lib/builders.nix)
-- [ ] [T017] [P2] [US2] Create `mkDocumentToolModule` builder for document-tools.nix sections (file: lib/builders.nix)
-- [ ] [T018] [P2] [US2] Add docstring to `mkDocumentToolModule` with signature and usage example (file: lib/builders.nix)
-- [ ] [T019] [P2] [US2] Create `mkImportList` helper for auto-importing directory modules (file: lib/builders.nix)
-- [ ] [T020] [P2] [US2] Add docstring to `mkImportList` with signature and usage example (file: lib/builders.nix)
+- [X] [T011] [P2] [US2] Create `mkCategoryModule` builder for package categories (file: lib/builders.nix)
+- [X] [T012] [P2] [US2] Add docstring to `mkCategoryModule` with signature and usage example (file: lib/builders.nix)
+- [X] [T013] [P2] [US2] Create `mkServiceModule` builder for simple service modules (file: lib/builders.nix)
+- [X] [T014] [P2] [US2] Add docstring to `mkServiceModule` with signature and usage example (file: lib/builders.nix)
+- [X] [T015] [P2] [US2] Create `mkGPUModule` builder for GPU configuration modules (file: lib/builders.nix)
+- [X] [T016] [P2] [US2] Add docstring to `mkGPUModule` with signature and usage example (file: lib/builders.nix)
+- [X] [T017] [P2] [US2] Create `mkDocumentToolModule` builder for document-tools.nix sections (file: lib/builders.nix)
+- [X] [T018] [P2] [US2] Add docstring to `mkDocumentToolModule` with signature and usage example (file: lib/builders.nix)
+- [X] [T019] [P2] [US2] Create `mkImportList` helper for auto-importing directory modules (file: lib/builders.nix)
+- [X] [T020] [P2] [US2] Add docstring to `mkImportList` with signature and usage example (file: lib/builders.nix)
 
 ### Utility Helpers (lib/utils.nix)
 
-- [ ] [T021] [P2] [US2] Create `mkConditionalPackages` helper for conditional package lists (file: lib/utils.nix)
-- [ ] [T022] [P2] [US2] Add docstring to `mkConditionalPackages` with signature and usage example (file: lib/utils.nix)
-- [ ] [T023] [P2] [US2] Create `mkOptionDefault` helper for simplified option definitions (file: lib/utils.nix)
-- [ ] [T024] [P2] [US2] Add docstring to `mkOptionDefault` with signature and usage example (file: lib/utils.nix)
-- [ ] [T025] [P2] [US2] Create `mkMergedOptions` helper for combining option sets (file: lib/utils.nix)
-- [ ] [T026] [P2] [US2] Add docstring to `mkMergedOptions` with signature and usage example (file: lib/utils.nix)
+- [X] [T021] [P2] [US2] Create `mkConditionalPackages` helper for conditional package lists (file: lib/utils.nix)
+- [X] [T022] [P2] [US2] Add docstring to `mkConditionalPackages` with signature and usage example (file: lib/utils.nix)
+- [X] [T023] [P2] [US2] Create `mkOptionDefault` helper for simplified option definitions (file: lib/utils.nix)
+- [X] [T024] [P2] [US2] Add docstring to `mkOptionDefault` with signature and usage example (file: lib/utils.nix)
+- [X] [T025] [P2] [US2] Create `mkMergedOptions` helper for combining option sets (file: lib/utils.nix)
+- [X] [T026] [P2] [US2] Add docstring to `mkMergedOptions` with signature and usage example (file: lib/utils.nix)
 
 ### Library Integration
 
-- [ ] [T027] [P2] [US2] Export all new builders from lib/default.nix (file: lib/default.nix)
-- [ ] [T028] [P2] [US2] Export all new utilities from lib/default.nix (file: lib/default.nix)
-- [ ] [T029] [P2] [US2] Create lib/README.md documenting all 10 helper functions (file: lib/README.md)
-- [ ] [T030] [P2] [US2] Add usage examples for each helper in lib/README.md (file: lib/README.md)
+- [X] [T027] [P2] [US2] Export all new builders from lib/default.nix (file: lib/default.nix)
+- [X] [T028] [P2] [US2] Export all new utilities from lib/default.nix (file: lib/default.nix)
+- [X] [T029] [P2] [US2] Create lib/README.md documenting all 10 helper functions (file: lib/README.md)
+- [X] [T030] [P2] [US2] Add usage examples for each helper in lib/README.md (file: lib/README.md)
 
 ---
 
