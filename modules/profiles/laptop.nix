@@ -84,69 +84,35 @@ in {
     };
 
     # Enable GNOME desktop with laptop optimizations
+    # Note: GNOME configuration now uses new modular system
+    # Extensions are configured individually in host configs
     modules.desktop.gnome = {
       enable = true;
       wayland.enable = true;
-
-      # Note: 'variant' option has been removed from GNOME module
-      # Hardware acceleration is now handled by GPU modules
-
-      # Laptop-specific extensions (using new boolean syntax)
-      extensions = {
-        enable = true;
-        # Core extensions (enabled unless minimal mode)
-        appIndicator = lib.mkDefault (!cfg.gnomeExtensions.minimal);
-        dashToDock = lib.mkDefault (!cfg.gnomeExtensions.minimal);
-        userThemes = lib.mkDefault (!cfg.gnomeExtensions.minimal);
-        justPerfection = lib.mkDefault (!cfg.gnomeExtensions.minimal);
-        vitals = lib.mkDefault (!cfg.gnomeExtensions.minimal);
-        caffeine = lib.mkDefault (!cfg.gnomeExtensions.minimal);
-
-        # Productivity extensions
-        clipboard = lib.mkDefault cfg.gnomeExtensions.productivity;
-        gsconnect = lib.mkDefault (cfg.gnomeExtensions.productivity && !cfg.gnomeExtensions.minimal);
-        workspaceIndicator = lib.mkDefault true;
-        soundOutput = lib.mkDefault false; # Not typically needed on laptops
-      };
     };
 
     # Package selection based on variant
-    modules.packages = {
-      enable = true;
+    # Note: Package configuration now uses new modular system
+    # Packages are configured in host configs per category
+    modules.packages.gaming.enable = lib.mkDefault (cfg.variant == "gaming");
 
-      # Disable heavy features for ultrabooks
-      gaming.enable = lib.mkDefault (cfg.variant == "gaming");
-
-      extraPackages = with pkgs;
-        [
-          # Laptop essentials
-          powertop
-          tlp
-          acpi
-          brightnessctl
-
-          # Variant-specific packages
-        ]
-        ++ lib.optionals (cfg.variant == "gaming") [
-          nvtop
-          mangohud
-          gamemode
-        ]
-        ++ lib.optionals (cfg.variant == "workstation") [
-          docker-compose
-          kubectl
-          terraform
-        ]
-        ++ lib.optionals (cfg.variant == "ultrabook") [
-          # Minimal extra packages for ultrabooks
-        ]
-        ++ lib.optionals cfg.gnomeExtensions.productivity [
-          gnomeExtensions.forge
-          gnomeExtensions.arc-menu
-          gnomeExtensions.paperwm
-          gnomeExtensions.pop-shell
-        ];
-    };
+    environment.systemPackages = with pkgs;
+      [
+        # Laptop essentials
+        powertop
+        tlp
+        acpi
+        brightnessctl
+      ]
+      ++ lib.optionals (cfg.variant == "gaming") [
+        nvtopPackages.full
+        mangohud
+        gamemode
+      ]
+      ++ lib.optionals (cfg.variant == "workstation") [
+        docker-compose
+        kubectl
+      ];
 
     # Core module optimizations for laptops
     modules.core = {

@@ -243,7 +243,7 @@ in {
 
               # LaTeX editors and IDEs
               pkgs.texstudio # Comprehensive LaTeX IDE
-              pkgs.texmaker # Cross-platform LaTeX editor
+              # pkgs.texmaker # Cross-platform LaTeX editor - TEMPORARILY DISABLED (broken in nixpkgs)
               pkgs.kile # KDE LaTeX editor
               pkgs.lyx # WYSIWYM document processor
 
@@ -255,12 +255,12 @@ in {
               # Additional utilities
               pkgs.ghostscript # PostScript and PDF interpreter
               pkgs.imagemagick # Image manipulation suite
-              pkgs.poppler_utils # PDF utilities (pdfinfo, pdftotext, etc.)
+              pkgs.poppler-utils # PDF utilities (pdfinfo, pdftotext, etc.)
               pkgs.qpdf # PDF transformation library
               pkgs.python3Packages.pygments # Syntax highlighting
 
               # Bibliography and reference management
-              pkgs.jabref # Bibliography reference manager
+              # pkgs.jabref # Bibliography reference manager (temporarily disabled - OpenJDK 21.0.9 build issue)
 
               # Math and science tools
               pkgs.gnuplot # Plotting utility

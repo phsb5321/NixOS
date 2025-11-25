@@ -1,0 +1,10 @@
+[org/gnome/mutter]
+# Variable refresh rate (FreeSync/G-Sync) for AMD RX 5700 XT
+# Fractional scaling support (if needed)
+experimental-features=['variable-refresh-rate', 'scale-monitor-framebuffer']
+
+# Reduce compositing overhead
+check-alive-timeout=uint32 60000
+
+# Better frame pacing
+sync-to-vblank=true
