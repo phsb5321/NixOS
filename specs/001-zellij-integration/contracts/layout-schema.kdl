@@ -1,0 +1,178 @@
+// Zellij Layout Schema Reference
+// This file documents the expected structure for layout files (*.kdl)
+// It is NOT executable KDL - it's a schema/reference document
+
+// Top-level layout structure
+layout {
+    // TABS: Define workspace tabs
+    tab name="TabName" focus=true {  // focus: boolean (optional, only one tab can have focus)
+        // PANES: Nested pane structure (tree)
+        pane split_direction="vertical" {  // split_direction: "vertical" | "horizontal"
+            // Child pane (leaf node)
+            pane size="60%" {  // size: percentage (e.g., "60%") or fraction (e.g., 1)
+                // Pane configuration
+                command "htop"  // string: command to run (optional)
+                args "arg1" "arg2"  // array of strings: command arguments (optional)
+                cwd "/home/user"  // string: working directory (optional)
+                focus true  // boolean: whether this pane has focus (optional)
+                name "MonitorPane"  // string: custom pane name (optional)
+            }
+
+            // Child pane (another split)
+            pane size="40%" split_direction="horizontal" {
+                pane size="50%" {
+                    command "zsh"
+                }
+                pane size="50%" {
+                    command "git"
+                    args "log" "--oneline"
+                    cwd "/home/user/project"
+                }
+            }
+        }
+    }
+
+    // FLOATING PANES: Overlay panes (optional)
+    floating_panes {
+        pane {
+            x "10%"      // string: horizontal position (percentage or pixels)
+            y "10%"      // string: vertical position
+            width "40%"  // string: pane width
+            height "40%" // string: pane height
+            command "zsh"
+        }
+    }
+
+    // PANE TEMPLATES: Reusable pane definitions
+    pane_template name="terminal_pane" {
+        command "zsh"
+        // Template can be referenced in layout
+    }
+
+    // TAB TEMPLATES: Reusable tab definitions
+    tab_template name="default_tab" {
+        pane split_direction="vertical" {
+            pane size="50%"
+            pane size="50%"
+        }
+    }
+
+    // DEFAULT TAB TEMPLATE: Applied to all tabs
+    default_tab_template {
+        pane {
+            // Base pane structure for new tabs
+        }
+    }
+}
+
+// ALTERNATIVE: Simplified layout (no tabs, just panes)
+layout {
+    pane split_direction="horizontal" {
+        pane size="30%"
+        pane size="70%"
+    }
+}
+
+// VALID VALUES REFERENCE
+
+// split_direction:
+// - "vertical"   : Panes stacked top/bottom
+// - "horizontal" : Panes side-by-side left/right
+
+// size:
+// - Percentage: "60%", "40%", etc. (must sum to 100% among siblings)
+// - Fraction: 1, 2, 3 (relative sizing, e.g., 1:2 means 1/3 and 2/3)
+// - If omitted, panes split equally
+
+// focus:
+// - true, false (boolean, optional)
+// - Only one pane should have focus=true per tab
+
+// position (for floating panes):
+// - x, y: "10%", "50px", "center" (percentage, pixels, or keyword)
+// - width, height: "40%", "200px" (percentage or pixels)
+
+// command:
+// - String: executable name or path
+// - Examples: "zsh", "htop", "/usr/bin/vim", "git"
+
+// args:
+// - Array of strings
+// - Each argument is a separate string
+// - Example: args "log" "--oneline" "--graph"
+
+// cwd:
+// - String: absolute or relative path
+// - Can use environment variables
+// - Example: "/home/user/project", "~/code"
+
+// name:
+// - String: custom display name for pane/tab
+// - Optional, defaults to command name
+
+// TEMPLATE USAGE
+
+// Define template:
+pane_template name="dev_pane" {
+    command "nvim"
+    cwd "~/code"
+}
+
+// Use template:
+pane {
+    // Reference template (syntax varies, check Zellij docs)
+    use "dev_pane"
+}
+
+// LAYOUT COMPOSITION
+
+// Include configuration in layout:
+layout {
+    // Can include keybindings, themes, etc. from main config
+    // See: https://zellij.dev/documentation/layouts-with-config
+}
+
+// COMMON PATTERNS
+
+// Two-column layout (editor + terminal):
+layout {
+    pane split_direction="horizontal" {
+        pane size="70%" { command "nvim"; }
+        pane size="30%" { command "zsh"; }
+    }
+}
+
+// Three-pane dev layout (editor, terminal, logs):
+layout {
+    pane split_direction="horizontal" {
+        pane size="60%" { command "nvim"; }
+        pane size="40%" split_direction="vertical" {
+            pane size="50%" { command "zsh"; }
+            pane size="50%" { command "tail"; args "-f" "/var/log/syslog"; }
+        }
+    }
+}
+
+// Multi-tab workflow:
+layout {
+    tab name="Code" {
+        pane { command "nvim"; }
+    }
+    tab name="Terminal" {
+        pane { command "zsh"; }
+    }
+    tab name="Monitor" {
+        pane { command "htop"; }
+    }
+}
+
+// VALIDATION RULES
+
+// 1. Pane sizes must sum to 100% among siblings (if using percentages)
+// 2. split_direction is required for parent panes with multiple children
+// 3. Only one pane per tab can have focus=true
+// 4. Floating pane positions must be within viewport bounds
+// 5. Commands must be executable (checked at runtime)
+// 6. Working directories must exist (checked at runtime)
+// 7. Template names must be unique within layout
+// 8. Tab names should be unique (not enforced, but recommended)

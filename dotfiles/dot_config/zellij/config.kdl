@@ -1,137 +1,231 @@
-// Zellij configuration with Catppuccin theme
-default_shell "zsh"
+// Zellij Configuration - Optimized for NixOS Development Workflow
+// Based on 2025 best practices with modal approach and Nord theme
+// Generated: 2025-11-26
 
-// Scrollback lines for history
-scrollback_editor "nvim"
-
-// Mouse mode
-mouse_mode true
-
-// Copy command
-copy_command "wl-copy"        // Wayland
-copy_clipboard "primary"      // Copy to primary clipboard
-
-// Theme settings
-themes {
-    catppuccin-latte {
-        bg "#acb0be" // Surface2
-        fg "#4c4f69" // Text
-        red "#d20f39"
-        green "#40a02b"
-        blue "#1e66f5"
-        yellow "#df8e1d"
-        magenta "#ea76cb" // Pink
-        orange "#fe640b" // Peach
-        cyan "#04a5e5" // Sky
-        black "#e6e9ef" // Mantle
-        white "#4c4f69" // Text
+// ============================================================================
+// KEYBINDINGS - Modal Approach (Locked mode default)
+// ============================================================================
+keybindings {
+    // -------------------------------------------------------------------------
+    // LOCKED MODE (Default) - Pure terminal, no Zellij shortcuts active
+    // -------------------------------------------------------------------------
+    locked {
+        // Alt+i: Enter Normal mode for Zellij operations
+        bind "Alt i" { SwitchToMode "Normal"; }
     }
 
-    catppuccin-frappe {
-        bg "#626880" // Surface2
-        fg "#c6d0f5" // Text
-        red "#e78284"
-        green "#a6d189"
-        blue "#8caaee"
-        yellow "#e5c890"
-        magenta "#f4b8e4" // Pink
-        orange "#ef9f76" // Peach
-        cyan "#99d1db" // Sky
-        black "#292c3c" // Mantle
-        white "#c6d0f5" // Text
-    }
-
-    catppuccin-macchiato {
-        bg "#5b6078" // Surface2
-        fg "#cad3f5" // Text
-        red "#ed8796"
-        green "#a6da95"
-        blue "#8aadf4"
-        yellow "#eed49f"
-        magenta "#f5bde6" // Pink
-        orange "#f5a97f" // Peach
-        cyan "#91d7e3" // Sky
-        black "#1e2030" // Mantle
-        white "#cad3f5" // Text
-    }
-
-    catppuccin-mocha {
-        bg "#585b70" // Surface2
-        fg "#cdd6f4" // Text
-        red "#f38ba8"
-        green "#a6e3a1"
-        blue "#89b4fa"
-        yellow "#f9e2af"
-        magenta "#f5c2e7" // Pink
-        orange "#fab387" // Peach
-        cyan "#89dceb" // Sky
-        black "#181825" // Mantle
-        white "#cdd6f4" // Text
-    }
-}
-
-// Use Catppuccin Mocha theme by default
-theme "catppuccin-mocha"
-
-// Simplified mode for cleaner UI
-simplified_ui true
-
-// Pane frames - make them more subtle
-pane_frames false
-
-// Default layout
-default_layout "compact"
-
-// Key bindings
-keybinds clear-defaults=true {
+    // -------------------------------------------------------------------------
+    // NORMAL MODE - Primary Zellij control mode
+    // -------------------------------------------------------------------------
     normal {
-        // Pane management
-        bind "Alt h" { MoveFocus "Left"; }
-        bind "Alt l" { MoveFocus "Right"; }
-        bind "Alt j" { MoveFocus "Down"; }
-        bind "Alt k" { MoveFocus "Up"; }
-        
-        // Split panes
-        bind "Alt |" { NewPane "Right"; SwitchToMode "Normal"; }
-        bind "Alt -" { NewPane "Down"; SwitchToMode "Normal"; }
-        
-        // Close pane
-        bind "Alt w" { CloseFocus; SwitchToMode "Normal"; }
-        
-        // Tabs
-        bind "Alt t" { NewTab; SwitchToMode "Normal"; }
-        bind "Alt 1" { GoToTab 1; SwitchToMode "Normal"; }
-        bind "Alt 2" { GoToTab 2; SwitchToMode "Normal"; }
-        bind "Alt 3" { GoToTab 3; SwitchToMode "Normal"; }
-        bind "Alt 4" { GoToTab 4; SwitchToMode "Normal"; }
-        bind "Alt 5" { GoToTab 5; SwitchToMode "Normal"; }
-        bind "Alt 6" { GoToTab 6; SwitchToMode "Normal"; }
-        bind "Alt 7" { GoToTab 7; SwitchToMode "Normal"; }
-        bind "Alt 8" { GoToTab 8; SwitchToMode "Normal"; }
-        bind "Alt 9" { GoToTab 9; SwitchToMode "Normal"; }
-        
-        // Tab navigation
-        bind "Alt n" { GoToNextTab; }
-        bind "Alt p" { GoToPreviousTab; }
-        
-        // Rename tab
-        bind "Alt r" { SwitchToMode "RenameTab"; TabNameInput 0; }
-        
-        // Toggle floating pane
-        bind "Alt f" { ToggleFloatingPanes; SwitchToMode "Normal"; }
-        
-        // Fullscreen
-        bind "Alt z" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
-        
-        // Quit
+        // Mode switching
+        bind "Ctrl p" { SwitchToMode "Pane"; }
+        bind "Ctrl t" { SwitchToMode "Tab"; }
+        bind "Ctrl r" { SwitchToMode "Resize"; }
+        bind "Ctrl s" { SwitchToMode "Scroll"; }
+        bind "Ctrl o" { SwitchToMode "Session"; }
+        bind "Alt Esc" { SwitchToMode "Locked"; }
+
+        // Quick actions (auto-return to Locked mode)
+        bind "n" { NewPane; SwitchToMode "Locked"; }
         bind "Ctrl q" { Quit; }
-        
-        // Detach session
-        bind "Ctrl d" { Detach; }
     }
-    
+
+    // -------------------------------------------------------------------------
+    // PANE MODE - Pane management operations
+    // -------------------------------------------------------------------------
+    pane {
+        // Navigation (Vim-style)
+        bind "h" { MoveFocus "Left"; }
+        bind "j" { MoveFocus "Down"; }
+        bind "k" { MoveFocus "Up"; }
+        bind "l" { MoveFocus "Right"; }
+        bind "Tab" { SwitchFocus; }
+
+        // Pane creation
+        bind "n" { NewPane; SwitchToMode "Locked"; }
+        bind "d" { NewPane "Down"; SwitchToMode "Locked"; }
+        bind "r" { NewPane "Right"; SwitchToMode "Locked"; }
+
+        // Pane management
+        bind "x" { CloseFocus; SwitchToMode "Locked"; }
+        bind "f" { ToggleFocusFullscreen; SwitchToMode "Locked"; }
+        bind "z" { TogglePaneFrames; SwitchToMode "Locked"; }
+        bind "w" { ToggleFloatingPanes; SwitchToMode "Locked"; }
+
+        // Return to modes
+        bind "Alt Esc" { SwitchToMode "Locked"; }
+        bind "Esc" { SwitchToMode "Normal"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB MODE - Tab management
+    // -------------------------------------------------------------------------
+    tab {
+        // Tab navigation
+        bind "h" { GoToPreviousTab; }
+        bind "l" { GoToNextTab; }
+        bind "1" { GoToTab 1; }
+        bind "2" { GoToTab 2; }
+        bind "3" { GoToTab 3; }
+        bind "4" { GoToTab 4; }
+        bind "5" { GoToTab 5; }
+        bind "6" { GoToTab 6; }
+        bind "7" { GoToTab 7; }
+        bind "8" { GoToTab 8; }
+        bind "9" { GoToTab 9; }
+
+        // Tab management
+        bind "n" { NewTab; SwitchToMode "Locked"; }
+        bind "x" { CloseTab; SwitchToMode "Locked"; }
+        bind "r" { SwitchToMode "RenameTab"; }
+
+        // Return to modes
+        bind "Alt Esc" { SwitchToMode "Locked"; }
+        bind "Esc" { SwitchToMode "Normal"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // RESIZE MODE - Pane resizing
+    // -------------------------------------------------------------------------
+    resize {
+        // Increase pane size (Vim-style directions)
+        bind "h" { Resize "Increase Left"; }
+        bind "j" { Resize "Increase Down"; }
+        bind "k" { Resize "Increase Up"; }
+        bind "l" { Resize "Increase Right"; }
+
+        // Decrease pane size (Shift + direction)
+        bind "H" { Resize "Decrease Left"; }
+        bind "J" { Resize "Decrease Down"; }
+        bind "K" { Resize "Decrease Up"; }
+        bind "L" { Resize "Decrease Right"; }
+
+        // Return to modes
+        bind "Alt Esc" { SwitchToMode "Locked"; }
+        bind "Esc" { SwitchToMode "Normal"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // SCROLL MODE - Scrollback navigation
+    // -------------------------------------------------------------------------
+    scroll {
+        // Scrolling
+        bind "j" { ScrollDown; }
+        bind "k" { ScrollUp; }
+        bind "d" { HalfPageScrollDown; }
+        bind "u" { HalfPageScrollUp; }
+        bind "Ctrl f" { PageScrollDown; }
+        bind "Ctrl b" { PageScrollUp; }
+
+        // Scrollback actions
+        bind "e" { EditScrollback; SwitchToMode "Locked"; }
+        bind "s" { SwitchToMode "EnterSearch"; }
+
+        // Return to modes
+        bind "Alt Esc" { SwitchToMode "Locked"; }
+        bind "Esc" { SwitchToMode "Normal"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // SESSION MODE - Session management
+    // -------------------------------------------------------------------------
+    session {
+        bind "d" { Detach; }
+        bind "Ctrl q" { Quit; }
+
+        // Return to modes
+        bind "Alt Esc" { SwitchToMode "Locked"; }
+        bind "Esc" { SwitchToMode "Normal"; }
+    }
+
+    // -------------------------------------------------------------------------
+    // RENAME TAB MODE
+    // -------------------------------------------------------------------------
     renametab {
         bind "Enter" { SwitchToMode "Normal"; }
         bind "Esc" { UndoRenameTab; SwitchToMode "Normal"; }
     }
+
+    // -------------------------------------------------------------------------
+    // SEARCH MODE
+    // -------------------------------------------------------------------------
+    entersearch {
+        bind "Enter" { SwitchToMode "Search"; }
+        bind "Esc" { SwitchToMode "Scroll"; }
+    }
+
+    search {
+        bind "n" { SearchDown; }
+        bind "N" { SearchUp; }
+        bind "Esc" { SwitchToMode "Scroll"; }
+    }
+}
+
+// ============================================================================
+// THEMES - Nord color palette
+// ============================================================================
+themes {
+    nord {
+        // Foreground/Background
+        fg "#D8DEE9"  // Nord Snow Storm 1
+        bg "#2E3440"  // Nord Polar Night 1
+
+        // Standard terminal colors
+        black "#3B4252"    // Nord Polar Night 2
+        red "#BF616A"      // Nord Aurora Red
+        green "#A3BE8C"    // Nord Aurora Green
+        yellow "#EBCB8B"   // Nord Aurora Yellow
+        blue "#81A1C1"     // Nord Frost 2
+        magenta "#B48EAD"  // Nord Aurora Purple
+        cyan "#88C0D0"     // Nord Frost 3
+        white "#E5E9F0"    // Nord Snow Storm 2
+        orange "#D08770"   // Nord Aurora Orange
+    }
+}
+
+// ============================================================================
+// UI PREFERENCES - Modern, clean interface
+// ============================================================================
+ui {
+    pane_frames {
+        rounded_corners true
+        hide_session_name false
+    }
+}
+
+// ============================================================================
+// PLUGINS - Default plugins for status bar and file management
+// ============================================================================
+plugins {
+    tab-bar { path "tab-bar"; }
+    status-bar { path "status-bar"; }
+    strider { path "strider"; }
+    compact-bar { path "compact-bar"; }
+}
+
+// ============================================================================
+// OPTIONS - Global settings
+// ============================================================================
+options {
+    // Shell configuration
+    default_shell "zsh"
+    pane_frames true
+
+    // Mouse support
+    mouse_mode true
+
+    // Copy/paste configuration (Wayland)
+    copy_command "wl-copy"
+    copy_clipboard "primary"
+    copy_on_select true
+
+    // Scrollback editor
+    scrollback_editor "nvim"
+
+    // Default layout
+    default_layout "default"
+
+    // Session behavior
+    // attach_to_session false  // Uncomment to auto-attach to existing sessions
 }

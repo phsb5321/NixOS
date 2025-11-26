@@ -1,0 +1,40 @@
+// Development Layout - Optimized for coding workflow
+// Top: Editor/IDE (60% height)
+// Bottom: Terminal (30%) + Git logs (10%)
+// Working directory: ~/NixOS or current project
+
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    tab name="Dev" focus=true {
+        pane split_direction="vertical" {
+            // Editor pane (top 60%)
+            pane size="60%" {
+                name "Editor"
+            }
+
+            // Bottom split (terminal + git logs)
+            pane size="40%" split_direction="horizontal" {
+                // Terminal pane (75% of bottom)
+                pane size="75%" {
+                    name "Terminal"
+                }
+
+                // Git status/logs pane (25% of bottom)
+                pane size="25%" {
+                    name "Git"
+                    command "git"
+                    args "log" "--oneline" "--graph" "--all" "--decorate" "-n" "20"
+                }
+            }
+        }
+    }
+}

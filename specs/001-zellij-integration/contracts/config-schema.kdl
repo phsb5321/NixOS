@@ -1,0 +1,191 @@
+// Zellij Configuration Schema Reference
+// This file documents the expected structure and valid values for config.kdl
+// It is NOT executable KDL - it's a schema/reference document
+
+// Top-level configuration structure
+config {
+    // KEYBINDINGS: Define keyboard shortcuts for different modes
+    keybindings {
+        // Locked mode: No Zellij keybindings active (pure terminal)
+        locked {
+            // Example: Alt+i switches to Normal mode
+            bind "Alt i" { SwitchToMode "Normal"; }
+        }
+
+        // Normal mode: Primary Zellij control mode
+        normal {
+            // Mode switching
+            bind "Ctrl p" { SwitchToMode "Pane"; }
+            bind "Ctrl t" { SwitchToMode "Tab"; }
+            bind "Ctrl s" { SwitchToMode "Scroll"; }
+            bind "Ctrl o" { SwitchToMode "Session"; }
+
+            // Quick actions
+            bind "n" { NewPane; SwitchToMode "Locked"; }
+            bind "Ctrl q" { Quit; }
+        }
+
+        // Pane mode: Pane management operations
+        pane {
+            bind "h" { MoveFocus "Left"; }
+            bind "j" { MoveFocus "Down"; }
+            bind "k" { MoveFocus "Up"; }
+            bind "l" { MoveFocus "Right"; }
+            bind "p" { SwitchFocus; }
+            bind "n" { NewPane; SwitchToMode "Locked"; }
+            bind "d" { NewPane "Down"; SwitchToMode "Locked"; }
+            bind "r" { NewPane "Right"; SwitchToMode "Locked"; }
+            bind "x" { CloseFocus; SwitchToMode "Locked"; }
+            bind "f" { ToggleFocusFullscreen; SwitchToMode "Locked"; }
+            bind "z" { TogglePaneFrames; SwitchToMode "Locked"; }
+            bind "w" { ToggleFloatingPanes; SwitchToMode "Locked"; }
+        }
+
+        // Tab mode: Tab management
+        tab {
+            bind "h" { GoToPreviousTab; }
+            bind "l" { GoToNextTab; }
+            bind "n" { NewTab; SwitchToMode "Locked"; }
+            bind "x" { CloseTab; SwitchToMode "Locked"; }
+            bind "r" { SwitchToMode "RenameTab"; }
+        }
+
+        // Resize mode: Pane resizing
+        resize {
+            bind "h" { Resize "Increase Left"; }
+            bind "j" { Resize "Increase Down"; }
+            bind "k" { Resize "Increase Up"; }
+            bind "l" { Resize "Increase Right"; }
+        }
+
+        // Scroll mode: Scrollback navigation
+        scroll {
+            bind "e" { EditScrollback; SwitchToMode "Locked"; }
+            bind "s" { SwitchToMode "EnterSearch"; }
+            bind "j" { ScrollDown; }
+            bind "k" { ScrollUp; }
+            bind "d" { HalfPageScrollDown; }
+            bind "u" { HalfPageScrollUp; }
+        }
+    }
+
+    // THEMES: Color scheme definitions
+    themes {
+        // Theme name (referenced in UI config)
+        default {
+            // Foreground/background
+            fg "#FFFFFF"  // format: #RRGGBB (hex color)
+            bg "#000000"
+
+            // Standard terminal colors
+            black "#000000"
+            red "#FF0000"
+            green "#00FF00"
+            yellow "#FFFF00"
+            blue "#0000FF"
+            magenta "#FF00FF"
+            cyan "#00FFFF"
+            white "#FFFFFF"
+
+            // Extended color (optional)
+            orange "#FFA500"
+        }
+    }
+
+    // UI: Visual preferences
+    ui {
+        pane_frames {
+            rounded_corners true  // boolean: true | false
+            hide_session_name false
+        }
+    }
+
+    // PLUGINS: Extension configuration
+    plugins {
+        // Built-in plugin: tab bar
+        tab-bar {
+            path "tab-bar"  // Plugin path (built-in)
+        }
+
+        // Built-in plugin: status bar
+        status-bar {
+            path "status-bar"
+        }
+
+        // Built-in plugin: file picker
+        strider {
+            path "strider"
+        }
+
+        // Built-in plugin: compact status bar
+        compact-bar {
+            path "compact-bar"
+        }
+    }
+
+    // OPTIONS: Global settings
+    options {
+        simplified_ui false  // boolean
+        default_shell "zsh"  // string: shell path
+        pane_frames true     // boolean
+
+        // Mouse support
+        mouse_mode true      // boolean
+
+        // Copy behavior
+        copy_command "wl-copy"  // string: clipboard command (xclip, wl-copy, pbcopy)
+        copy_clipboard "primary"  // string: primary | system
+        copy_on_select true  // boolean
+
+        // Layout
+        default_layout "default"  // string: layout name from layouts/
+
+        // Session
+        session_name "main"  // string: default session name (optional)
+        attach_to_session false  // boolean: auto-attach to existing
+
+        // Scrollback
+        scrollback_editor "nvim"  // string: editor command
+    }
+}
+
+// VALID VALUES REFERENCE
+
+// Modes:
+// - Locked, Normal, Pane, Tab, Resize, Scroll, EnterSearch, Search, RenameTab, RenamePane, Session, Move, Tmux
+
+// Actions:
+// - SwitchToMode "<mode>"
+// - Quit
+// - NewPane [direction]  // direction: "Down" | "Right" (optional)
+// - CloseFocus
+// - MoveFocus "<direction>"  // direction: "Left" | "Right" | "Up" | "Down"
+// - NewTab
+// - GoToNextTab
+// - GoToPreviousTab
+// - CloseTab
+// - ToggleFocusFullscreen
+// - TogglePaneFrames
+// - ToggleFloatingPanes
+// - Resize "<action>"  // action: "Increase/Decrease Left/Right/Up/Down"
+// - ScrollDown, ScrollUp, HalfPageScrollDown, HalfPageScrollUp
+// - EditScrollback
+// - SwitchFocus
+
+// Key format:
+// - Modifier + Key: "Ctrl a", "Alt b", "Shift c"
+// - Function keys: "F1", "F2", etc.
+// - Special keys: "Enter", "Tab", "Esc", "Backspace", "Delete"
+// - Navigation: "Left", "Right", "Up", "Down", "Home", "End", "PageUp", "PageDown"
+// - Single char: "a", "b", "1", "2", etc.
+
+// Color format:
+// - Hex: "#RRGGBB" (6-digit hex, case-insensitive)
+// - Named colors NOT supported (must use hex)
+
+// Boolean values:
+// - true, false (lowercase, no quotes)
+
+// String values:
+// - Quoted: "value"
+// - Paths can be absolute or relative
