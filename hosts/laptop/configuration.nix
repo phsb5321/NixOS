@@ -5,11 +5,13 @@
   pkgs,
   lib,
   systemVersion,
+  inputs,
   ...
 }: {
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    inputs.sops-nix.nixosModules.sops
   ];
 
   # Allow insecure packages for USB boot creation tool
@@ -227,13 +229,25 @@
   # Enable WPA3/SAE support in NetworkManager using iwd backend
   networking.networkmanager.wifi.backend = "iwd";
 
+  # ===== SECRETS MANAGEMENT =====
+  sops = {
+    defaultSopsFile = ../../secrets/laptop.yaml;
+    age.keyFile = "/var/lib/sops-nix/key.txt";
+
+    secrets = {
+      wifi_live_tim_4122_psk = {
+        mode = "0400";
+      };
+    };
+  };
+
   modules.networking.wifi = {
     enable = true;
     enablePowersave = true; # For laptop battery life
     networks = {
       # WiFi network configuration
       "LIVE TIM_4122" = {
-        psk = "123";
+        pskFile = config.sops.secrets.wifi_live_tim_4122_psk.path;
         priority = 100;
         autoConnect = true;
       };
