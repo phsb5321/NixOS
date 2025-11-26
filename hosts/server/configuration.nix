@@ -14,7 +14,6 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
-    ../shared/common.nix
     ./gnome.nix
   ];
 
@@ -27,7 +26,10 @@
       enableSystemdResolved = lib.mkForce false; # Override for manual DNS
       enableDNSOverTLS = lib.mkForce false;
     };
-    firewall.openPorts = [22 3000]; # SSH and development server
+    firewall = {
+      enable = true;
+      developmentPorts = [22 3000]; # SSH and development server
+    };
   };
 
   # Manual DNS configuration for server stability
@@ -249,31 +251,31 @@
     media.enable = lib.mkForce true;
     gaming.enable = lib.mkForce false; # Keep disabled for server
     audioVideo.enable = lib.mkForce true;
-
-    # Server-specific monitoring packages
-    extraPackages = with pkgs; [
-      # Server monitoring and management
-      iotop
-      nethogs
-      ncdu
-      lsof
-      strace
-      htop
-      btop
-
-      # Additional server tools
-      wget
-      git
-      claude-code
-      uv # Python package and environment manager
-      sshpass # For SSH automation
-      sshfs # For mounting remote filesystems
-
-      # Proxmox VM guest tools
-      qemu-utils
-      spice-vdagent
-    ];
   };
+
+  # Server-specific monitoring packages
+  environment.systemPackages = with pkgs; [
+    # Server monitoring and management
+    iotop
+    nethogs
+    ncdu
+    lsof
+    strace
+    htop
+    btop
+
+    # Additional server tools
+    wget
+    git
+    claude-code
+    uv # Python package and environment manager
+    sshpass # For SSH automation
+    sshfs # For mounting remote filesystems
+
+    # Proxmox VM guest tools
+    qemu-utils
+    spice-vdagent
+  ];
 
   # System state version
   system.stateVersion = systemVersion;

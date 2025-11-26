@@ -23,7 +23,7 @@
       clipboard = false; # Not needed for server
       gsconnect = false; # Not needed for server
       workspaceIndicator = true;
-      soundOutput = false; # Not needed for server
+      soundOutputChooser = false; # Not needed for server
     };
   };
 
