@@ -4,6 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## ⚠️ CRITICAL SAFETY RULE - NixOS Rebuilds ⚠️
+
+**NEVER build or switch the NixOS configuration unless on the `host/default` branch.**
+
+This is a strict safety requirement to prevent breaking the desktop system:
+
+- ✅ **SAFE**: Only perform `sudo nixos-rebuild switch/build/test` when on `host/default` branch
+- ❌ **UNSAFE**: Never run rebuild commands on any other branch (`develop`, `host/laptop`, `main`, etc.)
+
+**Workflow when not on `host/default`:**
+1. Make configuration changes on current branch
+2. Commit and push changes to remote
+3. Switch to `host/default`: `git checkout host/default`
+4. Merge or cherry-pick changes if needed
+5. ONLY THEN run rebuild commands
+
+**If asked to rebuild while not on `host/default`:**
+1. Refuse the rebuild operation
+2. Explain the safety constraint
+3. Offer to commit changes and switch to `host/default` first
+
+---
+
 ## 🚧 ACTIVE REFACTORING - READ FIRST
 
 **Status:** Planning complete, ready to execute
@@ -80,11 +103,19 @@ cat REFACTORING_OVERVIEW.md
 ## Common Development Commands
 
 ### NixOS Rebuilds
+
+⚠️ **SAFETY FIRST**: Only run rebuild commands when on `host/default` branch!
+
 - `./user-scripts/nixswitch` - Modern TUI-based rebuild script with auto-host detection, parallel processing, and error handling
-- `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop host  
-- `sudo nixos-rebuild switch --flake .#laptop` - Manual rebuild for laptop host
-- `sudo nixos-rebuild test --flake .` - Test configuration without switching
-- `sudo nixos-rebuild build --flake .` - Build without switching
+- `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop host (ONLY on host/default branch)
+- `sudo nixos-rebuild switch --flake .#laptop` - Manual rebuild for laptop host (NEVER run this)
+- `sudo nixos-rebuild test --flake .` - Test configuration without switching (ONLY on host/default branch)
+- `sudo nixos-rebuild build --flake .` - Build without switching (ONLY on host/default branch)
+
+**Pre-rebuild checklist:**
+1. Verify current branch: `git branch --show-current` must show `host/default`
+2. If not on `host/default`, commit changes and switch: `git checkout host/default`
+3. Only then proceed with rebuild commands
 
 ### Development Environments
 - `./user-scripts/nix-shell-selector.sh` - Interactive shell selector with multi-environment support
@@ -303,11 +334,19 @@ Each host defines its **complete GNOME configuration** in `hosts/<hostname>/gnom
 - Zed Editor configured with Claude Code integration
 
 ### Development Workflow
+- ⚠️ **CRITICAL**: Only run `nixswitch` or any rebuild command when on `host/default` branch
 - Use `nixswitch` for system rebuilds (handles validation, cleanup, error recovery)
 - Use `nix-shell-selector.sh` for development environments
 - Dotfiles changes apply immediately without rebuilds
 - Language servers and tools are pre-configured for modern development
 - Zed Editor with Claude Code ACP agent integration
+
+**Safe workflow pattern:**
+1. Work on any branch for configuration changes
+2. Commit and push changes
+3. Switch to `host/default`: `git checkout host/default`
+4. Merge/cherry-pick if needed
+5. ONLY THEN run rebuild commands
 
 ### External Binary Compatibility
 - **steam-run**: For running external binaries with library dependencies
@@ -331,19 +370,38 @@ This repository uses a structured branch workflow for managing multi-host config
 - **host/laptop**: Laptop-specific changes (Intel/NVIDIA GPU, power management)
 
 ### Working with Branches
+
+⚠️ **SAFETY RULE**: NixOS rebuilds are ONLY permitted on `host/default` branch!
+
 ```bash
-# Host-specific changes
-git checkout host/default  # or host/laptop
+# Desktop-specific changes (SAFE for rebuilds)
+git checkout host/default
+# Make changes, then rebuild
 sudo nixos-rebuild switch --flake .#default
 git commit -m "feat(desktop): description"
 git push origin host/default
-# Create PR: host/* → develop
+# Create PR: host/default → develop
 
-# Shared module changes
+# Laptop-specific changes (NO REBUILDS - commit and push only)
+git checkout host/laptop
+# Make changes, commit, push
+git commit -m "feat(laptop): description"
+git push origin host/laptop
+# Create PR: host/laptop → develop
+# WARNING: Never run nixos-rebuild on this branch!
+
+# Shared module changes (NO REBUILDS - commit and push only)
 git checkout develop
+# Make changes, commit, push
 git commit -m "feat(core): description"
 git push origin develop
 # Create PR: develop → main
+# WARNING: Never run nixos-rebuild on this branch!
+
+# To test shared/laptop changes on desktop:
+git checkout host/default
+git merge develop  # or cherry-pick specific commits
+sudo nixos-rebuild switch --flake .#default  # NOW it's safe
 ```
 
 ### Emergency Hotfixes
