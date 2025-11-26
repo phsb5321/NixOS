@@ -131,13 +131,13 @@
         # Uses stable nixpkgs by default
       };
 
-      # Example: server using stable for reliability
-      # server = {
-      #   system = "x86_64-linux";
-      #   hostname = "nixos-server";
-      #   configPath = "server";
-      #   nixpkgsInput = inputs.nixpkgs;  # Explicitly stable
-      # };
+      # Server using stable for reliability
+      server = {
+        system = "x86_64-linux";
+        hostname = "nixos-server";
+        configPath = "server";
+        nixpkgsInput = inputs.nixpkgs; # Explicitly stable
+      };
     };
   in {
     # NixOS Configurations - Generated from hosts definition
@@ -148,6 +148,7 @@
         nixos = mkNixosSystem hosts.desktop;
         nixos-desktop = mkNixosSystem hosts.desktop;
         nixos-laptop = mkNixosSystem hosts.laptop;
+        nixos-server = mkNixosSystem hosts.server;
         # Legacy alias for backward compatibility
         default = mkNixosSystem hosts.desktop;
       };
