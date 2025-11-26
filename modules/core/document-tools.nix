@@ -254,7 +254,7 @@ in {
               # Additional utilities
               pkgs.ghostscript # PostScript and PDF interpreter
               pkgs.imagemagick # Image manipulation suite
-              pkgs.poppler_utils # PDF utilities (pdfinfo, pdftotext, etc.)
+              pkgs.poppler-utils # PDF utilities (pdfinfo, pdftotext, etc.)
               pkgs.qpdf # PDF transformation library
               pkgs.python3Packages.pygments # Syntax highlighting
 

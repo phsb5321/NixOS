@@ -32,7 +32,7 @@ in {
       [
         lutris
         mangohud
-        vkBasalt
+        vkbasalt
         gamemode
         libstrangle
         vulkan-loader # Replaces libvulkan

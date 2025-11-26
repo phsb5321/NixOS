@@ -184,7 +184,7 @@ in {
           liberation_ttf # Microsoft font alternatives
           noto-fonts # Google Noto fonts
           noto-fonts-cjk-sans # CJK character support
-          noto-fonts-emoji # Emoji support
+          noto-fonts-color-emoji # Emoji support
         ];
         description = "List of utility packages to install";
       };
@@ -276,7 +276,7 @@ in {
         default = with pkgs; [
           # Fonts for terminal/desktop use
           nerd-fonts.jetbrains-mono
-          noto-fonts-emoji
+          noto-fonts-color-emoji
           noto-fonts
           noto-fonts-cjk-sans
 
