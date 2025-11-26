@@ -1,8 +1,0 @@
-[credential]
-	helper = store
-[user]
-	eaml = pedro.balbino@globalsys.com.br
-	email = pedro.balbino@globalsys.com.br
-	name = Pedro Balbino
-[init]
-	defaultBranch = main

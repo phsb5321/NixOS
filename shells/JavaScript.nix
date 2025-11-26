@@ -1,8 +1,8 @@
 # ~/NixOS/shells/JavaScript.nix
-# Use NixOS 25 stable for all packages
+# Use NixOS unstable for latest packages
 {
   pkgs ?
-    import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {
+    import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
       config.allowUnfree = true;
     },
 }: let
@@ -34,7 +34,7 @@
     (mkPackageGroup "Code Quality Tools" [
       pkgs.nodePackages.eslint
       pkgs.nodePackages.prettier
-      pkgs.biome
+      pkgs.biome # Alternative to ESLint/Prettier - configure to avoid conflicts
       pkgs.nodePackages.typescript
       pkgs.nodePackages.typescript-language-server
     ])
@@ -46,7 +46,6 @@
     (mkPackageGroup "Build Tools" [
       pkgs.gcc
       pkgs.gnumake
-      pkgs.nodePackages.webpack
     ])
     (mkPackageGroup "Utility Tools" [
       pkgs.jq
@@ -113,7 +112,7 @@ in
       echo "🚀 ✨ JavaScript/TypeScript Development Environment ✨ 🚀"
       echo ""
       echo "📦 Node.js • pnpm • yarn • bun • 🦕 deno"
-      echo "🔧 TypeScript • ESLint • Prettier • Biome.js • Webpack • Nodemon"
+      echo "🔧 TypeScript • ESLint • Prettier • Biome.js • Nodemon"
       echo "🧪 Playwright • Cypress • Testing Ready"
       echo "🗄️  Prisma • PostgreSQL • Database Tools"
       echo "🏗️  NestJS CLI • Vercel CLI • Build Tools"
