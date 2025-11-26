@@ -6,7 +6,11 @@
     ./networking
     ./desktop
     ./dotfiles
-    ./shell
+    ./hardware
+    ./profiles
     ./services
+    ./roles
+    ./gpu
+    ./secrets
   ];
 }

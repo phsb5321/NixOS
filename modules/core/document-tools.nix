@@ -238,11 +238,12 @@ in {
               # LaTeX build tools and processors
               pkgs.biber # Modern bibliography processor
               pkgs.texlab # LaTeX language server
-              # pkgs.tectonic # Modern LaTeX engine - temporarily disabled due to compilation issues
+              # pkgs.tectonic # Modern LaTeX engine
+              # TODO: Re-enable when Rust compilation issues are resolved in nixpkgs
 
               # LaTeX editors and IDEs
               pkgs.texstudio # Comprehensive LaTeX IDE
-              # pkgs.texmaker # Cross-platform LaTeX editor - temporarily disabled due to Qt6 build issues
+              # pkgs.texmaker # Cross-platform LaTeX editor - TEMPORARILY DISABLED (broken in nixpkgs)
               pkgs.kile # KDE LaTeX editor
               pkgs.lyx # WYSIWYM document processor
 
@@ -259,7 +260,7 @@ in {
               pkgs.python3Packages.pygments # Syntax highlighting
 
               # Bibliography and reference management
-              pkgs.jabref # Bibliography reference manager
+              # pkgs.jabref # Bibliography reference manager (temporarily disabled - OpenJDK 21.0.9 build issue)
 
               # Math and science tools
               pkgs.gnuplot # Plotting utility

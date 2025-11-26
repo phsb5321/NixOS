@@ -1,11 +1,10 @@
-# Services Module - Server services and daemons
+# ~/NixOS/modules/services/default.nix
+# Modular service configurations
 {
   imports = [
-    ./qbittorrent.nix
-    ./plex.nix
-    ./audiobookshelf.nix
-    ./audiobookshelf-guardian.nix
-    ./disk-guardian.nix
-    ./cloudflare-tunnel.nix
+    ./syncthing.nix
+    ./ssh.nix
+    ./printing.nix
+    ./docker.nix
   ];
 }
