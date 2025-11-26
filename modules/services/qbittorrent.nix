@@ -304,7 +304,8 @@ in {
         "d ${cfg.downloadDir} 0750 ${cfg.user} ${cfg.group} -"
         "d ${cfg.incompleteDir} 0750 ${cfg.user} ${cfg.group} -"
         "d ${cfg.watchDir} 0750 ${cfg.user} ${cfg.group} -"
-        "d ${cfg.storage.mountPoint} 0750 ${cfg.user} ${cfg.group} -"
+        # Mount point needs 0755 to allow other users to traverse into subdirectories (e.g., Audiobookshelf accessing /mnt/torrents/plex/AudioBooks)
+        "d ${cfg.storage.mountPoint} 0755 ${cfg.user} ${cfg.group} -"
       ]
       ++ lib.optionals cfg.webhook.enable [
         "f /var/log/qbittorrent-webhook.log 0644 ${cfg.user} ${cfg.group} -"

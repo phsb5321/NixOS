@@ -175,7 +175,6 @@ in {
       vulkan-validation-layers
       libva-utils
       vdpauinfo
-      glxinfo
       mesa-demos
       clinfo
       radeontop
@@ -329,7 +328,7 @@ in {
 
       # Fonts
       nerd-fonts.jetbrains-mono
-      noto-fonts-emoji
+      noto-fonts-color-emoji
       noto-fonts
       noto-fonts-cjk-sans
     ];
