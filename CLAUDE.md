@@ -666,3 +666,10 @@ git checkout -b hotfix/description main
 # Create PR to main
 # Merge main back to develop and host branches
 ```
+
+## Active Technologies
+- Nix 2.31.2 (functional, lazy evaluation) + nixpkgs 25.11 (nixos-unstable), flake-parts 1.0 (002-codebase-reduction)
+- Git repository, `/nix/store` (immutable store) (002-codebase-reduction)
+
+## Recent Changes
+- 002-codebase-reduction: Added Nix 2.31.2 (functional, lazy evaluation) + nixpkgs 25.11 (nixos-unstable), flake-parts 1.0
