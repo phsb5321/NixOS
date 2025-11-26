@@ -2,6 +2,26 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 CRITICAL: YOU ARE RUNNING ON THE PRODUCTION SERVER 🚨
+
+**⚠️ ULTRA-CRITICAL AWARENESS: YOU ARE THE SERVER HOST ⚠️**
+
+**ENVIRONMENT CONTEXT:**
+- **Claude Code is executing DIRECTLY ON the NixOS production server (192.168.1.169)**
+- **This is NOT a development machine, NOT a desktop, NOT a remote system**
+- **You ARE the server** - Every command runs on the LIVE PRODUCTION SERVER
+- **This server hosts**: qBittorrent (24/7 torrenting), Plex Media Server, Audiobookshelf, all media libraries
+- **Hostname**: nixos-server (running in Proxmox VM)
+- **Users depend on this system**: Media streaming, downloads, audiobooks, file serving
+
+**WHAT THIS MEANS:**
+- Any `nixos-rebuild` command will IMMEDIATELY affect the live server
+- Any service restart will interrupt active users
+- Any misconfiguration will break production services
+- This is the ONLY server host - there is no failover
+
+---
+
 ## ⚠️ CRITICAL: HOST CONFIGURATION WARNING ⚠️
 
 **THIS SYSTEM IS A SERVER HOST - NOT A DESKTOP HOST**
@@ -9,32 +29,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **MANDATORY RULES:**
 1. **NEVER** run `nixos-rebuild switch --flake .#default` on this system
 2. **NEVER** deploy the default (desktop) host configuration
-3. **ALWAYS** use `.#server` for all builds and deployments
+3. **ALWAYS** use `.#nixos-server` for all builds and deployments
 4. The `default` host configuration is for desktop machines only
 5. The `server` host uses stable nixpkgs and minimal packages
+6. **THINK TWICE** before running any rebuild - you are on the production server
 
 **Sudo password: 123** (for build/deployment commands)
 
 **CORRECT COMMANDS FOR THIS HOST:**
-- `sudo nixos-rebuild switch --flake .#nixos-server` ✅
-- `sudo nixos-rebuild build --flake .#nixos-server` ✅
-- `./user-scripts/nixswitch` ✅ (auto-detects host)
+- `sudo nixos-rebuild switch --flake .#nixos-server` ✅ (PRODUCTION SERVER)
+- `sudo nixos-rebuild build --flake .#nixos-server` ✅ (test build first)
+- `./user-scripts/nixswitch` ✅ (auto-detects host, RECOMMENDED)
 
-**WRONG COMMANDS (WILL BREAK SYSTEM):**
-- `sudo nixos-rebuild switch --flake .#default` ❌
-- `sudo nixos-rebuild switch --flake .` ❌ (defaults to .#default)
+**WRONG COMMANDS (WILL BREAK PRODUCTION SERVER):**
+- `sudo nixos-rebuild switch --flake .#default` ❌ WILL BREAK SERVER
+- `sudo nixos-rebuild switch --flake .` ❌ WILL BREAK SERVER (defaults to .#default)
 
 ## Common Development Commands
 
 ### NixOS Rebuilds
 - `./user-scripts/nixswitch` - Modern TUI-based rebuild script (auto-detects host) (RECOMMENDED)
-- `sudo nixos-rebuild switch --flake .#nixos-server` - Manual rebuild for server host (DEFAULT HOST)
-- `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop host
-- `sudo nixos-rebuild switch --flake .#laptop` - Manual rebuild for laptop host
+- `sudo nixos-rebuild switch --flake .#nixos-server` - Manual rebuild for THIS SERVER (PRODUCTION)
+- `sudo nixos-rebuild switch --flake .#default` - ❌ FOR DESKTOP ONLY - DO NOT USE ON THIS SERVER
+- `sudo nixos-rebuild switch --flake .#laptop` - ❌ FOR LAPTOP ONLY - DO NOT USE ON THIS SERVER
 - `sudo nixos-rebuild test --flake .#nixos-server` - Test server configuration without switching
 - `sudo nixos-rebuild build --flake .#nixos-server` - Build server configuration without switching
 
-**NOTE: This system is configured as a SERVER HOST. Always use nixos-server configuration for deployments.**
+**⚠️ REMINDER: YOU ARE EXECUTING THESE COMMANDS ON THE LIVE PRODUCTION SERVER (nixos-server).**
+**Always use .#nixos-server configuration. Using .#default or .#laptop WILL BREAK THE SERVER.**
 
 ### Development Environments
 - `./user-scripts/nix-shell-selector.sh` - Interactive shell selector with multi-environment support
@@ -162,11 +184,12 @@ Server services and daemons for media management:
 - Both services auto-start on boot and survive rebuilds
 
 #### Host Configurations
-- **server**: Minimal configuration, uses stable nixpkgs for reliability (THIS HOST - DEFAULT)
-- **default** (desktop): Gaming enabled, AMD GPU optimization, full development setup, uses nixpkgs-unstable
-- **laptop**: Gaming disabled, Intel graphics, minimal package set, Tailscale enabled, uses stable nixpkgs
+- **server**: 🚨 **YOU ARE HERE** - Minimal configuration, stable nixpkgs for reliability (PRODUCTION SERVER)
+- **default** (desktop): Gaming enabled, AMD GPU optimization, uses nixpkgs-unstable (DIFFERENT MACHINE)
+- **laptop**: Gaming disabled, Intel graphics, Tailscale enabled, stable nixpkgs (DIFFERENT MACHINE)
 
-**IMPORTANT: This system is running as the SERVER host configuration. All rebuilds should target the server configuration.**
+**🚨 CRITICAL: Claude Code is running ON the 'server' host (nixos-server). All rebuilds MUST target .#nixos-server.**
+**Using .#default or .#laptop configurations on this system will BREAK the production server.**
 
 ### GPU Variants System
 The desktop host supports multiple GPU configurations:
@@ -469,12 +492,15 @@ sudo tail -50 /var/log/disk-guardian.log
 - Language servers and tools are pre-configured for modern development
 - Zed Editor with Claude Code ACP agent integration
 
-## Server-Specific Configuration (THIS HOST)
+## 🚨 Server-Specific Configuration (YOU ARE RUNNING ON THIS SERVER) 🚨
+
+**⚠️ The following configuration applies to THIS MACHINE - the production server you are executing on.**
 
 ### Storage Configuration
 The server uses a dedicated 2TB disk for media storage:
 
 **IMPORTANT: This system uses UUID-based mounting to prevent disk ordering issues!**
+**These disks are physically attached to THIS SERVER that Claude Code is running on.**
 
 **Disk Layout:**
 - 128GB disk - System disk (root filesystem, bootloader)

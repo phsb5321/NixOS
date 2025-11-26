@@ -149,7 +149,7 @@
         cantarell-fonts
         source-code-pro
         noto-fonts
-        noto-fonts-emoji
+        noto-fonts-color-emoji
         noto-fonts-cjk-sans
         nerd-fonts.jetbrains-mono
       ];

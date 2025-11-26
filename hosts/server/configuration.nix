@@ -103,6 +103,11 @@
   # Enable Docker
   virtualisation.docker.enable = true;
 
+  # Enable FUSE user_allow_other for SSHFS mounts
+  # This allows non-root users to access SSHFS mounts with allow_other option
+  # Required for Audiobookshelf to access AudioBooks mount
+  programs.fuse.userAllowOther = true;
+
   # qBittorrent configuration with 2TB disk storage
   modules.services.qbittorrent = {
     enable = true;
@@ -260,6 +265,7 @@
       wget
       git
       claude-code
+      uv # Python package and environment manager
       sshpass # For SSH automation
       sshfs # For mounting remote filesystems
 
