@@ -7,7 +7,7 @@
     ./printing.nix
     ./docker.nix
     # Server-specific services
-    ./qbittorrent.nix
+    ./qbittorrent # Now a modular directory
     ./plex.nix
     ./audiobookshelf.nix
     ./disk-guardian.nix

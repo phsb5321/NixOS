@@ -1,27 +1,8 @@
-# ~/NixOS/lib/default.nix
-# Library functions for NixOS configuration
-{
-  lib,
-  inputs,
-  ...
-}: {
-  # Import all lib modules
-  builders = import ./builders.nix {inherit lib inputs;};
-  utils = import ./utils.nix {inherit lib;};
-
-  # Re-export commonly used nixpkgs lib functions
-  inherit
-    (lib)
-    mkIf
-    mkDefault
-    mkForce
-    mkMerge
-    mkBefore
-    mkAfter
-    mkEnableOption
-    mkOption
-    types
-    optionals
-    optionalAttrs
-    ;
+# NixOS Module Optimization - Shared Library Functions
+# Purpose: Centralized utilities for reducing code duplication across modules
+# See: docs/module-patterns.md for usage examples
+{lib, ...}: {
+  # Import sub-modules
+  moduleHelpers = import ./module-helpers.nix {inherit lib;};
+  systemBuilders = import ./system-builders.nix {inherit lib;};
 }
