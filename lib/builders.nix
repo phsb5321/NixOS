@@ -239,10 +239,9 @@
 
   # Auto-import all .nix files in a directory
   # Usage: mkImportList ./path/to/modules "*.nix"
-  mkImportList = path: pattern:
-    let
-      files = builtins.readDir path;
-      nixFiles = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) files;
-    in
-      map (name: path + "/${name}") (lib.attrNames nixFiles);
+  mkImportList = path: pattern: let
+    files = builtins.readDir path;
+    nixFiles = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) files;
+  in
+    map (name: path + "/${name}") (lib.attrNames nixFiles);
 }
