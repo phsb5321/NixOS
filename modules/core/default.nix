@@ -27,7 +27,7 @@ in {
     ./docker-dns.nix
     ./pipewire.nix
     ./monitor-audio.nix
-    ./document-tools.nix
+    ./document-tools
     ../hardware/amd-gpu.nix
   ];
 
