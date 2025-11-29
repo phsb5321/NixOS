@@ -1,41 +1,14 @@
-# System Construction Utilities
-# Helpers for building consistent system configurations
-{lib, ...}: {
-  # Package category builder
-  # Standardizes package category module structure
-  mkPackageCategory = {
-    name,
-    description,
-    packages ? [],
-    ...
-  }: {
-    config,
-    lib,
-    pkgs,
-    ...
-  }: let
-    cfg = config.modules.packages.categories.${name};
-  in {
-    options.modules.packages.categories.${name} = with lib; {
-      enable = mkEnableOption "${description}";
-    };
-    config = lib.mkIf cfg.enable {
-      environment.systemPackages = packages;
-    };
-  };
-
-  # Priority-based configuration merger
-  # Combines configurations with explicit priority handling
-  mergeWithPriority = priority: value:
-    lib.mkOverride priority value;
-
-  # Conditional package inclusion helper
-  pkgsIf = condition: packages:
-    if condition
-    then packages
-    else [];
-
-  # Enable all options in a set
-  enableAll = options:
-    builtins.mapAttrs (name: value: true) options;
+# ~/NixOS/lib/system-builders.nix
+#
+# System Builder Functions
+# Purpose: Utilities for constructing NixOS system configurations
+# Part of: 001-module-optimization (T004, T054)
+{
+  lib,
+  pkgs,
+  ...
+}: {
+  # Placeholder for mkSystemBuilder (T054)
+  # Standardized system configuration builder
+  mkSystemBuilder = throw "mkSystemBuilder not yet implemented (T054)";
 }

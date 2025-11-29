@@ -1,6 +1,13 @@
 # qBittorrent Option Declarations
 # All configurable options for the qBittorrent service
-{lib, ...}: {
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}: let
+  cfg = config.modules.services.qbittorrent;
+in {
   options.modules.services.qbittorrent = {
     enable = lib.mkEnableOption "qBittorrent headless torrent client";
 
@@ -95,6 +102,18 @@
 
       script = lib.mkOption {
         type = lib.types.path;
+        default = pkgs.writeShellScript "qbittorrent-webhook" ''
+          #!/usr/bin/env bash
+          TORRENT_NAME="$1"
+          TORRENT_SIZE="$5"
+          echo "[$(date)] Torrent completed: $TORRENT_NAME" >> /var/log/qbittorrent-webhook.log
+          ${lib.optionalString (cfg.webhook.url != "") ''
+            ${pkgs.curl}/bin/curl -X POST "${cfg.webhook.url}" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"✅ Torrent completed: **$TORRENT_NAME** ($TORRENT_SIZE bytes)\"}" \
+              >> /var/log/qbittorrent-webhook.log 2>&1
+          ''}
+        '';
         description = "Custom script to run on torrent completion";
       };
     };
