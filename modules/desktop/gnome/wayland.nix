@@ -67,7 +67,7 @@ in {
         GDK_BACKEND = "wayland,x11";
         QT_QPA_PLATFORM = "wayland;xcb";
         MOZ_ENABLE_WAYLAND = "1";
-        GTK_CSD = "1";
+        GTK_CSD = "0";  # Fix duplicate titlebars on Electron apps (Spotify, etc.)
         CLUTTER_BACKEND = "wayland";
         WLR_DRM_NO_ATOMIC = "1";
 
