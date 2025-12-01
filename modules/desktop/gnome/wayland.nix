@@ -96,6 +96,7 @@ in {
         GSK_RENDERER = "gl";
         QT_QPA_PLATFORM = "xcb";
         XDG_SESSION_TYPE = "x11";
+        GTK_CSD = "0";  # Fix duplicate titlebars on Electron apps (Spotify, etc.)
       })
     ];
 
