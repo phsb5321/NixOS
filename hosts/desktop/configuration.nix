@@ -65,7 +65,7 @@
 
     # Wayland configuration
     wayland = {
-      enable = true;
+      enable = true;  # Reverted back to Wayland (X11 broke display manager)
       electronSupport = true;
       screenSharing = true;
       variant = "hardware";
