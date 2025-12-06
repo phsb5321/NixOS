@@ -25,6 +25,21 @@
     gaming = true; # Enable 32-bit support and performance tweaks
   };
 
+  # ===== GAMING CONFIGURATION =====
+  # Steam with Proton and runtime library support
+  modules.gaming.steam = {
+    enable = true;
+    protontricks.enable = true;
+    geProton.enable = true;
+    remotePlay.enable = false;
+    # gamescopeSession defaults to false
+  };
+
+  modules.gaming.protontricks = {
+    enable = true;
+    helperScripts = true; # Provides install-vcrun2019, install-vcrun2022, list-steam-games, fix-frostpunk
+  };
+
   # ===== GNOME DESKTOP =====
   modules.desktop.gnome = {
     enable = true;
@@ -347,12 +362,7 @@
   hardware.cpu.intel.updateMicrocode = true;
 
   # ===== PROGRAMS =====
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;
-  };
+  # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
 
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;

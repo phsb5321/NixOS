@@ -12,5 +12,6 @@
     ./roles
     ./gpu
     ./secrets
+    ./gaming
   ];
 }
