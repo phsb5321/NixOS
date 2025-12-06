@@ -47,9 +47,10 @@ in {
     };
 
     # Enable gaming module
-    modules.core.gaming = {
-      enable = true;
-    };
+    # DISABLED: Replaced by new modular gaming system in modules/gaming/
+    # modules.core.gaming = {
+    #   enable = true;
+    # };
 
     # Enable PipeWire module
     modules.core.pipewire = {

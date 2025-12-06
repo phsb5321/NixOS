@@ -22,6 +22,29 @@ in {
       default = true;
       description = "Enable advanced power management";
     };
+
+    # Gaming optimizations
+    gaming = {
+      enable = mkEnableOption "gaming optimizations for AMD GPU";
+
+      nggCulling = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable NGG culling (RADV_PERFTEST=nggc) for 3-5% performance gain";
+      };
+
+      anisotropicFiltering = mkOption {
+        type = types.enum [0 2 4 8 16];
+        default = 16;
+        description = "Anisotropic filtering level for RADV (0 = disabled, 16 = maximum quality)";
+      };
+
+      lact.enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable LACT for GPU monitoring and undervolting";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -31,11 +54,15 @@ in {
       initrd.kernelModules = ["amdgpu"];
 
       # Kernel parameters optimized for AMD RX 5700 XT
-      kernelParams = [
-        "amdgpu.dc=1" # Display Core (required for Wayland)
-        "amdgpu.dpm=1" # Dynamic Power Management
-        "amdgpu.gpu_recovery=1" # GPU hang recovery
-      ];
+      kernelParams =
+        [
+          "amdgpu.dc=1" # Display Core (required for Wayland)
+          "amdgpu.dpm=1" # Dynamic Power Management
+          "amdgpu.gpu_recovery=1" # GPU hang recovery
+        ]
+        ++ lib.optionals cfg.gaming.enable [
+          "amdgpu.ppfeaturemask=0xffffffff" # Enable all power features (required for LACT undervolting)
+        ];
     };
 
     # Graphics configuration
@@ -73,25 +100,47 @@ in {
 
     # Environment variables for AMD GPU
     environment = {
-      variables = {
-        # Video acceleration drivers - use mkDefault to allow laptop to override for NVIDIA
-        "VDPAU_DRIVER" = lib.mkDefault "radeonsi";
-        "LIBVA_DRIVER_NAME" = lib.mkDefault "radeonsi";
+      variables =
+        {
+          # Video acceleration drivers - use mkDefault to allow laptop to override for NVIDIA
+          "VDPAU_DRIVER" = lib.mkDefault "radeonsi";
+          "LIBVA_DRIVER_NAME" = lib.mkDefault "radeonsi";
 
-        # Vulkan driver
-        "AMD_VULKAN_ICD" = lib.mkDefault "RADV";
+          # Vulkan driver
+          "AMD_VULKAN_ICD" = lib.mkDefault "RADV";
 
-        # RADV performance optimizations
-        "RADV_PERFTEST" = lib.mkDefault "gpl,nggc"; # Graphics pipeline library + NGG culling
-        "RADV_DEBUG" = lib.mkDefault "zerovram"; # Reduce VRAM usage
-      };
+          # RADV performance optimizations (base)
+          "RADV_PERFTEST" = lib.mkDefault "gpl${lib.optionalString cfg.gaming.nggCulling ",nggc"}";
+          "RADV_DEBUG" = lib.mkDefault "zerovram"; # Reduce VRAM usage
+        }
+        // lib.optionalAttrs (cfg.gaming.enable && cfg.gaming.anisotropicFiltering > 0) {
+          # Anisotropic filtering for gaming
+          "RADV_TEX_ANISO" = toString cfg.gaming.anisotropicFiltering;
+        };
 
       # Useful AMD GPU tools
-      systemPackages = with pkgs; [
-        radeontop # GPU monitoring
-        vulkan-tools # Vulkan utilities
-        mesa-demos # OpenGL testing
-      ];
+      systemPackages = with pkgs;
+        [
+          radeontop # GPU monitoring
+          vulkan-tools # Vulkan utilities
+          mesa-demos # OpenGL testing
+        ]
+        ++ lib.optionals cfg.gaming.lact.enable [
+          lact # GPU monitoring and undervolting GUI
+        ];
+    };
+
+    # LACT service for GPU monitoring/undervolting
+    systemd.services.lact = lib.mkIf cfg.gaming.lact.enable {
+      enable = true;
+      description = "AMDGPU Control Daemon";
+      after = ["multi-user.target"];
+      wantedBy = ["multi-user.target"];
+      serviceConfig = {
+        ExecStart = "${pkgs.lact}/bin/lact daemon";
+        Nice = -10;
+        Restart = "on-failure";
+      };
     };
 
     # User groups for GPU access
