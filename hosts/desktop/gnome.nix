@@ -24,6 +24,7 @@
       gsconnect = true;
       workspaceIndicator = true;
       soundOutput = true;
+      unite = true;  # Hide titlebars for Electron apps like Spotify
     };
   };
 
@@ -45,6 +46,7 @@
             "gsconnect@andyholmes.github.io"
             "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
             "sound-output-device-chooser@kgshank.net"
+            "unite@hardpixel.eu"
           ];
           favorite-apps = [
             "org.gnome.Nautilus.desktop"

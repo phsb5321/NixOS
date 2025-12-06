@@ -450,5 +450,5 @@
   };
 
   # ===== SYSTEM STATE VERSION =====
-  system.stateVersion = "25.11";
+  system.stateVersion = lib.mkForce "25.11";
 }
