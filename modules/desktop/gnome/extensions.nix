@@ -75,6 +75,12 @@ in {
       description = "Enable Sound Output Device Chooser extension";
     };
 
+    unite = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable Unite extension (hides titlebars for non-GTK apps)";
+    };
+
     productivity = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -132,7 +138,8 @@ in {
       ++ (lib.optionals (cfg.extensions.clipboard || cfg.extensions.productivity) [gnomeExtensions.clipboard-indicator])
       ++ (lib.optionals cfg.extensions.gsconnect [gnomeExtensions.gsconnect])
       ++ (lib.optionals cfg.extensions.workspaceIndicator [gnomeExtensions.workspace-indicator])
-      ++ (lib.optionals cfg.extensions.soundOutputChooser [gnomeExtensions.sound-output-device-chooser]);
+      ++ (lib.optionals cfg.extensions.soundOutputChooser [gnomeExtensions.sound-output-device-chooser])
+      ++ (lib.optionals cfg.extensions.unite [gnomeExtensions.unite]);
 
     # Note: dconf settings are intentionally minimal at system level
     # Users should configure GNOME settings through the GUI or home-manager

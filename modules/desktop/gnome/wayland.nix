@@ -67,7 +67,7 @@ in {
         GDK_BACKEND = "wayland,x11";
         QT_QPA_PLATFORM = "wayland;xcb";
         MOZ_ENABLE_WAYLAND = "1";
-        GTK_CSD = "0";  # Fix duplicate titlebars on Electron apps (Spotify, etc.)
+        GTK_CSD = "1";  # Enable client-side decorations (recommended for Wayland)
         CLUTTER_BACKEND = "wayland";
         WLR_DRM_NO_ATOMIC = "1";
 
@@ -81,6 +81,7 @@ in {
         NIXOS_OZONE_WL = "1";
         CHROME_OZONE_PLATFORM_WAYLAND = "1";
         ELECTRON_ENABLE_WAYLAND = "1";
+        ELECTRON_OZONE_PLATFORM_HINT = "auto";
       })
 
       # WebRTC screen sharing
@@ -96,7 +97,6 @@ in {
         GSK_RENDERER = "gl";
         QT_QPA_PLATFORM = "xcb";
         XDG_SESSION_TYPE = "x11";
-        GTK_CSD = "0";  # Fix duplicate titlebars on Electron apps (Spotify, etc.)
       })
     ];
 
