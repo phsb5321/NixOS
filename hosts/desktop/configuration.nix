@@ -48,6 +48,15 @@
     enableSteamPreCache = true; # Steam's built-in Vulkan shader pre-caching
   };
 
+  # CPU optimization for gaming (003-gaming-optimization - Phase 5: US3)
+  modules.gaming.gamemode = {
+    enable = true;
+    enableRenice = true; # Increase game process priority
+    renice = 10; # Nice value adjustment (higher = more aggressive priority boost)
+    softRealtime = "auto"; # Soft real-time scheduling
+    inhibitScreensaver = true; # Prevent screensaver during gaming
+  };
+
   # ===== GNOME DESKTOP =====
   modules.desktop.gnome = {
     enable = true;
@@ -348,6 +357,7 @@
     kernelParams = [
       "preempt=full"
       "nohz_full=all"
+      "intel_pstate=disable" # 003-gaming-optimization: Disable Intel p-state for better GameMode control
     ];
 
     kernel.sysctl = {
