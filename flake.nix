@@ -129,8 +129,8 @@
                 };
               };
 
-              # System version
-              system.stateVersion = systemVersion;
+              # System version (can be overridden by modules)
+              system.stateVersion = nixpkgsInput.lib.mkDefault systemVersion;
 
               # Set hostname
               networking.hostName = nixpkgsInput.lib.mkDefault hostname;
