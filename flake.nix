@@ -170,6 +170,9 @@
     nixosConfigurations = nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts // {
       # Compatibility alias for systems with hostname "nixos"
       nixos = mkNixosSystem hosts.default;
+      # Compatibility alias for hostname-based lookup
+      nixos-laptop = mkNixosSystem hosts.laptop;
+      nixos-desktop = mkNixosSystem hosts.default;
     };
 
     # Formatter for each system (using alejandra for better formatting)
