@@ -62,7 +62,7 @@ in {
       # Fonts
       (lib.optionals cfg.fonts [
         nerd-fonts.jetbrains-mono
-        noto-fonts-emoji
+        noto-fonts-color-emoji
         noto-fonts
         noto-fonts-cjk-sans
       ])
