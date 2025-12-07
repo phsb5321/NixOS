@@ -11,7 +11,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
-    inputs.sops-nix.nixosModules.sops
+    # inputs.sops-nix.nixosModules.sops  # Disabled until sops-nix is configured
   ];
 
   # Allow insecure packages for USB boot creation tool
@@ -230,27 +230,28 @@
   networking.networkmanager.wifi.backend = "iwd";
 
   # ===== SECRETS MANAGEMENT =====
-  sops = {
-    defaultSopsFile = ../../secrets/laptop.yaml;
-    age.keyFile = "/var/lib/sops-nix/key.txt";
-
-    secrets = {
-      wifi_live_tim_4122_psk = {
-        mode = "0400";
-      };
-    };
-  };
+  # Disabled WiFi secret until sops-nix is properly configured
+  # sops = {
+  #   defaultSopsFile = ../../secrets/laptop.yaml;
+  #   age.keyFile = "/var/lib/sops-nix/key.txt";
+  #
+  #   secrets = {
+  #     wifi_live_tim_4122_psk = {
+  #       mode = "0400";
+  #     };
+  #   };
+  # };
 
   modules.networking.wifi = {
     enable = true;
     enablePowersave = true; # For laptop battery life
     networks = {
-      # WiFi network configuration
-      "LIVE TIM_4122" = {
-        pskFile = config.sops.secrets.wifi_live_tim_4122_psk.path;
-        priority = 100;
-        autoConnect = true;
-      };
+      # WiFi network configuration - using NetworkManager GUI for now
+      # "LIVE TIM_4122" = {
+      #   pskFile = config.sops.secrets.wifi_live_tim_4122_psk.path;
+      #   priority = 100;
+      #   autoConnect = true;
+      # };
     };
   };
 
