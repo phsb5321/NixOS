@@ -40,6 +40,14 @@
     helperScripts = true; # Provides install-vcrun2019, install-vcrun2022, list-steam-games, fix-frostpunk
   };
 
+  # Shader compilation optimization (003-gaming-optimization - Phase 3: US1)
+  modules.gaming.shaderCache = {
+    enable = true;
+    enableRADVGPL = true; # Graphics Pipeline Library for compile-time shader processing
+    enableNGGC = true; # Next-Gen Geometry Culling for AMD GPUs
+    enableSteamPreCache = true; # Steam's built-in Vulkan shader pre-caching
+  };
+
   # ===== GNOME DESKTOP =====
   modules.desktop.gnome = {
     enable = true;
