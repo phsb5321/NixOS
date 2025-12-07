@@ -14,9 +14,10 @@
     # inputs.sops-nix.nixosModules.sops  # Disabled until sops-nix is configured
   ];
 
-  # Allow insecure packages for USB boot creation tool
+  # Allow insecure packages for USB boot creation tool and development
   nixpkgs.config.permittedInsecurePackages = [
     "ventoy-1.1.07" # Required for ventoy-full package
+    "gradle-7.6.6"  # Required by some development tools
   ];
 
   # ===== LAPTOP PROFILE =====
