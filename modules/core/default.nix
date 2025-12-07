@@ -366,7 +366,7 @@ in {
 
         # Remote Desktop & Network Tools
         remmina # Remote desktop client with VNC, RDP, SSH, SPICE support
-        freerdp3 # Free RDP client (latest version for better compatibility)
+        freerdp # Free RDP client for RDP connections
         tigervnc # VNC client and server
         gnome-connections # GNOME's remote desktop client (alternative)
 
