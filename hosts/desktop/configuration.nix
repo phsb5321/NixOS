@@ -57,6 +57,9 @@
     inhibitScreensaver = true; # Prevent screensaver during gaming
   };
 
+  # Performance monitoring (003-gaming-optimization - Phase 6: US4)
+  modules.gaming.mangohud.enable = true;
+
   # ===== GNOME DESKTOP =====
   modules.desktop.gnome = {
     enable = true;
