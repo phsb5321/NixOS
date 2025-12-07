@@ -349,6 +349,14 @@
       nvidiaBusId = "PCI:1:0:0";
     };
 
+    # Touchpad configuration - always enabled
+    touchpad = {
+      enable = true;
+      naturalScrolling = true;
+      tapToClick = true;
+      disableWhileTyping = true;
+    };
+
     batteryManagement.chargeThreshold = 85;
 
     powerManagement = {
@@ -416,5 +424,5 @@
   };
 
   # ===== SYSTEM STATE VERSION =====
-  system.stateVersion = systemVersion;
+  # system.stateVersion is managed by modules.core
 }
