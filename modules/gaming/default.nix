@@ -12,5 +12,8 @@
     ./protontricks.nix
     ./performance-tools.nix
     ./low-latency-audio.nix
+    ./gamemode.nix
+    ./shader-cache.nix
+    ./mangohud.nix
   ];
 }
