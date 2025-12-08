@@ -230,6 +230,9 @@
   # Enable WPA3/SAE support in NetworkManager using iwd backend
   networking.networkmanager.wifi.backend = "iwd";
 
+  # Prevent NetworkManager from blocking boot
+  systemd.services.NetworkManager-wait-online.enable = false;
+
   # ===== SECRETS MANAGEMENT =====
   # Disabled WiFi secret until sops-nix is properly configured
   # sops = {
@@ -385,6 +388,13 @@
       "i915.enable_psr=2" # Panel self refresh
       "nvme.noacpi=1" # Better NVMe power management
     ];
+
+    # Fix iwlwifi warnings during boot
+    extraModprobeConfig = ''
+      # Intel Wi-Fi firmware configuration
+      options iwlwifi bt_coex_active=0 swcrypto=1 11n_disable=0
+      options iwlmvm power_scheme=1
+    '';
 
     plymouth = {
       enable = true;
