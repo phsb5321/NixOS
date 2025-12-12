@@ -78,6 +78,10 @@ in {
     environment.sessionVariables = {
       # Enable heavy runtime for better compatibility
       STEAM_RUNTIME_HEAVY = "1";
+
+      # MangoHud library paths for Steam FHS environment
+      # This ensures MangoHud can be found by Proton games
+      MANGOHUD_DLSYM = "1";
     };
 
     # Install protontricks if enabled
