@@ -383,6 +383,7 @@
 
     kernelParams = [
       "quiet"
+      "loglevel=3" # Only show errors and critical messages
       "splash"
       "i915.enable_fbc=1" # Frame buffer compression
       "i915.enable_psr=2" # Panel self refresh
@@ -396,10 +397,8 @@
       options iwlmvm power_scheme=1
     '';
 
-    plymouth = {
-      enable = true;
-      theme = "breeze";
-    };
+    # Plymouth disabled - incompatible with systemd initrd
+    plymouth.enable = false;
 
     initrd.systemd.enable = true;
   };
