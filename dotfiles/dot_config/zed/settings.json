@@ -1,6 +1,6 @@
 {
   // ===== USER INTERFACE & APPEARANCE =====
-  "theme": "Ayu Light",
+  "theme": "Ayu Dark",
   "ui_font_size": 18,
   "buffer_font_size": 18,
   "buffer_font_family": "JetBrainsMono Nerd Font Mono",
@@ -129,19 +129,11 @@
   // ===== COPILOT & AI INTEGRATION =====
   "features": {
     "copilot": true,
-    "edit_prediction_provider": "copilot",
     "edit_prediction_provider": "zed"
   },
   "show_copilot_suggestions": true,
   "copilot": {
-    "disabled_globs": [
-      ".env*",
-      "*.key",
-      "*.pem",
-      "*.cert",
-      "secrets/**",
-      "**/secrets/**"
-    ]
+    "disabled_globs": [".env*", "*.key", "*.pem", "*.cert", "secrets/**", "**/secrets/**"]
   },
 
   // ===== EDIT PREDICTIONS (Your existing config) =====
