@@ -55,7 +55,81 @@ Use the custom slash commands for routine operations:
 
 - `./user-scripts/nixswitch` - Modern TUI-based rebuild with error handling
 - `./user-scripts/nix-shell-selector.sh` - Interactive development environment selector
-- `dotfiles-*` commands - Chezmoi dotfiles management
+
+## Dotfiles Management
+
+Chezmoi-based dotfiles management with validation, drift detection, and mutable file support.
+
+### Core Commands
+
+| Command | Description |
+|---------|-------------|
+| `dotfiles-init` | Initialize chezmoi with NixOS project dotfiles |
+| `dotfiles-apply` | Apply dotfiles from source to target (skips mutable with drift) |
+| `dotfiles-status` | Show status with drift indicators and mutability info |
+| `dotfiles-add <file>` | Add new file to managed dotfiles |
+| `dotfiles-edit` | Open dotfiles directory in editor |
+
+### Validation & Sync Commands
+
+| Command | Description |
+|---------|-------------|
+| `dotfiles-validate [--fix]` | Validate JSON/JSONC files for syntax and duplicate keys |
+| `dotfiles-check` | Full validation including sensitive data and hardcoded paths |
+| `dotfiles-drift [--diff] [--json]` | Show drift between source and target dotfiles |
+| `dotfiles-capture [--dry-run]` | Capture runtime changes back to source |
+
+### Command Options
+
+**dotfiles-apply**:
+- `--diff` - Show diff without applying
+- `--force-all` - Force apply all files, including mutable files with drift
+- `<file>...` - Apply specific files only
+
+**dotfiles-validate**:
+- `--fix` - Automatically fix duplicate keys (keeps last value)
+- `--source/--target/--both` - Choose which locations to validate
+- `-q, --quiet` - Only output errors
+
+**dotfiles-drift**:
+- `--diff` - Show full unified diff for each changed file
+- `--json` - Output in JSON format for scripting
+- `--mutable-only` - Only show mutable files
+
+**dotfiles-capture**:
+- `--dry-run` - Preview changes without modifying source
+- `--all` - Include immutable files in capture
+- `--force` - Skip confirmation prompts
+
+### Configuration Options
+
+Configure in NixOS configuration:
+```nix
+modules.dotfiles = {
+  enable = true;
+  validateJson = true;  # Enable JSON validation
+  mutableFiles = [      # Files that can be modified at runtime
+    ".config/zed/settings.json"
+    ".config/Code/User/settings.json"
+  ];
+};
+```
+
+### Workflow Examples
+
+**Capture GUI changes back to source**:
+```bash
+# Make changes via application GUI
+dotfiles-drift          # See what changed
+dotfiles-capture        # Adopt changes to source
+cd ~/NixOS && git commit -am "Update settings"
+```
+
+**Fix duplicate key errors**:
+```bash
+dotfiles-validate --fix  # Auto-fix duplicate keys
+dotfiles-apply           # Apply fixed config
+```
 
 ## Important Notes
 
