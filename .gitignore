@@ -1,6 +1,8 @@
 # Logs and outputs
 nixos-switch.log
 output.txt
+/tmp/rebuild*.log
+/tmp/nixos-rebuild*.log
 
 # Editor settings
 .vscode/
@@ -14,7 +16,9 @@ Thumbs.db
 
 # Nix build artifacts
 /result
-/result-
+/result-*
+result
+result-*
 *.drv
 *.out
 *.tmp

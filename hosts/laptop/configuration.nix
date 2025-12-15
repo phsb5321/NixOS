@@ -17,7 +17,7 @@
   # Allow insecure packages for USB boot creation tool and development
   nixpkgs.config.permittedInsecurePackages = [
     "ventoy-1.1.07" # Required for ventoy-full package
-    "gradle-7.6.6"  # Required by some development tools
+    # gradle removed - boot fixes working without it
   ];
 
   # ===== LAPTOP PROFILE =====
@@ -388,6 +388,14 @@
         "i915.enable_fbc=1" # Frame buffer compression
         "i915.enable_psr=2" # Panel self refresh
         "nvme.noacpi=1" # Better NVMe power management
+        
+        # ACPI fixes for SAC1 BufferField BIOS errors
+        "acpi=strict" # Force strict ACPI compliance
+        
+        # Nouveau/NVIDIA fixes for hybrid graphics issues  
+        "nouveau.modeset=0" # Disable nouveau kernel mode setting
+        "nvidia-drm.modeset=0" # Disable NVIDIA DRM mode setting
+        "nomodeset" # Fallback - disable kernel mode setting entirely
       ]
       (lib.mkAfter ["loglevel=3"]) # Ensure loglevel=3 overrides default loglevel=4
     ];
@@ -397,7 +405,22 @@
       # Intel Wi-Fi firmware configuration
       options iwlwifi bt_coex_active=0 swcrypto=1 11n_disable=0
       options iwlmvm power_scheme=1
+      
+      # Blacklist nouveau to prevent MMU faults and conflicts
+      blacklist nouveau
+      blacklist nvidia
+      blacklist nvidia_drm
+      blacklist nvidia_modeset
     '';
+
+    # Blacklist kernel modules that cause issues
+    blacklistedKernelModules = [
+      "nouveau"        # Prevent nouveau MMU faults  
+      "nvidia"         # Blacklist NVIDIA drivers (hybrid graphics disabled)
+      "nvidia_drm" 
+      "nvidia_modeset"
+      "acpi_power_meter" # Fix for ACPI SAC1 BufferField errors
+    ];
 
     # Plymouth disabled - incompatible with systemd initrd
     plymouth.enable = false;

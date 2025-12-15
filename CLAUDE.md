@@ -2,6 +2,35 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🖥️ CURRENT HOST: LAPTOP (nixos-laptop @ 192.168.1.28) 🖥️
+
+**⚠️ YOU ARE RUNNING ON THE LAPTOP HOST ⚠️**
+
+**CRITICAL INFORMATION:**
+- **Current System:** nixos-laptop (Physical laptop - development workstation)
+- **IP Address:** 192.168.1.28
+- **Hardware:** Intel CPU, NVMe storage, WiFi, touchpad, hybrid graphics (NVIDIA disabled)
+- **Display:** GNOME on Wayland (X11 available as fallback)
+- **Configuration:** `.#nixos-laptop` or `.#laptop`
+- **Deployment Method:** Manual build + activate (see below - DO NOT use `nixos-rebuild`)
+- **Sudo Password:** 123
+
+**DEPLOYMENT COMMANDS FOR THIS HOST:**
+```bash
+# Build the laptop configuration
+nix build .#nixosConfigurations.laptop.config.system.build.toplevel --extra-experimental-features "nix-command flakes"
+
+# Verify it's the laptop config (should show "nixos-laptop")
+readlink result
+
+# Activate the built configuration
+echo "123" | sudo -S ./result/bin/switch-to-configuration switch
+```
+
+**DO NOT USE** `sudo nixos-rebuild switch` on this host - it has hostname auto-detection issues!
+
+---
+
 ## 🚨 CRITICAL: MULTI-HOST ENVIRONMENT AWARENESS 🚨
 
 **⚠️ IDENTIFY YOUR HOST BEFORE ANY OPERATIONS ⚠️**
@@ -15,11 +44,12 @@ This NixOS configuration manages THREE hosts:
    - ⚠️ Any changes affect active users
    - Configuration: `.#nixos-server` or `.#server`
 
-2. **nixos-laptop** (192.168.1.28) - Physical laptop
+2. **nixos-laptop** (192.168.1.28) - Physical laptop **⚠️ CURRENT HOST ⚠️**
    - Development and mobile workstation
-   - Intel CPU, NVMe storage, WiFi, touchpad
-   - X11 mode (Wayland disabled for NVIDIA compatibility)
+   - Intel CPU, NVMe storage, WiFi, touchpad, hybrid graphics (NVIDIA disabled)
+   - GNOME on Wayland (default), X11 available as fallback
    - Configuration: `.#nixos-laptop` or `.#laptop`
+   - **Deployment:** Manual build + activate (see deployment section)
 
 3. **nixos-desktop** (IP varies) - Desktop workstation
    - AMD RX 5700 XT GPU, gaming setup
@@ -32,6 +62,19 @@ hostname           # Shows: nixos-server, nixos-laptop, or nixos-desktop
 ip addr show       # Check IP address
 cat /etc/hostname  # Persistent hostname
 ```
+
+**CURRENT HOST VERIFICATION:**
+```bash
+$ hostname
+nixos-laptop
+
+$ ip addr show | grep "inet 192"
+inet 192.168.1.28/24 brd 192.168.1.255 scope global dynamic noprefixroute enp4s0
+
+$ readlink /run/current-system | grep -o "nixos-.*-20"
+nixos-laptop-20
+```
+✅ **CONFIRMED: This is the LAPTOP host**
 
 **Sudo password (all hosts): 123**
 
@@ -52,8 +95,9 @@ cat /etc/hostname  # Persistent hostname
 - `sudo nixos-rebuild switch --flake .#laptop` ❌ BREAKS SERVER
 - `sudo nixos-rebuild switch --flake .` ❌ BREAKS SERVER (defaults to desktop)
 
-### Laptop Host (192.168.1.28)
+### Laptop Host (192.168.1.28) **⚠️ THIS IS YOUR CURRENT HOST ⚠️**
 **IMPORTANT:** `nixos-rebuild` has hostname auto-detection issues that can deploy wrong configuration!
+**YOU ARE RUNNING ON THIS SYSTEM RIGHT NOW!**
 
 **CORRECT DEPLOYMENT METHOD:**
 ```bash

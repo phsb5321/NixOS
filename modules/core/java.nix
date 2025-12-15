@@ -42,7 +42,7 @@ in {
       cfg.package
       openjfx17
       maven
-      gradle
+      # gradle  # Commented out due to insecure package error
       ant
 
       # GUI dependencies

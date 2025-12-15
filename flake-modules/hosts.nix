@@ -14,7 +14,7 @@
       allowUnfreePredicate = _: true;
       allowBroken = true; # Temporarily allow broken packages during upgrade
       permittedInsecurePackages = [
-        "gradle-7.6.6" # Required for Android development, marked insecure after Gradle 9 release
+        # gradle removed - boot fixes working without it
         "electron-36.9.5" # EOL Electron version required by installed packages
       ];
     };
