@@ -381,13 +381,15 @@
       timeout = 3;
     };
 
-    kernelParams = [
-      "quiet"
-      "loglevel=3" # Only show errors and critical messages
-      "splash"
-      "i915.enable_fbc=1" # Frame buffer compression
-      "i915.enable_psr=2" # Panel self refresh
-      "nvme.noacpi=1" # Better NVMe power management
+    kernelParams = lib.mkMerge [
+      [
+        "quiet"
+        "splash"
+        "i915.enable_fbc=1" # Frame buffer compression
+        "i915.enable_psr=2" # Panel self refresh
+        "nvme.noacpi=1" # Better NVMe power management
+      ]
+      (lib.mkAfter ["loglevel=3"]) # Ensure loglevel=3 overrides default loglevel=4
     ];
 
     # Fix iwlwifi warnings during boot
