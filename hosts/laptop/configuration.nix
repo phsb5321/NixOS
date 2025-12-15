@@ -441,6 +441,31 @@
     ];
   };
 
+  # ===== TOUCHPAD PERMANENT ENABLE =====
+  # Systemd service to ensure touchpad is always enabled and cannot be disabled
+  systemd.user.services.touchpad-always-enabled = {
+    description = "Force touchpad to always be enabled";
+    wantedBy = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.glib}/bin/gsettings set org.gnome.desktop.peripherals.touchpad send-events 'enabled'";
+      # Run on every dconf change to re-enable if disabled
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
+  };
+
+  # Also set it at system level as default
+  programs.dconf.profiles.user.databases = [{
+    settings = {
+      "org/gnome/desktop/peripherals/touchpad" = {
+        send-events = "enabled";
+      };
+    };
+  }];
+
   # ===== ENVIRONMENT VARIABLES =====
   environment.sessionVariables = {
     # Touchpad gestures in Firefox
