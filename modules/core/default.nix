@@ -27,7 +27,7 @@ in {
     ./docker-dns.nix
     ./pipewire.nix
     ./monitor-audio.nix
-    ./document-tools.nix
+    ./document-tools
     ../hardware/amd-gpu.nix
   ];
 
@@ -199,26 +199,6 @@ in {
     # Boot configuration with performance optimizations
     boot = {
       tmp.useTmpfs = lib.mkDefault true;
-      # Performance kernel parameters
-      kernel.sysctl = {
-        # VM optimizations (can be overridden by host-specific configs)
-        "vm.swappiness" = lib.mkDefault 10;
-        "vm.dirty_ratio" = 15;
-        "vm.dirty_background_ratio" = 5;
-        "vm.vfs_cache_pressure" = 50;
-        # Network performance (can be overridden by networking module)
-        "net.core.rmem_max" = lib.mkDefault 268435456;
-        "net.core.wmem_max" = lib.mkDefault 268435456;
-        "net.core.netdev_max_backlog" = lib.mkDefault 5000;
-        # Security hardening
-        "kernel.dmesg_restrict" = 1;
-        "kernel.kptr_restrict" = 2;
-        "net.ipv4.conf.all.log_martians" = 1;
-        "net.ipv4.conf.default.log_martians" = 1;
-        "net.ipv4.icmp_echo_ignore_broadcasts" = 1;
-        "net.ipv4.conf.all.send_redirects" = 0;
-        "net.ipv4.conf.default.send_redirects" = 0;
-      };
       # ZRAM removed - causing application compatibility issues
       # kernelModules = ["zram"];  # Disabled
     };
