@@ -1,0 +1,59 @@
+[/]
+disabled-extensions=['dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'appindicatorsupport@rgcjonas.gmail.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
+enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'just-perfection-desktop@just-perfection', 'Vitals@CoreCoding.com', 'caffeine@patapon.info', 'clipboard-indicator@tudmotu.com', 'sound-output-device-chooser@kgshank.net', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'places-menu@gnome-shell-extensions.gcampax.github.com', 'auto-move-windows@gnome-shell-extensions.gcampax.github.com']
+favorite-apps=@as []
+last-selected-power-profile='performance'
+welcome-dialog-last-shown-version='48.4'
+
+[app-switcher]
+current-workspace-only=true
+
+[extensions/blur-my-shell]
+settings-version=2
+
+[extensions/blur-my-shell/appfolder]
+brightness=0.59999999999999998
+sigma=30
+
+[extensions/blur-my-shell/dash-to-dock]
+blur=true
+brightness=0.59999999999999998
+sigma=30
+static-blur=true
+style-dash-to-dock=0
+
+[extensions/blur-my-shell/panel]
+brightness=0.59999999999999998
+sigma=30
+
+[extensions/blur-my-shell/window-list]
+brightness=0.59999999999999998
+sigma=30
+
+[extensions/caffeine]
+indicator-position-max=4
+user-enabled=true
+
+[extensions/clipboard-indicator]
+cache-size=10
+history-size=50
+
+[extensions/just-perfection]
+support-notifier-showed-version=34
+support-notifier-type=0
+
+[extensions/user-theme]
+name=''
+
+[extensions/vitals]
+hide-icons=false
+hot-sensors=['_processor_usage_', '_memory_usage_', '__temperature_max__']
+icon-style=1
+position-in-panel=0
+show-battery=true
+show-gpu=true
+update-time=1
+use-higher-precision=true
+
+[world-clocks]
+locations=@av []

@@ -25,6 +25,41 @@
     gaming = true; # Enable 32-bit support and performance tweaks
   };
 
+  # ===== GAMING CONFIGURATION =====
+  # Steam with Proton and runtime library support
+  modules.gaming.steam = {
+    enable = true;
+    protontricks.enable = true;
+    geProton.enable = true;
+    remotePlay.enable = false;
+    # gamescopeSession defaults to false
+  };
+
+  modules.gaming.protontricks = {
+    enable = true;
+    helperScripts = true; # Provides install-vcrun2019, install-vcrun2022, list-steam-games, fix-frostpunk
+  };
+
+  # Shader compilation optimization (003-gaming-optimization - Phase 3: US1)
+  modules.gaming.shaderCache = {
+    enable = true;
+    enableRADVGPL = true; # Graphics Pipeline Library for compile-time shader processing
+    enableNGGC = true; # Next-Gen Geometry Culling for AMD GPUs
+    enableSteamPreCache = true; # Steam's built-in Vulkan shader pre-caching
+  };
+
+  # CPU optimization for gaming (003-gaming-optimization - Phase 5: US3)
+  modules.gaming.gamemode = {
+    enable = true;
+    enableRenice = true; # Increase game process priority
+    renice = 10; # Nice value adjustment (higher = more aggressive priority boost)
+    softRealtime = "auto"; # Soft real-time scheduling
+    inhibitScreensaver = true; # Prevent screensaver during gaming
+  };
+
+  # Performance monitoring (003-gaming-optimization - Phase 6: US4)
+  modules.gaming.mangohud.enable = true;
+
   # ===== GNOME DESKTOP =====
   modules.desktop.gnome = {
     enable = true;
@@ -50,7 +85,7 @@
       gsconnect = true;
       workspaceIndicator = true;
       soundOutputChooser = false;
-      productivity = false; # Use individual toggles instead
+      productivity = false;
     };
 
     # Settings
@@ -65,7 +100,7 @@
 
     # Wayland configuration
     wayland = {
-      enable = true;
+      enable = true;  # Reverted back to Wayland (X11 broke display manager)
       electronSupport = true;
       screenSharing = true;
       variant = "hardware";
@@ -151,7 +186,6 @@
       editor = true;
       applications = true;
     };
-
   };
 
   # ===== HOST-SPECIFIC PACKAGES =====
@@ -183,7 +217,7 @@
 
     # Memory analysis
     heaptrack
-    massif-visualizer
+    # massif-visualizer # Temporarily disabled: broken CMake compatibility in nixpkgs-unstable
 
     # Disk utilities
     ncdu
@@ -215,7 +249,7 @@
 
   modules.networking.firewall = {
     enable = true;
-    developmentPorts = [ 3000 3001 8080 8000 ];
+    developmentPorts = [3000 3001 8080 8000];
   };
 
   modules.networking.remoteDesktop = {
@@ -227,7 +261,7 @@
   # DNS configuration
   networking = {
     dhcpcd.extraConfig = "nohook resolv.conf";
-    nameservers = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1" ];
+    nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     firewall.checkReversePath = "loose";
     nftables.enable = true;
   };
@@ -235,8 +269,8 @@
   services.resolved = {
     enable = true;
     dnssec = "allow-downgrade";
-    domains = [ "~." ];
-    fallbackDns = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1" ];
+    domains = ["~."];
+    fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     extraConfig = ''
       DNSOverTLS=yes
       DNS=8.8.8.8 8.8.4.4 1.1.1.1 1.0.0.1
@@ -288,7 +322,7 @@
           markdownlint = true;
           vale = {
             enable = true;
-            styles = [ "google" "write-good" ];
+            styles = ["google" "write-good"];
           };
           linkCheck = true;
         };
@@ -326,6 +360,7 @@
     kernelParams = [
       "preempt=full"
       "nohz_full=all"
+      "intel_pstate=disable" # 003-gaming-optimization: Disable Intel p-state for better GameMode control
     ];
 
     kernel.sysctl = {
@@ -341,19 +376,14 @@
       "fs.aio-max-nr" = 1048576;
     };
 
-    kernelModules = [ "kvm-intel" "amdgpu" ];
+    kernelModules = ["kvm-intel" "amdgpu"];
   };
 
   # ===== HARDWARE =====
   hardware.cpu.intel.updateMicrocode = true;
 
   # ===== PROGRAMS =====
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;
-  };
+  # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
 
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
@@ -388,7 +418,7 @@
       enable = true;
       backlogLimit = 8192;
       failureMode = "printk";
-      rules = [ "-a exit,always -F arch=b64 -S execve" ];
+      rules = ["-a exit,always -F arch=b64 -S execve"];
     };
 
     apparmor = {
@@ -405,8 +435,8 @@
   # AMD GPU optimization
   systemd.services.amd-gpu-optimization = {
     description = "AMD GPU Performance Optimization";
-    after = [ "graphical-session.target" ];
-    wantedBy = [ "multi-user.target" ];
+    after = ["graphical-session.target"];
+    wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -419,8 +449,8 @@
 
   # DNS health check
   systemd.timers.dns-health-check = {
-    wantedBy = [ "timers.target" ];
-    partOf = [ "dns-health-check.service" ];
+    wantedBy = ["timers.target"];
+    partOf = ["dns-health-check.service"];
     timerConfig = {
       OnCalendar = "*:0/5";
       Persistent = true;
@@ -441,5 +471,5 @@
   };
 
   # ===== SYSTEM STATE VERSION =====
-  system.stateVersion = "25.11";
+  system.stateVersion = lib.mkForce "25.11";
 }

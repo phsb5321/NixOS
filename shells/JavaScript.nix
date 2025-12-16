@@ -46,7 +46,6 @@
     (mkPackageGroup "Build Tools" [
       pkgs.gcc
       pkgs.gnumake
-      pkgs.nodePackages.webpack
     ])
     (mkPackageGroup "Utility Tools" [
       pkgs.jq

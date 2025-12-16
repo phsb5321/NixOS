@@ -36,28 +36,27 @@
     };
   };
 
-  outputs = inputs @ {
+  outputs = {
     self,
     nixpkgs,
-    flake-parts,
+    nixpkgs-unstable,
+    flake-utils,
     ...
-  }:
-    flake-parts.lib.mkFlake {inherit inputs;} {
-      # Declare supported systems
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-      ];
+  } @ inputs: let
+    # Supported systems
+    supportedSystems = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
 
-      # Flake-parts modules for modular configuration
-      imports = [
-        ./flake-modules/outputs.nix
-        ./flake-modules/hosts.nix
-      ];
+    # Helper function to create package sets
+    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
-      # Migration complete - all outputs now in flake-modules/
-      # - outputs.nix: perSystem outputs (checks, formatter, devShells, apps, packages)
-      # - hosts.nix: nixosConfigurations with withSystem integration
+    # Package configuration
+    pkgsConfig = {
+      allowUnfree = true;
+      allowUnfreePredicate = _: true;
+      allowBroken = true; # Temporarily allow broken packages during upgrade
     };
 
     # Helper function to create a NixOS system
@@ -131,8 +130,8 @@
                 };
               };
 
-              # System version (can be overridden by modules)
-              system.stateVersion = nixpkgsInput.lib.mkDefault systemVersion;
+              # System version
+              system.stateVersion = systemVersion;
 
               # Set hostname
               networking.hostName = nixpkgsInput.lib.mkDefault hostname;
@@ -143,11 +142,11 @@
 
     # Define all your hosts here
     hosts = {
-      # Primary desktop system (default)
-      default = {
+      # Primary desktop system
+      desktop = {
         system = "x86_64-linux";
         hostname = "nixos-desktop";
-        configPath = "default"; # Maps to hosts/default/
+        configPath = "desktop"; # Maps to hosts/desktop/
         nixpkgsInput = nixpkgs-unstable; # Use unstable as the main channel
       };
 
@@ -170,11 +169,12 @@
   in {
     # NixOS Configurations - Generated from hosts definition
     nixosConfigurations = nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts // {
-      # Compatibility alias for systems with hostname "nixos"
-      nixos = mkNixosSystem hosts.default;
-      # Compatibility alias for hostname-based lookup
+      # Compatibility aliases for systems with different hostnames
+      nixos = mkNixosSystem hosts.desktop;
+      nixos-desktop = mkNixosSystem hosts.desktop;
       nixos-laptop = mkNixosSystem hosts.laptop;
-      nixos-desktop = mkNixosSystem hosts.default;
+      # Legacy alias for backward compatibility
+      default = mkNixosSystem hosts.desktop;
     };
 
     # Formatter for each system (using alejandra for better formatting)
@@ -282,7 +282,7 @@
         # Script to deploy to a specific host
         deploy = pkgs.writeShellScriptBin "deploy" ''
           set -e
-          HOST=''${1:-default}
+          HOST=''${1:-desktop}
 
           if [ -z "$HOST" ]; then
             echo "Usage: $0 <hostname>"
@@ -297,7 +297,7 @@
         # Script to build without switching
         build = pkgs.writeShellScriptBin "build" ''
           set -e
-          HOST=''${1:-default}
+          HOST=''${1:-desktop}
           echo "Building configuration for $HOST..."
           nixos-rebuild build --flake .#$HOST
         '';

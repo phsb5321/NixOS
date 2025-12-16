@@ -13,31 +13,31 @@ with lib; let
 
   # Script to initialize chezmoi with our custom source directory
   initScript = pkgs.writeShellScriptBin "dotfiles-init" ''
-        #!/usr/bin/env bash
-        set -euo pipefail
+            #!/usr/bin/env bash
+            set -euo pipefail
 
-        echo "🧰 Initializing Chezmoi with NixOS Project Dotfiles"
-        echo "=================================================="
+            echo "🧰 Initializing Chezmoi with NixOS Project Dotfiles"
+            echo "=================================================="
 
-        # Check if chezmoi is available
-        if ! command -v chezmoi &> /dev/null; then
-            echo "❌ chezmoi is not installed. Please rebuild your NixOS configuration."
-            exit 1
-        fi
+            # Check if chezmoi is available
+            if ! command -v chezmoi &> /dev/null; then
+                echo "❌ chezmoi is not installed. Please rebuild your NixOS configuration."
+                exit 1
+            fi
 
         # Path to our dotfiles directory
         DOTFILES_DIR="${dotfilesPath}"
         USERNAME="${cfg.username}"
 
-        if [[ ! -d "$DOTFILES_DIR" ]]; then
-            echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
-            exit 1
-        fi
+            if [[ ! -d "$DOTFILES_DIR" ]]; then
+                echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
+                exit 1
+            fi
 
-        echo "📁 Using dotfiles from: $DOTFILES_DIR"
+            echo "📁 Using dotfiles from: $DOTFILES_DIR"
 
-        # Ensure config directory exists
-        mkdir -p ~/.config/chezmoi
+            # Ensure config directory exists
+            mkdir -p ~/.config/chezmoi
 
         # Create chezmoi configuration
         cat > ~/.config/chezmoi/chezmoi.toml <<EOF
@@ -77,15 +77,15 @@ sourceDir = "$DOTFILES_DIR"
     args = ["--wait", "--diff"]
 EOF
 
-        # Apply dotfiles
-        echo "🔄 Applying dotfiles..."
-        chezmoi apply
+            # Apply dotfiles
+            echo "🔄 Applying dotfiles..."
+            chezmoi apply
 
-        echo "✅ Dotfiles initialized and applied successfully!"
-        echo "💡 Source directory: $DOTFILES_DIR"
-        echo "💡 Edit dotfiles: code $DOTFILES_DIR"
-        echo "💡 Apply changes: dotfiles-apply"
-        echo "💡 Check status: chezmoi status"
+            echo "✅ Dotfiles initialized and applied successfully!"
+            echo "💡 Source directory: $DOTFILES_DIR"
+            echo "💡 Edit dotfiles: code $DOTFILES_DIR"
+            echo "💡 Apply changes: dotfiles-apply"
+            echo "💡 Check status: chezmoi status"
   '';
 
   # Script to apply dotfile changes
@@ -94,6 +94,65 @@ EOF
     set -euo pipefail
 
     DOTFILES_DIR="${dotfilesPath}"
+    MUTABLE_FILE="$DOTFILES_DIR/.chezmoimutable"
+    FORCE_ALL=false
+    DIFF_MODE=false
+    SPECIFIC_FILES=()
+
+    show_help() {
+        echo "🔄 dotfiles-apply - Apply dotfiles from source to target"
+        echo ""
+        echo "Usage: dotfiles-apply [OPTIONS] [FILE...]"
+        echo ""
+        echo "Options:"
+        echo "  --diff        Show diff without applying changes"
+        echo "  --force-all   Force apply all files, including mutable files with drift"
+        echo "  -h, --help    Show this help message"
+        echo ""
+        echo "Examples:"
+        echo "  dotfiles-apply                    # Apply all, skip mutable with drift"
+        echo "  dotfiles-apply --force-all        # Apply all, overwrite everything"
+        echo "  dotfiles-apply ~/.config/zed/settings.json  # Apply specific file"
+    }
+
+    # Check if file is mutable
+    is_mutable() {
+        local file="$1"
+        [[ -f "$MUTABLE_FILE" ]] && grep -qF "$file" "$MUTABLE_FILE" 2>/dev/null
+    }
+
+    # Check if file has drifted (target differs from what source would generate)
+    has_drift() {
+        local file="$1"
+        chezmoi status --source "$DOTFILES_DIR" 2>/dev/null | grep -qE "^.M.*$file$|^MM.*$file$"
+    }
+
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --diff)
+                DIFF_MODE=true
+                shift
+                ;;
+            --force-all)
+                FORCE_ALL=true
+                shift
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -*)
+                echo "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+            *)
+                SPECIFIC_FILES+=("$1")
+                shift
+                ;;
+        esac
+    done
 
     if [[ ! -d "$DOTFILES_DIR" ]]; then
         echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
@@ -104,13 +163,69 @@ EOF
     echo "🔄 Applying dotfiles from: $DOTFILES_DIR"
 
     # Show diff if requested
-    if [[ "''${1:-}" == "--diff" ]]; then
+    if [[ "$DIFF_MODE" == "true" ]]; then
         chezmoi diff --no-pager
         exit 0
     fi
 
-    # Apply changes
-    chezmoi apply
+    # If specific files requested, apply only those
+    if [[ ''${#SPECIFIC_FILES[@]} -gt 0 ]]; then
+        for file in "''${SPECIFIC_FILES[@]}"; do
+            echo "Applying: $file"
+            chezmoi apply "$file"
+        done
+        echo "✅ Applied ''${#SPECIFIC_FILES[@]} file(s)"
+        exit 0
+    fi
+
+    # Check for mutable files with drift
+    SKIPPED_FILES=()
+    if [[ "$FORCE_ALL" == "false" && -f "$MUTABLE_FILE" ]]; then
+        echo "Checking mutable files for drift..."
+
+        while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            [[ "$line" == \#* ]] && continue  # Skip comments
+
+            if has_drift "$line"; then
+                SKIPPED_FILES+=("$line")
+                echo "  ⏭️  Skipping $line [mutable with drift]"
+            fi
+        done < "$MUTABLE_FILE"
+    fi
+
+    if [[ ''${#SKIPPED_FILES[@]} -gt 0 ]]; then
+        echo ""
+        echo "⚠️  Skipping ''${#SKIPPED_FILES[@]} mutable file(s) with local changes"
+        echo "   💡 Use 'dotfiles-capture' to adopt changes to source"
+        echo "   💡 Use 'dotfiles-apply --force-all' to overwrite anyway"
+        echo ""
+
+        # Apply only non-skipped files by excluding mutable ones
+        # chezmoi doesn't have a direct exclude flag, so we apply with confirmation
+        echo "Applying remaining files..."
+
+        # Get list of all managed files
+        MANAGED_FILES=$(chezmoi managed --source "$DOTFILES_DIR" 2>/dev/null || true)
+
+        for file in $MANAGED_FILES; do
+            skip=false
+            for skipped in "''${SKIPPED_FILES[@]}"; do
+                [[ "$file" == "$skipped" ]] && skip=true && break
+            done
+
+            if [[ "$skip" == "false" ]]; then
+                # Check if file has changes to apply
+                if chezmoi status --source "$DOTFILES_DIR" 2>/dev/null | grep -q "$file"; then
+                    chezmoi apply "$HOME/$file" 2>/dev/null || true
+                fi
+            fi
+        done
+    else
+        # No mutable files to skip, apply everything
+        chezmoi apply
+    fi
+
     echo "✅ Dotfiles applied successfully!"
   '';
 
@@ -180,6 +295,7 @@ EOF
     set -euo pipefail
 
     DOTFILES_DIR="${dotfilesPath}"
+    MUTABLE_FILE="$DOTFILES_DIR/.chezmoimutable"
 
     if [[ ! -d "$DOTFILES_DIR" ]]; then
         echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
@@ -187,22 +303,78 @@ EOF
         exit 1
     fi
 
+    # Check if file is mutable
+    is_mutable() {
+        local file="$1"
+        [[ -f "$MUTABLE_FILE" ]] && grep -qF "$file" "$MUTABLE_FILE" 2>/dev/null
+    }
+
     echo "🧰 Dotfiles Status"
     echo "================"
-    echo "📁 Source directory: $DOTFILES_DIR"
+    echo "📁 Source: $DOTFILES_DIR"
     echo ""
 
-    echo "📋 Managed files:"
-    chezmoi managed --source "$DOTFILES_DIR" 2>/dev/null || echo "No files managed yet"
+    # Count managed files and mutability stats
+    TOTAL_MANAGED=0
+    MUTABLE_COUNT=0
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        ((TOTAL_MANAGED++)) || true
+        is_mutable "$file" && ((MUTABLE_COUNT++)) || true
+    done < <(chezmoi managed --source "$DOTFILES_DIR" 2>/dev/null)
+
+    echo "📋 Files: $TOTAL_MANAGED managed ($MUTABLE_COUNT mutable)"
     echo ""
 
-    echo "🔄 Status:"
-    if chezmoi status --source "$DOTFILES_DIR" 2>/dev/null | grep -q .; then
-        chezmoi status --source "$DOTFILES_DIR"
-        echo ""
-        echo "⚠️  There are changes. Run 'dotfiles-apply' to apply them."
+    # Get status and show drift info
+    echo "🔄 Drift Status:"
+    STATUS_OUTPUT=$(chezmoi status --source "$DOTFILES_DIR" 2>/dev/null || true)
+
+    if [[ -z "$STATUS_OUTPUT" ]]; then
+        echo "✅ All dotfiles are in sync"
     else
-        echo "✅ All dotfiles are up to date"
+        DRIFTED=0
+        SOURCE_CHANGED=0
+
+        while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            status="''${line:0:2}"
+            file="''${line:3}"
+
+            # Determine label based on status
+            label=""
+            if [[ "$status" == "MM" || "$status" == " M" ]]; then
+                label="[DRIFTED]"
+                ((DRIFTED++)) || true
+            elif [[ "$status" == "M " ]]; then
+                label="[SOURCE]"
+                ((SOURCE_CHANGED++)) || true
+            elif [[ "$status" == "A " ]]; then
+                label="[NEW]"
+                ((SOURCE_CHANGED++)) || true
+            fi
+
+            # Add mutability indicator
+            if is_mutable "$file"; then
+                echo "  📝 $file $label [mutable]"
+            else
+                echo "  📄 $file $label"
+            fi
+        done <<< "$STATUS_OUTPUT"
+
+        echo ""
+
+        # Show summary and suggestions
+        if [[ $DRIFTED -gt 0 ]]; then
+            echo "⚠️  $DRIFTED file(s) have drifted from source"
+            echo "   💡 Run 'dotfiles-drift --diff' to see differences"
+            echo "   💡 Run 'dotfiles-capture' to adopt runtime changes"
+            echo "   💡 Run 'dotfiles-apply' to restore from source"
+        fi
+        if [[ $SOURCE_CHANGED -gt 0 ]]; then
+            echo "📤 $SOURCE_CHANGED file(s) have source changes to apply"
+            echo "   💡 Run 'dotfiles-apply' to update"
+        fi
     fi
   '';
 
@@ -361,10 +533,12 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # Ensure chezmoi is available
+    # Ensure chezmoi and required tools are available
     environment.systemPackages =
       [
         pkgs.chezmoi
+        pkgs.jq
+        pkgs.python3
       ]
       ++ (optionals cfg.enableHelperScripts [
         initScript

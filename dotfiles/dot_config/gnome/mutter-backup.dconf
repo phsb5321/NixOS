@@ -1,0 +1,5 @@
+[/]
+dynamic-workspaces=false
+experimental-features=['scale-monitor-framebuffer']
+output-luminance=[('HDMI-1', 'GWD', 'ARZOPA', '0x34330206', uint32 1, 190.0)]
+workspaces-only-on-primary=false

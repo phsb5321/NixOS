@@ -1,0 +1,17 @@
+[org/gnome/desktop/interface]
+enable-animations=true
+enable-hot-corners=false
+show-battery-percentage=false
+
+[org/gnome/desktop/session]
+# Never blank screen on desktop
+idle-delay=uint32 0
+
+[org/gnome/settings-daemon/plugins/power]
+# Never suspend on AC power
+sleep-inactive-ac-type='nothing'
+power-button-action='interactive'
+
+[org/gnome/desktop/peripherals/touchpad]
+# Not needed on desktop
+tap-to-click=false
