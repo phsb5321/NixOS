@@ -1,8 +1,17 @@
 # ~/NixOS/modules/gpu/amd.nix
 # AMD GPU abstraction module
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 let
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+>>>>>>> origin/host/server
   cfg = config.modules.gpu.amd;
 in {
   options.modules.gpu.amd = {
@@ -29,6 +38,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     # Early KMS for faster boot and better Wayland
+<<<<<<< HEAD
     boot.initrd.kernelModules = [ "amdgpu" ];
 
     # AMD GPU kernel parameters
@@ -39,6 +49,20 @@ in {
     ] ++ lib.optionals cfg.powerManagement [
       "amdgpu.ppfeaturemask=0xffffffff"  # Enable all power features
     ];
+=======
+    boot.initrd.kernelModules = ["amdgpu"];
+
+    # AMD GPU kernel parameters
+    boot.kernelParams =
+      [
+        "amdgpu.dc=1" # Display Core (required for Wayland)
+        "amdgpu.dpm=1" # Dynamic Power Management
+        "amdgpu.gpu_recovery=1" # GPU hang recovery
+      ]
+      ++ lib.optionals cfg.powerManagement [
+        "amdgpu.ppfeaturemask=0xffffffff" # Enable all power features
+      ];
+>>>>>>> origin/host/server
 
     # Graphics hardware
     hardware.graphics = {
@@ -61,7 +85,11 @@ in {
     };
 
     # Video driver configuration
+<<<<<<< HEAD
     services.xserver.videoDrivers = [ "amdgpu" ];
+=======
+    services.xserver.videoDrivers = ["amdgpu"];
+>>>>>>> origin/host/server
 
     # Udev rules for GPU access
     services.udev.extraRules = ''
@@ -82,7 +110,11 @@ in {
       radeontop
       vulkan-tools
       mesa-demos
+<<<<<<< HEAD
       clinfo  # OpenCL info
+=======
+      clinfo # OpenCL info
+>>>>>>> origin/host/server
     ];
 
     # Ensure video/render groups exist

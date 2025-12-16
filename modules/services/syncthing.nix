@@ -1,5 +1,6 @@
 # ~/NixOS/modules/services/syncthing.nix
 # Syncthing file synchronization service
+<<<<<<< HEAD
 { config, lib, ... }:
 
 with lib;
@@ -8,6 +9,16 @@ let
   cfg = config.modules.services.syncthing;
 in
 {
+=======
+{
+  config,
+  lib,
+  ...
+}:
+with lib; let
+  cfg = config.modules.services.syncthing;
+in {
+>>>>>>> origin/host/server
   options.modules.services.syncthing = {
     enable = mkEnableOption "Syncthing file synchronization";
 

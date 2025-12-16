@@ -2,6 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+<<<<<<< HEAD
 ## 🖥️ CURRENT HOST: LAPTOP (nixos-laptop @ 192.168.1.28) 🖥️
 
 **⚠️ YOU ARE RUNNING ON THE LAPTOP HOST ⚠️**
@@ -127,6 +128,51 @@ echo "123" | sudo -S ./result/bin/switch-to-configuration switch
 - `sudo nixos-rebuild switch --flake .#nixos-desktop` ✅
 - `sudo nixos-rebuild switch --flake .#desktop` ✅
 - `./user-scripts/nixswitch` ✅ (auto-detects)
+=======
+## 🚨 CRITICAL: YOU ARE RUNNING ON THE PRODUCTION SERVER 🚨
+
+**⚠️ ULTRA-CRITICAL AWARENESS: YOU ARE THE SERVER HOST ⚠️**
+
+**ENVIRONMENT CONTEXT:**
+- **Claude Code is executing DIRECTLY ON the NixOS production server (192.168.1.169)**
+- **This is NOT a development machine, NOT a desktop, NOT a remote system**
+- **You ARE the server** - Every command runs on the LIVE PRODUCTION SERVER
+- **This server hosts**: qBittorrent (24/7 torrenting), Plex Media Server, Audiobookshelf, all media libraries
+- **Hostname**: nixos-server (running in Proxmox VM)
+- **Users depend on this system**: Media streaming, downloads, audiobooks, file serving
+
+**WHAT THIS MEANS:**
+- Any `nixos-rebuild` command will IMMEDIATELY affect the live server
+- Any service restart will interrupt active users
+- Any misconfiguration will break production services
+- This is the ONLY server host - there is no failover
+
+---
+
+## ⚠️ CRITICAL: HOST CONFIGURATION WARNING ⚠️
+
+**THIS SYSTEM IS A SERVER HOST - NOT A DESKTOP HOST**
+
+**MANDATORY RULES:**
+1. **NEVER** run `nixos-rebuild switch --flake .#default` or `.#desktop` on this system
+2. **NEVER** deploy the desktop or laptop host configuration
+3. **ALWAYS** use `.#nixos-server` for all builds and deployments
+4. The `desktop` host configuration is for desktop machines only
+5. The `server` host uses stable nixpkgs and minimal packages
+6. **THINK TWICE** before running any rebuild - you are on the production server
+
+**Sudo password: 123** (for build/deployment commands)
+
+**CORRECT COMMANDS FOR THIS HOST:**
+- `sudo nixos-rebuild switch --flake .#nixos-server` ✅ (PRODUCTION SERVER)
+- `sudo nixos-rebuild build --flake .#nixos-server` ✅ (test build first)
+- `./user-scripts/nixswitch` ✅ (auto-detects host, RECOMMENDED)
+
+**WRONG COMMANDS (WILL BREAK PRODUCTION SERVER):**
+- `sudo nixos-rebuild switch --flake .#desktop` ❌ WILL BREAK SERVER
+- `sudo nixos-rebuild switch --flake .#laptop` ❌ WILL BREAK SERVER  
+- `sudo nixos-rebuild switch --flake .` ❌ WILL BREAK SERVER (defaults to .#desktop)
+>>>>>>> origin/host/server
 
 ---
 
@@ -715,7 +761,10 @@ Each host defines its **complete GNOME configuration** in `hosts/<hostname>/gnom
 - **NixOS 25.11+**: X11 sessions still available when `wayland.enable = false`
 - **Portal Integration**: Comprehensive XDG desktop portal configuration for file dialogs
 - **Electron Support**: Proper NIXOS_OZONE_WL and GTK_USE_PORTAL configuration
+<<<<<<< HEAD
 - **Electron Titlebar Fix**: X11 mode includes `GTK_CSD=0` to prevent duplicate titlebars on Electron apps (Spotify, VS Code, Discord, etc.)
+=======
+>>>>>>> origin/host/server
 
 ### Bruno API Client
 - Desktop: Wayland mode with enhanced portal configuration for file dialogs
@@ -800,8 +849,11 @@ git checkout -b hotfix/description main
 ## Active Technologies
 - Nix 2.31.2 (functional, lazy evaluation) + nixpkgs 25.11 (nixos-unstable), flake-parts 1.0 (002-codebase-reduction)
 - Git repository, `/nix/store` (immutable store) (002-codebase-reduction)
+<<<<<<< HEAD
 - Nix expression language (NixOS 25.11 unstable) + GNOME desktop environment modules, nixpkgs GNOME packages (001-gnome-titlebar-fix)
 - N/A (configuration-only change) (001-gnome-titlebar-fix)
+=======
+>>>>>>> origin/host/server
 
 ## Recent Changes
 - 002-codebase-reduction: Added Nix 2.31.2 (functional, lazy evaluation) + nixpkgs 25.11 (nixos-unstable), flake-parts 1.0

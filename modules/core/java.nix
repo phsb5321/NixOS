@@ -68,6 +68,7 @@ in {
       ANDROID_HOME = mkIf cfg.androidTools.enable "/home/notroot/.android/sdk";
     };
 
+<<<<<<< HEAD
     # JavaFX native library path - append to existing LD_LIBRARY_PATH via shell init
     programs.bash.interactiveShellInit = let
       javafxLibPath = lib.makeLibraryPath [
@@ -111,6 +112,8 @@ in {
       export LD_LIBRARY_PATH="${javafxLibPath}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     '';
 
+=======
+>>>>>>> origin/host/server
     # Add udev rules for Android devices
     services.udev.extraRules = mkIf cfg.androidTools.enable ''
       # Google

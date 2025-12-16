@@ -25,9 +25,15 @@ with lib; let
                 exit 1
             fi
 
+<<<<<<< HEAD
         # Path to our dotfiles directory
         DOTFILES_DIR="${dotfilesPath}"
         USERNAME="${cfg.username}"
+=======
+            # Path to our dotfiles directory
+            DOTFILES_DIR="${dotfilesPath}"
+            USERNAME="${cfg.username}"
+>>>>>>> origin/host/server
 
             if [[ ! -d "$DOTFILES_DIR" ]]; then
                 echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
@@ -39,6 +45,7 @@ with lib; let
             # Ensure config directory exists
             mkdir -p ~/.config/chezmoi
 
+<<<<<<< HEAD
         # Create chezmoi configuration
         cat > ~/.config/chezmoi/chezmoi.toml <<EOF
 # Chezmoi configuration for NixOS project
@@ -76,6 +83,45 @@ sourceDir = "$DOTFILES_DIR"
     command = "code"
     args = ["--wait", "--diff"]
 EOF
+=======
+            # Create chezmoi configuration
+            cat > ~/.config/chezmoi/chezmoi.toml <<EOF
+    # Chezmoi configuration for NixOS project
+    # This configures chezmoi to use the dotfiles directory within the project
+
+    # Set the source directory to our NixOS dotfiles
+    sourceDir = "$DOTFILES_DIR"
+
+    [data]
+        # Hostname for templating
+        hostname = "{{ .chezmoi.hostname }}"
+        # Username for templating
+        username = "{{ .chezmoi.username }}"
+        # OS for templating
+        os = "{{ .chezmoi.os }}"
+        # Architecture for templating
+        arch = "{{ .chezmoi.arch }}"
+        # Host type detection
+        isDesktop = {{ if eq .chezmoi.hostname "nixos" }}true{{ else }}false{{ end }}
+        isLaptop = {{ if eq .chezmoi.hostname "laptop" }}true{{ else }}false{{ end }}
+
+    [git]
+        # Auto-commit changes to dotfiles
+        autoCommit = true
+        # Auto-push changes (set to false initially for safety)
+        autoPush = false
+
+    [edit]
+        # Use VS Code as the default editor for dotfiles
+        command = "code"
+        args = ["--wait"]
+
+    [diff]
+        # Use VS Code for diffs
+        command = "code"
+        args = ["--wait", "--diff"]
+    EOF
+>>>>>>> origin/host/server
 
             # Apply dotfiles
             echo "🔄 Applying dotfiles..."
@@ -94,6 +140,7 @@ EOF
     set -euo pipefail
 
     DOTFILES_DIR="${dotfilesPath}"
+<<<<<<< HEAD
     MUTABLE_FILE="$DOTFILES_DIR/.chezmoimutable"
     FORCE_ALL=false
     DIFF_MODE=false
@@ -153,6 +200,8 @@ EOF
                 ;;
         esac
     done
+=======
+>>>>>>> origin/host/server
 
     if [[ ! -d "$DOTFILES_DIR" ]]; then
         echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
@@ -163,11 +212,16 @@ EOF
     echo "🔄 Applying dotfiles from: $DOTFILES_DIR"
 
     # Show diff if requested
+<<<<<<< HEAD
     if [[ "$DIFF_MODE" == "true" ]]; then
+=======
+    if [[ "''${1:-}" == "--diff" ]]; then
+>>>>>>> origin/host/server
         chezmoi diff --no-pager
         exit 0
     fi
 
+<<<<<<< HEAD
     # If specific files requested, apply only those
     if [[ ''${#SPECIFIC_FILES[@]} -gt 0 ]]; then
         for file in "''${SPECIFIC_FILES[@]}"; do
@@ -226,6 +280,10 @@ EOF
         chezmoi apply
     fi
 
+=======
+    # Apply changes
+    chezmoi apply
+>>>>>>> origin/host/server
     echo "✅ Dotfiles applied successfully!"
   '';
 
@@ -295,7 +353,10 @@ EOF
     set -euo pipefail
 
     DOTFILES_DIR="${dotfilesPath}"
+<<<<<<< HEAD
     MUTABLE_FILE="$DOTFILES_DIR/.chezmoimutable"
+=======
+>>>>>>> origin/host/server
 
     if [[ ! -d "$DOTFILES_DIR" ]]; then
         echo "❌ Dotfiles directory not found: $DOTFILES_DIR"
@@ -303,6 +364,7 @@ EOF
         exit 1
     fi
 
+<<<<<<< HEAD
     # Check if file is mutable
     is_mutable() {
         local file="$1"
@@ -375,6 +437,24 @@ EOF
             echo "📤 $SOURCE_CHANGED file(s) have source changes to apply"
             echo "   💡 Run 'dotfiles-apply' to update"
         fi
+=======
+    echo "🧰 Dotfiles Status"
+    echo "================"
+    echo "📁 Source directory: $DOTFILES_DIR"
+    echo ""
+
+    echo "📋 Managed files:"
+    chezmoi managed --source "$DOTFILES_DIR" 2>/dev/null || echo "No files managed yet"
+    echo ""
+
+    echo "🔄 Status:"
+    if chezmoi status --source "$DOTFILES_DIR" 2>/dev/null | grep -q .; then
+        chezmoi status --source "$DOTFILES_DIR"
+        echo ""
+        echo "⚠️  There are changes. Run 'dotfiles-apply' to apply them."
+    else
+        echo "✅ All dotfiles are up to date"
+>>>>>>> origin/host/server
     fi
   '';
 
@@ -533,12 +613,19 @@ in {
   };
 
   config = mkIf cfg.enable {
+<<<<<<< HEAD
     # Ensure chezmoi and required tools are available
     environment.systemPackages =
       [
         pkgs.chezmoi
         pkgs.jq
         pkgs.python3
+=======
+    # Ensure chezmoi is available
+    environment.systemPackages =
+      [
+        pkgs.chezmoi
+>>>>>>> origin/host/server
       ]
       ++ (optionals cfg.enableHelperScripts [
         initScript

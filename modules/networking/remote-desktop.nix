@@ -21,9 +21,15 @@ in {
       tools = mkOption {
         type = types.listOf types.package;
         default = with pkgs; [
+<<<<<<< HEAD
           remmina         # Multi-protocol remote desktop client
           freerdp         # FreeRDP for RDP connections
           tigervnc        # VNC client
+=======
+          remmina # Multi-protocol remote desktop client
+          freerdp # FreeRDP for RDP connectivity
+          tigervnc # VNC client
+>>>>>>> origin/host/server
           gnome-connections # GNOME's native remote desktop client
         ];
         description = "Remote desktop client packages to install";
@@ -85,12 +91,23 @@ in {
     # Combined client and server packages
     environment.systemPackages =
       lib.optionals cfg.client.enable cfg.client.tools
+<<<<<<< HEAD
       ++ lib.optionals cfg.server.enable (with pkgs; [
         # Server management tools
         tigervnc  # Also includes vncserver
       ] ++ lib.optionals cfg.server.rdp.enable [
         xrdp
       ]);
+=======
+      ++ lib.optionals cfg.server.enable (with pkgs;
+        [
+          # Server management tools
+          tigervnc # Also includes vncserver
+        ]
+        ++ lib.optionals cfg.server.rdp.enable [
+          xrdp
+        ]);
+>>>>>>> origin/host/server
 
     # GNOME Remote Desktop (modern approach for Wayland)
     services.gnome.gnome-remote-desktop.enable =
@@ -116,8 +133,13 @@ in {
     # Firewall configuration
     networking.firewall = lib.mkIf cfg.firewall.openPorts {
       allowedTCPPorts =
+<<<<<<< HEAD
         lib.optionals cfg.server.vnc.enable [ cfg.server.vnc.port ]
         ++ lib.optionals cfg.server.rdp.enable [ cfg.server.rdp.port ];
+=======
+        lib.optionals cfg.server.vnc.enable [cfg.server.vnc.port]
+        ++ lib.optionals cfg.server.rdp.enable [cfg.server.rdp.port];
+>>>>>>> origin/host/server
     };
 
     # Enable required system services for remote desktop
@@ -139,11 +161,18 @@ in {
       ];
     };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
     # Session variables for better remote desktop experience
     environment.sessionVariables = lib.mkIf cfg.server.enable {
       # Enable screen sharing via PipeWire
       WEBRTC_PIPEWIRE_CAPTURER = "1";
     };
   };
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/host/server

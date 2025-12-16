@@ -27,10 +27,65 @@ in {
     ./docker-dns.nix
     ./pipewire.nix
     ./monitor-audio.nix
-    ./document-tools
+    ./document-tools.nix
     ../hardware/amd-gpu.nix
   ];
 
+  options.modules.core = with lib; {
+    enable = mkEnableOption "Core system configuration module";
+
+    stateVersion = mkOption {
+      type = types.str;
+      description = "The NixOS state version";
+    };
+
+    timeZone = mkOption {
+      type = types.str;
+      default = "UTC";
+      description = "System timezone";
+    };
+
+    defaultLocale = mkOption {
+      type = types.str;
+      default = "en_US.UTF-8";
+      description = "Default system locale";
+    };
+
+    extraSystemPackages = mkOption {
+      type = with types; listOf package;
+      default = [];
+      description = "Additional system-wide packages to install";
+    };
+
+    # 🎯 KEYBOARD LAYOUT: Configuration options for Brazilian layout
+    keyboard = {
+      enable = mkOption {
+        type = types.bool;
+        default = false; # Disabled by default to let desktop environments handle it
+        description = "Enable explicit keyboard configuration";
+      };
+
+      layout = mkOption {
+        type = types.str;
+        default = "br";
+        description = "Keyboard layout";
+      };
+
+      variant = mkOption {
+        type = types.str;
+        default = ""; # Default to standard Brazilian ABNT (no variant)
+        description = "Keyboard variant";
+      };
+
+      options = mkOption {
+        type = types.str;
+        default = "grp:alt_shift_toggle,compose:ralt";
+        description = "Keyboard options";
+      };
+    };
+  };
+
+>>>>>>> origin/host/server
   config = lib.mkIf cfg.enable {
     # Enable fonts module
     modules.core.fonts = {
@@ -47,10 +102,16 @@ in {
     };
 
     # Enable gaming module
+<<<<<<< HEAD
     # DISABLED: Replaced by new modular gaming system in modules/gaming/
     # modules.core.gaming = {
     #   enable = true;
     # };
+=======
+    modules.core.gaming = {
+      enable = true;
+    };
+>>>>>>> origin/host/server
 
     # Enable PipeWire module
     modules.core.pipewire = {
@@ -115,7 +176,11 @@ in {
     # Enable AMD GPU optimizations for RX 5700 XT
     modules.hardware.amdgpu = {
       enable = true;
+<<<<<<< HEAD
       model = "navi10";  # RX 5700 XT uses Navi 10
+=======
+      model = "navi10"; # RX 5700 XT uses Navi 10
+>>>>>>> origin/host/server
       powerManagement = true;
     };
 
@@ -168,11 +233,14 @@ in {
       distributedBuilds = true;
     };
 
+<<<<<<< HEAD
     # Allow insecure packages for compatibility
     nixpkgs.config.permittedInsecurePackages = [
       "gradle-7.6.6"
     ];
 
+=======
+>>>>>>> origin/host/server
     # Security configuration
     security = {
       sudo.wheelNeedsPassword = true;
@@ -199,6 +267,29 @@ in {
     # Boot configuration with performance optimizations
     boot = {
       tmp.useTmpfs = lib.mkDefault true;
+<<<<<<< HEAD
+=======
+      # Performance kernel parameters
+      kernel.sysctl = {
+        # VM optimizations (can be overridden by host-specific configs)
+        "vm.swappiness" = lib.mkDefault 10;
+        "vm.dirty_ratio" = 15;
+        "vm.dirty_background_ratio" = 5;
+        "vm.vfs_cache_pressure" = 50;
+        # Network performance (can be overridden by networking module)
+        "net.core.rmem_max" = lib.mkDefault 268435456;
+        "net.core.wmem_max" = lib.mkDefault 268435456;
+        "net.core.netdev_max_backlog" = lib.mkDefault 5000;
+        # Security hardening
+        "kernel.dmesg_restrict" = 1;
+        "kernel.kptr_restrict" = 2;
+        "net.ipv4.conf.all.log_martians" = 1;
+        "net.ipv4.conf.default.log_martians" = 1;
+        "net.ipv4.icmp_echo_ignore_broadcasts" = 1;
+        "net.ipv4.conf.all.send_redirects" = 0;
+        "net.ipv4.conf.default.send_redirects" = 0;
+      };
+>>>>>>> origin/host/server
       # ZRAM removed - causing application compatibility issues
       # kernelModules = ["zram"];  # Disabled
     };
@@ -224,7 +315,11 @@ in {
     # Basic systemd-resolved configuration (detailed DNS config in host-specific files)
     services.resolved = {
       enable = true;
+<<<<<<< HEAD
       fallbackDns = [ "8.8.8.8" "8.8.4.4" "1.1.1.1" ];
+=======
+      fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
+>>>>>>> origin/host/server
     };
 
     # Virtualization configuration
@@ -307,7 +402,11 @@ in {
 
         # Remote Desktop & Network Tools
         remmina # Remote desktop client with VNC, RDP, SSH, SPICE support
+<<<<<<< HEAD
         freerdp # Free RDP client for RDP connections
+=======
+        freerdp # Free RDP client (latest version for better compatibility)
+>>>>>>> origin/host/server
         tigervnc # VNC client and server
         gnome-connections # GNOME's remote desktop client (alternative)
 

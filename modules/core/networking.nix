@@ -40,9 +40,15 @@ in {
           };
           connection = {
             # IPv6 privacy and stability settings
+<<<<<<< HEAD
             "ipv6.ip6-privacy" = "0";  # Disable IPv6 privacy to prevent conflicts
             "ipv6.method" = "auto";
             "ipv6.may-fail" = "false";  # Ensure IPv6 configuration completes
+=======
+            "ipv6.ip6-privacy" = "0"; # Disable IPv6 privacy to prevent conflicts
+            "ipv6.method" = "auto";
+            "ipv6.may-fail" = "false"; # Ensure IPv6 configuration completes
+>>>>>>> origin/host/server
           };
           ipv6 = {
             # Prevent IPv6 routing conflicts that cause disconnections
@@ -73,8 +79,14 @@ in {
 
         # Disable power management for specified interfaces
         ${lib.concatMapStringsSep "\n" (iface: ''
+<<<<<<< HEAD
           disable_power_mgmt "${iface}"
         '') cfg.interfaces}
+=======
+            disable_power_mgmt "${iface}"
+          '')
+          cfg.interfaces}
+>>>>>>> origin/host/server
 
         # Also check for any active network interfaces
         for iface in $(ls /sys/class/net/ 2>/dev/null | grep -E '^(en|wl|eth|wlan)'); do
@@ -220,4 +232,8 @@ in {
       curl
     ];
   };
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/host/server

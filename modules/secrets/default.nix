@@ -1,8 +1,17 @@
 # ~/NixOS/modules/secrets/default.nix
 # Secrets management with sops-nix
+<<<<<<< HEAD
 { config, lib, inputs, ... }:
 
 let
+=======
+{
+  config,
+  lib,
+  inputs,
+  ...
+}: let
+>>>>>>> origin/host/server
   cfg = config.modules.secrets;
 in {
   imports = [

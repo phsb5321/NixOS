@@ -15,6 +15,7 @@ in {
       type = types.attrsOf (types.submodule {
         options = {
           psk = mkOption {
+<<<<<<< HEAD
             type = types.nullOr types.str;
             default = null;
             description = "WiFi password/PSK (plain text, not recommended)";
@@ -23,6 +24,10 @@ in {
             type = types.nullOr types.path;
             default = null;
             description = "Path to file containing WiFi password/PSK (recommended for secrets)";
+=======
+            type = types.str;
+            description = "WiFi password/PSK";
+>>>>>>> origin/host/server
           };
           priority = mkOption {
             type = types.int;
@@ -47,6 +52,7 @@ in {
     };
   };
 
+<<<<<<< HEAD
   config = mkIf cfg.enable (mkMerge [
     {
       # Ensure NetworkManager is configured for WiFi
@@ -72,12 +78,44 @@ in {
         lib.nameValuePair
         "NetworkManager/system-connections/${name}.nmconnection"
         {
+=======
+  config = mkIf cfg.enable {
+    # Ensure NetworkManager is configured for WiFi
+    networking.networkmanager = {
+      enable = true;
+      wifi = {
+        powersave = cfg.enablePowersave;
+        scanRandMacAddress = true;
+      };
+    };
+
+    # Add wireless tools
+    environment.systemPackages = with pkgs; [
+      iw
+      wirelesstools
+      wpa_supplicant
+    ];
+
+    # Configure WiFi networks through NetworkManager
+    environment.etc =
+      lib.mapAttrs' (name: network: {
+        name = "NetworkManager/system-connections/${name}.nmconnection";
+        value = {
+>>>>>>> origin/host/server
           mode = "0600";
           text = ''
             [connection]
             id=${name}
             type=wifi
+<<<<<<< HEAD
             autoconnect=${if network.autoConnect then "true" else "false"}
+=======
+            autoconnect=${
+              if network.autoConnect
+              then "true"
+              else "false"
+            }
+>>>>>>> origin/host/server
             autoconnect-priority=${toString network.priority}
 
             [wifi]
@@ -95,6 +133,7 @@ in {
             [ipv6]
             method=auto
           '';
+<<<<<<< HEAD
         })
       (lib.filterAttrs (_: n: n.psk != null) cfg.networks);
     })
@@ -150,4 +189,10 @@ in {
       (lib.filterAttrs (_: n: n.pskFile != null) cfg.networks);
     })
   ]);
+=======
+        };
+      })
+      cfg.networks;
+  };
+>>>>>>> origin/host/server
 }

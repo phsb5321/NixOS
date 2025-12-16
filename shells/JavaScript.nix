@@ -112,7 +112,11 @@ in
       echo "🚀 ✨ JavaScript/TypeScript Development Environment ✨ 🚀"
       echo ""
       echo "📦 Node.js • pnpm • yarn • bun • 🦕 deno"
+<<<<<<< HEAD
       echo "🔧 TypeScript • ESLint • Prettier • Biome.js • Webpack • Nodemon"
+=======
+      echo "🔧 TypeScript • ESLint • Prettier • Biome.js • Nodemon"
+>>>>>>> origin/host/server
       echo "🧪 Playwright • Cypress • Testing Ready"
       echo "🗄️  Prisma • PostgreSQL • Database Tools"
       echo "🏗️  NestJS CLI • Vercel CLI • Build Tools"

@@ -28,12 +28,21 @@ in {
     # AMD GPU kernel configuration
     boot = {
       # Early KMS for faster boot and better Wayland integration
+<<<<<<< HEAD
       initrd.kernelModules = [ "amdgpu" ];
 
       # Kernel parameters optimized for AMD RX 5700 XT
       kernelParams = [
         "amdgpu.dc=1"           # Display Core (required for Wayland)
         "amdgpu.dpm=1"          # Dynamic Power Management
+=======
+      initrd.kernelModules = ["amdgpu"];
+
+      # Kernel parameters optimized for AMD RX 5700 XT
+      kernelParams = [
+        "amdgpu.dc=1" # Display Core (required for Wayland)
+        "amdgpu.dpm=1" # Dynamic Power Management
+>>>>>>> origin/host/server
         "amdgpu.gpu_recovery=1" # GPU hang recovery
       ];
     };
@@ -49,6 +58,10 @@ in {
         vulkan-tools
         vulkan-validation-layers
         mesa
+<<<<<<< HEAD
+=======
+        rocmPackages.clr.icd # Better OpenCL support
+>>>>>>> origin/host/server
       ];
 
       # 32-bit support
@@ -60,7 +73,11 @@ in {
     # Services configuration
     services = {
       # AMD GPU driver
+<<<<<<< HEAD
       xserver.videoDrivers = [ "amdgpu" ];
+=======
+      xserver.videoDrivers = ["amdgpu"];
+>>>>>>> origin/host/server
 
       # Udev rules for GPU access
       udev.extraRules = ''
@@ -79,13 +96,26 @@ in {
 
         # Vulkan driver
         "AMD_VULKAN_ICD" = lib.mkDefault "RADV";
+<<<<<<< HEAD
+=======
+
+        # RADV performance optimizations
+        "RADV_PERFTEST" = lib.mkDefault "gpl,nggc"; # Graphics pipeline library + NGG culling
+        "RADV_DEBUG" = lib.mkDefault "zerovram"; # Reduce VRAM usage
+>>>>>>> origin/host/server
       };
 
       # Useful AMD GPU tools
       systemPackages = with pkgs; [
+<<<<<<< HEAD
         radeontop     # GPU monitoring
         vulkan-tools  # Vulkan utilities
         mesa-demos    # OpenGL testing
+=======
+        radeontop # GPU monitoring
+        vulkan-tools # Vulkan utilities
+        mesa-demos # OpenGL testing
+>>>>>>> origin/host/server
       ];
     };
 
@@ -96,7 +126,14 @@ in {
     };
 
     users.users.notroot = {
+<<<<<<< HEAD
       extraGroups = [ "video" "render" ];
     };
   };
 }
+=======
+      extraGroups = ["video" "render"];
+    };
+  };
+}
+>>>>>>> origin/host/server

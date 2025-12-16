@@ -1,5 +1,6 @@
 # modules/hardware/forticlient.nix
 # FortiClient VPN configuration for laptop
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -8,6 +9,17 @@ let
   cfg = config.modules.hardware.forticlient;
 in
 {
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
+  cfg = config.modules.hardware.forticlient;
+in {
+>>>>>>> origin/host/server
   options.modules.hardware.forticlient = {
     enable = mkEnableOption "FortiClient VPN support";
 
@@ -39,7 +51,11 @@ in
     # Install openfortivpn and GUI tools
     environment.systemPackages = with pkgs; [
       openfortivpn
+<<<<<<< HEAD
       openfortivpn-webview  # For SAML authentication if needed
+=======
+      openfortivpn-webview # For SAML authentication if needed
+>>>>>>> origin/host/server
 
       # Additional networking tools
       networkmanager-fortisslvpn
@@ -75,9 +91,15 @@ in
     # Create systemd service for openfortivpn
     systemd.services.openfortivpn = mkIf cfg.autoStart {
       description = "OpenFortiVPN Client";
+<<<<<<< HEAD
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
       wantedBy = mkIf cfg.autoStart [ "multi-user.target" ];
+=======
+      after = ["network-online.target"];
+      wants = ["network-online.target"];
+      wantedBy = mkIf cfg.autoStart ["multi-user.target"];
+>>>>>>> origin/host/server
 
       serviceConfig = {
         Type = "simple";
@@ -89,16 +111,28 @@ in
     };
 
     # Add user to networkmanager group for VPN management
+<<<<<<< HEAD
     users.groups.networkmanager.members = [ "notroot" ];
 
     # Enable required kernel modules
     boot.kernelModules = [ "ppp_async" "ppp_deflate" "ppp_mppe" ];
+=======
+    users.groups.networkmanager.members = ["notroot"];
+
+    # Enable required kernel modules
+    boot.kernelModules = ["ppp_async" "ppp_deflate" "ppp_mppe"];
+>>>>>>> origin/host/server
 
     # Firewall rules for VPN
     networking.firewall = {
       # Allow VPN traffic
+<<<<<<< HEAD
       allowedTCPPorts = mkIf (cfg.serverConfig ? port) [ cfg.serverConfig.port ];
       allowedUDPPorts = mkIf (cfg.serverConfig ? port) [ cfg.serverConfig.port ];
+=======
+      allowedTCPPorts = mkIf (cfg.serverConfig ? port) [cfg.serverConfig.port];
+      allowedUDPPorts = mkIf (cfg.serverConfig ? port) [cfg.serverConfig.port];
+>>>>>>> origin/host/server
 
       # Enable NAT traversal
       extraCommands = ''
@@ -107,4 +141,8 @@ in
       '';
     };
   };
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/host/server

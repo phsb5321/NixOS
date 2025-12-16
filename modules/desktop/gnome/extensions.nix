@@ -1,8 +1,17 @@
 # ~/NixOS/modules/desktop/gnome/extensions.nix
 # GNOME Shell extensions and dconf settings
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 let
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+>>>>>>> origin/host/server
   cfg = config.modules.desktop.gnome;
 in {
   options.modules.desktop.gnome.extensions = {
@@ -72,6 +81,7 @@ in {
       description = "Enable Sound Output Device Chooser extension";
     };
 
+<<<<<<< HEAD
     # Additional popular extensions
     blurMyShell = lib.mkOption {
       type = lib.types.bool;
@@ -145,6 +155,8 @@ in {
       description = "Enable TopHat (Top Indicators) extension";
     };
 
+=======
+>>>>>>> origin/host/server
     productivity = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -193,6 +205,7 @@ in {
   config = lib.mkIf (cfg.enable && cfg.extensions.enable) {
     # Extension packages
     environment.systemPackages = with pkgs;
+<<<<<<< HEAD
       # Core extensions
       (lib.optionals cfg.extensions.appIndicator [ gnomeExtensions.appindicator ])
       ++ (lib.optionals cfg.extensions.dashToDock [ gnomeExtensions.dash-to-dock ])
@@ -218,6 +231,18 @@ in {
       ++ (lib.optionals cfg.extensions.netspeedSimplified [ gnomeExtensions.net-speed-simplified ])
       ++ (lib.optionals cfg.extensions.windowTitles [ gnomeExtensions.window-list ])  # Window list shows titles
       ++ (lib.optionals cfg.extensions.topIndicators [ gnomeExtensions.tophat ]);
+=======
+      (lib.optionals cfg.extensions.appIndicator [gnomeExtensions.appindicator])
+      ++ (lib.optionals cfg.extensions.dashToDock [gnomeExtensions.dash-to-dock])
+      ++ (lib.optionals cfg.extensions.userThemes [gnomeExtensions.user-themes])
+      ++ (lib.optionals cfg.extensions.justPerfection [gnomeExtensions.just-perfection])
+      ++ (lib.optionals (cfg.extensions.vitals || cfg.extensions.productivity) [gnomeExtensions.vitals])
+      ++ (lib.optionals (cfg.extensions.caffeine || cfg.extensions.productivity) [gnomeExtensions.caffeine])
+      ++ (lib.optionals (cfg.extensions.clipboard || cfg.extensions.productivity) [gnomeExtensions.clipboard-indicator])
+      ++ (lib.optionals cfg.extensions.gsconnect [gnomeExtensions.gsconnect])
+      ++ (lib.optionals cfg.extensions.workspaceIndicator [gnomeExtensions.workspace-indicator])
+      ++ (lib.optionals cfg.extensions.soundOutputChooser [gnomeExtensions.sound-output-device-chooser]);
+>>>>>>> origin/host/server
 
     # Note: dconf settings are intentionally minimal at system level
     # Users should configure GNOME settings through the GUI or home-manager

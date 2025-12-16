@@ -105,7 +105,7 @@
       chrome = true;
       brave = true;
       librewolf = true;
-      zen = true; # Enable Zen browser
+      zen = true; # Enable Zen browser - user wants desktop similarity
       firefoxNightly = true; # Enable Firefox Nightly
     };
 
@@ -131,7 +131,7 @@
       vlc = true;
       spotify = true;
       discord = true;
-      streaming = true; # Enable streaming like desktop
+      streaming = true; # Enable streaming like desktop - user wants desktop similarity
       imageEditing = true;
     };
 
@@ -184,6 +184,13 @@
     # AI Development
     claude-code
 
+    # Development tools
+    insomnia
+    mongodb-compass
+
+    # Fun extension
+    gnomeExtensions.runcat # Running cat shows CPU usage
+
     # Communication
     telegram-desktop
     slack
@@ -201,9 +208,7 @@
     kdePackages.kdenlive
     inkscape
 
-    # Development tools
-    insomnia
-    mongodb-compass
+    # Additional development tools
     git-crypt
     gnupg
 
@@ -234,6 +239,8 @@
 
     # Fun extension
     gnomeExtensions.runcat # Running cat shows CPU usage
+    # AI Development
+    claude-code
 
     # NVIDIA tools (for when discrete GPU is used manually)
     nvidia-system-monitor-qt
@@ -362,14 +369,18 @@
       latex = {
         enable = true;
         minimal = false;
+<<<<<<< HEAD
         extraPackages = with pkgs; [
           biber
           texlive.combined.scheme-context
         ];
+=======
+>>>>>>> origin/host/server
       };
       markdown = {
         enable = true;
         lsp = true;
+<<<<<<< HEAD
         linting = {
           enable = true;
           markdownlint = true;
@@ -405,6 +416,16 @@
   };
 
 
+=======
+        linting.enable = true;
+        formatting.enable = true;
+        preview.enable = true;
+        utilities.enable = true;
+      };
+    };
+  };
+
+>>>>>>> origin/host/server
   # ===== DOTFILES =====
   modules.dotfiles = {
     enable = true;
@@ -432,6 +453,7 @@
       nvidiaBusId = "PCI:1:0:0";
     };
 
+<<<<<<< HEAD
     # Touchpad configuration - always enabled
     touchpad = {
       enable = true;
@@ -440,6 +462,8 @@
       disableWhileTyping = true;
     };
 
+=======
+>>>>>>> origin/host/server
     batteryManagement.chargeThreshold = 85;
 
     powerManagement = {
@@ -459,6 +483,7 @@
       timeout = 3;
     };
 
+<<<<<<< HEAD
     kernelParams = lib.mkMerge [
       [
         "quiet"
@@ -502,23 +527,44 @@
 
     # Plymouth disabled - incompatible with systemd initrd
     plymouth.enable = false;
+=======
+    kernelParams = [
+      "quiet"
+      "splash"
+      "i915.enable_fbc=1" # Frame buffer compression
+      "i915.enable_psr=2" # Panel self refresh
+      "nvme.noacpi=1" # Better NVMe power management
+    ];
+
+    plymouth = {
+      enable = true;
+      theme = "breeze";
+    };
+>>>>>>> origin/host/server
 
     initrd.systemd.enable = true;
   };
 
   # ===== USER CONFIGURATION =====
+<<<<<<< HEAD
   users.groups.plugdev = {};
   
   users.users.notroot = {
     isNormalUser = true;
     description = "Not Root";
     shell = pkgs.zsh; # Set ZSH as default shell
+=======
+  users.users.notroot = {
+    isNormalUser = true;
+    description = "Not Root";
+>>>>>>> origin/host/server
     extraGroups = [
       "networkmanager"
       "wheel"
       "video" # Brightness control
       "input" # Touchpad gestures
       "power" # Power management
+<<<<<<< HEAD
       "dialout" # Like desktop
       "libvirtd" # Like desktop
       "plugdev" # Like desktop
@@ -603,4 +649,29 @@
 
   # ===== SYSTEM STATE VERSION =====
   # system.stateVersion is managed by modules.core
+=======
+    ];
+  };
+
+  # ===== ENVIRONMENT VARIABLES =====
+  environment.sessionVariables = {
+    # Touchpad gestures in Firefox
+    MOZ_USE_XINPUT2 = "1";
+
+    # Electron apps scaling
+    ELECTRON_FORCE_IS_PACKAGED = "true";
+    ELECTRON_TRASH = "gio";
+
+    # Steam optimizations
+    STEAM_RUNTIME = "1";
+    STEAM_RUNTIME_HEAVY = "1";
+
+    # DXVK optimizations
+    DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
+    DXVK_LOG_LEVEL = "warn";
+  };
+
+  # ===== SYSTEM STATE VERSION =====
+  system.stateVersion = systemVersion;
+>>>>>>> origin/host/server
 }

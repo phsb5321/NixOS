@@ -91,7 +91,10 @@
         };
       };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       monitoring = {
         enable = mkOption {
           type = types.bool;
@@ -147,7 +150,10 @@
         '';
       };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # ———————————————————————————————————————
       # Network monitoring and reliability
       # ———————————————————————————————————————

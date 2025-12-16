@@ -1,8 +1,17 @@
 # ~/NixOS/modules/gpu/nvidia.nix
 # NVIDIA GPU module
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 let
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+>>>>>>> origin/host/server
   cfg = config.modules.gpu.nvidia;
 in {
   options.modules.gpu.nvidia = {
@@ -35,7 +44,11 @@ in {
 
   config = lib.mkIf cfg.enable {
     # NVIDIA driver configuration
+<<<<<<< HEAD
     services.xserver.videoDrivers = [ "nvidia" ];
+=======
+    services.xserver.videoDrivers = ["nvidia"];
+>>>>>>> origin/host/server
 
     hardware.nvidia = {
       # Modesetting for Wayland support
@@ -44,7 +57,11 @@ in {
       # Power management
       powerManagement = {
         enable = cfg.powerManagement;
+<<<<<<< HEAD
         finegrained = false;  # Only enable if using hybrid graphics
+=======
+        finegrained = false; # Only enable if using hybrid graphics
+>>>>>>> origin/host/server
       };
 
       # Driver package selection
@@ -80,7 +97,11 @@ in {
 
     # GPU tools
     environment.systemPackages = with pkgs; [
+<<<<<<< HEAD
       nvtopPackages.nvidia  # NVIDIA GPU monitoring
+=======
+      nvtopPackages.nvidia # NVIDIA GPU monitoring
+>>>>>>> origin/host/server
       vulkan-tools
       mesa-demos
     ];

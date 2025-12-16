@@ -1,8 +1,17 @@
 # ~/NixOS/modules/roles/desktop.nix
 # Desktop role - full features, gaming, development
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 {
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: {
+>>>>>>> origin/host/server
   options.modules.roles.desktop = {
     enable = lib.mkEnableOption "desktop workstation role";
   };
@@ -33,9 +42,23 @@
       isNormalUser = true;
       description = "Pedro Balbino";
       extraGroups = [
+<<<<<<< HEAD
         "networkmanager" "wheel" "audio" "video"
         "disk" "input" "bluetooth" "docker"
         "render" "kvm" "pipewire"
+=======
+        "networkmanager"
+        "wheel"
+        "audio"
+        "video"
+        "disk"
+        "input"
+        "bluetooth"
+        "docker"
+        "render"
+        "kvm"
+        "pipewire"
+>>>>>>> origin/host/server
       ];
     };
 

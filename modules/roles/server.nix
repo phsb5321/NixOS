@@ -1,8 +1,16 @@
 # ~/NixOS/modules/roles/server.nix
 # Server role - headless, services-focused
+<<<<<<< HEAD
 { config, lib, ... }:
 
 {
+=======
+{
+  config,
+  lib,
+  ...
+}: {
+>>>>>>> origin/host/server
   options.modules.roles.server = {
     enable = lib.mkEnableOption "server role";
   };
@@ -16,8 +24,13 @@
     # Hardware - minimal
     hardware = {
       enableRedistributableFirmware = true;
+<<<<<<< HEAD
       bluetooth.enable = false;  # Not needed on server
       graphics.enable = false;   # Headless
+=======
+      bluetooth.enable = false; # Not needed on server
+      graphics.enable = false; # Headless
+>>>>>>> origin/host/server
     };
 
     # User configuration
@@ -25,7 +38,12 @@
       isNormalUser = true;
       description = "Pedro Balbino";
       extraGroups = [
+<<<<<<< HEAD
         "networkmanager" "wheel"
+=======
+        "networkmanager"
+        "wheel"
+>>>>>>> origin/host/server
       ];
     };
 

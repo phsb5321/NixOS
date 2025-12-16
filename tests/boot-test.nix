@@ -1,8 +1,17 @@
 # ~/NixOS/tests/boot-test.nix
 # Boot and system tests
+<<<<<<< HEAD
 { pkgs, lib, nixpkgs, ... }:
 
 {
+=======
+{
+  pkgs,
+  lib,
+  nixpkgs,
+  ...
+}: {
+>>>>>>> origin/host/server
   # Boot test for default host
   boot-test-default = pkgs.writeShellScriptBin "boot-test-default" ''
     set -euo pipefail

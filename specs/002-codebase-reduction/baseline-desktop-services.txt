@@ -1,0 +1,167 @@
+  UNIT                                                                                                    LOAD   ACTIVE SUB       DESCRIPTION
+  sys-devices-pci0000:00-0000:00:01.1-0000:02:00.0-nvme-nvme0-nvme0n1-nvme0n1p1.device                    loaded active plugged   SSD 1TB 1
+  sys-devices-pci0000:00-0000:00:01.1-0000:02:00.0-nvme-nvme0-nvme0n1.device                              loaded active plugged   SSD 1TB
+  sys-devices-pci0000:00-0000:00:02.0-0000:03:00.0-0000:04:00.0-0000:05:00.1-sound-card1-controlC1.device loaded active plugged   /sys/devices/pci0000:00/0000:00:02.0/0000:03:00.0/0000:04:00.0/0000:05:00.1/sound/card1/controlC1
+  sys-devices-pci0000:00-0000:00:14.0-usb3-3\x2d1-3\x2d1:1.2-sound-card2-controlC2.device                 loaded active plugged   Anker_PowerConf_C200
+  sys-devices-pci0000:00-0000:00:14.0-usb3-3\x2d4-3\x2d4:1.0-ttyUSB0-tty-ttyUSB0.device                   loaded active plugged   CH340 serial converter
+  sys-devices-pci0000:00-0000:00:14.0-usb3-3\x2d5-3\x2d5:1.0-bluetooth-hci0.device                        loaded active plugged   /sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/bluetooth/hci0
+  sys-devices-pci0000:00-0000:00:1b.0-sound-card0-controlC0.device                                        loaded active plugged   /sys/devices/pci0000:00/0000:00:1b.0/sound/card0/controlC0
+  sys-devices-pci0000:00-0000:00:1c.3-0000:08:00.0-net-enp8s0.device                                      loaded active plugged   RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller
+  sys-devices-pci0000:00-0000:00:1c.5-0000:09:00.0-net-wlp9s0.device                                      loaded active plugged   Wireless 7260 (Dual Band Wireless-AC 7260 [Wilkins Peak 2])
+  sys-devices-pci0000:00-0000:00:1f.0-intel\x2dspi-spi_master-spi0-spi0.0-mtd-mtd0.device                 loaded active plugged   /sys/devices/pci0000:00/0000:00:1f.0/intel-spi/spi_master/spi0/spi0.0/mtd/mtd0
+  sys-devices-pci0000:00-0000:00:1f.0-intel\x2dspi-spi_master-spi0-spi0.0-mtd-mtd0ro.device               loaded active plugged   /sys/devices/pci0000:00/0000:00:1f.0/intel-spi/spi_master/spi0/spi0.0/mtd/mtd0ro
+  sys-devices-platform-serial8250-tty-ttyS1.device                                                        loaded active plugged   /sys/devices/platform/serial8250/tty/ttyS1
+  sys-devices-platform-serial8250-tty-ttyS2.device                                                        loaded active plugged   /sys/devices/platform/serial8250/tty/ttyS2
+  sys-devices-platform-serial8250-tty-ttyS3.device                                                        loaded active plugged   /sys/devices/platform/serial8250/tty/ttyS3
+  sys-devices-pnp0-00:05-tty-ttyS0.device                                                                 loaded active plugged   /sys/devices/pnp0/00:05/tty/ttyS0
+  sys-devices-virtual-input-mice.device                                                                   loaded active plugged   /sys/devices/virtual/input/mice
+  sys-devices-virtual-misc-rfkill.device                                                                  loaded active plugged   /sys/devices/virtual/misc/rfkill
+  sys-devices-virtual-misc-tun.device                                                                     loaded active plugged   /sys/devices/virtual/misc/tun
+  sys-devices-virtual-net-br\x2d2e1d05a894c7.device                                                       loaded active plugged   /sys/devices/virtual/net/br-2e1d05a894c7
+  sys-devices-virtual-net-br\x2d4bbe77b4d1eb.device                                                       loaded active plugged   /sys/devices/virtual/net/br-4bbe77b4d1eb
+  sys-devices-virtual-net-delicasa0.device                                                                loaded active plugged   /sys/devices/virtual/net/delicasa0
+  sys-devices-virtual-net-docker0.device                                                                  loaded active plugged   /sys/devices/virtual/net/docker0
+  sys-devices-virtual-net-tailscale0.device                                                               loaded active plugged   /sys/devices/virtual/net/tailscale0
+  sys-module-configfs.device                                                                              loaded active plugged   /sys/module/configfs
+  sys-module-fuse.device                                                                                  loaded active plugged   /sys/module/fuse
+  sys-module-tun.device                                                                                   loaded active plugged   /sys/module/tun
+  sys-subsystem-bluetooth-devices-hci0.device                                                             loaded active plugged   /sys/subsystem/bluetooth/devices/hci0
+  sys-subsystem-net-devices-br\x2d2e1d05a894c7.device                                                     loaded active plugged   /sys/subsystem/net/devices/br-2e1d05a894c7
+  sys-subsystem-net-devices-br\x2d4bbe77b4d1eb.device                                                     loaded active plugged   /sys/subsystem/net/devices/br-4bbe77b4d1eb
+  sys-subsystem-net-devices-delicasa0.device                                                              loaded active plugged   /sys/subsystem/net/devices/delicasa0
+  sys-subsystem-net-devices-docker0.device                                                                loaded active plugged   /sys/subsystem/net/devices/docker0
+  sys-subsystem-net-devices-enp8s0.device                                                                 loaded active plugged   RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller
+  sys-subsystem-net-devices-tailscale0.device                                                             loaded active plugged   /sys/subsystem/net/devices/tailscale0
+  sys-subsystem-net-devices-wlp9s0.device                                                                 loaded active plugged   Wireless 7260 (Dual Band Wireless-AC 7260 [Wilkins Peak 2])
+  -.mount                                                                                                 loaded active mounted   Root Mount
+  dev-hugepages.mount                                                                                     loaded active mounted   Huge Pages File System
+  dev-mqueue.mount                                                                                        loaded active mounted   POSIX Message Queue File System
+  nix-store.mount                                                                                         loaded active mounted   /nix/store
+  run-keys.mount                                                                                          loaded active mounted   /run/keys
+  run-user-1000-doc.mount                                                                                 loaded active mounted   /run/user/1000/doc
+  run-user-1000-gvfs.mount                                                                                loaded active mounted   /run/user/1000/gvfs
+  run-user-1000.mount                                                                                     loaded active mounted   /run/user/1000
+  run-wrappers.mount                                                                                      loaded active mounted   /run/wrappers
+  sys-fs-fuse-connections.mount                                                                           loaded active mounted   FUSE Control File System
+  sys-kernel-config.mount                                                                                 loaded active mounted   Kernel Configuration File System
+  sys-kernel-debug.mount                                                                                  loaded active mounted   Kernel Debug File System
+  sys-kernel-tracing.mount                                                                                loaded active mounted   Kernel Trace File System
+  tmp.mount                                                                                               loaded active mounted   /tmp
+  systemd-ask-password-console.path                                                                       loaded active waiting   Dispatch Password Requests to Console Directory Watch
+  systemd-ask-password-wall.path                                                                          loaded active waiting   Forward Password Requests to Wall Directory Watch
+  init.scope                                                                                              loaded active running   System and Service Manager
+  session-2.scope                                                                                         loaded active running   Session 2 of User notroot
+  accounts-daemon.service                                                                                 loaded active running   Accounts Service
+  amd-gpu-optimization.service                                                                            loaded active exited    AMD GPU Performance Optimization
+  apparmor.service                                                                                        loaded active exited    Load AppArmor policies
+  audit-rules-nixos.service                                                                               loaded active exited    Load Audit Rules
+  auditd.service                                                                                          loaded active running   Security Audit Logging Service
+  avahi-daemon.service                                                                                    loaded active running   Avahi mDNS/DNS-SD Stack
+  bluetooth.service                                                                                       loaded active running   Bluetooth service
+  colord.service                                                                                          loaded active running   Manage, Install and Generate Color Profiles
+  cpufreq.service                                                                                         loaded active exited    CPU Frequency Setup
+  cups-browsed.service                                                                                    loaded active running   CUPS Remote Printer Discovery
+  cups.service                                                                                            loaded active running   CUPS Scheduler
+  dbus.service                                                                                            loaded active running   D-Bus System Message Bus
+  display-manager.service                                                                                 loaded active running   Display Manager
+  docker.service                                                                                          loaded active running   Docker Application Container Engine
+  kmod-static-nodes.service                                                                               loaded active exited    Create List of Static Device Nodes
+  logrotate-checkconf.service                                                                             loaded active exited    Logrotate configuration check
+  ModemManager.service                                                                                    loaded active running   Modem Manager
+  NetworkManager-wait-online.service                                                                      loaded active exited    Network Manager Wait Online
+  NetworkManager.service                                                                                  loaded active running   Network Manager
+  nftables.service                                                                                        loaded active exited    nftables firewall
+  nix-daemon.service                                                                                      loaded active running   Nix Daemon
+  nscd.service                                                                                            loaded active running   Name Service Cache Daemon (nsncd)
+  polkit.service                                                                                          loaded active running   Authorization Manager
+  power-profiles-daemon.service                                                                           loaded active running   Power Profiles daemon
+  reload-systemd-vconsole-setup.service                                                                   loaded active exited    Reset console on configuration changes
+  rtkit-daemon.service                                                                                    loaded active running   RealtimeKit Scheduling Policy Service
+  sshd.service                                                                                            loaded active running   SSH Daemon
+  syncthing.service                                                                                       loaded active running   Syncthing service
+  systemd-journal-flush.service                                                                           loaded active exited    Flush Journal to Persistent Storage
+  systemd-journald.service                                                                                loaded active running   Journal Service
+  systemd-logind.service                                                                                  loaded active running   User Login Management
+  systemd-machined.service                                                                                loaded active running   Virtual Machine and Container Registration Service
+  systemd-modules-load.service                                                                            loaded active exited    Load Kernel Modules
+  systemd-oomd.service                                                                                    loaded active running   Userspace Out-Of-Memory (OOM) Killer
+  systemd-random-seed.service                                                                             loaded active exited    Load/Save OS Random Seed
+  systemd-remount-fs.service                                                                              loaded active exited    Remount Root and Kernel File Systems
+  systemd-resolved.service                                                                                loaded active running   Network Name Resolution
+  systemd-sysctl.service                                                                                  loaded active exited    Apply Kernel Variables
+  systemd-timesyncd.service                                                                               loaded active running   Network Time Synchronization
+  systemd-tmpfiles-resetup.service                                                                        loaded active exited    Re-setup tmpfiles on a system that is already running.
+  systemd-tmpfiles-setup-dev-early.service                                                                loaded active exited    Create Static Device Nodes in /dev gracefully
+  systemd-tmpfiles-setup-dev.service                                                                      loaded active exited    Create Static Device Nodes in /dev
+  systemd-tmpfiles-setup.service                                                                          loaded active exited    Create System Files and Directories
+  systemd-udev-trigger.service                                                                            loaded active exited    Coldplug All udev Devices
+  systemd-udevd.service                                                                                   loaded active running   Rule-based Manager for Device Events and Files
+  systemd-update-utmp.service                                                                             loaded active exited    Record System Boot/Shutdown in UTMP
+  systemd-user-sessions.service                                                                           loaded active exited    Permit User Sessions
+  systemd-vconsole-setup.service                                                                          loaded active exited    Virtual Console Setup
+  tailscaled.service                                                                                      loaded active running   Tailscale node agent
+  udisks2.service                                                                                         loaded active running   Disk Manager
+  upower.service                                                                                          loaded active running   Daemon for power management
+  user-runtime-dir@1000.service                                                                           loaded active exited    User Runtime Directory /run/user/1000
+  user@1000.service                                                                                       loaded active running   User Manager for UID 1000
+  wpa_supplicant.service                                                                                  loaded active running   WPA supplicant
+  -.slice                                                                                                 loaded active active    Root Slice
+  machine.slice                                                                                           loaded active active    Virtual Machine and Container Slice
+  system-cups.slice                                                                                       loaded active active    CUPS Slice
+  system-modprobe.slice                                                                                   loaded active active    Slice /system/modprobe
+  system.slice                                                                                            loaded active active    System Slice
+  user-1000.slice                                                                                         loaded active active    Slice /user/1000
+  user-132.slice                                                                                          loaded active active    Slice /user/132
+  user.slice                                                                                              loaded active active    User and Session Slice
+  avahi-daemon.socket                                                                                     loaded active running   Avahi mDNS/DNS-SD Stack Activation Socket
+  cups.socket                                                                                             loaded active running   CUPS Scheduler
+  dbus.socket                                                                                             loaded active running   D-Bus System Message Bus Socket
+  docker.socket                                                                                           loaded active running   Docker Socket for the API
+  nix-daemon.socket                                                                                       loaded active running   Nix Daemon Socket
+  podman.socket                                                                                           loaded active listening Podman API Socket
+  sshd-unix-local.socket                                                                                  loaded active listening OpenSSH Server Socket (systemd-ssh-generator, AF_UNIX Local)
+  systemd-bootctl.socket                                                                                  loaded active listening Boot Entries Service Socket
+  systemd-coredump.socket                                                                                 loaded active listening Process Core Dump Socket
+  systemd-creds.socket                                                                                    loaded active listening Credential Encryption/Decryption
+  systemd-hostnamed.socket                                                                                loaded active listening Hostname Service Socket
+  systemd-journald-audit.socket                                                                           loaded active running   Journal Audit Socket
+  systemd-journald-dev-log.socket                                                                         loaded active running   Journal Socket (/dev/log)
+  systemd-journald.socket                                                                                 loaded active running   Journal Sockets
+  systemd-oomd.socket                                                                                     loaded active running   Userspace Out-Of-Memory (OOM) Killer Socket
+  systemd-rfkill.socket                                                                                   loaded active listening Load/Save RF Kill Switch Status /dev/rfkill Watch
+  systemd-udevd-control.socket                                                                            loaded active running   udev Control Socket
+  systemd-udevd-kernel.socket                                                                             loaded active running   udev Kernel Socket
+  basic.target                                                                                            loaded active active    Basic System
+  bluetooth.target                                                                                        loaded active active    Bluetooth Support
+  cryptsetup.target                                                                                       loaded active active    Local Encrypted Volumes
+  getty.target                                                                                            loaded active active    Login Prompts
+  graphical.target                                                                                        loaded active active    Graphical Interface
+  local-fs-pre.target                                                                                     loaded active active    Preparation for Local File Systems
+  local-fs.target                                                                                         loaded active active    Local File Systems
+  machines.target                                                                                         loaded active active    Virtual Machines and Containers
+  multi-user.target                                                                                       loaded active active    Multi-User System
+  network-online.target                                                                                   loaded active active    Network is Online
+  network-pre.target                                                                                      loaded active active    Preparation for Network
+  network.target                                                                                          loaded active active    Network
+  nss-lookup.target                                                                                       loaded active active    Host and Network Name Lookups
+  nss-user-lookup.target                                                                                  loaded active active    User and Group Name Lookups
+  paths.target                                                                                            loaded active active    Path Units
+  remote-fs.target                                                                                        loaded active active    Remote File Systems
+  slices.target                                                                                           loaded active active    Slice Units
+  sockets.target                                                                                          loaded active active    Socket Units
+  sound.target                                                                                            loaded active active    Sound Card
+  swap.target                                                                                             loaded active active    Swaps
+  sysinit-reactivation.target                                                                             loaded active active    Reactivate sysinit units
+  sysinit.target                                                                                          loaded active active    System Initialization
+  timers.target                                                                                           loaded active active    Timer Units
+  dns-health-check.timer                                                                                  loaded active waiting   dns-health-check.timer
+  fstrim.timer                                                                                            loaded active waiting   Discard unused filesystem blocks once a week
+  logrotate.timer                                                                                         loaded active waiting   logrotate.timer
+  nix-gc.timer                                                                                            loaded active waiting   nix-gc.timer
+  systemd-tmpfiles-clean.timer                                                                            loaded active waiting   Daily Cleanup of Temporary Directories
+
+Legend: LOAD   → Reflects whether the unit definition was properly loaded.
+        ACTIVE → The high-level unit activation state, i.e. generalization of SUB.
+        SUB    → The low-level unit activation state, values depend on unit type.
+
+160 loaded units listed.

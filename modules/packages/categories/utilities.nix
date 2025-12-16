@@ -1,8 +1,17 @@
 # ~/NixOS/modules/packages/categories/utilities.nix
 # System utilities and tools
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 let
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+>>>>>>> origin/host/server
   cfg = config.modules.packages.utilities;
 in {
   options.modules.packages.utilities = {
@@ -59,40 +68,62 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
+<<<<<<< HEAD
       # Disk management
+=======
+    # Disk management
+>>>>>>> origin/host/server
       (lib.optionals cfg.diskManagement [
         gparted
         baobab
         lsof
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # File sync
       ++ (lib.optionals cfg.fileSync [
         syncthing
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # Compression
       ++ (lib.optionals cfg.compression [
         pigz
         unzip
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # Security
       ++ (lib.optionals cfg.security [
         seahorse
         bleachbit
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # PDF viewer
       ++ (lib.optionals cfg.pdfViewer [
         kdePackages.okular
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # Messaging
       ++ (lib.optionals cfg.messaging [
         ferdium
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # Fonts
       ++ (lib.optionals cfg.fonts [
         cantarell-fonts
@@ -101,7 +132,10 @@ in {
         noto-fonts-cjk-sans
         noto-fonts-color-emoji
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # Extra packages
       ++ cfg.extraPackages;
   };

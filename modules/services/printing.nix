@@ -1,5 +1,6 @@
 # ~/NixOS/modules/services/printing.nix
 # Printing service (CUPS) configuration
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -8,6 +9,17 @@ let
   cfg = config.modules.services.printing;
 in
 {
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
+  cfg = config.modules.services.printing;
+in {
+>>>>>>> origin/host/server
   options.modules.services.printing = {
     enable = mkEnableOption "printing service (CUPS)";
 

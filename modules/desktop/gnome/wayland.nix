@@ -1,8 +1,17 @@
 # ~/NixOS/modules/desktop/gnome/wayland.nix
 # GNOME Wayland and X11 configuration
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 let
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+>>>>>>> origin/host/server
   cfg = config.modules.desktop.gnome;
 in {
   options.modules.desktop.gnome.wayland = {
@@ -67,6 +76,13 @@ in {
         GTK_CSD = "1";
         CLUTTER_BACKEND = "wayland";
         WLR_DRM_NO_ATOMIC = "1";
+<<<<<<< HEAD
+=======
+
+        # Performance optimizations
+        MUTTER_DEBUG_FORCE_KMS_MODE = "simple"; # Better GPU compatibility
+        CLUTTER_PAINT = "disable-clipped-redraws:disable-culling"; # Reduce redraws
+>>>>>>> origin/host/server
       })
 
       # Electron Wayland support

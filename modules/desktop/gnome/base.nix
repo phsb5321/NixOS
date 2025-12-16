@@ -1,8 +1,17 @@
 # ~/NixOS/modules/desktop/gnome/base.nix
 # Base GNOME desktop environment configuration
+<<<<<<< HEAD
 { config, lib, pkgs, ... }:
 
 let
+=======
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+>>>>>>> origin/host/server
   cfg = config.modules.desktop.gnome;
 in {
   options.modules.desktop.gnome = {
@@ -102,12 +111,60 @@ in {
       glib-networking.enable = true;
       sushi.enable = true;
       tinysparql.enable = true;
+<<<<<<< HEAD
+=======
+
+      # Disable bloat
+      core-apps.enable = false;
+      games.enable = false;
+      core-developer-tools.enable = false;
+>>>>>>> origin/host/server
     };
 
     # Additional services
     services.geoclue2.enable = lib.mkIf cfg.coreServices true;
     services.upower.enable = lib.mkIf cfg.coreServices true;
 
+<<<<<<< HEAD
+=======
+    # Exclude unwanted GNOME packages
+    environment.gnome.excludePackages = with pkgs; [
+      # Apps
+      gnome-photos
+      gnome-tour
+      cheese # Webcam app
+      gnome-music
+      gedit
+      epiphany # GNOME Web browser
+      geary # Email client
+      gnome-characters
+      totem # Video player
+      gnome-calendar
+      gnome-contacts
+      gnome-maps
+
+      # Games
+      tali # Poker game
+      iagno # Go game
+      hitori # Sudoku game
+      atomix # Puzzle game
+      gnome-chess
+      gnome-mahjongg
+      gnome-mines
+      gnome-sudoku
+      gnome-tetravex
+      quadrapassel # Tetris
+      five-or-more
+      four-in-a-row
+      gnome-taquin
+      gnome-klotski
+      gnome-nibbles
+      gnome-robots
+      lightsoff
+      swell-foop
+    ];
+
+>>>>>>> origin/host/server
     # dconf support
     programs.dconf.enable = true;
 
@@ -156,7 +213,11 @@ in {
 
     # Core GNOME packages
     environment.systemPackages = with pkgs;
+<<<<<<< HEAD
       # Essential packages
+=======
+    # Essential packages
+>>>>>>> origin/host/server
       (lib.optionals cfg.coreApplications [
         gnome-session
         gnome-settings-daemon
@@ -167,7 +228,10 @@ in {
         gnome-text-editor
         nautilus
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # Portal packages
       ++ (lib.optionals cfg.portal [
         xdg-desktop-portal
@@ -175,7 +239,10 @@ in {
         xdg-desktop-portal-gtk
         gnome-remote-desktop
       ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/host/server
       # Theme packages
       ++ (lib.optionals cfg.themes [
         arc-theme
@@ -184,6 +251,10 @@ in {
         adwaita-icon-theme
         gnome-themes-extra
         gtk-engine-murrine
+<<<<<<< HEAD
+=======
+        adw-gtk3 # Adwaita-like theme for GTK3
+>>>>>>> origin/host/server
       ]);
   };
 }
