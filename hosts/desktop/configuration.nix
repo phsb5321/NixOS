@@ -26,39 +26,17 @@
   };
 
   # ===== GAMING CONFIGURATION =====
-  # Steam with Proton and runtime library support
-  modules.gaming.steam = {
+  # Enable gaming module with Steam and related tools
+  modules.core.gaming = {
     enable = true;
-    protontricks.enable = true;
-    geProton.enable = true;
-    remotePlay.enable = false;
-    # gamescopeSession defaults to false
+    enableSteam = true;
   };
-
-  modules.gaming.protontricks = {
-    enable = true;
-    helperScripts = true; # Provides install-vcrun2019, install-vcrun2022, list-steam-games, fix-frostpunk
-  };
-
-  # Shader compilation optimization (003-gaming-optimization - Phase 3: US1)
-  modules.gaming.shaderCache = {
-    enable = true;
-    enableRADVGPL = true; # Graphics Pipeline Library for compile-time shader processing
-    enableNGGC = true; # Next-Gen Geometry Culling for AMD GPUs
-    enableSteamPreCache = true; # Steam's built-in Vulkan shader pre-caching
-  };
-
-  # CPU optimization for gaming (003-gaming-optimization - Phase 5: US3)
-  modules.gaming.gamemode = {
-    enable = true;
-    enableRenice = true; # Increase game process priority
-    renice = 10; # Nice value adjustment (higher = more aggressive priority boost)
-    softRealtime = "auto"; # Soft real-time scheduling
-    inhibitScreensaver = true; # Prevent screensaver during gaming
-  };
-
-  # Performance monitoring (003-gaming-optimization - Phase 6: US4)
-  modules.gaming.mangohud.enable = true;
+  
+  # TODO: These advanced gaming options need to be implemented in modules.core.gaming:
+  # - Steam Proton configuration
+  # - Shader cache optimization  
+  # - Gamemode CPU optimization
+  # - MangoHud overlay configuration
 
   # ===== GNOME DESKTOP =====
   modules.desktop.gnome = {
@@ -383,7 +361,7 @@
   hardware.cpu.intel.updateMicrocode = true;
 
   # ===== PROGRAMS =====
-  # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
+  # Steam configuration moved to modules.core.gaming.steam (see GAMING CONFIGURATION section above)
 
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;

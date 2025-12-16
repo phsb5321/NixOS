@@ -17,8 +17,12 @@
   # Allow insecure packages for USB boot creation tool and development
   nixpkgs.config.permittedInsecurePackages = [
     "ventoy-1.1.07" # Required for ventoy-full package
-    "gradle-7.6.6" # Required for Java development
+    "gradle-7.6.6" # Required for Java development - Gradle 7 EOL but needed for compatibility
   ];
+
+  # CRITICAL: Pin kernel to 6.12.x to avoid boot failure regression in 6.17+
+  # See: https://github.com/nixos/nixpkgs/issues/449939
+  boot.kernelPackages = pkgs.linuxPackages_6_12;
 
   # ===== LAPTOP PROFILE =====
   # Laptop profile with standard variant for balanced performance/battery

@@ -14,8 +14,9 @@
       allowUnfreePredicate = _: true;
       allowBroken = true; # Temporarily allow broken packages during upgrade
       permittedInsecurePackages = [
-        # gradle removed - boot fixes working without it
+        "gradle-7.6.6" # Required for Java development - Gradle 7 EOL but needed for compatibility
         "electron-36.9.5" # EOL Electron version required by installed packages
+        "ventoy-1.1.07" # Required for ventoy-full package
       ];
     };
 

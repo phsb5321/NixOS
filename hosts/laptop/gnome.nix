@@ -24,6 +24,22 @@
       gsconnect = true;
       workspaceIndicator = true;
       soundOutput = false; # Not needed on laptop
+      
+      # Additional useful extensions for laptop
+      removableDriveMenu = true; # Useful for USB drives
+      altTab = true; # Better Alt+Tab behavior
+      systemMonitor = true; # System monitoring in top bar
+      batteryClock = true; # Battery info in clock
+      netspeedSimplified = true; # Network speed monitor
+      topIndicators = true; # Top bar indicators
+      
+      # Visual effects (disabled to save battery)
+      blurMyShell = false;
+      burnMyWindows = false;
+      popShell = false;
+      windowList = false;
+      windowTitles = false;
+      gpuStats = false; # Not needed, vitals provides this
     };
   };
 
@@ -44,6 +60,12 @@
             "clipboard-indicator@tudmotu.com"
             "gsconnect@andyholmes.github.io"
             "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
+            "drive-menu@gnome-shell-extensions.gcampax.github.com"
+            "advanced-alt-tab@G-dH.github.com"
+            "system-monitor@gnome-shell-extensions.gcampax.github.com"
+            "batime@martin.zurowietz.de"
+            "netspeedsimplified@prateekmedia.extension"
+            "tophat@fflewddur.github.io"
           ];
           favorite-apps = [
             "org.gnome.Nautilus.desktop"
