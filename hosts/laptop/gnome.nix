@@ -24,6 +24,7 @@
       gsconnect = true;
       workspaceIndicator = true;
       soundOutput = false; # Not needed on laptop
+      unite = true; # Hide titlebars for Electron apps like Spotify
       
       # Additional useful extensions for laptop
       removableDriveMenu = true; # Useful for USB drives
@@ -60,6 +61,7 @@
             "clipboard-indicator@tudmotu.com"
             "gsconnect@andyholmes.github.io"
             "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
+            "unite@hardpixel.eu"
             "drive-menu@gnome-shell-extensions.gcampax.github.com"
             "advanced-alt-tab@G-dH.github.com"
             "system-monitor@gnome-shell-extensions.gcampax.github.com"

@@ -24,10 +24,23 @@
       gsconnect = true;
       workspaceIndicator = true;
       soundOutput = true;
-<<<<<<< HEAD
       unite = true;  # Hide titlebars for Electron apps like Spotify
-=======
->>>>>>> origin/host/server
+      
+      # Additional productivity extensions (from laptop)
+      removableDriveMenu = true; # Useful for USB drives
+      altTab = true; # Better Alt+Tab behavior
+      systemMonitor = true; # System monitoring in top bar
+      batteryClock = true; # Battery/UPS info in clock
+      netspeedSimplified = true; # Network speed monitor
+      topIndicators = true; # Top bar indicators
+      
+      # Visual effects (can enable on desktop with more power)
+      blurMyShell = false;
+      burnMyWindows = false;
+      popShell = false;
+      windowList = false;
+      windowTitles = false;
+      gpuStats = false; # Vitals provides this
     };
   };
 
@@ -49,10 +62,13 @@
             "gsconnect@andyholmes.github.io"
             "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
             "sound-output-device-chooser@kgshank.net"
-<<<<<<< HEAD
             "unite@hardpixel.eu"
-=======
->>>>>>> origin/host/server
+            "drive-menu@gnome-shell-extensions.gcampax.github.com"
+            "advanced-alt-tab@G-dH.github.com"
+            "system-monitor@gnome-shell-extensions.gcampax.github.com"
+            "batime@martin.zurowietz.de"
+            "netspeedsimplified@prateekmedia.extension"
+            "tophat@fflewddur.github.io"
           ];
           favorite-apps = [
             "org.gnome.Nautilus.desktop"
