@@ -103,12 +103,12 @@ in {
         rustc
         cargo
         go
-        openjdk
+        # openjdk - moved to dedicated Java module (modules.core.java)
       ])
 
       # Compilers and build tools
       ++ (lib.optionals cfg.compilers [
-        android-tools
+        # android-tools - moved to dedicated Java module (modules.core.java)
         llvm
         clang
         gcc

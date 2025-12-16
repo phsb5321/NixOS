@@ -212,6 +212,11 @@ in {
       distributedBuilds = true;
     };
 
+    # Allow insecure packages for compatibility
+    nixpkgs.config.permittedInsecurePackages = [
+      "gradle-7.6.6"
+    ];
+
     # Security configuration
     security = {
       sudo.wheelNeedsPassword = true;

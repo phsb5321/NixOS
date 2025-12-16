@@ -32,6 +32,12 @@ in {
       description = "Install Zen browser";
     };
 
+    firefoxNightly = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Install Firefox Nightly";
+    };
+
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [];
@@ -44,6 +50,7 @@ in {
       ++ lib.optionals cfg.brave [ brave ]
       ++ lib.optionals cfg.librewolf [ librewolf ]
       ++ lib.optionals cfg.zen [ inputs.zen-browser.packages.${pkgs.system}.default ]
+      ++ lib.optionals cfg.firefoxNightly [ inputs.firefox-nightly.packages.${pkgs.system}.firefox-nightly-bin ]
       ++ cfg.extraPackages;
   };
 }

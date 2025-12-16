@@ -17,7 +17,7 @@
   # Allow insecure packages for USB boot creation tool and development
   nixpkgs.config.permittedInsecurePackages = [
     "ventoy-1.1.07" # Required for ventoy-full package
-    # gradle removed - boot fixes working without it
+    "gradle-7.6.6" # Required for Java development
   ];
 
   # ===== LAPTOP PROFILE =====
@@ -56,6 +56,22 @@
       clipboard = true;
       gsconnect = true;
       workspaceIndicator = true;
+      soundOutputChooser = true; # Add missing extension from desktop
+      productivity = true; # Enable productivity bundle
+      
+      # Popular additional extensions (disabled by default)
+      blurMyShell = false; # Beautiful blur effects
+      popShell = false; # Tiling window management
+      burnMyWindows = false; # Window close animations
+      windowList = false; # Taskbar-style window list
+      removableDriveMenu = true; # Useful for laptop
+      altTab = true; # Better Alt+Tab behavior
+      systemMonitor = true; # System monitoring extension
+      batteryClock = true; # Battery info in top bar - useful for laptop
+      gpuStats = false; # GPU monitoring (less useful on laptop)
+      netspeedSimplified = true; # Network speed monitoring
+      windowTitles = false; # Window titles on panel
+      topIndicators = true; # Top indicators (TopHat)
     };
 
     # Settings
@@ -85,7 +101,8 @@
       chrome = true;
       brave = true;
       librewolf = true;
-      zen = false; # Less critical for laptop
+      zen = true; # Enable Zen browser
+      firefoxNightly = true; # Enable Firefox Nightly
     };
 
     # Development tools
@@ -110,7 +127,7 @@
       vlc = true;
       spotify = true;
       discord = true;
-      streaming = false; # Less critical for laptop
+      streaming = true; # Enable streaming like desktop
       imageEditing = true;
     };
 
@@ -120,8 +137,8 @@
       performance = true;
       launchers = true;
       wine = true;
-      gpuControl = false; # NVIDIA disabled
-      minecraft = false;
+      gpuControl = false; # NVIDIA disabled for laptop
+      minecraft = false; # Match desktop setting
     };
 
     # Utilities
@@ -160,21 +177,47 @@
 
   # ===== HOST-SPECIFIC PACKAGES =====
   environment.systemPackages = with pkgs; [
-    # Development tools
-    insomnia
-    mongodb-compass
-
-    # Fun extension
-    gnomeExtensions.runcat # Running cat shows CPU usage
+    # AI Development
+    claude-code
 
     # Communication
+    telegram-desktop
     slack
     teams-for-linux
     zoom-us
 
     # Productivity
+    notion-app-enhanced
     obsidian
     logseq
+
+    # Advanced media (like desktop)
+    blender
+    krita
+    kdePackages.kdenlive
+    inkscape
+
+    # Development tools
+    insomnia
+    mongodb-compass
+    git-crypt
+    gnupg
+
+    # System monitoring (like desktop)
+    iotop
+    atop
+    smem
+    numactl
+    stress-ng
+    memtester
+
+    # Memory analysis (like desktop)
+    heaptrack
+    massif-visualizer
+
+    # Disk utilities (like desktop)
+    ncdu
+    duf
 
     # Cloud CLI
     google-cloud-sdk
@@ -185,8 +228,8 @@
     # Utilities
     ventoy-full # Bootable USB creation
 
-    # AI Development
-    claude-code
+    # Fun extension
+    gnomeExtensions.runcat # Running cat shows CPU usage
 
     # NVIDIA tools (for when discrete GPU is used manually)
     nvidia-system-monitor-qt
@@ -315,17 +358,48 @@
       latex = {
         enable = true;
         minimal = false;
+        extraPackages = with pkgs; [
+          biber
+          texlive.combined.scheme-context
+        ];
       };
       markdown = {
         enable = true;
         lsp = true;
-        linting.enable = true;
-        formatting.enable = true;
-        preview.enable = true;
-        utilities.enable = true;
+        linting = {
+          enable = true;
+          markdownlint = true;
+          vale = {
+            enable = true;
+            styles = [ "google" "write-good" ];
+          };
+          linkCheck = true;
+        };
+        formatting = {
+          enable = true;
+          mdformat = true;
+          prettier = false;
+        };
+        preview = {
+          enable = true;
+          glow = true;
+          grip = false;
+        };
+        utilities = {
+          enable = true;
+          doctoc = true;
+          mdbook = true;
+          mermaid = true;
+        };
       };
     };
+
+    java = {
+      enable = true;
+      androidTools.enable = true;
+    };
   };
+
 
   # ===== DOTFILES =====
   modules.dotfiles = {
@@ -429,17 +503,27 @@
   };
 
   # ===== USER CONFIGURATION =====
+  users.groups.plugdev = {};
+  
   users.users.notroot = {
     isNormalUser = true;
     description = "Not Root";
+    shell = pkgs.zsh; # Set ZSH as default shell
     extraGroups = [
       "networkmanager"
       "wheel"
       "video" # Brightness control
       "input" # Touchpad gestures
       "power" # Power management
+      "dialout" # Like desktop
+      "libvirtd" # Like desktop
+      "plugdev" # Like desktop
     ];
   };
+
+  # Enable ZSH system-wide and set as default
+  programs.zsh.enable = true;
+  users.defaultUserShell = pkgs.zsh;
 
   # ===== TOUCHPAD PERMANENT ENABLE =====
   # Systemd service to ensure touchpad is always enabled and cannot be disabled
@@ -482,6 +566,35 @@
     # DXVK optimizations
     DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
     DXVK_LOG_LEVEL = "warn";
+  };
+
+  # ===== SECURITY (like desktop) =====
+  security = {
+    pam.services = {
+      gdm.enableGnomeKeyring = true;
+      gdm-password.enableGnomeKeyring = true;
+    };
+
+    auditd.enable = true;
+    audit = {
+      enable = true;
+      backlogLimit = 8192;
+      failureMode = "printk";
+      rules = [ "-a exit,always -F arch=b64 -S execve" ];
+    };
+
+    apparmor = {
+      enable = true;
+      killUnconfinedConfinables = true;
+    };
+  };
+
+  # ===== PROGRAMS (like desktop) =====
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+    gamescopeSession.enable = true;
   };
 
   # ===== SYSTEM STATE VERSION =====
