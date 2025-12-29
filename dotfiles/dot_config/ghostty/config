@@ -51,6 +51,17 @@ keybind = ctrl+shift+equal=increase_font_size:1
 keybind = ctrl+shift+minus=decrease_font_size:1
 keybind = ctrl+shift+0=reset_font_size
 
+# Unbind keys that conflict with Zellij (PT-BR ABNT2 keyboard compatibility)
+# Alt+arrow keys are used by Zellij for pane navigation
+keybind = alt+left=unbind
+keybind = alt+right=unbind
+keybind = alt+up=unbind
+keybind = alt+down=unbind
+# Unbind alt+f (Zellij floating pane toggle)
+keybind = alt+f=unbind
+# Unbind alt+n (Zellij new pane)
+keybind = alt+n=unbind
+
 
 # Color palette (catppuccin-mocha)
 palette = 0=#45475a
