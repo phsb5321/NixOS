@@ -697,16 +697,26 @@ parallel_updates() {
     local temp_dir=$(mktemp -d)
     trap "rm -rf $temp_dir" EXIT
 
-    # Run git fetch, flake update, and basic checks in parallel
+    # Run git fetch and disk check in parallel first
     {
         (git -C "$FLAKE_DIR" fetch origin 2>/dev/null && echo "git_fetch_ok" > "$temp_dir/git_fetch" || echo "git_fetch_failed" > "$temp_dir/git_fetch") &
-        (nix flake update "$FLAKE_DIR" --refresh 2>/dev/null && echo "flake_update_ok" > "$temp_dir/flake_update" || echo "flake_update_failed" > "$temp_dir/flake_update") &
-        (nix flake check --no-build "$FLAKE_DIR" 2>/dev/null && echo "syntax_ok" > "$temp_dir/syntax_check" || echo "syntax_failed" > "$temp_dir/syntax_check") &
         (df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ' > "$temp_dir/disk_space") &
-
-        # Wait for all background jobs to complete
         wait
     }
+
+    # Run flake update (must complete before syntax check to avoid race condition)
+    if nix flake update "$FLAKE_DIR" --refresh 2>/dev/null; then
+        echo "flake_update_ok" > "$temp_dir/flake_update"
+    else
+        echo "flake_update_failed" > "$temp_dir/flake_update"
+    fi
+
+    # Run syntax check after update completes
+    if timeout 120s nix flake check --no-build "$FLAKE_DIR" 2>/dev/null; then
+        echo "syntax_ok" > "$temp_dir/syntax_check"
+    else
+        echo "syntax_failed" > "$temp_dir/syntax_check"
+    fi
 
     # Check results
     local disk_gb=$(cat "$temp_dir/disk_space" 2>/dev/null || echo "0")

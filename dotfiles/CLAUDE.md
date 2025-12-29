@@ -2,10 +2,31 @@
 
 This is a comprehensive NixOS configuration managed through a flake-based approach with modular architecture and dotfiles integration.
 
+## CRITICAL: NixOS Rebuild Commands
+
+**ALWAYS use the correct flake target when rebuilding:**
+
+```bash
+# Desktop host (primary workstation)
+sudo nixos-rebuild switch --flake .#desktop
+
+# Laptop host
+sudo nixos-rebuild switch --flake .#laptop
+
+# Server host
+sudo nixos-rebuild switch --flake .#server
+```
+
+**NEVER use:**
+- `sudo nixos-rebuild switch --flake .` (missing host target)
+- `sudo nixos-rebuild switch` (not using flake)
+
+The flake defines multiple hosts and requires explicit target specification.
+
 ## Project Overview
 
 **Architecture**: Modular NixOS flake configuration with:
-- Host-specific configurations (default=desktop, laptop)  
+- Host-specific configurations (desktop, laptop, server)
 - Shared module system for reusable components
 - Chezmoi-managed dotfiles for user configuration
 - Performance-optimized settings for gaming and development
@@ -20,7 +41,7 @@ This is a comprehensive NixOS configuration managed through a flake-based approa
 
 ## Current Configuration
 
-**Primary Host**: `default` (desktop)
+**Primary Host**: `desktop`
 - AMD GPU with hardware acceleration
 - 62GB RAM, swap disabled for performance
 - Gaming-optimized with performance CPU governor
@@ -133,6 +154,7 @@ dotfiles-apply           # Apply fixed config
 
 ## Important Notes
 
+- **Always use explicit flake targets** when rebuilding (e.g., `.#desktop`, `.#laptop`)
 - Always test configuration changes with `nix flake check` before rebuilding
 - Use the performance-optimized settings carefully on different hardware
 - The configuration is designed for high-memory systems (62GB+)

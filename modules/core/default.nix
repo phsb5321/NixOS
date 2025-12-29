@@ -201,6 +201,7 @@ in {
 
         # Terminals and Shells
         zellij
+        wl-clipboard  # Required for Zellij clipboard integration on Wayland
         sshfs
 
         # Development
