@@ -148,7 +148,8 @@ in {
         type = types.listOf types.package;
         default = with pkgs; [
           vlc
-          spotify # Official Spotify client - works with Facebook/OAuth login
+          # Spotify removed - blue title bar is unfixable (hardcoded branding)
+          # Use web player at https://open.spotify.com instead
           vesktop # Better Discord client with Vencord built-in
           obs-studio
           gimp
