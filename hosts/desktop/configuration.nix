@@ -205,8 +205,9 @@ in {
   # Host-specific module configuration
   modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
 
-  # spotifyd - Spotify Connect daemon (lightweight alternative to Spotify client)
-  modules.services.spotifyd.enable = true;
+  # spotifyd disabled - requires username/password auth, doesn't support Facebook/OAuth login
+  # Using official Spotify client from media packages instead
+  modules.services.spotifyd.enable = false;
   modules.core.java = {
     enable = true;
     androidTools.enable = activeVariant.enableHardwareAccel;

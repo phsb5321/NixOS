@@ -148,6 +148,7 @@ in {
         type = types.listOf types.package;
         default = with pkgs; [
           vlc
+          spotify # Official Spotify client - works with Facebook/OAuth login
           vesktop # Better Discord client with Vencord built-in
           obs-studio
           gimp

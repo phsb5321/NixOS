@@ -55,8 +55,9 @@
     gaming.enable = false; # Disabled for laptop to save battery
   };
 
-  # spotifyd - Spotify Connect daemon (lightweight alternative to Spotify client)
-  modules.services.spotifyd.enable = true;
+  # spotifyd disabled - requires username/password auth, doesn't support Facebook/OAuth login
+  # Using official Spotify client from media packages instead
+  modules.services.spotifyd.enable = false;
 
   # Bootloader configuration
   boot.loader.systemd-boot.enable = true;
