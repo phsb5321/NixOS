@@ -153,7 +153,7 @@
       desktop = {
         system = "x86_64-linux";
         hostname = "nixos-desktop";
-        configPath = "default"; # Maps to hosts/default/
+        configPath = "desktop"; # Maps to hosts/desktop/
         nixpkgsInput = nixpkgs-unstable; # Use unstable as the main channel
       };
 
