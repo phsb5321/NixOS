@@ -1,6 +1,7 @@
 # NixOS Configuration Structure
 
-This NixOS configuration has been refactored to make it easier to share packages and configuration between hosts while maintaining host-specific customizations.
+This NixOS configuration has been refactored to make it easier to share packages
+and configuration between hosts while maintaining host-specific customizations.
 
 ## Structure Overview
 
@@ -33,8 +34,9 @@ The new packages module provides categorized package management:
 
 - **browsers**: Web browsers (Chrome, Firefox, Brave, etc.)
 - **development**: Development tools (Postman, API clients, etc.)
-- **media**: Media and entertainment (Spotify, Discord, VLC, etc.)
+- **media**: Media and entertainment (VLC, Discord, OBS, etc.)
 - **utilities**: System utilities (gparted, syncthing, etc.)
+- **services**: Background daemons (spotifyd for Spotify Connect)
 - **gaming**: Gaming-related packages (Steam, GameMode, etc.)
 - **audioVideo**: Audio/video tools (PipeWire, EasyEffects, etc.)
 - **python**: Python with optional GTK support
@@ -52,17 +54,21 @@ Contains shared settings for:
 
 ### 3. Dotfiles Management (chezmoi)
 
-**UPDATED**: Comprehensive dotfiles management with chezmoi using project-local storage:
+**UPDATED**: Comprehensive dotfiles management with chezmoi using project-local
+storage:
 
-- **Project Integration**: Dotfiles stored in `~/NixOS/dotfiles/` within the repository
-- **Pre-imported Configuration**: Common dotfiles already imported and ready to use
+- **Project Integration**: Dotfiles stored in `~/NixOS/dotfiles/` within the
+  repository
+- **Pre-imported Configuration**: Common dotfiles already imported and ready to
+  use
 - **Instantaneous Sync**: Changes apply immediately without rebuilding NixOS
 - **Independent Operation**: Works separately from NixOS and Home Manager
 - **Helper Scripts**: `dotfiles-init`, `dotfiles-edit`, `dotfiles-apply`, etc.
 - **Shell Aliases**: `dotfiles`, `dotfiles-diff`
 - **Git Integration**: Dotfiles directory is its own git repository
 
-See `DOTFILES_README.md` and `CHEZMOI_SETUP.md` for complete setup and usage instructions.
+See `DOTFILES_README.md` and `CHEZMOI_SETUP.md` for complete setup and usage
+instructions.
 
 ### 4. Host-Specific Configurations
 
@@ -165,7 +171,8 @@ Example minimal host configuration:
 }
 ```
 
-This structure makes it much easier to maintain multiple NixOS configurations while sharing common functionality.
+This structure makes it much easier to maintain multiple NixOS configurations
+while sharing common functionality.
 
 ## Quick Reference
 
