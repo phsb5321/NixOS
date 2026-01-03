@@ -9,24 +9,24 @@ code in this repository.
 
 **MANDATORY RULES:**
 
-1. **NEVER** run `nixos-rebuild switch --flake .#default` on this system
-2. **NEVER** deploy the default (desktop) host configuration
+1. **NEVER** run `nixos-rebuild switch --flake .#desktop` on this system
+2. **NEVER** deploy the desktop host configuration
 3. **ALWAYS** use `.#server` for all builds and deployments
-4. The `default` host configuration is for desktop machines only
+4. The `desktop` host configuration is for desktop machines only
 5. The `server` host uses stable nixpkgs and minimal packages
 
 **Sudo password: 123** (for build/deployment commands)
 
 **CORRECT COMMANDS FOR THIS HOST:**
 
-- `sudo nixos-rebuild switch --flake .#nixos-server` ✅
-- `sudo nixos-rebuild build --flake .#nixos-server` ✅
+- `sudo nixos-rebuild switch --flake .#server` ✅
+- `sudo nixos-rebuild build --flake .#server` ✅
 - `./user-scripts/nixswitch` ✅ (auto-detects host)
 
 **WRONG COMMANDS (WILL BREAK SYSTEM):**
 
-- `sudo nixos-rebuild switch --flake .#default` ❌
-- `sudo nixos-rebuild switch --flake .` ❌ (defaults to .#default)
+- `sudo nixos-rebuild switch --flake .#desktop` ❌
+- `sudo nixos-rebuild switch --flake .` ❌
 
 ## Common Development Commands
 
@@ -34,17 +34,17 @@ code in this repository.
 
 - `./user-scripts/nixswitch` - Modern TUI-based rebuild script (auto-detects
   host) (RECOMMENDED)
-- `sudo nixos-rebuild switch --flake .#nixos-server` - Manual rebuild for server
+- `sudo nixos-rebuild switch --flake .#server` - Manual rebuild for server
   host (DEFAULT HOST)
-- `sudo nixos-rebuild switch --flake .#default` - Manual rebuild for desktop
+- `sudo nixos-rebuild switch --flake .#desktop` - Manual rebuild for desktop
   host
 - `sudo nixos-rebuild switch --flake .#laptop` - Manual rebuild for laptop host
-- `sudo nixos-rebuild test --flake .#nixos-server` - Test server configuration
+- `sudo nixos-rebuild test --flake .#server` - Test server configuration
   without switching
-- `sudo nixos-rebuild build --flake .#nixos-server` - Build server configuration
+- `sudo nixos-rebuild build --flake .#server` - Build server configuration
   without switching
 
-**NOTE: This system is configured as a SERVER HOST. Always use nixos-server
+**NOTE: This system is configured as a SERVER HOST. Always use server
 configuration for deployments.**
 
 ### Development Environments
@@ -60,7 +60,7 @@ configuration for deployments.**
 
 - `nix flake update` - Update all flake inputs
 - `nix flake check` - Validate flake syntax and configuration
-- `nix build .#nixosConfigurations.default.config.system.build.toplevel` - Build
+- `nix build .#nixosConfigurations.desktop.config.system.build.toplevel` - Build
   system configuration
 - `alejandra .` - Format Nix code
 - `nixpkgs-fmt .` - Alternative Nix formatter
@@ -84,7 +84,7 @@ shared package management:
 
 - **flake.nix**: Main flake entry point with nixpkgs-unstable for latest
   packages
-- **hosts/**: Host-specific configurations (default=desktop, laptop)
+- **hosts/**: Host-specific configurations (desktop, laptop, server)
 - **modules/**: Shared system modules with categorical organization
 - **shells/**: Development environment shells for different languages
 - **user-scripts/**: Custom automation scripts (nixswitch, nix-shell-selector)
@@ -121,7 +121,7 @@ Categorical package management with per-host enable/disable:
 
 - **server**: Minimal configuration, uses stable nixpkgs for reliability (THIS
   HOST - DEFAULT)
-- **default** (desktop): Gaming enabled, AMD GPU optimization, full development
+- **desktop**: Gaming enabled, AMD GPU optimization, full development
   setup, uses nixpkgs-unstable
 - **laptop**: Gaming disabled, Intel graphics, minimal package set, Tailscale
   enabled, uses stable nixpkgs

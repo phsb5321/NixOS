@@ -149,8 +149,8 @@
 
     # Define all your hosts here
     hosts = {
-      # Primary desktop system (default)
-      default = {
+      # Primary desktop system
+      desktop = {
         system = "x86_64-linux";
         hostname = "nixos-desktop";
         configPath = "default"; # Maps to hosts/default/
@@ -166,7 +166,7 @@
       };
 
       # Server using stable for reliability
-      nixos-server = {
+      server = {
         system = "x86_64-linux";
         hostname = "nixos-server";
         configPath = "server";
@@ -210,7 +210,7 @@
         # Script to deploy to a specific host
         deploy = pkgs.writeShellScriptBin "deploy" ''
           set -e
-          HOST=''${1:-default}
+          HOST=''${1:-desktop}
 
           if [ -z "$HOST" ]; then
             echo "Usage: $0 <hostname>"
@@ -225,7 +225,7 @@
         # Script to build without switching
         build = pkgs.writeShellScriptBin "build" ''
           set -e
-          HOST=''${1:-default}
+          HOST=''${1:-desktop}
           echo "Building configuration for $HOST..."
           nixos-rebuild build --flake .#$HOST
         '';
