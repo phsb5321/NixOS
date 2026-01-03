@@ -233,10 +233,6 @@ alias dotfiles-sync='chezmoi git pull -- --rebase && chezmoi apply --source ~/Ni
 alias dotfiles='dotfiles-status'
 alias cm='dotfiles-apply'
 
-# Music streaming aliases
-alias spotify-gui='spot'
-alias spotify-tui='ncspot'
-
 # Editor aliases
 alias zed='zeditor'
 alias code='code --enable-features=UseOzonePlatform --ozone-platform=wayland'
