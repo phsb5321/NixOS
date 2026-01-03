@@ -7,5 +7,6 @@
     ./desktop
     ./dotfiles
     ./shell
+    ./services
   ];
 }
