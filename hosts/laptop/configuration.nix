@@ -55,6 +55,9 @@
     gaming.enable = false; # Disabled for laptop to save battery
   };
 
+  # spotifyd - Spotify Connect daemon (lightweight alternative to Spotify client)
+  modules.services.spotifyd.enable = true;
+
   # Bootloader configuration
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

@@ -204,6 +204,9 @@ in {
 
   # Host-specific module configuration
   modules.packages.gaming.enable = lib.mkDefault activeVariant.enableHardwareAccel;
+
+  # spotifyd - Spotify Connect daemon (lightweight alternative to Spotify client)
+  modules.services.spotifyd.enable = true;
   modules.core.java = {
     enable = true;
     androidTools.enable = activeVariant.enableHardwareAccel;
@@ -270,11 +273,6 @@ in {
       krita
       kdePackages.kdenlive
       obs-studio
-
-      # Music streaming
-      spotify
-      spot
-      ncspot
 
       # Communication
       telegram-desktop
