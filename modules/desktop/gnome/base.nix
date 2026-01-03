@@ -180,10 +180,13 @@
       };
     };
 
-    # Qt theming integration (can be overridden by host configuration)
+    # Qt theming integration
+    # NOTE: platformTheme = "gnome" is disabled due to qgnomeplatform Qt6 build issues
+    # See: https://github.com/NixOS/nixpkgs/issues/315121
+    # Using qt5ct for Qt styling configuration instead
     qt = lib.mkDefault {
       enable = true;
-      platformTheme = "gnome";
+      platformTheme = "qt5ct";
       style = "adwaita-dark";
     };
   };
