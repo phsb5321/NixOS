@@ -3,7 +3,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: let
   cfg = config.modules.desktop.gnome;
@@ -72,7 +71,7 @@ in {
         GDK_BACKEND = "wayland,x11";
         QT_QPA_PLATFORM = "wayland;xcb";
         MOZ_ENABLE_WAYLAND = "1";
-        GTK_CSD = "1";  # Enable client-side decorations (recommended for Wayland)
+        GTK_CSD = "1"; # Enable client-side decorations (recommended for Wayland)
         CLUTTER_BACKEND = "wayland";
         WLR_DRM_NO_ATOMIC = "1";
 

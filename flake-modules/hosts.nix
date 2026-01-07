@@ -19,6 +19,25 @@
       ];
     };
 
+    # Overlays to fix package issues
+    overlays = [
+      # Fix clipboard-indicator extension schema compilation
+      (_final: prev: {
+        gnomeExtensions =
+          prev.gnomeExtensions
+          // {
+            clipboard-indicator = prev.gnomeExtensions.clipboard-indicator.overrideAttrs (oldAttrs: {
+              postInstall =
+                (oldAttrs.postInstall or "")
+                + ''
+                  # Recompile schemas to fix type mismatch bug
+                  ${prev.glib.dev}/bin/glib-compile-schemas $out/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com/schemas/
+                '';
+            });
+          };
+      })
+    ];
+
     # Helper function to create a NixOS system with perSystem context
     # Uses withSystem to access perSystem outputs (pkgs, config, self', inputs')
     mkNixosSystem = {
@@ -30,15 +49,13 @@
       extraSpecialArgs ? {},
     }:
       withSystem system ({
-        pkgs,
-        config,
         self',
         inputs',
         ...
       }: let
         # Get NixOS version dynamically from the input
         systemVersion = let
-          version = nixpkgsInput.lib.version;
+          inherit (nixpkgsInput.lib) version;
           versionParts = builtins.splitVersion version;
           major = builtins.head versionParts;
           minor = builtins.elemAt versionParts 1;
@@ -50,11 +67,13 @@
         pkgsForHost = import nixpkgsInput {
           inherit system;
           config = pkgsConfig;
+          inherit overlays;
         };
 
         pkgs-unstable = import inputs.nixpkgs-unstable {
           inherit system;
           config = pkgsConfig;
+          inherit overlays;
         };
 
         # Common special args for all hosts
@@ -69,7 +88,7 @@
               self'
               inputs'
               ;
-            pkgs-unstable = pkgs-unstable;
+            inherit pkgs-unstable;
             stablePkgs = pkgsForHost;
           }
           // extraSpecialArgs;
@@ -85,6 +104,7 @@
               # Base system configuration
               {
                 nixpkgs.config = pkgsConfig;
+                nixpkgs.overlays = overlays;
 
                 # Nix settings
                 nix = {
@@ -142,7 +162,7 @@
   in {
     # NixOS Configurations - Generated from hosts definition
     nixosConfigurations =
-      inputs.nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts
+      inputs.nixpkgs.lib.mapAttrs (_name: mkNixosSystem) hosts
       // {
         # Compatibility aliases for systems with different hostnames
         nixos = mkNixosSystem hosts.desktop;

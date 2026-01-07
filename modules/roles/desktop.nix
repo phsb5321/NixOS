@@ -3,7 +3,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: {
   options.modules.roles.desktop = {

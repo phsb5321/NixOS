@@ -66,13 +66,16 @@ in {
     # Enable GameMode NixOS module
     programs.gamemode = {
       enable = true;
-      enableRenice = cfg.enableRenice;
+      inherit (cfg) enableRenice;
 
       settings = {
         general = {
           softrealtime = cfg.softRealtime;
-          renice = cfg.renice;
-          inhibit_screensaver = if cfg.inhibitScreensaver then 1 else 0;
+          inherit (cfg) renice;
+          inhibit_screensaver =
+            if cfg.inhibitScreensaver
+            then 1
+            else 0;
         };
 
         gpu = lib.mkIf cfg.gpuOptimizations {

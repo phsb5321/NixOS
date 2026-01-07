@@ -46,13 +46,13 @@ in {
   config = mkIf cfg.enable {
     services.printing = {
       enable = true;
-      drivers = cfg.drivers;
+      inherit (cfg) drivers;
     };
 
     services.avahi = mkIf cfg.avahi.enable {
       enable = true;
-      nssmdns4 = cfg.avahi.nssmdns4;
-      openFirewall = cfg.avahi.openFirewall;
+      inherit (cfg.avahi) nssmdns4;
+      inherit (cfg.avahi) openFirewall;
     };
   };
 }

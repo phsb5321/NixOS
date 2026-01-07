@@ -3,7 +3,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: {
   # Enable GNOME with Wayland
@@ -24,7 +23,8 @@
       gsconnect = true;
       workspaceIndicator = true;
       soundOutput = true;
-      unite = true;  # Hide titlebars for Electron apps like Spotify
+      unite = true; # Hide titlebars for Electron apps like Spotify
+      launchNewInstance = true; # Always launch new app windows
     };
   };
 
@@ -47,6 +47,7 @@
             "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
             "sound-output-device-chooser@kgshank.net"
             "unite@hardpixel.eu"
+            "launch-new-instance@gnome-shell-extensions.gcampax.github.com"
           ];
           favorite-apps = [
             "org.gnome.Nautilus.desktop"

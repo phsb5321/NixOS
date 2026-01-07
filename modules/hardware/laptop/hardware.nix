@@ -16,9 +16,9 @@ in {
     services.libinput = lib.mkIf cfg.touchpad.enable {
       enable = true;
       touchpad = {
-        naturalScrolling = cfg.touchpad.naturalScrolling;
+        inherit (cfg.touchpad) naturalScrolling;
         tapping = cfg.touchpad.tapToClick;
-        disableWhileTyping = cfg.touchpad.disableWhileTyping;
+        inherit (cfg.touchpad) disableWhileTyping;
         scrollMethod = "twofinger";
         accelSpeed = "0";
       };
@@ -141,8 +141,8 @@ in {
           enable = true;
           enableOffloadCmd = true;
         };
-        intelBusId = cfg.graphics.intelBusId;
-        nvidiaBusId = cfg.graphics.nvidiaBusId;
+        inherit (cfg.graphics) intelBusId;
+        inherit (cfg.graphics) nvidiaBusId;
       };
     };
 

@@ -13,5 +13,7 @@
     ./disk-guardian.nix
     ./cloudflare-tunnel.nix
     ./audiobookshelf-guardian.nix
+    # Desktop-specific services
+    ./waydroid-desktop-hygiene.nix
   ];
 }

@@ -3,12 +3,7 @@
 # Per-system outputs for the NixOS configuration flake
 # Defines checks, formatter, devShells, apps, and packages using perSystem
 {
-  perSystem = {
-    pkgs,
-    config,
-    system,
-    ...
-  }: {
+  perSystem = {pkgs, ...}: {
     # Checks for CI/CD validation
     checks = {
       # Format check

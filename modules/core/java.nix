@@ -146,7 +146,7 @@ in {
     # System-wide Java configuration
     programs.java = {
       enable = true;
-      package = cfg.package;
+      inherit (cfg) package;
     };
   };
 }

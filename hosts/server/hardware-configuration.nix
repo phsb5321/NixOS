@@ -1,9 +1,7 @@
 # Hardware configuration for server
 # Based on the /etc/nixos/hardware-configuration.nix
 {
-  config,
   lib,
-  pkgs,
   modulesPath,
   ...
 }: {

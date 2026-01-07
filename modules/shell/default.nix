@@ -67,7 +67,7 @@ in {
       # ZSH configuration that applies system-wide
       ohMyZsh = mkIf cfg.zsh.ohMyZsh.enable {
         enable = true;
-        plugins = cfg.zsh.ohMyZsh.plugins;
+        inherit (cfg.zsh.ohMyZsh) plugins;
         theme = ""; # We use Powerlevel10k instead
       };
 
