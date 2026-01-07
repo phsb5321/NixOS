@@ -1,10 +1,6 @@
 # Desktop Host - GNOME Configuration
 # AMD GPU Wayland-optimized setup (host-specific overrides only)
-{
-  config,
-  lib,
-  ...
-}: {
+{lib, ...}: {
   # Enable GNOME with common settings
   modules.desktop.gnome = {
     enable = true;

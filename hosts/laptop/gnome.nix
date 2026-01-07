@@ -1,10 +1,6 @@
 # Laptop Host - GNOME Configuration
 # Power-optimized X11 setup (host-specific overrides only)
-{
-  config,
-  lib,
-  ...
-}: {
+{lib, ...}: {
   # Enable GNOME with common settings
   modules.desktop.gnome = {
     enable = true;
