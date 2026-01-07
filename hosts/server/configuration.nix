@@ -1,4 +1,4 @@
-# NixOS Server Configuration - Simplified modular approach like laptop
+# NixOS Server Configuration - Profile-Based (New Architecture)
 # VM host running GNOME in X11 mode for compatibility
 {
   pkgs,
@@ -10,8 +10,13 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../../profiles/server.nix
     ./gnome.nix
   ];
+
+  # ===== PROFILE-BASED CONFIGURATION =====
+  # Server profile enables: SSH, minimal hardware
+  modules.profiles.server.enable = true;
 
   # Host-specific metadata
   modules.networking.hostName = lib.mkForce hostname;

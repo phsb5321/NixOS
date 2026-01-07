@@ -1,4 +1,6 @@
-# Laptop profile module - combines all laptop-specific configurations
+# ~/NixOS/profiles/laptop.nix
+# Laptop profile - power management, optimized for portable use
+# Consolidated from modules/roles/laptop.nix and modules/profiles/laptop.nix
 {
   config,
   lib,
@@ -7,6 +9,10 @@
 }: let
   cfg = config.modules.profiles.laptop;
 in {
+  imports = [
+    ./common.nix
+  ];
+
   options.modules.profiles.laptop = {
     enable = lib.mkEnableOption "laptop profile with optimized settings";
 
@@ -38,6 +44,43 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    # Services - minimal set for laptop
+    modules.services = {
+      ssh.enable = true;
+      printing.enable = lib.mkDefault false; # Disable on laptop by default
+    };
+
+    # Dotfiles
+    modules.dotfiles.enable = true;
+
+    # Hardware
+    hardware = {
+      enableRedistributableFirmware = true;
+      bluetooth.enable = true;
+      graphics = {
+        enable = true;
+        enable32Bit = lib.mkDefault (cfg.variant == "gaming"); # Only for gaming variant
+      };
+    };
+
+    # Laptop-specific groups (extends common.nix base groups)
+    users.users.notroot.extraGroups = lib.mkAfter [
+      "audio"
+      "video"
+      "disk"
+      "input"
+      "bluetooth"
+      "render"
+      "kvm"
+      "pipewire"
+    ];
+
+    # Base programs
+    programs = {
+      dconf.enable = true;
+      nix-ld.enable = true;
+    };
+
     # Enable laptop hardware module
     modules.hardware.laptop = {
       enable = true;
@@ -84,16 +127,12 @@ in {
     };
 
     # Enable GNOME desktop with laptop optimizations
-    # Note: GNOME configuration now uses new modular system
-    # Extensions are configured individually in host configs
     modules.desktop.gnome = {
       enable = true;
       wayland.enable = true;
     };
 
     # Package selection based on variant
-    # Note: Package configuration now uses new modular system
-    # Packages are configured in host configs per category
     modules.packages.gaming.enable = lib.mkDefault (cfg.variant == "gaming");
 
     environment.systemPackages = with pkgs;

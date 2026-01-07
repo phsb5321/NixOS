@@ -1,5 +1,5 @@
-# NixOS Laptop Configuration - Role-Based (New Architecture)
-# This is the new modular configuration using laptop profile and role-based modules
+# NixOS Laptop Configuration - Profile-Based (New Architecture)
+# This is the new modular configuration using laptop profile and profile-based modules
 {
   pkgs,
   lib,
@@ -9,6 +9,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../../profiles/laptop.nix
   ];
 
   # Allow insecure packages for USB boot creation tool
@@ -370,7 +371,7 @@
   };
 
   # ===== HOST-SPECIFIC USER CONFIGURATION =====
-  # Base user defined in profiles/common.nix via modules/roles/laptop.nix
+  # Base user defined in profiles/common.nix via profiles/laptop.nix
   # Only add laptop-specific groups here
   users.users.notroot.extraGroups = lib.mkAfter [
     "power" # Power management
