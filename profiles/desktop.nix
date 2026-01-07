@@ -53,5 +53,25 @@
       dconf.enable = true;
       nix-ld.enable = true;
     };
+
+    # ===== DESKTOP-SPECIFIC PACKAGE OVERRIDES =====
+    # Desktop workstation gets full features: gaming, streaming, all browsers
+    modules.packages = {
+      # Full browser suite including Zen
+      browsers.zen = true;
+
+      # Full media capabilities
+      media.streaming = true;
+
+      # Full gaming support
+      gaming = {
+        enable = true;
+        performance = lib.mkDefault true;
+        launchers = lib.mkDefault true;
+        wine = lib.mkDefault true;
+        gpuControl = lib.mkDefault true;
+        minecraft = lib.mkDefault false;
+      };
+    };
   };
 }

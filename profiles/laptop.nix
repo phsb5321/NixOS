@@ -132,8 +132,22 @@ in {
       wayland.enable = true;
     };
 
-    # Package selection based on variant
-    modules.packages.gaming.enable = lib.mkDefault (cfg.variant == "gaming");
+    # ===== LAPTOP-SPECIFIC PACKAGE OVERRIDES =====
+    # Power-conscious defaults, gaming only for gaming variant
+    modules.packages = {
+      # Gaming only for gaming variant
+      gaming = {
+        enable = lib.mkDefault (cfg.variant == "gaming");
+        performance = lib.mkDefault (cfg.variant == "gaming");
+        launchers = lib.mkDefault (cfg.variant == "gaming");
+        wine = lib.mkDefault (cfg.variant == "gaming");
+        gpuControl = lib.mkDefault false; # NVIDIA hybrid graphics handled separately
+        minecraft = lib.mkDefault false;
+      };
+
+      # Streaming disabled by default for battery life
+      media.streaming = lib.mkDefault false;
+    };
 
     environment.systemPackages = with pkgs;
       [

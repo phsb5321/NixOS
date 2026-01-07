@@ -107,85 +107,9 @@
   };
 
   # ===== PACKAGE CONFIGURATION =====
-  modules.packages = {
-    # Browsers
-    browsers = {
-      enable = true;
-      chrome = true;
-      brave = true;
-      librewolf = true;
-      zen = true;
-    };
-
-    # Development tools
-    development = {
-      enable = true;
-      editors = true;
-      apiTools = true;
-      runtimes = true;
-      compilers = true;
-      languageServers = true;
-      versionControl = true;
-      utilities = true;
-      database = true;
-      containers = true;
-      debugging = true;
-      networking = true;
-    };
-
-    # Media
-    media = {
-      enable = true;
-      vlc = true;
-      spotify = true;
-      discord = true;
-      streaming = true;
-      imageEditing = true;
-    };
-
-    # Gaming
-    gaming = {
-      enable = true;
-      performance = true;
-      launchers = true;
-      wine = true;
-      gpuControl = true;
-      minecraft = false;
-    };
-
-    # Utilities
-    utilities = {
-      enable = true;
-      diskManagement = true;
-      fileSync = false; # Syncthing handled by role
-      compression = true;
-      security = true;
-      pdfViewer = true;
-      messaging = true;
-      fonts = true;
-    };
-
-    # Audio/Video
-    audioVideo = {
-      enable = true;
-      pipewire = true;
-      audioEffects = true;
-      audioControl = true;
-      webcam = true;
-    };
-
-    # Terminal
-    terminal = {
-      enable = true;
-      fonts = true;
-      shell = true;
-      theme = true;
-      modernTools = true;
-      plugins = true;
-      editor = true;
-      applications = true;
-    };
-  };
+  # Most defaults come from profiles/common.nix and profiles/desktop.nix
+  # Only host-specific overrides needed here
+  # (Currently all defaults from profiles are correct for desktop)
 
   # ===== HOST-SPECIFIC PACKAGES =====
   environment.systemPackages = with pkgs; [
