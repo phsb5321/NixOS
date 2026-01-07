@@ -5,5 +5,6 @@
     ./base.nix
     ./extensions.nix
     ./wayland.nix
+    ./settings.nix # Common dconf settings shared across hosts
   ];
 }
