@@ -139,7 +139,8 @@ in {
         backend = "podman";
         containers = {};
       };
-      waydroid.enable = false;
+      # Default to false, desktop host enables with plain true
+      waydroid.enable = lib.mkDefault false;
     };
   };
 }

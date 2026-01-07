@@ -210,6 +210,7 @@ in {
 
     # Swappiness for laptops (prefer RAM over swap)
     boot.kernel.sysctl = {
+      # JUSTIFIED: Laptop profile overrides base module's swappiness for battery optimization
       "vm.swappiness" = lib.mkForce 10;
       "vm.laptop_mode" = lib.mkDefault 5;
     };
