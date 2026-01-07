@@ -48,7 +48,7 @@ in {
       lib.optionals cfg.chrome [google-chrome]
       ++ lib.optionals cfg.brave [brave]
       ++ lib.optionals cfg.librewolf [librewolf]
-      ++ lib.optionals cfg.zen [inputs.zen-browser.packages.${pkgs.system}.default]
+      ++ lib.optionals cfg.zen [inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default]
       ++ cfg.extraPackages;
   };
 }

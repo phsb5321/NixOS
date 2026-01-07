@@ -105,15 +105,20 @@ in {
       fstrim.enable = true;
       thermald.enable = true;
       printing.enable = true;
+      # Limit journal size to prevent disk bloat
+      journald.extraConfig = ''
+        SystemMaxUse=500M
+        MaxRetentionSec=7day
+      '';
     };
 
     # 🎯 KEYBOARD LAYOUT: Console keymap will be automatically derived from xserver.xkb configuration
     # Configure X11 keyboard layout if X11 is available and keyboard config is enabled
     services.xserver = lib.mkIf (config.services.xserver.enable && cfg.keyboard.enable) {
       xkb = {
-        layout = cfg.keyboard.layout;
-        variant = cfg.keyboard.variant;
-        options = cfg.keyboard.options;
+        inherit (cfg.keyboard) layout;
+        inherit (cfg.keyboard) variant;
+        inherit (cfg.keyboard) options;
       };
     };
 

@@ -89,7 +89,7 @@ in {
       [
         "snd_hda_intel.enable_hdmi=1" # Enable HDMI audio for Intel
       ]
-      ++ lib.optionals (config.hardware.graphics.enable) [
+      ++ lib.optionals config.hardware.graphics.enable [
         "radeon.audio=1" # Enable HDMI audio for Radeon
         "amdgpu.audio=1" # Enable HDMI audio for AMDGPU
       ];

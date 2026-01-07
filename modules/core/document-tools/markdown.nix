@@ -13,15 +13,12 @@
 in {
   config = lib.mkIf (cfg.enable && cfg.markdown.enable) {
     environment.systemPackages =
-      []
-      # Language server support
-      ++ lib.optionals cfg.markdown.lsp [
+      lib.optionals cfg.markdown.lsp [
         pkgs.marksman # Markdown language server
       ]
       # Linting tools
       ++ lib.optionals cfg.markdown.linting.enable (
-        []
-        ++ lib.optionals cfg.markdown.linting.markdownlint [
+        lib.optionals cfg.markdown.linting.markdownlint [
           pkgs.markdownlint-cli2 # Modern Markdown linter
         ]
         ++ lib.optionals cfg.markdown.linting.vale.enable (
@@ -37,8 +34,7 @@ in {
       )
       # Formatting tools
       ++ lib.optionals cfg.markdown.formatting.enable (
-        []
-        ++ lib.optionals cfg.markdown.formatting.mdformat [
+        lib.optionals cfg.markdown.formatting.mdformat [
           pkgs.mdformat # CommonMark formatter
         ]
         ++ lib.optionals cfg.markdown.formatting.prettier [
@@ -47,8 +43,7 @@ in {
       )
       # Preview tools
       ++ lib.optionals cfg.markdown.preview.enable (
-        []
-        ++ lib.optionals cfg.markdown.preview.glow [
+        lib.optionals cfg.markdown.preview.glow [
           pkgs.glow # Terminal markdown renderer
         ]
         ++ lib.optionals cfg.markdown.preview.grip [
@@ -57,8 +52,7 @@ in {
       )
       # Utilities
       ++ lib.optionals cfg.markdown.utilities.enable (
-        []
-        ++ lib.optionals cfg.markdown.utilities.doctoc [
+        lib.optionals cfg.markdown.utilities.doctoc [
           pkgs.doctoc # Table of contents generator
         ]
         ++ lib.optionals cfg.markdown.utilities.mdbook [

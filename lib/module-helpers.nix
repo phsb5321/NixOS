@@ -3,11 +3,7 @@
 # Module Helper Functions
 # Purpose: Common patterns for creating NixOS modules
 # Part of: 001-module-optimization (T003, T051-T053)
-{
-  lib,
-  pkgs,
-  ...
-}: {
+{...}: {
   # Placeholder for mkServiceModule (T051)
   # Creates a standardized service module with common options
   mkServiceModule = throw "mkServiceModule not yet implemented (T051)";

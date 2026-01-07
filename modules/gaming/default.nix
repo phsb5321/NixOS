@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}: {
+{...}: {
   # Gaming modules aggregator
   # Imports all gaming-specific modules for NixOS gaming optimization
 

@@ -107,7 +107,7 @@ in {
     # RDP server using xrdp
     services.xrdp = lib.mkIf (cfg.server.enable && cfg.server.rdp.enable) {
       enable = true;
-      port = cfg.server.rdp.port;
+      inherit (cfg.server.rdp) port;
       openFirewall = cfg.firewall.openPorts;
       defaultWindowManager =
         if config.services.displayManager.gdm.wayland

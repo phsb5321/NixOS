@@ -1,11 +1,7 @@
 # NixOS Server Configuration - Simplified modular approach like laptop
 # VM host running GNOME in X11 mode for compatibility
 {
-  config,
   pkgs,
-  pkgs-unstable,
-  stablePkgs,
-  inputs,
   systemVersion,
   hostname,
   lib,

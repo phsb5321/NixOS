@@ -12,7 +12,7 @@ in {
     # Create user and group
     users.users.${cfg.user} = {
       isSystemUser = true;
-      group = cfg.group;
+      inherit (cfg) group;
       home = cfg.dataDir;
       createHome = true;
       description = "qBittorrent service user";
@@ -22,8 +22,8 @@ in {
 
     # Filesystem configuration for storage device
     fileSystems.${cfg.storage.mountPoint} = lib.mkIf (cfg.storage.device != "") {
-      device = cfg.storage.device;
-      fsType = cfg.storage.fsType;
+      inherit (cfg.storage) device;
+      inherit (cfg.storage) fsType;
       options = ["defaults" "nofail"];
     };
 

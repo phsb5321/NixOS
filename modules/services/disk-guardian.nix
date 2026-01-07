@@ -4,7 +4,6 @@
 # - Monitors mount health continuously
 # - Sends alerts on failures
 # - Prevents services from starting with wrong disk configuration
-
 {
   config,
   lib,

@@ -4,7 +4,6 @@
 # - Monitors container health
 # - Checks data persistence
 # - Validates Cloudflare Tunnel access
-
 {
   config,
   lib,

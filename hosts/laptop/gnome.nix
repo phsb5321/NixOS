@@ -3,7 +3,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: {
   # Enable GNOME with X11 for better compatibility

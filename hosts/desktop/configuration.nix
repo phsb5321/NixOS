@@ -1,10 +1,8 @@
 # NixOS Desktop Configuration - Role-Based (New Architecture)
 # This is the new modular configuration using roles, GPU abstraction, and modular packages
 {
-  config,
   pkgs,
   lib,
-  hostname,
   ...
 }: {
   imports = [
@@ -100,7 +98,7 @@
 
     # Wayland configuration
     wayland = {
-      enable = true;  # Reverted back to Wayland (X11 broke display manager)
+      enable = true; # Reverted back to Wayland (X11 broke display manager)
       electronSupport = true;
       screenSharing = true;
       variant = "hardware";
@@ -192,6 +190,7 @@
   environment.systemPackages = with pkgs; [
     # AI Development
     claude-code
+    opencode
 
     # Communication
     telegram-desktop
@@ -263,6 +262,10 @@
     dhcpcd.extraConfig = "nohook resolv.conf";
     nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     firewall.checkReversePath = "loose";
+    # Trust waydroid0 interface for firewall
+    firewall.trustedInterfaces = ["waydroid0"];
+    # Allow DHCP and DNS ports for Waydroid
+    firewall.allowedUDPPorts = [53 67];
     nftables.enable = true;
   };
 
@@ -426,6 +429,15 @@
       killUnconfinedConfinables = true;
     };
   };
+
+  # ===== VIRTUALIZATION =====
+  # Waydroid - Android container for Linux (priority feature)
+  # Default waydroid 1.5.4+ already has LXC_USE_NFT="true" for nftables
+  virtualisation.waydroid.enable = lib.mkForce true;
+
+  # Waydroid desktop entry hygiene - hide per-app launchers from GNOME
+  # Replaces .desktop files with /dev/null symlinks to prevent clutter
+  modules.services.waydroid-desktop-hygiene.enable = true;
 
   # ===== SYSTEMD SERVICES =====
   # GNOME login fixes
