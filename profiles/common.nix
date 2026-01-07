@@ -2,7 +2,6 @@
 # Common profile - Single source of truth for user configuration and package defaults
 # All hosts import this profile to get the canonical user definition and common packages
 {
-  config,
   lib,
   pkgs,
   ...

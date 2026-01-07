@@ -172,5 +172,98 @@
         # Legacy alias for backward compatibility
         default = mkNixosSystem hosts.desktop;
       };
+
+    # Colmena configuration for remote deployment
+    # Usage: colmena build, colmena apply --on <host>
+    # Note: Colmena requires special args that match what nixosSystem provides
+    colmena = let
+      # Helper to create colmena node config from our hosts definition
+      mkColmenaNode = _hostName: hostConfig: {pkgs, ...}: let
+        nixpkgsInput = hostConfig.nixpkgsInput or inputs.nixpkgs;
+        systemVersion = let
+          inherit (nixpkgsInput.lib) version;
+          versionParts = builtins.splitVersion version;
+          major = builtins.head versionParts;
+          minor = builtins.elemAt versionParts 1;
+        in "${major}.${minor}";
+
+        pkgs-unstable = import inputs.nixpkgs-unstable {
+          system = "x86_64-linux";
+          config = pkgsConfig;
+          inherit overlays;
+        };
+      in {
+        deployment = {
+          targetHost = hostConfig.hostname;
+          targetUser = "root";
+          allowLocalDeployment = true;
+          tags =
+            if _hostName == "desktop"
+            then ["desktop" "workstation" "canary"]
+            else if _hostName == "laptop"
+            then ["laptop" "portable"]
+            else if _hostName == "server"
+            then ["server" "production"]
+            else [];
+        };
+
+        imports = [../hosts/${hostConfig.configPath}/configuration.nix];
+
+        # Provide the same specialArgs that mkNixosSystem provides
+        _module.args = {
+          inherit inputs;
+          systemVersion = systemVersion;
+          system = hostConfig.system;
+          hostname = hostConfig.hostname;
+          inherit pkgs-unstable;
+          stablePkgs = pkgs;
+          # self' and inputs' are not available in colmena context
+        };
+      };
+    in {
+      meta = {
+        nixpkgs = import inputs.nixpkgs {
+          system = "x86_64-linux";
+          config = pkgsConfig;
+          inherit overlays;
+        };
+
+        # Node-specific nixpkgs (for different channels per host)
+        nodeNixpkgs = {
+          desktop = import inputs.nixpkgs-unstable {
+            system = "x86_64-linux";
+            config = pkgsConfig;
+            inherit overlays;
+          };
+          laptop = import inputs.nixpkgs {
+            system = "x86_64-linux";
+            config = pkgsConfig;
+            inherit overlays;
+          };
+          server = import inputs.nixpkgs {
+            system = "x86_64-linux";
+            config = pkgsConfig;
+            inherit overlays;
+          };
+        };
+
+        # Special args available to all nodes
+        specialArgs = {
+          inherit inputs;
+        };
+      };
+
+      # Default configuration applied to all nodes
+      defaults = {...}: {
+        # Common settings for all colmena-managed nodes
+        nixpkgs.config = pkgsConfig;
+        nixpkgs.overlays = overlays;
+      };
+
+      # Generate node configs from hosts definition
+      desktop = mkColmenaNode "desktop" hosts.desktop;
+      laptop = mkColmenaNode "laptop" hosts.laptop;
+      server = mkColmenaNode "server" hosts.server;
+    };
   };
 }
