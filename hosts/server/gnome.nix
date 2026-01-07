@@ -117,9 +117,10 @@
     }
   ];
 
-  # Override GSK_RENDERER for VM (let GTK auto-detect llvmpipe)
+  # JUSTIFIED: Override GSK_RENDERER for Proxmox VM (let GTK auto-detect llvmpipe)
+  # Other hosts set specific renderers; server needs auto-detection for VirtIO-GPU
   environment.sessionVariables = {
-    GSK_RENDERER = lib.mkForce ""; # Empty string lets GTK auto-detect
+    GSK_RENDERER = lib.mkForce "";
   };
 
   # Security configuration for GNOME

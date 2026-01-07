@@ -57,9 +57,9 @@ in {
     # X11 support for non-Wayland
     services.xserver.enable = !cfg.wayland.enable;
 
-    # Fix for PT-BR ABNT2 keyboard deadkeys in Ghostty/Zellij on Wayland
+    # JUSTIFIED: Fix for PT-BR ABNT2 keyboard deadkeys in Ghostty/Zellij on Wayland
     # Override ibus.nix default (which sets "ibus") after nixpkgs 2025-12 update
-    # Must use environment.variables with mkForce to properly override the conflict
+    # Must use mkForce because ibus.nix uses direct assignment, not mkDefault
     environment.variables.GTK_IM_MODULE = lib.mkIf cfg.wayland.enable (lib.mkForce "simple");
 
     # Wayland environment variables

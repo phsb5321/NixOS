@@ -292,6 +292,8 @@
     ];
 
     kernel.sysctl = {
+      # JUSTIFIED: Gaming-optimized memory settings override base module defaults
+      # Desktop requires aggressive swappiness=1 for gaming (base default is 10)
       "vm.swappiness" = lib.mkForce 1;
       "vm.vfs_cache_pressure" = lib.mkForce 50;
       "vm.dirty_ratio" = lib.mkForce 10;
@@ -300,6 +302,7 @@
       "vm.dirty_writeback_centisecs" = 100;
       "vm.page-cluster" = 0;
       "kernel.sched_autogroup_enabled" = 1;
+      # JUSTIFIED: Gaming requires higher file descriptor limit than base default
       "fs.file-max" = lib.mkForce 4194304;
       "fs.aio-max-nr" = 1048576;
     };
@@ -357,7 +360,8 @@
   # ===== VIRTUALIZATION =====
   # Waydroid - Android container for Linux (priority feature)
   # Default waydroid 1.5.4+ already has LXC_USE_NFT="true" for nftables
-  virtualisation.waydroid.enable = lib.mkForce true;
+  # Base module defaults to false, so simple enable works
+  virtualisation.waydroid.enable = true;
 
   # Waydroid desktop entry hygiene - hide per-app launchers from GNOME
   # Replaces .desktop files with /dev/null symlinks to prevent clutter
@@ -407,5 +411,6 @@
   };
 
   # ===== SYSTEM STATE VERSION =====
-  system.stateVersion = lib.mkForce "25.11";
+  # Uses modules.core.stateVersion, but also set directly for clarity
+  system.stateVersion = "25.11";
 }

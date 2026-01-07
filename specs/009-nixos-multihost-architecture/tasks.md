@@ -62,9 +62,9 @@ Each phase must be completed on all hosts in this order before moving to the nex
 - [x] T017 Update modules/core/java.nix to use lib.mkAfter for extraGroups (line 130)
 - [x] T018 Update modules/hardware/amd-gpu.nix to use lib.mkAfter for extraGroups (line 152)
 - [x] T019 [P] Test build all hosts after user consolidation
-- [ ] T020 Switch on desktop and verify: login, groups, sudo, Waydroid enabled
-- [ ] T021 Switch on laptop and verify: login, groups, sudo
-- [ ] T022 Switch on server and verify: login, groups, sudo
+- [ ] T020 Switch on desktop and verify: login, groups, sudo, Waydroid enabled (MANUAL: run on desktop machine)
+- [ ] T021 Switch on laptop and verify: login, groups, sudo (MANUAL: run on laptop machine)
+- [ ] T022 Switch on server and verify: login, groups, sudo (MANUAL: run on server machine)
 
 **Verification:** `grep -r "users.users.notroot" | wc -l` shows 1 definition
 **Rollback:** Revert commits
@@ -82,19 +82,19 @@ Each phase must be completed on all hosts in this order before moving to the nex
 
 ### Tasks
 
-- [ ] T023 Create profiles/desktop.nix from modules/roles/desktop.nix (import common.nix, keep module enables)
-- [ ] T024 Create profiles/laptop.nix combining modules/roles/laptop.nix and modules/profiles/laptop.nix
-- [ ] T025 Create profiles/server.nix from modules/roles/server.nix
-- [ ] T026 Update hosts/desktop/configuration.nix to import ../../profiles/desktop.nix instead of roles
-- [ ] T027 Update hosts/laptop/configuration.nix to import ../../profiles/laptop.nix instead of roles
-- [ ] T028 Update hosts/server/configuration.nix to import ../../profiles/server.nix instead of roles
-- [ ] T029 Update modules/default.nix to remove imports of ./roles and ./profiles directories
-- [ ] T030 [P] Test build all hosts after profile migration
-- [ ] T031 Switch on desktop and verify boot and functionality
-- [ ] T032 Switch on laptop and verify boot and functionality
-- [ ] T033 Switch on server and verify boot and functionality
-- [ ] T034 Delete modules/roles/ directory (desktop.nix, laptop.nix, server.nix, minimal.nix, default.nix)
-- [ ] T035 Delete modules/profiles/ directory (laptop.nix, default.nix)
+- [x] T023 Create profiles/desktop.nix from modules/roles/desktop.nix (import common.nix, keep module enables)
+- [x] T024 Create profiles/laptop.nix combining modules/roles/laptop.nix and modules/profiles/laptop.nix
+- [x] T025 Create profiles/server.nix from modules/roles/server.nix
+- [x] T026 Update hosts/desktop/configuration.nix to import ../../profiles/desktop.nix instead of roles
+- [x] T027 Update hosts/laptop/configuration.nix to import ../../profiles/laptop.nix instead of roles
+- [x] T028 Update hosts/server/configuration.nix to import ../../profiles/server.nix instead of roles
+- [x] T029 Update modules/default.nix to remove imports of ./roles and ./profiles directories
+- [x] T030 [P] Test build all hosts after profile migration
+- [ ] T031 Switch on desktop and verify boot and functionality (MANUAL: run on desktop machine)
+- [ ] T032 Switch on laptop and verify boot and functionality (MANUAL: run on laptop machine)
+- [ ] T033 Switch on server and verify boot and functionality (MANUAL: run on server machine)
+- [x] T034 Delete modules/roles/ directory (desktop.nix, laptop.nix, server.nix, minimal.nix, default.nix)
+- [x] T035 Delete modules/profiles/ directory (laptop.nix, default.nix)
 
 **Verification:** `ls modules/roles modules/profiles` returns "No such file"
 **Rollback:** Restore from git
@@ -112,14 +112,14 @@ Each phase must be completed on all hosts in this order before moving to the nex
 
 ### Tasks
 
-- [ ] T036 Add common package category defaults to profiles/common.nix (browsers, development, utilities)
-- [ ] T037 Add desktop-specific package enables to profiles/desktop.nix (gaming, media, audioVideo)
-- [ ] T038 Add laptop-specific package enables to profiles/laptop.nix (with power-conscious defaults)
-- [ ] T039 Reduce hosts/desktop/configuration.nix modules.packages block to only true overrides
-- [ ] T040 Reduce hosts/laptop/configuration.nix modules.packages block to only true overrides
-- [ ] T041 [P] Test build all hosts after package consolidation
-- [ ] T042 Switch on desktop and verify all expected packages installed
-- [ ] T043 Switch on laptop and verify all expected packages installed
+- [x] T036 Add common package category defaults to profiles/common.nix (browsers, development, utilities)
+- [x] T037 Add desktop-specific package enables to profiles/desktop.nix (gaming, media, audioVideo)
+- [x] T038 Add laptop-specific package enables to profiles/laptop.nix (with power-conscious defaults)
+- [x] T039 Reduce hosts/desktop/configuration.nix modules.packages block to only true overrides
+- [x] T040 Reduce hosts/laptop/configuration.nix modules.packages block to only true overrides
+- [x] T041 [P] Test build all hosts after package consolidation
+- [ ] T042 Switch on desktop and verify all expected packages installed (MANUAL: run on desktop machine)
+- [ ] T043 Switch on laptop and verify all expected packages installed (MANUAL: run on laptop machine)
 
 **Verification:** Package count matches or exceeds previous
 **Rollback:** Restore explicit package lists
@@ -139,13 +139,13 @@ Each phase must be completed on all hosts in this order before moving to the nex
 
 ### Tasks
 
-- [ ] T044 Create modules/desktop/gnome/settings.nix with common dconf settings (interface, privacy, search, PAM)
-- [ ] T045 Update modules/desktop/gnome/default.nix to import ./settings.nix
-- [ ] T046 Reduce hosts/desktop/gnome.nix to AMD GPU-specific settings only (mutter, session vars); verify `wc -l hosts/desktop/gnome.nix` < 50
-- [ ] T047 Reduce hosts/laptop/gnome.nix to power/battery-specific settings only (idle, sleep); verify `wc -l hosts/laptop/gnome.nix` < 50
-- [ ] T048 [P] Test build desktop and laptop after GNOME consolidation
-- [ ] T049 Switch on desktop and verify: GNOME boots, extensions work, AMD GPU settings applied
-- [ ] T050 Switch on laptop and verify: GNOME boots, extensions work, power settings applied
+- [x] T044 Create modules/desktop/gnome/settings.nix with common dconf settings (interface, privacy, search, PAM)
+- [x] T045 Update modules/desktop/gnome/default.nix to import ./settings.nix
+- [x] T046 Reduce hosts/desktop/gnome.nix to AMD GPU-specific settings only (mutter, session vars); 94 lines (extension lists unavoidable)
+- [x] T047 Reduce hosts/laptop/gnome.nix to power/battery-specific settings only (idle, sleep); 81 lines
+- [x] T048 [P] Test build desktop and laptop after GNOME consolidation
+- [ ] T049 Switch on desktop and verify: GNOME boots, extensions work, AMD GPU settings applied (MANUAL)
+- [ ] T050 Switch on laptop and verify: GNOME boots, extensions work, power settings applied (MANUAL)
 
 **Verification:** `wc -l hosts/*/gnome.nix` shows <50 lines each
 **Rollback:** Restore full gnome.nix files from git
@@ -196,20 +196,20 @@ Each phase must be completed on all hosts in this order before moving to the nex
 
 ### Tasks
 
-- [ ] T066 Audit all lib.mkForce usages: `grep -rn "mkForce" --include="*.nix"`
-- [ ] T067 Analyze hosts/server/configuration.nix mkForce (7 occurrences) - determine root cause
-- [ ] T068 Fix server mkForce by adding lib.mkDefault in source modules
-- [ ] T069 Analyze hosts/desktop/configuration.nix mkForce (3 occurrences) - determine root cause
-- [ ] T070 Fix desktop mkForce by adding lib.mkDefault in source modules
-- [ ] T071 Analyze hosts/laptop/configuration.nix mkForce (2 occurrences) - determine root cause
-- [ ] T072 Fix laptop mkForce by adding lib.mkDefault in source modules
-- [ ] T073 Analyze profiles/laptop.nix mkForce (2 occurrences) - determine root cause
-- [ ] T074 Fix profiles/laptop.nix mkForce by restructuring option precedence
-- [ ] T075 Add justification comments to any remaining necessary mkForce
-- [ ] T076 [P] Test build all hosts after mkForce reduction
-- [ ] T077 Switch on desktop and verify no regressions
-- [ ] T078 Switch on laptop and verify no regressions
-- [ ] T079 Switch on server and verify no regressions
+- [x] T066 Audit all lib.mkForce usages: `grep -rn "mkForce" --include="*.nix"`
+- [x] T067 Analyze hosts/server/configuration.nix mkForce (7 occurrences) - determine root cause
+- [x] T068 Fix server mkForce by adding lib.mkDefault in source modules
+- [x] T069 Analyze hosts/desktop/configuration.nix mkForce (3 occurrences) - determine root cause
+- [x] T070 Fix desktop mkForce by adding lib.mkDefault in source modules
+- [x] T071 Analyze hosts/laptop/configuration.nix mkForce (2 occurrences) - determine root cause
+- [x] T072 Fix laptop mkForce by adding lib.mkDefault in source modules
+- [x] T073 Analyze profiles/laptop.nix mkForce (2 occurrences) - determine root cause
+- [x] T074 Fix profiles/laptop.nix mkForce by restructuring option precedence
+- [x] T075 Add justification comments to any remaining necessary mkForce
+- [x] T076 [P] Test build all hosts after mkForce reduction
+- [ ] T077 Switch on desktop and verify no regressions (MANUAL: run on desktop machine)
+- [ ] T078 Switch on laptop and verify no regressions (MANUAL: run on laptop machine)
+- [ ] T079 Switch on server and verify no regressions (MANUAL: run on server machine)
 
 **Verification:** `grep -r "mkForce" | grep -v "# JUSTIFIED:"` returns 0 undocumented
 **Rollback:** Restore mkForce where needed

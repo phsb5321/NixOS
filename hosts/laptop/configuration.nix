@@ -67,6 +67,7 @@
 
     # Wayland configuration - Force X11 for NVIDIA compatibility
     wayland = {
+      # JUSTIFIED: Hardware requirement - NVIDIA hybrid graphics causes blank screen with Wayland
       enable = lib.mkForce false; # Use X11 for NVIDIA laptop
       electronSupport = false;
       screenSharing = false;
