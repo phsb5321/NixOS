@@ -1,19 +1,20 @@
-# ~/NixOS/modules/roles/desktop.nix
-# Desktop role - full features, gaming, development
+# ~/NixOS/profiles/desktop.nix
+# Desktop profile - full features, gaming, development
+# Consolidated from modules/roles/desktop.nix
 {
   config,
   lib,
   ...
 }: {
   imports = [
-    ../../profiles/common.nix
+    ./common.nix
   ];
 
-  options.modules.roles.desktop = {
-    enable = lib.mkEnableOption "desktop workstation role";
+  options.modules.profiles.desktop = {
+    enable = lib.mkEnableOption "desktop workstation profile";
   };
 
-  config = lib.mkIf config.modules.roles.desktop.enable {
+  config = lib.mkIf config.modules.profiles.desktop.enable {
     # Services
     modules.services = {
       syncthing.enable = true;

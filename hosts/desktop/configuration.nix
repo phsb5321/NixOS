@@ -1,5 +1,5 @@
-# NixOS Desktop Configuration - Role-Based (New Architecture)
-# This is the new modular configuration using roles, GPU abstraction, and modular packages
+# NixOS Desktop Configuration - Profile-Based (New Architecture)
+# This is the new modular configuration using profiles, GPU abstraction, and modular packages
 {
   pkgs,
   lib,
@@ -8,11 +8,12 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../../profiles/desktop.nix
   ];
 
-  # ===== ROLE-BASED CONFIGURATION =====
-  # Desktop role enables: GNOME, gaming, full features, services, dotfiles
-  modules.roles.desktop.enable = true;
+  # ===== PROFILE-BASED CONFIGURATION =====
+  # Desktop profile enables: GNOME, gaming, full features, services, dotfiles
+  modules.profiles.desktop.enable = true;
 
   # ===== GPU CONFIGURATION =====
   # AMD RX 5700 XT (Navi 10) with gaming optimizations
