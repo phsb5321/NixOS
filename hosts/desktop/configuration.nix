@@ -393,11 +393,10 @@
 
   # ===== HOST-SPECIFIC USER CONFIGURATION =====
   users.groups.plugdev = {};
-  users.users.notroot.extraGroups = [
+  users.users.notroot.extraGroups = lib.mkAfter [
     "dialout"
     "libvirtd"
     "plugdev"
-    "input"
   ];
 
   # ===== POWER MANAGEMENT =====

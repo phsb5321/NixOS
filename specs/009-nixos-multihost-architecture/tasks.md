@@ -2,7 +2,7 @@
 
 **Feature ID:** 009-nixos-multihost-architecture
 **Generated:** 2026-01-07
-**Total Tasks:** 47
+**Total Tasks:** 92
 **Phases:** 8 (including Setup and Polish)
 
 ---
@@ -25,14 +25,14 @@ Each phase must be completed on all hosts in this order before moving to the nex
 
 ### Tasks
 
-- [ ] T001 Run alejandra formatter on all .nix files in repository root
-- [ ] T002 Run statix linter and fix all warnings in *.nix files
-- [ ] T003 Run deadnix and remove all dead code in *.nix files
-- [ ] T004 Verify `nix flake check` passes with no errors
-- [ ] T005 [P] Test build desktop: `nix build .#nixosConfigurations.desktop.config.system.build.toplevel`
-- [ ] T006 [P] Test build laptop: `nix build .#nixosConfigurations.laptop.config.system.build.toplevel`
-- [ ] T007 [P] Test build server: `nix build .#nixosConfigurations.server.config.system.build.toplevel`
-- [ ] T008 Commit as "chore: establish formatting baseline"
+- [x] T001 Run alejandra formatter on all .nix files in repository root
+- [x] T002 Run statix linter and fix all warnings in *.nix files
+- [x] T003 Run deadnix and remove all dead code in *.nix files
+- [x] T004 Verify `nix flake check` passes with no errors
+- [x] T005 [P] Test build desktop: `nix build .#nixosConfigurations.desktop.config.system.build.toplevel`
+- [x] T006 [P] Test build laptop: `nix build .#nixosConfigurations.laptop.config.system.build.toplevel`
+- [x] T007 [P] Test build server: `nix build .#nixosConfigurations.server.config.system.build.toplevel`
+- [x] T008 Commit as "chore: establish formatting baseline"
 
 **Verification:** All 3 hosts build successfully
 **Rollback:** `git revert`
@@ -51,17 +51,17 @@ Each phase must be completed on all hosts in this order before moving to the nex
 
 ### Tasks
 
-- [ ] T009 Create profiles/ directory at repository root
-- [ ] T010 Create profiles/common.nix with canonical user definition (users.users.notroot, zsh, defaultUserShell)
-- [ ] T011 Update modules/roles/desktop.nix to import ../../profiles/common.nix and remove users.users.notroot block
-- [ ] T012 Update modules/roles/laptop.nix to import ../../profiles/common.nix and remove users.users.notroot block
-- [ ] T013 Update modules/roles/server.nix to import ../../profiles/common.nix and remove users.users.notroot block
-- [ ] T014 Update modules/roles/minimal.nix to import ../../profiles/common.nix and remove users.users.notroot block
-- [ ] T015 Update hosts/desktop/configuration.nix to use lib.mkAfter for extraGroups instead of direct assignment
-- [ ] T016 Update hosts/laptop/configuration.nix to use lib.mkAfter for extraGroups and remove users.users.notroot block
-- [ ] T017 Update modules/core/java.nix to use lib.mkAfter for extraGroups (line 130)
-- [ ] T018 Update modules/hardware/amd-gpu.nix to use lib.mkAfter for extraGroups (line 152)
-- [ ] T019 [P] Test build all hosts after user consolidation
+- [x] T009 Create profiles/ directory at repository root
+- [x] T010 Create profiles/common.nix with canonical user definition (users.users.notroot, zsh, defaultUserShell)
+- [x] T011 Update modules/roles/desktop.nix to import ../../profiles/common.nix and remove users.users.notroot block
+- [x] T012 Update modules/roles/laptop.nix to import ../../profiles/common.nix and remove users.users.notroot block
+- [x] T013 Update modules/roles/server.nix to import ../../profiles/common.nix and remove users.users.notroot block
+- [x] T014 Update modules/roles/minimal.nix to import ../../profiles/common.nix and remove users.users.notroot block
+- [x] T015 Update hosts/desktop/configuration.nix to use lib.mkAfter for extraGroups instead of direct assignment
+- [x] T016 Update hosts/laptop/configuration.nix to use lib.mkAfter for extraGroups and remove users.users.notroot block
+- [x] T017 Update modules/core/java.nix to use lib.mkAfter for extraGroups (line 130)
+- [x] T018 Update modules/hardware/amd-gpu.nix to use lib.mkAfter for extraGroups (line 152)
+- [x] T019 [P] Test build all hosts after user consolidation
 - [ ] T020 Switch on desktop and verify: login, groups, sudo, Waydroid enabled
 - [ ] T021 Switch on laptop and verify: login, groups, sudo
 - [ ] T022 Switch on server and verify: login, groups, sudo
@@ -141,8 +141,8 @@ Each phase must be completed on all hosts in this order before moving to the nex
 
 - [ ] T044 Create modules/desktop/gnome/settings.nix with common dconf settings (interface, privacy, search, PAM)
 - [ ] T045 Update modules/desktop/gnome/default.nix to import ./settings.nix
-- [ ] T046 Reduce hosts/desktop/gnome.nix to AMD GPU-specific settings only (mutter, session vars)
-- [ ] T047 Reduce hosts/laptop/gnome.nix to power/battery-specific settings only (idle, sleep)
+- [ ] T046 Reduce hosts/desktop/gnome.nix to AMD GPU-specific settings only (mutter, session vars); verify `wc -l hosts/desktop/gnome.nix` < 50
+- [ ] T047 Reduce hosts/laptop/gnome.nix to power/battery-specific settings only (idle, sleep); verify `wc -l hosts/laptop/gnome.nix` < 50
 - [ ] T048 [P] Test build desktop and laptop after GNOME consolidation
 - [ ] T049 Switch on desktop and verify: GNOME boots, extensions work, AMD GPU settings applied
 - [ ] T050 Switch on laptop and verify: GNOME boots, extensions work, power settings applied
@@ -250,7 +250,7 @@ Each phase must be completed on all hosts in this order before moving to the nex
 - [ ] T088 Verify Waydroid still enabled on desktop (constitution requirement)
 - [ ] T089 Document secrets management (bootstrap, rotation) in docs/SECRETS.md
 - [ ] T090 Document module authoring conventions in docs/MODULE_CONVENTIONS.md
-- [ ] T091 Run final `nix flake check` on all hosts
+- [ ] T091 Run final `nix flake check` and `statix check .` to verify no regressions
 - [ ] T092 Create git tag for architecture milestone
 
 **Verification:** All acceptance criteria from spec.md pass

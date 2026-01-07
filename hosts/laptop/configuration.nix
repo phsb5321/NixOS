@@ -369,18 +369,12 @@
     initrd.systemd.enable = true;
   };
 
-  # ===== USER CONFIGURATION =====
-  users.users.notroot = {
-    isNormalUser = true;
-    description = "Not Root";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "video" # Brightness control
-      "input" # Touchpad gestures
-      "power" # Power management
-    ];
-  };
+  # ===== HOST-SPECIFIC USER CONFIGURATION =====
+  # Base user defined in profiles/common.nix via modules/roles/laptop.nix
+  # Only add laptop-specific groups here
+  users.users.notroot.extraGroups = lib.mkAfter [
+    "power" # Power management
+  ];
 
   # ===== ENVIRONMENT VARIABLES =====
   environment.sessionVariables = {

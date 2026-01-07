@@ -127,7 +127,7 @@ in {
     users.groups.adbusers = {};
 
     # Add your user to adbusers group if Android tools are enabled
-    users.users.notroot.extraGroups = mkIf cfg.androidTools.enable ["adbusers"];
+    users.users.notroot.extraGroups = lib.mkIf cfg.androidTools.enable (lib.mkAfter ["adbusers"]);
 
     # System configurations for better Java application support
     security.polkit.enable = true;

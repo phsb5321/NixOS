@@ -5,6 +5,10 @@
   lib,
   ...
 }: {
+  imports = [
+    ../../profiles/common.nix
+  ];
+
   options.modules.roles.desktop = {
     enable = lib.mkEnableOption "desktop workstation role";
   };
@@ -30,28 +34,21 @@
       };
     };
 
-    # User configuration
-    users.users.notroot = {
-      isNormalUser = true;
-      description = "Pedro Balbino";
-      extraGroups = [
-        "networkmanager"
-        "wheel"
-        "audio"
-        "video"
-        "disk"
-        "input"
-        "bluetooth"
-        "docker"
-        "render"
-        "kvm"
-        "pipewire"
-      ];
-    };
+    # Desktop-specific groups (extends common.nix base groups)
+    users.users.notroot.extraGroups = lib.mkAfter [
+      "audio"
+      "video"
+      "disk"
+      "input"
+      "bluetooth"
+      "docker"
+      "render"
+      "kvm"
+      "pipewire"
+    ];
 
     # Base programs
     programs = {
-      zsh.enable = true;
       dconf.enable = true;
       nix-ld.enable = true;
     };
