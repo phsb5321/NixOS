@@ -5,6 +5,10 @@
   lib,
   ...
 }: {
+  imports = [
+    ../../profiles/common.nix
+  ];
+
   options.modules.roles.server = {
     enable = lib.mkEnableOption "server role";
   };
@@ -22,19 +26,7 @@
       graphics.enable = false; # Headless
     };
 
-    # User configuration
-    users.users.notroot = {
-      isNormalUser = true;
-      description = "Pedro Balbino";
-      extraGroups = [
-        "networkmanager"
-        "wheel"
-      ];
-    };
-
-    # Base programs
-    programs = {
-      zsh.enable = true;
-    };
+    # Server uses only base groups from common.nix (networkmanager, wheel)
+    # No additional groups needed for headless server
   };
 }

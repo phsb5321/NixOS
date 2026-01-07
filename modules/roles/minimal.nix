@@ -5,6 +5,10 @@
   lib,
   ...
 }: {
+  imports = [
+    ../../profiles/common.nix
+  ];
+
   options.modules.roles.minimal = {
     enable = lib.mkEnableOption "minimal installation role";
   };
@@ -22,16 +26,7 @@
       graphics.enable = false;
     };
 
-    # User configuration
-    users.users.notroot = {
-      isNormalUser = true;
-      description = "Pedro Balbino";
-      extraGroups = ["wheel"];
-    };
-
-    # Base programs
-    programs = {
-      zsh.enable = true;
-    };
+    # Minimal uses only base groups from common.nix (networkmanager, wheel)
+    # No additional groups needed
   };
 }

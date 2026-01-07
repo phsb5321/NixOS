@@ -149,8 +149,6 @@ in {
       render = {};
     };
 
-    users.users.notroot = {
-      extraGroups = ["video" "render"];
-    };
+    users.users.notroot.extraGroups = lib.mkAfter ["video" "render"];
   };
 }

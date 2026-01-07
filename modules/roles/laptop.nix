@@ -5,6 +5,10 @@
   lib,
   ...
 }: {
+  imports = [
+    ../../profiles/common.nix
+  ];
+
   options.modules.roles.laptop = {
     enable = lib.mkEnableOption "laptop role";
 
@@ -35,27 +39,20 @@
       };
     };
 
-    # User configuration
-    users.users.notroot = {
-      isNormalUser = true;
-      description = "Pedro Balbino";
-      extraGroups = [
-        "networkmanager"
-        "wheel"
-        "audio"
-        "video"
-        "disk"
-        "input"
-        "bluetooth"
-        "render"
-        "kvm"
-        "pipewire"
-      ];
-    };
+    # Laptop-specific groups (extends common.nix base groups)
+    users.users.notroot.extraGroups = lib.mkAfter [
+      "audio"
+      "video"
+      "disk"
+      "input"
+      "bluetooth"
+      "render"
+      "kvm"
+      "pipewire"
+    ];
 
     # Base programs
     programs = {
-      zsh.enable = true;
       dconf.enable = true;
       nix-ld.enable = true;
     };
