@@ -10,14 +10,16 @@
   # Server secrets file path (gitignored, must exist on the actual server)
   serverSecretsPath = /home/notroot/NixOS/hosts/server/server-secrets.nix;
 in {
-  imports = [
-    ./hardware-configuration.nix
-    ../../modules
-    ../../profiles/server.nix
-    ./gnome.nix
-  ] ++ lib.optionals (builtins.pathExists serverSecretsPath) [
-    serverSecretsPath # Local secrets file (gitignored)
-  ];
+  imports =
+    [
+      ./hardware-configuration.nix
+      ../../modules
+      ../../profiles/server.nix
+      ./gnome.nix
+    ]
+    ++ lib.optionals (builtins.pathExists serverSecretsPath) [
+      serverSecretsPath # Local secrets file (gitignored)
+    ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
   # Server profile enables: SSH, minimal hardware

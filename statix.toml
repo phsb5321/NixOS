@@ -1,0 +1,17 @@
+# statix.toml - Configuration for Nix linter
+# Disable style warnings that are opinionated and don't affect correctness
+
+# Disable style-only warnings
+disabled = [
+  "manual_inherit",        # W03: x = x -> inherit x (style preference)
+  "manual_inherit_from",   # W04: x = foo.x -> inherit (foo) x (style preference)
+  "empty_pattern",         # W10: {...}: -> _: (sometimes explicit for clarity)
+  "repeated_keys",         # W20: networking = {...}; networking.dns = ... (valid NixOS module pattern)
+  "empty_list_concat",     # W23: [] ++ [...] (valid pattern for optional list items)
+]
+
+# Nix version for compatibility
+nix_version = "2.4"
+
+# Patterns to ignore
+ignore = [".direnv", "result"]

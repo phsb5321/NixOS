@@ -157,44 +157,46 @@
   '';
 in
   pkgs.mkShell {
-    buildInputs = with pkgs; [
-      # Python environment
-      pythonEnv
+    buildInputs = with pkgs;
+      [
+        # Python environment
+        pythonEnv
 
-      # Package and environment management
-      uv
-      pre-commit
+        # Package and environment management
+        uv
+        pre-commit
 
-      # Development and debugging tools
-      ruff
-      gdb
+        # Development and debugging tools
+        ruff
+        gdb
 
-      # GUI and system dependencies
-      tcl
-      tk
-      stdenv.cc.cc.lib
-      zlib
-      openssl
-      libGL
-      libGLU
-      xorg.libX11
-      xorg.libXext
-      xorg.libXrender
-      xorg.libICE
-      xorg.libSM
+        # GUI and system dependencies
+        tcl
+        tk
+        stdenv.cc.cc.lib
+        zlib
+        openssl
+        libGL
+        libGLU
+        xorg.libX11
+        xorg.libXext
+        xorg.libXrender
+        xorg.libICE
+        xorg.libSM
 
-      # Graphics and media libraries
-      glib
-      gtk3
-      gdk-pixbuf
-      cairo
-      pango
-      ffmpeg
-      opencvGtk
+        # Graphics and media libraries
+        glib
+        gtk3
+        gdk-pixbuf
+        cairo
+        pango
+        ffmpeg
+        opencvGtk
 
-      # Database
-      postgresql
-    ] ++ testingToolchain.packages;
+        # Database
+        postgresql
+      ]
+      ++ testingToolchain.packages;
 
     shellHook = ''
       # Testing toolchain configuration

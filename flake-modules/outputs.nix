@@ -16,7 +16,7 @@
 
       # Lint check
       lint-check = pkgs.runCommand "lint-check" {} ''
-        ${pkgs.statix}/bin/statix check ${../.} > $out 2>&1
+        ${pkgs.statix}/bin/statix check --config ${../.}/statix.toml ${../.} > $out 2>&1
       '';
 
       # Dead code check

@@ -120,29 +120,31 @@
   '';
 in
   pkgs.mkShell {
-    buildInputs = with pkgs; [
-      # Python environment with data science packages
-      dataScienceEnv
+    buildInputs = with pkgs;
+      [
+        # Python environment with data science packages
+        dataScienceEnv
 
-      # Additional system tools
-      pkg-config
+        # Additional system tools
+        pkg-config
 
-      # Graphics libraries (for matplotlib, etc.)
-      libGL
-      libGLU
-      xorg.libX11
-      xorg.libXext
+        # Graphics libraries (for matplotlib, etc.)
+        libGL
+        libGLU
+        xorg.libX11
+        xorg.libXext
 
-      # For rendering
-      cairo
-      pango
-      gdk-pixbuf
+        # For rendering
+        cairo
+        pango
+        gdk-pixbuf
 
-      # Compression libraries (for pandas)
-      zlib
-      bzip2
-      xz
-    ] ++ testingToolchain.packages;
+        # Compression libraries (for pandas)
+        zlib
+        bzip2
+        xz
+      ]
+      ++ testingToolchain.packages;
 
     shellHook = ''
       # Testing toolchain configuration
