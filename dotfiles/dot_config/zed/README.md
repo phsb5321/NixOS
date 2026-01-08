@@ -51,7 +51,7 @@ Comprehensive Nix language snippets:
 
 ### AI-Powered Development
 - **GitHub Copilot**: Enabled with security exclusions for sensitive files
-- **Zed Assistant**: Claude Sonnet 4 with comprehensive tool access
+- **Zed Assistant**: AI assistant with comprehensive tool access
 - **Edit Predictions**: Eager mode for faster suggestions
 - **Agent Profiles**: Custom "Write" profile with file system and development tools
 
@@ -190,6 +190,13 @@ sudo nixos-rebuild switch --flake .#default
 ```
 
 ## 🐛 Troubleshooting
+
+### Invalid LSP Settings Error
+If you see an error like "invalid type: boolean `true`, expected struct LspSettings":
+- The `"lsp"` section should **only contain language server names** as keys (e.g., "nixd", "rust-analyzer")
+- Do NOT add boolean fields like `enable_workspace_suggestions` directly under `"lsp"`
+- Valid structure: `"lsp": { "server-name": { "initialization_options": {...} } }`
+- See [Zed LSP Documentation](https://zed.dev/docs/configuring-languages) for correct format
 
 ### Language Server Issues
 1. Check if language servers are installed: `which nixd nil typescript-language-server`

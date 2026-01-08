@@ -1,10 +1,5 @@
 # modules/core/docker-dns.nix
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}: {
+{pkgs, ...}: {
   # Configure Docker with explicit DNS settings
   virtualisation.docker = {
     enable = true;
@@ -33,23 +28,13 @@
     };
   };
 
-  # Configure networking properly for Docker
+  # Configure networking properly for Docker (nftables compatible)
   networking = {
     # Consolidated firewall configuration
     firewall = {
       allowPing = true;
       trustedInterfaces = ["docker0" "br-+"];
       allowedTCPPorts = [2375 2376]; # Docker daemon ports
-      extraCommands = ''
-        # Allow established connections from Docker containers
-        iptables -A INPUT -i docker0 -j ACCEPT
-        iptables -A FORWARD -i docker0 -j ACCEPT
-        iptables -A FORWARD -o docker0 -j ACCEPT
-
-        # Ensure Docker containers can resolve DNS
-        iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-        iptables -A INPUT -p udp --sport 53 -j ACCEPT
-      '';
     };
 
     # Enable NAT for Docker

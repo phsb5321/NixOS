@@ -1,12 +1,15 @@
 # ~/NixOS/shells/JavaScript.nix
-# Use NixOS 25 stable for all packages
+# Use NixOS unstable for latest packages
 {
   pkgs ?
-    import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz") {
+    import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
       config.allowUnfree = true;
     },
 }: let
   centralizedStore = "$HOME/.nix-js-environments";
+
+  # Import shared testing toolchain with the same pkgs
+  testingToolchain = import ./testing-toolchain.nix {inherit pkgs;};
 
   # Helper function to create a tagged package group
   mkPackageGroup = name: packages: {
@@ -28,13 +31,13 @@
       pkgs.nodePackages."@nestjs/cli"
     ])
     (mkPackageGroup "Testing Tools" [
-      pkgs.playwright-driver.browsers
+      # Playwright browsers now provided by testing-toolchain
       pkgs.cypress
     ])
     (mkPackageGroup "Code Quality Tools" [
       pkgs.nodePackages.eslint
       pkgs.nodePackages.prettier
-      pkgs.biome
+      pkgs.biome # Alternative to ESLint/Prettier - configure to avoid conflicts
       pkgs.nodePackages.typescript
       pkgs.nodePackages.typescript-language-server
     ])
@@ -46,17 +49,14 @@
     (mkPackageGroup "Build Tools" [
       pkgs.gcc
       pkgs.gnumake
-      pkgs.nodePackages.webpack
     ])
     (mkPackageGroup "Utility Tools" [
-      pkgs.jq
+      # jq now provided by testing-toolchain
       pkgs.yq
       pkgs.openssl
       pkgs.nodePackages.nodemon
     ])
-    (mkPackageGroup "Browser Tools" [
-      pkgs.chromium
-    ])
+    # Browser Tools now provided by testing-toolchain
   ];
 
   # Flatten package groups into a single list
@@ -73,11 +73,21 @@
   packageManagers = ["pnpm" "npm" "yarn" "bun"];
 in
   pkgs.mkShell {
-    buildInputs = allPackages;
+    # Include testing toolchain packages alongside JavaScript-specific packages
+    buildInputs = allPackages ++ testingToolchain.packages;
 
     shellHook = ''
       # Clean up NIX_PATH to suppress warnings
       export NIX_PATH=$(echo "$NIX_PATH" | sed 's|/nix/var/nix/profiles/per-user/root/channels[^:]*:||g')
+
+      # ============================================================
+      # Testing Toolchain Configuration (from testing-toolchain.nix)
+      # ============================================================
+      ${testingToolchain.shellHook}
+
+      # ============================================================
+      # JavaScript-Specific Configuration
+      # ============================================================
 
       # Set up centralized store for package managers
       ${builtins.concatStringsSep "\n" (map setupPackageManager packageManagers)}
@@ -94,32 +104,31 @@ in
         bun upgrade &>/dev/null || true
       fi
 
-      # Set up environment variables
+      # Set up Prisma environment variables
       export PRISMA_QUERY_ENGINE_LIBRARY="${pkgs.prisma-engines}/lib/libquery_engine.node"
       export PRISMA_QUERY_ENGINE_BINARY="${pkgs.prisma-engines}/bin/query-engine"
       export PRISMA_SCHEMA_ENGINE_BINARY="${pkgs.prisma-engines}/bin/schema-engine"
-      export PUPPETEER_EXECUTABLE_PATH="$(which chromium)"
-      export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
-      export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+
+      # Cypress configuration
       export CYPRESS_CACHE_FOLDER="${centralizedStore}/cypress/cache"
       export CYPRESS_VERIFY_TIMEOUT=100000
+      mkdir -p "${centralizedStore}/cypress/cache"
+
+      # TypeScript configuration
       export TSC_NONPOLLING_WATCHER=1
       export TSC_WATCHFILE=UseFsEvents
 
-      # Create cypress cache directory
-      mkdir -p "${centralizedStore}/cypress/cache"
-
       echo ""
-      echo "🚀 ✨ JavaScript/TypeScript Development Environment ✨ 🚀"
+      echo "JavaScript/TypeScript Development Environment"
       echo ""
-      echo "📦 Node.js • pnpm • yarn • bun • 🦕 deno"
-      echo "🔧 TypeScript • ESLint • Prettier • Biome.js • Webpack • Nodemon"
-      echo "🧪 Playwright • Cypress • Testing Ready"
-      echo "🗄️  Prisma • PostgreSQL • Database Tools"
-      echo "🏗️  NestJS CLI • Vercel CLI • Build Tools"
-      echo "🌐 Chromium • Browser Tools Ready"
+      echo "Node.js - pnpm - yarn - bun - deno"
+      echo "TypeScript - ESLint - Prettier - Biome.js - Nodemon"
+      echo "Playwright - Cypress - Testing Ready"
+      echo "Prisma - PostgreSQL - Database Tools"
+      echo "NestJS CLI - Vercel CLI - Build Tools"
+      echo "Chromium - Browser Tools Ready"
       echo ""
-      echo "⚡ Ready to build amazing things! ⚡"
+      echo "Run 'test-toolchain-diagnose' to verify testing setup"
       echo ""
     '';
   }

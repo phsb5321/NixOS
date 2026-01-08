@@ -22,7 +22,7 @@ in {
         font-awesome
         noto-fonts
         noto-fonts-cjk-sans
-        noto-fonts-emoji
+        noto-fonts-color-emoji
         liberation_ttf
         cantarell-fonts
 
@@ -119,21 +119,21 @@ in {
   config = mkIf (config.modules.core.enable && cfg.enable) {
     fonts = {
       fontDir.enable = true;
-      packages = cfg.packages;
-      enableDefaultPackages = cfg.enableDefaultPackages;
+      inherit (cfg) packages;
+      inherit (cfg) enableDefaultPackages;
 
       fontconfig = {
-        defaultFonts = cfg.defaultFonts;
+        inherit (cfg) defaultFonts;
 
-        antialias = cfg.rendering.antialias;
+        inherit (cfg.rendering) antialias;
         subpixel = {
-          rgba = cfg.rendering.subpixel.rgba;
+          inherit (cfg.rendering.subpixel) rgba;
           lcdfilter = "default";
         };
 
         hinting = {
-          enable = cfg.rendering.hinting.enable;
-          style = cfg.rendering.hinting.style;
+          inherit (cfg.rendering.hinting) enable;
+          inherit (cfg.rendering.hinting) style;
         };
 
         # Note: localConf is handled by modules.desktop.fonts to avoid conflicts

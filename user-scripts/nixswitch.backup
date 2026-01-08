@@ -1,0 +1,532 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+#######################################
+# NixOS Switch - Simplified Edition
+# Modern TUI with parallel processing and auto-host detection
+# v8.0.0 - Clean configuration, nixos-unstable/nixpkgs-unstable setup
+#######################################
+
+readonly SCRIPT_VERSION="8.0.0"
+readonly FLAKE_DIR="$HOME/NixOS"
+readonly LOG_DIR="$HOME/.cache/nixos-rebuild"
+
+# Check dependencies
+for cmd in gum nix git; do
+    if ! command -v "$cmd" &>/dev/null; then
+        echo "❌ Missing required tool: $cmd"
+        exit 1
+    fi
+done
+
+#######################################
+# Modern TUI Components
+#######################################
+
+show_banner() {
+    gum style \
+    --foreground 212 \
+    --border-foreground 39 \
+    --border thick \
+    --align center \
+    --width 70 \
+    --margin "1 2" \
+    --padding "2 4" \
+    "🚀 NixOS Switch v${SCRIPT_VERSION}" \
+    "" \
+    "✨ Streamlined • Parallel • Beautiful ✨"
+}
+
+log_with_level() {
+    local level="$1"
+    local msg="$2"
+    gum log --structured --level "$level" "$msg"
+    [[ -n "${LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $msg" >> "$LOG_FILE"
+}
+
+info() { log_with_level "info" "$1"; }
+success() { log_with_level "info" "✅ $1"; }
+error() { log_with_level "error" "❌ $1"; }
+warn() { log_with_level "warn" "⚠️  $1"; }
+
+progress_group() {
+    local title="$1"
+    shift
+    gum style --foreground 99 --bold "📋 $title"
+    gum join --vertical "$@"
+}
+
+#######################################
+# Core Functions
+#######################################
+
+detect_host() {
+    case "$(hostname)" in
+        *laptop*|*mobile*|nixos-laptop) echo "laptop" ;;
+        *) echo "desktop" ;;
+    esac
+}
+
+setup_logging() {
+    mkdir -p "$LOG_DIR"
+    LOG_FILE="$LOG_DIR/nixswitch-$(date '+%Y%m%d_%H%M%S').log"
+    
+    # Cleanup old logs
+    {
+        find "$LOG_DIR" -name "nixswitch-*.log" -type f | sort -r | tail -n +6 | xargs -r rm &
+        find "$LOG_DIR" -name "nixswitch-*.log" -type f -mtime +3 -delete 2>/dev/null &
+        sudo journalctl --vacuum-time=1week 2>/dev/null &
+        wait
+    } || true
+    
+    info "Logging setup complete"
+}
+
+parallel_updates() {
+    local host="$1"
+    info "Running parallel updates and validations..."
+    
+    # Create temp files for parallel processing
+    local temp_dir=$(mktemp -d)
+    trap "rm -rf $temp_dir" EXIT
+    
+    # Run git fetch, flake update, and basic checks in parallel
+    {
+        (git -C "$FLAKE_DIR" fetch origin 2>/dev/null && echo "git_fetch_ok" > "$temp_dir/git_fetch" || echo "git_fetch_failed" > "$temp_dir/git_fetch") &
+        (nix flake update "$FLAKE_DIR" --refresh 2>/dev/null && echo "flake_update_ok" > "$temp_dir/flake_update" || echo "flake_update_failed" > "$temp_dir/flake_update") &
+        (nix flake check --no-build "$FLAKE_DIR" 2>/dev/null && echo "syntax_ok" > "$temp_dir/syntax_check" || echo "syntax_failed" > "$temp_dir/syntax_check") &
+        (df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ' > "$temp_dir/disk_space") &
+        
+        # Wait for all background jobs to complete
+        wait
+    }
+    
+    # Check results
+    local disk_gb=$(cat "$temp_dir/disk_space" 2>/dev/null || echo "0")
+    local git_result=$(cat "$temp_dir/git_fetch" 2>/dev/null || echo "git_fetch_failed")
+    local flake_result=$(cat "$temp_dir/flake_update" 2>/dev/null || echo "flake_update_failed")
+    local syntax_result=$(cat "$temp_dir/syntax_check" 2>/dev/null || echo "syntax_failed")
+    
+    # Display results
+    progress_group "Update Results" \
+    "$(if [[ "$git_result" == "git_fetch_ok" ]]; then echo "✅ Git fetch"; else echo "⚠️  Git fetch (non-critical)"; fi)" \
+    "$(if [[ "$flake_result" == "flake_update_ok" ]]; then echo "✅ Flake update"; else echo "❌ Flake update failed"; fi)" \
+    "$(if [[ "$syntax_result" == "syntax_ok" ]]; then echo "✅ Syntax check"; else echo "❌ Syntax check failed"; fi)" \
+    "$(if [[ "$disk_gb" -ge 5 ]]; then echo "✅ Disk space: ${disk_gb}GB"; else echo "⚠️  Low disk space: ${disk_gb}GB"; fi)"
+    
+    # Fail if critical checks failed
+    if [[ "$flake_result" == "flake_update_failed" ]]; then
+        error "Flake update failed - this is critical"
+        return 1
+    fi
+    
+    if [[ "$syntax_result" == "syntax_failed" ]]; then
+        error "Syntax validation failed - configuration is invalid"
+        return 1
+    fi
+    
+    [[ "$disk_gb" -lt 5 ]] && warn "Low disk space detected"
+    
+    # Validate host configuration
+    if ! gum spin --spinner dot --title "Validating host configuration..." -- \
+    timeout 120s nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run &>/dev/null; then
+        error "Host configuration validation failed for: $host"
+        return 1
+    fi
+    
+    success "All validations passed"
+}
+
+perform_rebuild() {
+    local host="$1"
+    
+    # Enhanced password handling
+    gum style \
+    --foreground 214 \
+    --border normal \
+    --border-foreground 214 \
+    --padding "1 2" \
+    --margin "1 0" \
+    "🔐 System Rebuild Authentication" \
+    "" \
+    "Sudo access required for system rebuild"
+    
+    # Test sudo access
+    if ! sudo -v 2>/dev/null; then
+        error "Authentication failed - cannot proceed with rebuild"
+        return 1
+    fi
+    
+    success "Authentication successful"
+    
+    # Pre-rebuild cleanup to prevent service conflicts
+    pre_rebuild_cleanup
+    
+    # Keep sudo alive in background
+    (
+        while sleep 30; do
+            sudo -v 2>/dev/null || break
+        done
+    ) &
+    local sudo_pid=$!
+    trap "kill $sudo_pid 2>/dev/null || true" EXIT
+    
+    # Format code if available
+    if command -v alejandra &>/dev/null; then
+        gum spin --spinner dot --title "Formatting code..." -- alejandra "$FLAKE_DIR" &>/dev/null &
+        local format_pid=$!
+    fi
+    
+    # Main rebuild
+    local start_time=$(date +%s)
+    info "Starting NixOS rebuild for host: $host"
+    
+    # Wait for formatting to complete
+    [[ -n "${format_pid:-}" ]] && wait $format_pid && success "Code formatting completed"
+    
+    # Execute rebuild
+    local rebuild_cmd=(
+        sudo nixos-rebuild switch
+        --flake "$FLAKE_DIR#$host"
+        --show-trace
+    )
+    
+    if gum spin \
+    --spinner globe \
+    --title "Building and switching to new configuration..." \
+    --show-output \
+    -- "${rebuild_cmd[@]}" 2>&1 | tee -a "$LOG_FILE"; then
+        
+        local duration=$(( $(date +%s) - start_time ))
+        success "Rebuild completed successfully in ${duration}s"
+        
+        # Show generation info
+        local current_gen=$(sudo nixos-rebuild list-generations | grep current | awk '{print $1}')
+        gum style \
+        --foreground 84 \
+        --border normal \
+        --border-foreground 84 \
+        --padding "1 2" \
+        "🎯 Active Configuration" \
+        "" \
+        "Generation: $current_gen" \
+        "Host: $host" \
+        "        "Build time: ${duration}s"
+        
+        echo
+        
+        # Post-rebuild system check
+        post_rebuild_check
+        
+        # Network connectivity check
+        network_recovery"
+        
+    else
+        local duration=$(( $(date +%s) - start_time ))
+        error "Rebuild failed after ${duration}s"
+        
+        # Provide diagnostic information
+        warn "Checking for common issues..."
+        
+        # Check for service conflicts
+        if systemctl list-units --failed --quiet | grep -q "lactd"; then
+            warn "GPU control service (lactd) conflicts detected"
+            info "Try running: sudo systemctl reset-failed && sudo rm -f /run/lactd.sock"
+        fi
+        
+        # Check for systemd issues
+        if ! sudo systemctl is-system-running --quiet; then
+            warn "System state is degraded - some services may have failed"
+            info "Check status with: systemctl status"
+        fi
+        
+        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "View error logs?"; then
+            tail -n 30 "$LOG_FILE" | gum pager
+        fi
+        return 1
+    fi
+    
+    # Cleanup background processes
+    kill $sudo_pid 2>/dev/null || true
+}
+
+parallel_cleanup() {
+    echo
+    gum style --foreground 99 --bold "🧹 System Cleanup"
+    info "Running parallel cleanup tasks..."
+    
+    # Use GNU parallel if available, otherwise fall back to background jobs
+    if command -v parallel &>/dev/null; then
+        parallel --will-cite --halt now,fail=1 --jobs 3 ::: \
+        "nix-collect-garbage --delete-older-than 7d 2>/dev/null" \
+        "nix store optimise 2>/dev/null" \
+        "nix store gc 2>/dev/null" || warn "Some cleanup tasks failed"
+    else
+        {
+            nix-collect-garbage --delete-older-than 7d 2>/dev/null &
+            nix store optimise 2>/dev/null &
+            nix store gc 2>/dev/null &
+            wait
+        } || warn "Some cleanup tasks failed"
+    fi
+    
+    success "System cleanup completed"
+}
+
+git_workflow() {
+    local host="$1"
+    
+    cd "$FLAKE_DIR"
+    
+    # Check if we have changes
+    local has_changes=false
+    local has_unpushed=false
+    
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        has_changes=true
+    fi
+    
+    if git remote get-url origin &>/dev/null; then
+        local unpushed=$(git rev-list --count origin..HEAD 2>/dev/null || echo "0")
+        [[ "$unpushed" -gt 0 ]] && has_unpushed=true
+    fi
+    
+    if [[ "$has_changes" == "false" && "$has_unpushed" == "false" ]]; then
+        info "Git repository is clean and up to date"
+        return 0
+    fi
+    
+    echo
+    gum style --foreground 214 --bold "📝 Git Workflow"
+    echo
+    
+    # Handle uncommitted changes
+    if [[ "$has_changes" == "true" ]]; then
+        gum style --foreground 84 --bold "📋 Changed Files:"
+        git status --porcelain | head -5 | while read -r line; do
+            echo "  $line"
+        done
+        echo
+        
+        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Commit changes?"; then
+            local commit_message="${COMMIT_MESSAGE:-"chore: update configuration $(date '+%Y-%m-%d %H:%M')"}"
+            
+            if [[ -z "$COMMIT_MESSAGE" ]] && [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
+                commit_message=$(gum input --placeholder "Enter commit message" --value "$commit_message")
+            fi
+            
+            git add -A
+            git commit -m "$commit_message"
+            success "Changes committed: $commit_message"
+        else
+            info "Skipping git commit"
+            return 0
+        fi
+    fi
+    
+    # Push if we have unpushed commits
+    if [[ "$has_unpushed" == "true" ]] || git log --oneline origin..HEAD 2>/dev/null | grep -q .; then
+        if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Push to remote?"; then
+            if git push 2>/dev/null; then
+                success "Changes pushed to remote"
+            else
+                warn "Failed to push to remote (non-critical)"
+            fi
+        fi
+    fi
+}
+
+show_success() {
+    local host="$1"
+    echo
+    
+    # Success celebration
+    gum style \
+    --foreground 84 \
+    --border double \
+    --border-foreground 84 \
+    --align center \
+    --width 60 \
+    --margin "1 2" \
+    --padding "2 4" \
+    "🎉 SUCCESS! 🎉" \
+    "" \
+    "NixOS rebuild completed successfully" \
+    "Host: $host" \
+    "Time: $(date '+%H:%M:%S')"
+}
+
+show_help() {
+    gum style --foreground 212 --bold "NixOS Switch v${SCRIPT_VERSION}"
+    echo
+    gum style --foreground 39 "Streamlined NixOS rebuild with modern TUI and parallel processing"
+    echo
+    gum style --foreground 84 --bold "Options:"
+    echo "  --help/-h                Show this help"
+    echo "  --non-interactive/-y     Skip confirmations"
+    echo "  --commit-message MSG     Custom commit message"
+    echo "  desktop/laptop           Specify host (auto-detected if omitted)"
+    echo "  desktop-unstable         Use unstable packages for latest software (desktop)"
+    echo "  laptop-unstable          Use unstable packages on laptop"
+    echo
+    gum style --foreground 84 "Features: Auto-detection • Parallel processing • Beautiful TUI • Git integration"
+}
+
+pre_rebuild_cleanup() {
+    info "Performing pre-rebuild cleanup..."
+    
+    # Reset any failed systemd units that might interfere
+    sudo systemctl reset-failed 2>/dev/null || true
+    
+    # Handle known problematic services
+    if systemctl is-active --quiet lactd.service; then
+        sudo systemctl stop lactd.service 2>/dev/null || true
+    fi
+    
+    # Clean up problematic socket files
+    sudo rm -f /run/lactd.sock 2>/dev/null || true
+    
+    # Wait a moment for services to fully stop
+    sleep 1
+    
+    success "Pre-rebuild cleanup completed"
+}
+
+post_rebuild_check() {
+    info "Performing post-rebuild system check..."
+    
+    # Check if critical services are running
+    local failed_services=()
+    local critical_services=("NetworkManager" "systemd-resolved" "dbus")
+    
+    for service in "${critical_services[@]}"; do
+        if ! systemctl is-active --quiet "$service"; then
+            failed_services+=("$service")
+        fi
+    done
+    
+    if [[ ${#failed_services[@]} -gt 0 ]]; then
+        warn "Some critical services failed to start: ${failed_services[*]}"
+        info "Attempting to restart failed services..."
+        for service in "${failed_services[@]}"; do
+            sudo systemctl start "$service" 2>/dev/null || warn "Failed to restart $service"
+        done
+    fi
+    
+    # Reset any failed non-critical services
+    sudo systemctl reset-failed 2>/dev/null || true
+    
+    success "Post-rebuild check completed"
+}
+
+network_recovery() {
+    info "Checking network connectivity..."
+    
+    # Test basic connectivity
+    if ! ping -c 1 8.8.8.8 &>/dev/null; then
+        warn "Network connectivity issues detected"
+        
+        # Try to restart NetworkManager
+        info "Attempting to restart network services..."
+        sudo systemctl restart NetworkManager 2>/dev/null || true
+        sudo systemctl restart systemd-resolved 2>/dev/null || true
+        
+        # Wait for network to come back up
+        sleep 3
+        
+        # Test again
+        if ping -c 1 8.8.8.8 &>/dev/null; then
+            success "Network connectivity restored"
+        else
+            error "Network recovery failed - manual intervention may be required"
+            return 1
+        fi
+    else
+        success "Network connectivity is working"
+    fi
+}
+
+main() {
+    show_banner
+    
+    # Get host
+    local host=${SPECIFIED_HOST:-$(detect_host)}
+    gum style --foreground 212 --bold "🎯 Target Host: $host"
+    
+    # Change to flake directory
+    if ! cd "$FLAKE_DIR" 2>/dev/null; then
+        error "Cannot access flake directory: $FLAKE_DIR"
+        exit 1
+    fi
+    
+    # Setup logging
+    setup_logging
+    
+    # Verify host configuration exists
+    local config_path="hosts/${host//-unstable/}"  # Remove -unstable suffix for path check
+    if [[ ! -d "$config_path" ]]; then
+        error "Host configuration '$config_path' not found"
+        info "Available hosts: $(ls hosts/ | tr '\n' ' ')"
+        info "Available configurations: desktop, laptop, desktop-unstable, laptop-unstable"
+        exit 1
+    fi
+    
+    # Run parallel updates and validation
+    if ! parallel_updates "$host"; then
+        exit 1
+    fi
+    
+    # Confirmation
+    if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
+        gum confirm --default=true "Proceed with rebuild?" || {
+            info "Cancelled by user"
+            exit 0
+        }
+    fi
+    
+    # Pre-rebuild cleanup
+    pre_rebuild_cleanup
+    
+    # Main rebuild
+    if ! perform_rebuild "$host"; then
+        exit 1
+    fi
+    
+    # Post-rebuild tasks
+    git_workflow "$host"
+    parallel_cleanup
+    
+    # Post-rebuild check
+    post_rebuild_check
+    
+    # Success message
+    show_success "$host"
+}
+
+# Command line parsing
+NON_INTERACTIVE=false
+COMMIT_MESSAGE=""
+SPECIFIED_HOST=""
+
+# Handle help first
+for arg in "$@"; do
+    if [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
+        show_help
+        exit 0
+    fi
+done
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -y|--non-interactive) NON_INTERACTIVE=true; shift ;;
+        --commit-message) COMMIT_MESSAGE="$2"; shift 2 ;;
+        desktop|laptop|desktop-unstable|laptop-unstable) SPECIFIED_HOST="$1"; shift ;;
+        default|default-unstable)
+            warn "Host 'default' has been renamed to 'desktop'. Using 'desktop' instead."
+            SPECIFIED_HOST="${1/default/desktop}"; shift ;;
+        *) error "Unknown option: $1"; show_help; exit 1 ;;
+    esac
+done
+
+main

@@ -22,214 +22,42 @@
 
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
-  };
 
-  outputs = {
-    self,
-    nixpkgs,
-    nixpkgs-unstable,
-    flake-utils,
-    ...
-  } @ inputs: let
-    # Supported systems
-    supportedSystems = [
-      "x86_64-linux"
-      "aarch64-linux"
-    ];
-
-    # Helper function to create package sets
-    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-
-    # Package configuration
-    pkgsConfig = {
-      allowUnfree = true;
-      allowUnfreePredicate = _: true;
+    # Modular flake framework
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    # Helper function to create a NixOS system
-    mkNixosSystem = {
-      system,
-      hostname,
-      configPath, # Path to the host configuration directory
-      nixpkgsInput ? nixpkgs, # Allow different nixpkgs versions per host
-      extraModules ? [],
-      extraSpecialArgs ? {},
-    }: let
-      # Get NixOS version dynamically from the input
-      systemVersion = let
-        version = nixpkgsInput.lib.version;
-        versionParts = builtins.splitVersion version;
-        major = builtins.head versionParts;
-        minor = builtins.elemAt versionParts 1;
-      in "${major}.${minor}";
-
-      # Create package sets with Qt6 workaround overlay
-      pkgs = import nixpkgsInput {
-        inherit system;
-        config = pkgsConfig;
-        overlays = [
-          # Overlay to work around qgnomeplatform Qt6 build issues
-          (final: prev: {
-            qgnomeplatform = final.stdenv.mkDerivation {
-              pname = "qgnomeplatform-stub";
-              version = "0.8.4-stub";
-              src = final.writeText "empty" "";
-              dontUnpack = true;
-              buildPhase = "true";
-              installPhase = ''
-                mkdir -p $out/lib/qt-6/plugins/platforms
-                touch $out/lib/qt-6/plugins/platforms/.keep
-              '';
-              meta = {
-                description = "Stub package to work around Qt6 GuiPrivate build issues";
-                platforms = final.lib.platforms.linux;
-              };
-            };
-          })
-        ];
-      };
-
-      pkgs-unstable = import nixpkgs-unstable {
-        inherit system;
-        config = pkgsConfig;
-      };
-
-      # Common special args for all hosts
-      baseSpecialArgs =
-        {
-          inherit
-            inputs
-            systemVersion
-            system
-            hostname
-            ;
-          pkgs-unstable = pkgs-unstable;
-          stablePkgs = pkgs;
-        }
-        // extraSpecialArgs;
-    in
-      nixpkgsInput.lib.nixosSystem {
-        inherit system;
-        specialArgs = baseSpecialArgs;
-        modules =
-          [
-            # Host-specific configuration
-            ./hosts/${configPath}/configuration.nix
-
-            # Base system configuration
-            {
-              nixpkgs.config = pkgsConfig;
-
-              # Nix settings
-              nix = {
-                settings = {
-                  experimental-features = [
-                    "nix-command"
-                    "flakes"
-                  ];
-                  auto-optimise-store = true;
-                };
-
-                gc = {
-                  automatic = true;
-                  dates = "weekly";
-                  options = nixpkgsInput.lib.mkDefault "--delete-older-than 7d";
-                };
-              };
-
-              # System version
-              system.stateVersion = systemVersion;
-
-              # Set hostname
-              networking.hostName = nixpkgsInput.lib.mkDefault hostname;
-            }
-          ]
-          ++ extraModules;
-      };
-
-    # Define all your hosts here
-    hosts = {
-      # Primary desktop system (default)
-      default = {
-        system = "x86_64-linux";
-        hostname = "nixos-desktop";
-        configPath = "default"; # Maps to hosts/default/
-        nixpkgsInput = nixpkgs-unstable; # Use unstable as the main channel
-      };
-
-      # Laptop system
-      laptop = {
-        system = "x86_64-linux";
-        hostname = "nixos-laptop";
-        configPath = "laptop"; # Maps to hosts/laptop/
-        # Uses stable nixpkgs by default
-      };
-
-      # Server using stable for reliability
-      nixos-server = {
-        system = "x86_64-linux";
-        hostname = "nixos-server";
-        configPath = "server";
-        nixpkgsInput = nixpkgs; # Explicitly stable
-      };
+    # Secrets management with sops
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
-  in {
-    # NixOS Configurations - Generated from hosts definition
-    nixosConfigurations = nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts;
 
-    # Formatter for each system
-    formatter = forAllSystems (system: (import nixpkgs {inherit system;}).nixpkgs-fmt);
-
-    # Development shells (useful for development)
-    devShells = forAllSystems (
-      system: let
-        pkgs = import nixpkgs {
-          inherit system;
-          config = pkgsConfig;
-        };
-      in {
-        default = pkgs.mkShell {
-          name = "nixos-config";
-          buildInputs = with pkgs; [
-            nixpkgs-fmt
-            statix # Nix linter
-            deadnix # Dead code detection
-          ];
-        };
-      }
-    );
-
-    # Helper scripts for deployment (optional)
-    packages = forAllSystems (
-      system: let
-        pkgs = import nixpkgs {
-          inherit system;
-          config = pkgsConfig;
-        };
-      in {
-        # Script to deploy to a specific host
-        deploy = pkgs.writeShellScriptBin "deploy" ''
-          set -e
-          HOST=''${1:-default}
-
-          if [ -z "$HOST" ]; then
-            echo "Usage: $0 <hostname>"
-            echo "Available hosts: ${builtins.concatStringsSep " " (builtins.attrNames hosts)}"
-            exit 1
-          fi
-
-          echo "Deploying to $HOST..."
-          nixos-rebuild switch --flake .#$HOST --target-host $HOST --use-remote-sudo
-        '';
-
-        # Script to build without switching
-        build = pkgs.writeShellScriptBin "build" ''
-          set -e
-          HOST=''${1:-default}
-          echo "Building configuration for $HOST..."
-          nixos-rebuild build --flake .#$HOST
-        '';
-      }
-    );
+    # Remote deployment tool
+    colmena = {
+      url = "github:zhaofengli/colmena";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
+
+  outputs = inputs @ {flake-parts, ...}:
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      # Declare supported systems
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+
+      # Flake-parts modules for modular configuration
+      imports = [
+        ./flake-modules/outputs.nix
+        ./flake-modules/hosts.nix
+      ];
+
+      # Migration complete - all outputs now in flake-modules/
+      # - outputs.nix: perSystem outputs (checks, formatter, devShells, apps, packages)
+      # - hosts.nix: nixosConfigurations with withSystem integration
+    };
 }

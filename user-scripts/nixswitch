@@ -3,22 +3,41 @@
 set -euo pipefail
 
 #######################################
-# NixOS Switch - Simplified Edition
-# Modern TUI with parallel processing and auto-host detection
-# v8.0.0 - Clean configuration, nixos-unstable/nixpkgs-unstable setup
+# NixOS Switch - Enhanced Edition
+# Modern TUI with subcommands, parallel processing and auto-host detection
+# v9.0.0 - Added subcommands: update, validate, diff, rollback, upgrade, git-sync
 #######################################
 
-readonly SCRIPT_VERSION="8.0.0"
-readonly FLAKE_DIR="$HOME/NixOS"
-readonly LOG_DIR="$HOME/.cache/nixos-rebuild"
+readonly SCRIPT_VERSION="9.0.0"
+readonly FLAKE_DIR="${NIXSWITCH_FLAKE_DIR:-$HOME/NixOS}"
+readonly LOG_DIR="${NIXSWITCH_LOG_DIR:-$HOME/.cache/nixos-rebuild}"
 
-# Check dependencies
-for cmd in gum nix git; do
-    if ! command -v "$cmd" &>/dev/null; then
-        echo "❌ Missing required tool: $cmd"
+# Subcommand to execute (default = full rebuild workflow)
+SUBCOMMAND="default"
+
+# Check dependencies (T002)
+check_dependencies() {
+    local missing=()
+    for cmd in gum nix git; do
+        if ! command -v "$cmd" &>/dev/null; then
+            missing+=("$cmd")
+        fi
+    done
+
+    # jq is optional but recommended for diff command
+    if ! command -v jq &>/dev/null; then
+        JQ_AVAILABLE=false
+    else
+        JQ_AVAILABLE=true
+    fi
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo "❌ Missing required tools: ${missing[*]}"
         exit 1
     fi
-done
+}
+
+check_dependencies
 
 #######################################
 # Modern TUI Components
@@ -64,14 +83,14 @@ progress_group() {
 detect_host() {
     case "$(hostname)" in
         *laptop*|*mobile*|nixos-laptop) echo "laptop" ;;
-        *) echo "default" ;;
+        *) echo "desktop" ;;
     esac
 }
 
 setup_logging() {
     mkdir -p "$LOG_DIR"
     LOG_FILE="$LOG_DIR/nixswitch-$(date '+%Y%m%d_%H%M%S').log"
-    
+
     # Cleanup old logs
     {
         find "$LOG_DIR" -name "nixswitch-*.log" -type f | sort -r | tail -n +6 | xargs -r rm &
@@ -79,68 +98,665 @@ setup_logging() {
         sudo journalctl --vacuum-time=1week 2>/dev/null &
         wait
     } || true
-    
+
     info "Logging setup complete"
 }
+
+#######################################
+# US1: Update Flake Inputs (T008-T013)
+#######################################
+
+# Show summary of what inputs changed (T011)
+show_update_summary() {
+    local old_lock="$1"
+    local new_lock="$2"
+
+    echo
+    gum style --foreground 212 --bold "📦 Flake Input Changes"
+    echo "═══════════════════════════════════"
+
+    if [[ "$JQ_AVAILABLE" == "true" ]]; then
+        # Get list of inputs from new lock
+        local inputs=$(jq -r '.nodes | keys[]' "$new_lock" 2>/dev/null | grep -v "^root$" || true)
+
+        for input in $inputs; do
+            local old_rev=$(jq -r ".nodes.\"$input\".locked.rev // empty" "$old_lock" 2>/dev/null | head -c 7)
+            local new_rev=$(jq -r ".nodes.\"$input\".locked.rev // empty" "$new_lock" 2>/dev/null | head -c 7)
+            local old_date=$(jq -r ".nodes.\"$input\".locked.lastModified // empty" "$old_lock" 2>/dev/null)
+            local new_date=$(jq -r ".nodes.\"$input\".locked.lastModified // empty" "$new_lock" 2>/dev/null)
+
+            if [[ -n "$new_rev" ]]; then
+                if [[ "$old_rev" != "$new_rev" ]]; then
+                    local formatted_date=""
+                    if [[ -n "$new_date" ]]; then
+                        formatted_date=$(date -d "@$new_date" '+%Y-%m-%d' 2>/dev/null || echo "unknown")
+                    fi
+                    echo "  $input: ${old_rev:-new} → $new_rev ($formatted_date)"
+                else
+                    echo "  $input: $new_rev (unchanged)"
+                fi
+            fi
+        done
+    else
+        # Fallback: simple git diff
+        if ! diff -q "$old_lock" "$new_lock" &>/dev/null; then
+            echo "  flake.lock was updated (install jq for detailed diff)"
+        else
+            echo "  No changes detected"
+        fi
+    fi
+    echo
+}
+
+# Update command implementation (T008-T013)
+cmd_update() {
+    local inputs=()
+    local dry_run=false
+    local auto_commit=false
+
+    # Parse update-specific options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --dry-run) dry_run=true; shift ;;
+            --commit) auto_commit=true; shift ;;
+            -*) error "Unknown option for update: $1"; return 1 ;;
+            *) inputs+=("$1"); shift ;;
+        esac
+    done
+
+    cd "$FLAKE_DIR"
+
+    echo
+    gum style --foreground 212 --bold "🔄 Flake Update"
+    echo
+
+    # Save current lock for comparison
+    local temp_lock=$(mktemp)
+    cp flake.lock "$temp_lock"
+
+    if [[ "$dry_run" == "true" ]]; then
+        info "Dry-run mode: showing what would be updated..."
+        echo
+
+        # Fetch metadata to show available updates
+        if nix flake metadata "$FLAKE_DIR" --json --refresh 2>/dev/null | head -c 1 >/dev/null; then
+            success "Fetched latest input information"
+            info "Run without --dry-run to apply updates"
+        else
+            warn "Could not fetch update information"
+        fi
+
+        rm -f "$temp_lock"
+        return 0
+    fi
+
+    # Perform update
+    if [[ ${#inputs[@]} -eq 0 ]]; then
+        info "Updating all flake inputs..."
+        if gum spin --spinner dot --title "Updating all inputs..." -- \
+            nix flake update "$FLAKE_DIR" --refresh 2>/dev/null; then
+            success "All inputs updated"
+        else
+            error "Failed to update flake inputs"
+            rm -f "$temp_lock"
+            return 1
+        fi
+    else
+        # Update specific inputs (T010)
+        for input in "${inputs[@]}"; do
+            info "Updating input: $input"
+            if gum spin --spinner dot --title "Updating $input..." -- \
+                nix flake update "$FLAKE_DIR" "$input" --refresh 2>/dev/null; then
+                success "Updated: $input"
+            else
+                warn "Failed to update: $input"
+            fi
+        done
+    fi
+
+    # Show what changed (T011)
+    show_update_summary "$temp_lock" "flake.lock"
+    rm -f "$temp_lock"
+
+    # Auto-commit if requested (T013)
+    if [[ "$auto_commit" == "true" ]]; then
+        if ! git diff --quiet flake.lock; then
+            local msg=$(generate_commit_message)
+            git add flake.lock
+            git commit -m "$msg"
+            success "Committed: $msg"
+        else
+            info "No changes to commit"
+        fi
+    fi
+
+    success "Update complete"
+}
+
+#######################################
+# US2: Validate Configuration (T014-T018)
+#######################################
+
+cmd_validate() {
+    local host="${SPECIFIED_HOST:-$(detect_host)}"
+    local quick=false
+    local verbose=false
+
+    # Parse validate-specific options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --quick) quick=true; shift ;;
+            --verbose) verbose=true; shift ;;
+            desktop|laptop|server) host="$1"; shift ;;
+            -*) error "Unknown option for validate: $1"; return 1 ;;
+            *) host="$1"; shift ;;
+        esac
+    done
+
+    cd "$FLAKE_DIR"
+
+    echo
+    gum style --foreground 212 --bold "🔍 Configuration Validation"
+    echo
+
+    local all_passed=true
+
+    # Step 1: Syntax check (T015)
+    info "Running syntax check..."
+    if gum spin --spinner dot --title "Running nix flake check..." -- \
+        timeout 180s nix flake check --no-build "$FLAKE_DIR" 2>/dev/null; then
+        success "Syntax check passed"
+    else
+        error "Syntax check failed (or timed out)"
+        if [[ "$verbose" == "true" ]]; then
+            nix flake check --no-build "$FLAKE_DIR" 2>&1 || true
+        fi
+        all_passed=false
+    fi
+
+    # Step 2: Build dry-run (T016) - skip if --quick
+    if [[ "$quick" != "true" ]]; then
+        info "Validating host configuration: $host"
+        if gum spin --spinner dot --title "Checking $host configuration..." -- \
+            timeout 120s nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run 2>/dev/null; then
+            success "Host '$host' configuration is valid"
+        else
+            error "Host '$host' configuration validation failed"
+            if [[ "$verbose" == "true" ]]; then
+                nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run 2>&1 || true
+            fi
+            all_passed=false
+        fi
+    fi
+
+    # Final result (T018)
+    echo
+    if [[ "$all_passed" == "true" ]]; then
+        gum style --foreground 84 --bold "✅ All validations passed"
+        return 0
+    else
+        gum style --foreground 196 --bold "❌ Validation failed"
+        return 1
+    fi
+}
+
+#######################################
+# US3: Commit and Track Changes (T019-T022)
+#######################################
+
+# Generate intelligent commit message (T019-T021)
+generate_commit_message() {
+    local changes=()
+
+    cd "$FLAKE_DIR"
+
+    # Check for flake.lock changes (T020)
+    if git diff --name-only --cached 2>/dev/null | grep -q "flake.lock" || \
+       git diff --name-only 2>/dev/null | grep -q "flake.lock"; then
+        changes+=("update flake inputs")
+    fi
+
+    # Check for configuration changes (T021)
+    local config_files=$(git diff --name-only --cached 2>/dev/null; git diff --name-only 2>/dev/null)
+
+    if echo "$config_files" | grep -q "^hosts/"; then
+        changes+=("update host configuration")
+    fi
+
+    if echo "$config_files" | grep -q "^modules/"; then
+        changes+=("update modules")
+    fi
+
+    if echo "$config_files" | grep -q "^flake\.nix$"; then
+        changes+=("update flake.nix")
+    fi
+
+    if echo "$config_files" | grep -qE "^(user-scripts|scripts)/"; then
+        changes+=("update scripts")
+    fi
+
+    if echo "$config_files" | grep -q "^dotfiles/"; then
+        changes+=("update dotfiles")
+    fi
+
+    # Build message
+    if [[ ${#changes[@]} -eq 0 ]]; then
+        echo "chore: update configuration $(date '+%Y-%m-%d')"
+    elif [[ ${#changes[@]} -eq 1 ]]; then
+        echo "chore: ${changes[0]}"
+    else
+        local msg="chore: ${changes[0]}"
+        for ((i=1; i<${#changes[@]}; i++)); do
+            msg+=", ${changes[$i]}"
+        done
+        echo "$msg"
+    fi
+}
+
+#######################################
+# US4: Git Branch Workflow (T023-T028)
+#######################################
+
+cmd_git_sync() {
+    local to_hosts=false
+    local do_push=false
+    local do_fetch=false
+
+    # Parse git-sync-specific options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --to-hosts) to_hosts=true; shift ;;
+            --push) do_push=true; shift ;;
+            --fetch) do_fetch=true; shift ;;
+            -*) error "Unknown option for git-sync: $1"; return 1 ;;
+            *) shift ;;
+        esac
+    done
+
+    cd "$FLAKE_DIR"
+
+    echo
+    gum style --foreground 212 --bold "🔄 Git Branch Synchronization"
+    echo "══════════════════════════════════"
+    echo
+
+    local current_branch=$(git branch --show-current)
+
+    # Fetch from remote (T024, T028)
+    if [[ "$do_fetch" == "true" ]]; then
+        info "Fetching from origin..."
+        if git fetch origin 2>/dev/null; then
+            success "Fetched latest from origin"
+        else
+            warn "Could not fetch from origin"
+        fi
+    fi
+
+    # Merge main into host branches (T025)
+    if [[ "$to_hosts" == "true" ]]; then
+        local hosts=("desktop" "laptop" "server")
+        local failed_merges=()
+
+        for host in "${hosts[@]}"; do
+            local branch="host/$host"
+
+            if git show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null; then
+                info "Merging main → $branch"
+
+                git checkout "$branch" 2>/dev/null || {
+                    warn "Could not checkout $branch"
+                    failed_merges+=("$branch")
+                    continue
+                }
+
+                # Attempt merge (T026)
+                if git merge main --no-edit 2>/dev/null; then
+                    success "Merged main → $branch"
+                else
+                    # Handle merge conflict (T026)
+                    warn "Merge conflict in $branch"
+                    echo "  Please resolve manually:"
+                    echo "    git checkout $branch"
+                    echo "    git merge main"
+                    echo "    # resolve conflicts"
+                    echo "    git merge --continue"
+                    failed_merges+=("$branch")
+                    git merge --abort 2>/dev/null || true
+                fi
+            else
+                info "Branch $branch does not exist locally, skipping"
+            fi
+        done
+
+        # Return to original branch
+        git checkout "$current_branch" 2>/dev/null || git checkout main 2>/dev/null || true
+
+        # Report results
+        echo
+        if [[ ${#failed_merges[@]} -gt 0 ]]; then
+            warn "Failed to merge: ${failed_merges[*]}"
+        else
+            success "All host branches synchronized"
+        fi
+    fi
+
+    # Push all branches (T027)
+    if [[ "$do_push" == "true" ]]; then
+        info "Pushing all branches to origin..."
+        if git push --all 2>/dev/null; then
+            success "Pushed all branches"
+        else
+            warn "Could not push some branches"
+        fi
+    fi
+
+    success "Git sync complete"
+}
+
+#######################################
+# US5: Distribution Upgrade (T029-T033)
+#######################################
+
+cmd_upgrade() {
+    local channel=""
+    local list_only=false
+    local dry_run=false
+
+    # Parse upgrade-specific options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --list) list_only=true; shift ;;
+            --dry-run) dry_run=true; shift ;;
+            -*) error "Unknown option for upgrade: $1"; return 1 ;;
+            *) channel="$1"; shift ;;
+        esac
+    done
+
+    cd "$FLAKE_DIR"
+
+    echo
+    gum style --foreground 212 --bold "🚀 NixOS Release Upgrade"
+    echo "═══════════════════════════════════"
+    echo
+
+    # List available channels (T030)
+    local available_channels=("nixos-unstable" "nixos-24.11" "nixos-24.05")
+
+    if [[ "$list_only" == "true" ]]; then
+        echo "Available channels:"
+        for ch in "${available_channels[@]}"; do
+            if grep -q "nixpkgs.url.*$ch" flake.nix 2>/dev/null; then
+                echo "  $ch (current)"
+            else
+                echo "  $ch"
+            fi
+        done
+        return 0
+    fi
+
+    # Get current channel
+    local current_channel=$(grep -oP 'nixpkgs\.url\s*=\s*"github:nixos/nixpkgs/\K[^"]+' flake.nix 2>/dev/null || echo "unknown")
+    echo "Current channel: $current_channel"
+    echo
+
+    # Interactive channel selection (T031)
+    if [[ -z "$channel" ]]; then
+        channel=$(gum choose "${available_channels[@]}" --header "Select target channel:")
+    fi
+
+    if [[ "$channel" == "$current_channel" ]]; then
+        info "Already on channel: $channel"
+        return 0
+    fi
+
+    echo "Target channel: $channel"
+    echo
+
+    if [[ "$dry_run" == "true" ]]; then
+        info "Dry-run mode: would upgrade from $current_channel to $channel"
+        return 0
+    fi
+
+    # Confirm upgrade
+    if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
+        gum confirm "Upgrade from $current_channel to $channel?" || {
+            info "Cancelled by user"
+            return 0
+        }
+    fi
+
+    # Save backup of current files (T033)
+    local backup_flake=$(mktemp)
+    local backup_lock=$(mktemp)
+    cp flake.nix "$backup_flake"
+    cp flake.lock "$backup_lock"
+
+    # Modify flake.nix (T032)
+    info "Updating nixpkgs input to $channel..."
+    sed -i "s|nixpkgs.url = \"github:nixos/nixpkgs/$current_channel\"|nixpkgs.url = \"github:nixos/nixpkgs/$channel\"|g" flake.nix
+
+    # Update the lock file
+    if ! nix flake update "$FLAKE_DIR" nixpkgs --refresh 2>/dev/null; then
+        error "Failed to update nixpkgs"
+        # Revert (T033)
+        cp "$backup_flake" flake.nix
+        cp "$backup_lock" flake.lock
+        rm -f "$backup_flake" "$backup_lock"
+        return 1
+    fi
+
+    # Validate (T033)
+    info "Validating new configuration..."
+    if ! cmd_validate --quick 2>/dev/null; then
+        error "Validation failed - reverting upgrade"
+        cp "$backup_flake" flake.nix
+        cp "$backup_lock" flake.lock
+        rm -f "$backup_flake" "$backup_lock"
+        return 1
+    fi
+
+    rm -f "$backup_flake" "$backup_lock"
+
+    success "Upgraded to $channel"
+    echo
+    info "Run 'nixswitch' to rebuild with the new channel"
+}
+
+#######################################
+# Phase 8: Diff Command (T034)
+#######################################
+
+cmd_diff() {
+    local fetch=false
+    local json_output=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --fetch) fetch=true; shift ;;
+            --json) json_output=true; shift ;;
+            -*) error "Unknown option for diff: $1"; return 1 ;;
+            *) shift ;;
+        esac
+    done
+
+    cd "$FLAKE_DIR"
+
+    if [[ "$JQ_AVAILABLE" != "true" ]]; then
+        warn "jq is not installed - diff output will be limited"
+        echo
+        git diff flake.lock 2>/dev/null || echo "No changes in flake.lock"
+        return 0
+    fi
+
+    echo
+    gum style --foreground 212 --bold "📊 Flake Input Status"
+    echo "═══════════════════════════════════"
+    echo
+
+    # Get current metadata
+    local metadata
+    if [[ "$fetch" == "true" ]]; then
+        metadata=$(nix flake metadata "$FLAKE_DIR" --json --refresh 2>/dev/null)
+    else
+        metadata=$(nix flake metadata "$FLAKE_DIR" --json 2>/dev/null)
+    fi
+
+    if [[ "$json_output" == "true" ]]; then
+        echo "$metadata" | jq '.locks.nodes'
+        return 0
+    fi
+
+    # Display formatted output
+    local inputs=$(jq -r '.nodes | keys[]' flake.lock 2>/dev/null | grep -v "^root$" || true)
+
+    for input in $inputs; do
+        local rev=$(jq -r ".nodes.\"$input\".locked.rev // empty" flake.lock 2>/dev/null | head -c 7)
+        local date=$(jq -r ".nodes.\"$input\".locked.lastModified // empty" flake.lock 2>/dev/null)
+        local ref=$(jq -r ".nodes.\"$input\".original.ref // empty" flake.lock 2>/dev/null)
+
+        if [[ -n "$rev" ]]; then
+            local formatted_date=""
+            if [[ -n "$date" ]]; then
+                formatted_date=$(date -d "@$date" '+%Y-%m-%d' 2>/dev/null || echo "unknown")
+            fi
+
+            if [[ -n "$ref" ]]; then
+                echo "$input ($ref)"
+            else
+                echo "$input"
+            fi
+            echo "  Revision: $rev"
+            echo "  Updated:  $formatted_date"
+            echo
+        fi
+    done
+}
+
+#######################################
+# Phase 8: Rollback Command (T035)
+#######################################
+
+cmd_rollback() {
+    local list_generations=false
+    local target=""
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --generations) list_generations=true; shift ;;
+            --to) target="$2"; shift 2 ;;
+            -*) error "Unknown option for rollback: $1"; return 1 ;;
+            *) shift ;;
+        esac
+    done
+
+    echo
+    gum style --foreground 212 --bold "⏪ System Rollback"
+    echo "═══════════════════════════════════"
+    echo
+
+    # List generations
+    if [[ "$list_generations" == "true" ]]; then
+        info "Available system generations:"
+        echo
+        sudo nixos-rebuild list-generations | head -15
+        return 0
+    fi
+
+    # Confirm rollback
+    if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
+        gum confirm "Roll back to previous generation?" || {
+            info "Cancelled by user"
+            return 0
+        }
+    fi
+
+    # Perform rollback
+    if [[ -n "$target" ]]; then
+        info "Rolling back to generation $target..."
+        sudo nix-env --switch-generation "$target" -p /nix/var/nix/profiles/system
+        sudo /nix/var/nix/profiles/system/bin/switch-to-configuration switch
+    else
+        info "Rolling back to previous generation..."
+        sudo nixos-rebuild switch --rollback
+    fi
+
+    # Show current generation
+    local current=$(sudo nixos-rebuild list-generations 2>/dev/null | grep current | awk '{print $1}')
+    success "Rolled back to generation $current"
+}
+
+#######################################
+# Original Functions (preserved for backward compatibility)
+#######################################
 
 parallel_updates() {
     local host="$1"
     info "Running parallel updates and validations..."
-    
+
     # Create temp files for parallel processing
     local temp_dir=$(mktemp -d)
     trap "rm -rf $temp_dir" EXIT
-    
-    # Run git fetch, flake update, and basic checks in parallel
+
+    # Run git fetch and disk check in parallel first
     {
         (git -C "$FLAKE_DIR" fetch origin 2>/dev/null && echo "git_fetch_ok" > "$temp_dir/git_fetch" || echo "git_fetch_failed" > "$temp_dir/git_fetch") &
-        (nix flake update "$FLAKE_DIR" --refresh 2>/dev/null && echo "flake_update_ok" > "$temp_dir/flake_update" || echo "flake_update_failed" > "$temp_dir/flake_update") &
-        (nix flake check --no-build "$FLAKE_DIR" 2>/dev/null && echo "syntax_ok" > "$temp_dir/syntax_check" || echo "syntax_failed" > "$temp_dir/syntax_check") &
         (df /nix --output=avail --block-size=1G | tail -1 | tr -d ' ' > "$temp_dir/disk_space") &
-        
-        # Wait for all background jobs to complete
         wait
     }
-    
+
+    # Run flake update (must complete before syntax check to avoid race condition)
+    if nix flake update "$FLAKE_DIR" --refresh 2>/dev/null; then
+        echo "flake_update_ok" > "$temp_dir/flake_update"
+    else
+        echo "flake_update_failed" > "$temp_dir/flake_update"
+    fi
+
+    # Run syntax check after update completes
+    if timeout 120s nix flake check --no-build "$FLAKE_DIR" 2>/dev/null; then
+        echo "syntax_ok" > "$temp_dir/syntax_check"
+    else
+        echo "syntax_failed" > "$temp_dir/syntax_check"
+    fi
+
     # Check results
     local disk_gb=$(cat "$temp_dir/disk_space" 2>/dev/null || echo "0")
     local git_result=$(cat "$temp_dir/git_fetch" 2>/dev/null || echo "git_fetch_failed")
     local flake_result=$(cat "$temp_dir/flake_update" 2>/dev/null || echo "flake_update_failed")
     local syntax_result=$(cat "$temp_dir/syntax_check" 2>/dev/null || echo "syntax_failed")
-    
+
     # Display results
     progress_group "Update Results" \
     "$(if [[ "$git_result" == "git_fetch_ok" ]]; then echo "✅ Git fetch"; else echo "⚠️  Git fetch (non-critical)"; fi)" \
     "$(if [[ "$flake_result" == "flake_update_ok" ]]; then echo "✅ Flake update"; else echo "❌ Flake update failed"; fi)" \
     "$(if [[ "$syntax_result" == "syntax_ok" ]]; then echo "✅ Syntax check"; else echo "❌ Syntax check failed"; fi)" \
     "$(if [[ "$disk_gb" -ge 5 ]]; then echo "✅ Disk space: ${disk_gb}GB"; else echo "⚠️  Low disk space: ${disk_gb}GB"; fi)"
-    
+
     # Fail if critical checks failed
     if [[ "$flake_result" == "flake_update_failed" ]]; then
         error "Flake update failed - this is critical"
         return 1
     fi
-    
+
     if [[ "$syntax_result" == "syntax_failed" ]]; then
         error "Syntax validation failed - configuration is invalid"
         return 1
     fi
-    
+
     [[ "$disk_gb" -lt 5 ]] && warn "Low disk space detected"
-    
+
     # Validate host configuration
     if ! gum spin --spinner dot --title "Validating host configuration..." -- \
     timeout 120s nix build "$FLAKE_DIR#nixosConfigurations.$host.config.system.build.toplevel" --dry-run &>/dev/null; then
         error "Host configuration validation failed for: $host"
         return 1
     fi
-    
+
     success "All validations passed"
 }
 
 perform_rebuild() {
     local host="$1"
-    
+
     # Enhanced password handling
     gum style \
     --foreground 214 \
@@ -151,18 +767,18 @@ perform_rebuild() {
     "🔐 System Rebuild Authentication" \
     "" \
     "Sudo access required for system rebuild"
-    
+
     # Test sudo access
     if ! sudo -v 2>/dev/null; then
         error "Authentication failed - cannot proceed with rebuild"
         return 1
     fi
-    
+
     success "Authentication successful"
-    
+
     # Pre-rebuild cleanup to prevent service conflicts
     pre_rebuild_cleanup
-    
+
     # Keep sudo alive in background
     (
         while sleep 30; do
@@ -171,36 +787,36 @@ perform_rebuild() {
     ) &
     local sudo_pid=$!
     trap "kill $sudo_pid 2>/dev/null || true" EXIT
-    
+
     # Format code if available
     if command -v alejandra &>/dev/null; then
         gum spin --spinner dot --title "Formatting code..." -- alejandra "$FLAKE_DIR" &>/dev/null &
         local format_pid=$!
     fi
-    
+
     # Main rebuild
     local start_time=$(date +%s)
     info "Starting NixOS rebuild for host: $host"
-    
+
     # Wait for formatting to complete
     [[ -n "${format_pid:-}" ]] && wait $format_pid && success "Code formatting completed"
-    
+
     # Execute rebuild
     local rebuild_cmd=(
         sudo nixos-rebuild switch
         --flake "$FLAKE_DIR#$host"
         --show-trace
     )
-    
+
     if gum spin \
     --spinner globe \
     --title "Building and switching to new configuration..." \
     --show-output \
     -- "${rebuild_cmd[@]}" 2>&1 | tee -a "$LOG_FILE"; then
-        
+
         local duration=$(( $(date +%s) - start_time ))
         success "Rebuild completed successfully in ${duration}s"
-        
+
         # Show generation info
         local current_gen=$(sudo nixos-rebuild list-generations | grep current | awk '{print $1}')
         gum style \
@@ -212,41 +828,41 @@ perform_rebuild() {
         "" \
         "Generation: $current_gen" \
         "Host: $host" \
-        "        "Build time: ${duration}s"
-        
+        "Build time: ${duration}s"
+
         echo
-        
+
         # Post-rebuild system check
         post_rebuild_check
-        
+
         # Network connectivity check
-        network_recovery"
-        
+        network_recovery
+
     else
         local duration=$(( $(date +%s) - start_time ))
         error "Rebuild failed after ${duration}s"
-        
+
         # Provide diagnostic information
         warn "Checking for common issues..."
-        
+
         # Check for service conflicts
         if systemctl list-units --failed --quiet | grep -q "lactd"; then
             warn "GPU control service (lactd) conflicts detected"
             info "Try running: sudo systemctl reset-failed && sudo rm -f /run/lactd.sock"
         fi
-        
+
         # Check for systemd issues
         if ! sudo systemctl is-system-running --quiet; then
             warn "System state is degraded - some services may have failed"
             info "Check status with: systemctl status"
         fi
-        
+
         if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "View error logs?"; then
             tail -n 30 "$LOG_FILE" | gum pager
         fi
         return 1
     fi
-    
+
     # Cleanup background processes
     kill $sudo_pid 2>/dev/null || true
 }
@@ -255,7 +871,7 @@ parallel_cleanup() {
     echo
     gum style --foreground 99 --bold "🧹 System Cleanup"
     info "Running parallel cleanup tasks..."
-    
+
     # Use GNU parallel if available, otherwise fall back to background jobs
     if command -v parallel &>/dev/null; then
         parallel --will-cite --halt now,fail=1 --jobs 3 ::: \
@@ -270,37 +886,38 @@ parallel_cleanup() {
             wait
         } || warn "Some cleanup tasks failed"
     fi
-    
+
     success "System cleanup completed"
 }
 
+# Enhanced git_workflow with better commit messages (T022)
 git_workflow() {
     local host="$1"
-    
+
     cd "$FLAKE_DIR"
-    
+
     # Check if we have changes
     local has_changes=false
     local has_unpushed=false
-    
+
     if ! git diff --quiet || ! git diff --cached --quiet; then
         has_changes=true
     fi
-    
+
     if git remote get-url origin &>/dev/null; then
         local unpushed=$(git rev-list --count origin..HEAD 2>/dev/null || echo "0")
         [[ "$unpushed" -gt 0 ]] && has_unpushed=true
     fi
-    
+
     if [[ "$has_changes" == "false" && "$has_unpushed" == "false" ]]; then
         info "Git repository is clean and up to date"
         return 0
     fi
-    
+
     echo
     gum style --foreground 214 --bold "📝 Git Workflow"
     echo
-    
+
     # Handle uncommitted changes
     if [[ "$has_changes" == "true" ]]; then
         gum style --foreground 84 --bold "📋 Changed Files:"
@@ -308,14 +925,15 @@ git_workflow() {
             echo "  $line"
         done
         echo
-        
+
         if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Commit changes?"; then
-            local commit_message="${COMMIT_MESSAGE:-"chore: update configuration $(date '+%Y-%m-%d %H:%M')"}"
-            
+            # Use improved commit message generation (T022)
+            local commit_message="${COMMIT_MESSAGE:-$(generate_commit_message)}"
+
             if [[ -z "$COMMIT_MESSAGE" ]] && [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
                 commit_message=$(gum input --placeholder "Enter commit message" --value "$commit_message")
             fi
-            
+
             git add -A
             git commit -m "$commit_message"
             success "Changes committed: $commit_message"
@@ -324,7 +942,7 @@ git_workflow() {
             return 0
         fi
     fi
-    
+
     # Push if we have unpushed commits
     if [[ "$has_unpushed" == "true" ]] || git log --oneline origin..HEAD 2>/dev/null | grep -q .; then
         if [[ "${NON_INTERACTIVE:-false}" != "true" ]] && gum confirm "Push to remote?"; then
@@ -340,7 +958,7 @@ git_workflow() {
 show_success() {
     local host="$1"
     echo
-    
+
     # Success celebration
     gum style \
     --foreground 84 \
@@ -357,55 +975,86 @@ show_success() {
     "Time: $(date '+%H:%M:%S')"
 }
 
+# Enhanced help with subcommands (T007)
 show_help() {
     gum style --foreground 212 --bold "NixOS Switch v${SCRIPT_VERSION}"
     echo
     gum style --foreground 39 "Streamlined NixOS rebuild with modern TUI and parallel processing"
     echo
-    gum style --foreground 84 --bold "Options:"
-    echo "  --help/-h                Show this help"
-    echo "  --non-interactive/-y     Skip confirmations"
-    echo "  --commit-message MSG     Custom commit message"
-    echo "  default/laptop           Specify host (auto-detected if omitted)"
-    echo "  default-unstable         Use unstable packages for latest software"
-    echo "  laptop-unstable          Use unstable packages on laptop"
+
+    gum style --foreground 84 --bold "Subcommands:"
+    echo "  update [inputs...]       Update flake inputs without rebuilding"
+    echo "    --dry-run              Preview what would be updated"
+    echo "    --commit               Auto-commit after update"
     echo
-    gum style --foreground 84 "Features: Auto-detection • Parallel processing • Beautiful TUI • Git integration"
+    echo "  validate [host]          Validate configuration without building"
+    echo "    --quick                Syntax check only (skip build dry-run)"
+    echo "    --verbose              Show detailed validation output"
+    echo
+    echo "  diff                     Show flake input status"
+    echo "    --fetch                Fetch latest metadata before showing"
+    echo "    --json                 Output in JSON format"
+    echo
+    echo "  rollback                 Roll back to previous generation"
+    echo "    --generations          List available generations"
+    echo "    --to N                 Roll back to specific generation N"
+    echo
+    echo "  upgrade [channel]        Upgrade NixOS release channel"
+    echo "    --list                 List available channels"
+    echo "    --dry-run              Preview what would change"
+    echo
+    echo "  git-sync                 Synchronize git branches"
+    echo "    --to-hosts             Merge main into all host/* branches"
+    echo "    --fetch                Fetch from remote before sync"
+    echo "    --push                 Push after sync"
+    echo
+
+    gum style --foreground 84 --bold "Default Mode (no subcommand):"
+    echo "  nixswitch [host] [options]   Full workflow: update, validate, rebuild, commit"
+    echo
+    echo "  Options:"
+    echo "    --help/-h                  Show this help"
+    echo "    --non-interactive/-y       Skip confirmations"
+    echo "    --commit-message MSG       Custom commit message"
+    echo "    desktop/laptop/server      Specify host (auto-detected if omitted)"
+    echo
+
+    gum style --foreground 84 "Features: Auto-detection • Subcommands • Parallel processing • Git integration"
 }
 
 pre_rebuild_cleanup() {
     info "Performing pre-rebuild cleanup..."
-    
+
     # Reset any failed systemd units that might interfere
     sudo systemctl reset-failed 2>/dev/null || true
-    
+
     # Handle known problematic services
     if systemctl is-active --quiet lactd.service; then
         sudo systemctl stop lactd.service 2>/dev/null || true
     fi
-    
+
     # Clean up problematic socket files
     sudo rm -f /run/lactd.sock 2>/dev/null || true
-    
+
     # Wait a moment for services to fully stop
     sleep 1
-    
+
     success "Pre-rebuild cleanup completed"
 }
 
 post_rebuild_check() {
     info "Performing post-rebuild system check..."
-    
+
     # Check if critical services are running
     local failed_services=()
     local critical_services=("NetworkManager" "systemd-resolved" "dbus")
-    
+
     for service in "${critical_services[@]}"; do
         if ! systemctl is-active --quiet "$service"; then
             failed_services+=("$service")
         fi
     done
-    
+
     if [[ ${#failed_services[@]} -gt 0 ]]; then
         warn "Some critical services failed to start: ${failed_services[*]}"
         info "Attempting to restart failed services..."
@@ -413,28 +1062,28 @@ post_rebuild_check() {
             sudo systemctl start "$service" 2>/dev/null || warn "Failed to restart $service"
         done
     fi
-    
+
     # Reset any failed non-critical services
     sudo systemctl reset-failed 2>/dev/null || true
-    
+
     success "Post-rebuild check completed"
 }
 
 network_recovery() {
     info "Checking network connectivity..."
-    
+
     # Test basic connectivity
     if ! ping -c 1 8.8.8.8 &>/dev/null; then
         warn "Network connectivity issues detected"
-        
+
         # Try to restart NetworkManager
         info "Attempting to restart network services..."
         sudo systemctl restart NetworkManager 2>/dev/null || true
         sudo systemctl restart systemd-resolved 2>/dev/null || true
-        
+
         # Wait for network to come back up
         sleep 3
-        
+
         # Test again
         if ping -c 1 8.8.8.8 &>/dev/null; then
             success "Network connectivity restored"
@@ -447,36 +1096,40 @@ network_recovery() {
     fi
 }
 
+#######################################
+# Main function - default rebuild workflow
+#######################################
+
 main() {
     show_banner
-    
+
     # Get host
     local host=${SPECIFIED_HOST:-$(detect_host)}
     gum style --foreground 212 --bold "🎯 Target Host: $host"
-    
+
     # Change to flake directory
     if ! cd "$FLAKE_DIR" 2>/dev/null; then
         error "Cannot access flake directory: $FLAKE_DIR"
         exit 1
     fi
-    
+
     # Setup logging
     setup_logging
-    
+
     # Verify host configuration exists
     local config_path="hosts/${host//-unstable/}"  # Remove -unstable suffix for path check
     if [[ ! -d "$config_path" ]]; then
         error "Host configuration '$config_path' not found"
         info "Available hosts: $(ls hosts/ | tr '\n' ' ')"
-        info "Available configurations: default, laptop, default-unstable, laptop-unstable"
+        info "Available configurations: desktop, laptop, desktop-unstable, laptop-unstable"
         exit 1
     fi
-    
+
     # Run parallel updates and validation
     if ! parallel_updates "$host"; then
         exit 1
     fi
-    
+
     # Confirmation
     if [[ "${NON_INTERACTIVE:-false}" != "true" ]]; then
         gum confirm --default=true "Proceed with rebuild?" || {
@@ -484,32 +1137,67 @@ main() {
             exit 0
         }
     fi
-    
+
     # Pre-rebuild cleanup
     pre_rebuild_cleanup
-    
+
     # Main rebuild
     if ! perform_rebuild "$host"; then
         exit 1
     fi
-    
+
     # Post-rebuild tasks
     git_workflow "$host"
     parallel_cleanup
-    
+
     # Post-rebuild check
     post_rebuild_check
-    
+
     # Success message
     show_success "$host"
 }
 
+#######################################
+# Subcommand routing (T004-T006)
+#######################################
+
+dispatch_subcommand() {
+    case "$SUBCOMMAND" in
+        update)     cmd_update "$@" ;;
+        validate)   cmd_validate "$@" ;;
+        diff)       cmd_diff "$@" ;;
+        rollback)   cmd_rollback "$@" ;;
+        upgrade)    cmd_upgrade "$@" ;;
+        git-sync)   cmd_git_sync "$@" ;;
+        default)    main ;;
+        *)
+            error "Unknown subcommand: $SUBCOMMAND"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+#######################################
 # Command line parsing
+#######################################
+
 NON_INTERACTIVE=false
 COMMIT_MESSAGE=""
 SPECIFIED_HOST=""
+SUBCOMMAND_ARGS=()
 
-# Handle help first
+# Check for subcommand first (T004)
+if [[ $# -gt 0 ]]; then
+    case "$1" in
+        update|validate|diff|rollback|upgrade|git-sync)
+            SUBCOMMAND="$1"
+            shift
+            ;;
+    esac
+fi
+
+# Handle help
 for arg in "$@"; do
     if [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
         show_help
@@ -517,13 +1205,23 @@ for arg in "$@"; do
     fi
 done
 
+# Parse remaining options
 while [[ $# -gt 0 ]]; do
     case $1 in
         -y|--non-interactive) NON_INTERACTIVE=true; shift ;;
         --commit-message) COMMIT_MESSAGE="$2"; shift 2 ;;
-        default|laptop|default-unstable|laptop-unstable) SPECIFIED_HOST="$1"; shift ;;
-        *) error "Unknown option: $1"; show_help; exit 1 ;;
+        desktop|laptop|server|desktop-unstable|laptop-unstable)
+            SPECIFIED_HOST="$1"; shift ;;
+        default|default-unstable)
+            warn "Host 'default' has been renamed to 'desktop'. Using 'desktop' instead."
+            SPECIFIED_HOST="${1/default/desktop}"; shift ;;
+        *)
+            # Pass remaining args to subcommand
+            SUBCOMMAND_ARGS+=("$1")
+            shift
+            ;;
     esac
 done
 
-main
+# Execute the appropriate command (T005, T006)
+dispatch_subcommand "${SUBCOMMAND_ARGS[@]}"

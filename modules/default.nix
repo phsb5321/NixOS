@@ -1,4 +1,6 @@
 # ~/NixOS/modules/default.nix
+# Note: profiles/ has moved to top-level profiles/ directory
+# Host configurations now import profiles directly
 {
   imports = [
     ./core
@@ -6,6 +8,10 @@
     ./networking
     ./desktop
     ./dotfiles
-    ./shell
+    ./hardware
+    ./services
+    ./gpu
+    ./secrets
+    ./gaming
   ];
 }
