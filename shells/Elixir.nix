@@ -1,4 +1,7 @@
 {pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
+  # Import shared testing toolchain
+  testingToolchain = import ./testing-toolchain.nix {inherit pkgs;};
+
   # Helper function to create a tagged package group
   mkPackageGroup = name: packages: {
     inherit name packages;
@@ -35,9 +38,12 @@
   allPackages = builtins.concatLists (map (group: group.packages) packageGroups);
 in
   pkgs.mkShell {
-    buildInputs = allPackages;
+    buildInputs = allPackages ++ testingToolchain.packages;
 
     shellHook = ''
+            # Testing toolchain configuration
+            ${testingToolchain.shellHook}
+
             # Ensure local hex and rebar are available
             mix local.hex --force
             mix local.rebar --force
@@ -154,6 +160,7 @@ in
             echo "  - Run Credo: mcr"
             echo "  - Run Dialyzer: mdl"
             echo -e "\n💡 Elixir version: $(elixir -v)"
+            echo "Run 'test-toolchain-diagnose' to verify testing setup"
     '';
 
     # Set environment variables for PostgreSQL
