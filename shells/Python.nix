@@ -1,4 +1,7 @@
 {pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
+  # Import shared testing toolchain
+  testingToolchain = import ./testing-toolchain.nix {inherit pkgs;};
+
   # Create a custom OpenCV package with GTK support
   opencvGtk = pkgs.opencv4.override {
     enableGtk3 = true;
@@ -191,9 +194,12 @@ in
 
       # Database
       postgresql
-    ];
+    ] ++ testingToolchain.packages;
 
     shellHook = ''
+      # Testing toolchain configuration
+      ${testingToolchain.shellHook}
+
       # Set up library paths for external dependencies
       export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:${pkgs.libGL}/lib:${pkgs.glib}/lib:${pkgs.gtk3}/lib:${opencvGtk}/lib:${pkgs.postgresql}/lib:$LD_LIBRARY_PATH
       export TCLLIBPATH=${pkgs.tcl}/lib

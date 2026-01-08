@@ -1,0 +1,22 @@
+# Cloudflare Tunnel Configuration for Audiobookshelf
+# Location: ~/.cloudflared/config.yml
+#
+# Setup Instructions:
+# 1. Install cloudflared: nix-shell -p cloudflared
+# 2. Login: cloudflared tunnel login
+# 3. Create tunnel: cloudflared tunnel create audiobookshelf
+# 4. Copy the tunnel ID and credentials file path below
+# 5. Copy this file to ~/.cloudflared/config.yml with your values
+# 6. Start tunnel: cloudflared tunnel --config ~/.cloudflared/config.yml run audiobookshelf
+#
+# Replace the placeholders below with your actual values:
+
+tunnel: YOUR_TUNNEL_ID_HERE
+credentials-file: /home/YOUR_USER/.cloudflared/YOUR_TUNNEL_ID_HERE.json
+
+ingress:
+  - hostname: your-subdomain.your-domain.com
+    service: http://localhost:13378
+    originRequest:
+      noTLSVerify: true
+  - service: http_status:404

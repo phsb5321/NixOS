@@ -1,7 +1,7 @@
 # Hardware module imports
 {
   imports = [
-    ./laptop.nix
+    ./laptop
     ./forticlient.nix
   ];
 }

@@ -68,6 +68,49 @@ in {
       ANDROID_HOME = mkIf cfg.androidTools.enable "/home/notroot/.android/sdk";
     };
 
+    # JavaFX native library path - append to existing LD_LIBRARY_PATH via shell init
+    programs.bash.interactiveShellInit = let
+      javafxLibPath = lib.makeLibraryPath [
+        pkgs.gtk3
+        pkgs.glib
+        pkgs.libGL
+        pkgs.mesa
+        pkgs.xorg.libX11
+        pkgs.xorg.libXrender
+        pkgs.xorg.libXtst
+        pkgs.alsa-lib
+        pkgs.cairo
+        pkgs.pango
+        pkgs.gdk-pixbuf
+        pkgs.freetype
+        pkgs.fontconfig
+      ];
+    in ''
+      # JavaFX native library support
+      export LD_LIBRARY_PATH="${javafxLibPath}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    '';
+
+    programs.zsh.interactiveShellInit = let
+      javafxLibPath = lib.makeLibraryPath [
+        pkgs.gtk3
+        pkgs.glib
+        pkgs.libGL
+        pkgs.mesa
+        pkgs.xorg.libX11
+        pkgs.xorg.libXrender
+        pkgs.xorg.libXtst
+        pkgs.alsa-lib
+        pkgs.cairo
+        pkgs.pango
+        pkgs.gdk-pixbuf
+        pkgs.freetype
+        pkgs.fontconfig
+      ];
+    in ''
+      # JavaFX native library support
+      export LD_LIBRARY_PATH="${javafxLibPath}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    '';
+
     # Add udev rules for Android devices
     services.udev.extraRules = mkIf cfg.androidTools.enable ''
       # Google
@@ -84,7 +127,7 @@ in {
     users.groups.adbusers = {};
 
     # Add your user to adbusers group if Android tools are enabled
-    users.users.notroot.extraGroups = mkIf cfg.androidTools.enable ["adbusers"];
+    users.users.notroot.extraGroups = lib.mkIf cfg.androidTools.enable (lib.mkAfter ["adbusers"]);
 
     # System configurations for better Java application support
     security.polkit.enable = true;
@@ -103,7 +146,7 @@ in {
     # System-wide Java configuration
     programs.java = {
       enable = true;
-      package = cfg.package;
+      inherit (cfg) package;
     };
   };
 }

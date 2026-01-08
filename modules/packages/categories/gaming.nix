@@ -41,6 +41,19 @@ in {
       description = "Install Minecraft launcher (Prism Launcher)";
     };
 
+    # New gaming tools section
+    performanceTools = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Install performance monitoring tools (MangoHud, Goverlay)";
+    };
+
+    protonTools = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Install Proton management tools (protontricks, protonup-qt)";
+    };
+
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [];
@@ -77,6 +90,17 @@ in {
       # Minecraft
       ++ (lib.optionals cfg.minecraft [
         prismlauncher
+      ])
+      # New gaming tools section
+      ++ (lib.optionals cfg.performanceTools [
+        mangohud # FPS/GPU overlay
+        goverlay # MangoHud GUI configurator
+        gamemode # Process optimizer
+      ])
+      ++ (lib.optionals cfg.protonTools [
+        protontricks # Prefix manager
+        protonup-qt # GE-Proton installer
+        winetricks # Wine configuration
       ])
       # Extra packages
       ++ cfg.extraPackages;

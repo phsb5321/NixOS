@@ -1,7 +1,6 @@
-# NixOS Laptop Configuration - Role-Based (New Architecture)
-# This is the new modular configuration using laptop profile and role-based modules
+# NixOS Laptop Configuration - Profile-Based (New Architecture)
+# This is the new modular configuration using laptop profile and profile-based modules
 {
-  config,
   pkgs,
   lib,
   systemVersion,
@@ -10,6 +9,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../../profiles/laptop.nix
   ];
 
   # Allow insecure packages for USB boot creation tool
@@ -67,6 +67,7 @@
 
     # Wayland configuration - Force X11 for NVIDIA compatibility
     wayland = {
+      # JUSTIFIED: Hardware requirement - NVIDIA hybrid graphics causes blank screen with Wayland
       enable = lib.mkForce false; # Use X11 for NVIDIA laptop
       electronSupport = false;
       screenSharing = false;
@@ -75,83 +76,16 @@
   };
 
   # ===== PACKAGE CONFIGURATION =====
+  # Most defaults come from profiles/common.nix and profiles/laptop.nix
+  # Only host-specific overrides needed here
   modules.packages = {
-    # Browsers
-    browsers = {
-      enable = true;
-      chrome = true;
-      brave = true;
-      librewolf = true;
-      zen = false; # Less critical for laptop
-    };
-
-    # Development tools
-    development = {
-      enable = true;
-      editors = true;
-      apiTools = true;
-      runtimes = true;
-      compilers = true;
-      languageServers = true;
-      versionControl = true;
-      utilities = true;
-      database = true;
-      containers = true;
-      debugging = true;
-      networking = true;
-    };
-
-    # Media
-    media = {
-      enable = true;
-      vlc = true;
-      spotify = true;
-      discord = true;
-      streaming = false; # Less critical for laptop
-      imageEditing = true;
-    };
-
-    # Gaming - Steam integration
+    # Gaming - enabled on this laptop even though it's "standard" variant
+    # (profile only enables gaming for "gaming" variant by default)
     gaming = {
       enable = true;
       performance = true;
       launchers = true;
       wine = true;
-      gpuControl = false; # NVIDIA disabled
-      minecraft = false;
-    };
-
-    # Utilities
-    utilities = {
-      enable = true;
-      diskManagement = true;
-      fileSync = false; # Syncthing handled by profile
-      compression = true;
-      security = true;
-      pdfViewer = true;
-      messaging = true;
-      fonts = true;
-    };
-
-    # Audio/Video
-    audioVideo = {
-      enable = true;
-      pipewire = true;
-      audioEffects = true;
-      audioControl = true;
-      webcam = true;
-    };
-
-    # Terminal
-    terminal = {
-      enable = true;
-      fonts = true;
-      shell = true;
-      theme = true;
-      modernTools = true;
-      plugins = true;
-      editor = true;
-      applications = true;
     };
   };
 
@@ -370,18 +304,12 @@
     initrd.systemd.enable = true;
   };
 
-  # ===== USER CONFIGURATION =====
-  users.users.notroot = {
-    isNormalUser = true;
-    description = "Not Root";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "video" # Brightness control
-      "input" # Touchpad gestures
-      "power" # Power management
-    ];
-  };
+  # ===== HOST-SPECIFIC USER CONFIGURATION =====
+  # Base user defined in profiles/common.nix via profiles/laptop.nix
+  # Only add laptop-specific groups here
+  users.users.notroot.extraGroups = lib.mkAfter [
+    "power" # Power management
+  ];
 
   # ===== ENVIRONMENT VARIABLES =====
   environment.sessionVariables = {

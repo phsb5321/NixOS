@@ -45,11 +45,11 @@ in {
   config = mkIf cfg.enable {
     services.syncthing = {
       enable = true;
-      user = cfg.user;
-      dataDir = cfg.dataDir;
-      configDir = cfg.configDir;
-      overrideDevices = cfg.overrideDevices;
-      overrideFolders = cfg.overrideFolders;
+      inherit (cfg) user;
+      inherit (cfg) dataDir;
+      inherit (cfg) configDir;
+      inherit (cfg) overrideDevices;
+      inherit (cfg) overrideFolders;
     };
   };
 }

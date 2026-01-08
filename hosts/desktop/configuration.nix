@@ -1,20 +1,19 @@
-# NixOS Desktop Configuration - Role-Based (New Architecture)
-# This is the new modular configuration using roles, GPU abstraction, and modular packages
+# NixOS Desktop Configuration - Profile-Based (New Architecture)
+# This is the new modular configuration using profiles, GPU abstraction, and modular packages
 {
-  config,
   pkgs,
   lib,
-  hostname,
   ...
 }: {
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../../profiles/desktop.nix
   ];
 
-  # ===== ROLE-BASED CONFIGURATION =====
-  # Desktop role enables: GNOME, gaming, full features, services, dotfiles
-  modules.roles.desktop.enable = true;
+  # ===== PROFILE-BASED CONFIGURATION =====
+  # Desktop profile enables: GNOME, gaming, full features, services, dotfiles
+  modules.profiles.desktop.enable = true;
 
   # ===== GPU CONFIGURATION =====
   # AMD RX 5700 XT (Navi 10) with gaming optimizations
@@ -24,6 +23,41 @@
     powerManagement = true;
     gaming = true; # Enable 32-bit support and performance tweaks
   };
+
+  # ===== GAMING CONFIGURATION =====
+  # Steam with Proton and runtime library support
+  modules.gaming.steam = {
+    enable = true;
+    protontricks.enable = true;
+    geProton.enable = true;
+    remotePlay.enable = false;
+    # gamescopeSession defaults to false
+  };
+
+  modules.gaming.protontricks = {
+    enable = true;
+    helperScripts = true; # Provides install-vcrun2019, install-vcrun2022, list-steam-games, fix-frostpunk
+  };
+
+  # Shader compilation optimization (003-gaming-optimization - Phase 3: US1)
+  modules.gaming.shaderCache = {
+    enable = true;
+    enableRADVGPL = true; # Graphics Pipeline Library for compile-time shader processing
+    enableNGGC = true; # Next-Gen Geometry Culling for AMD GPUs
+    enableSteamPreCache = true; # Steam's built-in Vulkan shader pre-caching
+  };
+
+  # CPU optimization for gaming (003-gaming-optimization - Phase 5: US3)
+  modules.gaming.gamemode = {
+    enable = true;
+    enableRenice = true; # Increase game process priority
+    renice = 10; # Nice value adjustment (higher = more aggressive priority boost)
+    softRealtime = "auto"; # Soft real-time scheduling
+    inhibitScreensaver = true; # Prevent screensaver during gaming
+  };
+
+  # Performance monitoring (003-gaming-optimization - Phase 6: US4)
+  modules.gaming.mangohud.enable = true;
 
   # ===== GNOME DESKTOP =====
   modules.desktop.gnome = {
@@ -65,7 +99,7 @@
 
     # Wayland configuration
     wayland = {
-      enable = true;
+      enable = true; # Reverted back to Wayland (X11 broke display manager)
       electronSupport = true;
       screenSharing = true;
       variant = "hardware";
@@ -73,90 +107,15 @@
   };
 
   # ===== PACKAGE CONFIGURATION =====
-  modules.packages = {
-    # Browsers
-    browsers = {
-      enable = true;
-      chrome = true;
-      brave = true;
-      librewolf = true;
-      zen = true;
-    };
-
-    # Development tools
-    development = {
-      enable = true;
-      editors = true;
-      apiTools = true;
-      runtimes = true;
-      compilers = true;
-      languageServers = true;
-      versionControl = true;
-      utilities = true;
-      database = true;
-      containers = true;
-      debugging = true;
-      networking = true;
-    };
-
-    # Media
-    media = {
-      enable = true;
-      vlc = true;
-      spotify = true;
-      discord = true;
-      streaming = true;
-      imageEditing = true;
-    };
-
-    # Gaming
-    gaming = {
-      enable = true;
-      performance = true;
-      launchers = true;
-      wine = true;
-      gpuControl = true;
-      minecraft = false;
-    };
-
-    # Utilities
-    utilities = {
-      enable = true;
-      diskManagement = true;
-      fileSync = false; # Syncthing handled by role
-      compression = true;
-      security = true;
-      pdfViewer = true;
-      messaging = true;
-      fonts = true;
-    };
-
-    # Audio/Video
-    audioVideo = {
-      enable = true;
-      pipewire = true;
-      audioEffects = true;
-      audioControl = true;
-      webcam = true;
-    };
-
-    # Terminal
-    terminal = {
-      enable = true;
-      fonts = true;
-      shell = true;
-      theme = true;
-      modernTools = true;
-      plugins = true;
-      editor = true;
-      applications = true;
-    };
-  };
+  # Most defaults come from profiles/common.nix and profiles/desktop.nix
+  # Only host-specific overrides needed here
+  # (Currently all defaults from profiles are correct for desktop)
 
   # ===== HOST-SPECIFIC PACKAGES =====
   environment.systemPackages = with pkgs; [
     # AI Development
     claude-code
+    opencode
 
     # Communication
     telegram-desktop
@@ -228,6 +187,10 @@
     dhcpcd.extraConfig = "nohook resolv.conf";
     nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     firewall.checkReversePath = "loose";
+    # Trust waydroid0 interface for firewall
+    firewall.trustedInterfaces = ["waydroid0"];
+    # Allow DHCP and DNS ports for Waydroid
+    firewall.allowedUDPPorts = [53 67];
     nftables.enable = true;
   };
 
@@ -325,9 +288,12 @@
     kernelParams = [
       "preempt=full"
       "nohz_full=all"
+      "intel_pstate=disable" # 003-gaming-optimization: Disable Intel p-state for better GameMode control
     ];
 
     kernel.sysctl = {
+      # JUSTIFIED: Gaming-optimized memory settings override base module defaults
+      # Desktop requires aggressive swappiness=1 for gaming (base default is 10)
       "vm.swappiness" = lib.mkForce 1;
       "vm.vfs_cache_pressure" = lib.mkForce 50;
       "vm.dirty_ratio" = lib.mkForce 10;
@@ -336,6 +302,7 @@
       "vm.dirty_writeback_centisecs" = 100;
       "vm.page-cluster" = 0;
       "kernel.sched_autogroup_enabled" = 1;
+      # JUSTIFIED: Gaming requires higher file descriptor limit than base default
       "fs.file-max" = lib.mkForce 4194304;
       "fs.aio-max-nr" = 1048576;
     };
@@ -347,23 +314,17 @@
   hardware.cpu.intel.updateMicrocode = true;
 
   # ===== PROGRAMS =====
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;
-  };
+  # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
 
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
 
   # ===== HOST-SPECIFIC USER CONFIGURATION =====
   users.groups.plugdev = {};
-  users.users.notroot.extraGroups = [
+  users.users.notroot.extraGroups = lib.mkAfter [
     "dialout"
     "libvirtd"
     "plugdev"
-    "input"
   ];
 
   # ===== POWER MANAGEMENT =====
@@ -395,6 +356,16 @@
       killUnconfinedConfinables = true;
     };
   };
+
+  # ===== VIRTUALIZATION =====
+  # Waydroid - Android container for Linux (priority feature)
+  # Default waydroid 1.5.4+ already has LXC_USE_NFT="true" for nftables
+  # Base module defaults to false, so simple enable works
+  virtualisation.waydroid.enable = true;
+
+  # Waydroid desktop entry hygiene - hide per-app launchers from GNOME
+  # Replaces .desktop files with /dev/null symlinks to prevent clutter
+  modules.services.waydroid-desktop-hygiene.enable = true;
 
   # ===== SYSTEMD SERVICES =====
   # GNOME login fixes
@@ -440,5 +411,6 @@
   };
 
   # ===== SYSTEM STATE VERSION =====
+  # Uses modules.core.stateVersion, but also set directly for clarity
   system.stateVersion = "25.11";
 }

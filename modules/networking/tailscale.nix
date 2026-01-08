@@ -56,12 +56,12 @@
     # Enable Tailscale service
     services.tailscale = {
       enable = true;
-      useRoutingFeatures = config.modules.networking.tailscale.useRoutingFeatures;
-      port = config.modules.networking.tailscale.port;
-      interfaceName = config.modules.networking.tailscale.interfaceName;
-      authKeyFile = config.modules.networking.tailscale.authKeyFile;
-      extraUpFlags = config.modules.networking.tailscale.extraUpFlags;
-      openFirewall = config.modules.networking.tailscale.openFirewall;
+      inherit (config.modules.networking.tailscale) useRoutingFeatures;
+      inherit (config.modules.networking.tailscale) port;
+      inherit (config.modules.networking.tailscale) interfaceName;
+      inherit (config.modules.networking.tailscale) authKeyFile;
+      inherit (config.modules.networking.tailscale) extraUpFlags;
+      inherit (config.modules.networking.tailscale) openFirewall;
     };
 
     # Firewall configuration for Tailscale

@@ -1,7 +1,6 @@
 # Cloudflare Tunnel Module
 # Automatically runs cloudflared tunnel for Audiobookshelf external access
 # Provides persistent tunnel that survives reboots
-
 {
   config,
   lib,
@@ -14,9 +13,9 @@ in {
     enable = lib.mkEnableOption "Cloudflare Tunnel for Audiobookshelf";
 
     tunnelId = lib.mkOption {
-      type = lib.types.str;
-      default = "7d1704a0-512f-4a54-92c4-d9bf0b4561c3";
-      description = "Cloudflare tunnel ID";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Cloudflare tunnel ID (must be set via server-secrets.nix, never commit to git)";
     };
 
     tunnelName = lib.mkOption {
@@ -32,9 +31,9 @@ in {
     };
 
     credentialsFile = lib.mkOption {
-      type = lib.types.path;
-      default = "/home/notroot/.cloudflared/7d1704a0-512f-4a54-92c4-d9bf0b4561c3.json";
-      description = "Path to Cloudflare tunnel credentials file";
+      type = lib.types.nullOr lib.types.path;
+      default = null;
+      description = "Path to Cloudflare tunnel credentials file (typically ~/.cloudflared/<tunnel-id>.json)";
     };
 
     user = lib.mkOption {
@@ -45,8 +44,20 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    # Assertions to ensure credentials are configured
+    assertions = [
+      {
+        assertion = cfg.tunnelId != null;
+        message = "modules.services.cloudflareTunnel.tunnelId must be set (via server-secrets.nix)";
+      }
+      {
+        assertion = cfg.credentialsFile != null;
+        message = "modules.services.cloudflareTunnel.credentialsFile must be set (via server-secrets.nix)";
+      }
+    ];
+
     # Cloudflare Tunnel systemd service
-    systemd.services.cloudflared-tunnel = {
+    systemd.services.cloudflared-tunnel = lib.mkIf (cfg.tunnelId != null && cfg.credentialsFile != null) {
       description = "Cloudflare Tunnel for Audiobookshelf";
       after = ["network.target" "audiobookshelf.service"];
       wants = ["audiobookshelf.service"];

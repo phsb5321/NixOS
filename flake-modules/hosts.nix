@@ -19,6 +19,25 @@
       ];
     };
 
+    # Overlays to fix package issues
+    overlays = [
+      # Fix clipboard-indicator extension schema compilation
+      (_final: prev: {
+        gnomeExtensions =
+          prev.gnomeExtensions
+          // {
+            clipboard-indicator = prev.gnomeExtensions.clipboard-indicator.overrideAttrs (oldAttrs: {
+              postInstall =
+                (oldAttrs.postInstall or "")
+                + ''
+                  # Recompile schemas to fix type mismatch bug
+                  ${prev.glib.dev}/bin/glib-compile-schemas $out/share/gnome-shell/extensions/clipboard-indicator@tudmotu.com/schemas/
+                '';
+            });
+          };
+      })
+    ];
+
     # Helper function to create a NixOS system with perSystem context
     # Uses withSystem to access perSystem outputs (pkgs, config, self', inputs')
     mkNixosSystem = {
@@ -30,15 +49,13 @@
       extraSpecialArgs ? {},
     }:
       withSystem system ({
-        pkgs,
-        config,
         self',
         inputs',
         ...
       }: let
         # Get NixOS version dynamically from the input
         systemVersion = let
-          version = nixpkgsInput.lib.version;
+          inherit (nixpkgsInput.lib) version;
           versionParts = builtins.splitVersion version;
           major = builtins.head versionParts;
           minor = builtins.elemAt versionParts 1;
@@ -50,11 +67,13 @@
         pkgsForHost = import nixpkgsInput {
           inherit system;
           config = pkgsConfig;
+          inherit overlays;
         };
 
         pkgs-unstable = import inputs.nixpkgs-unstable {
           inherit system;
           config = pkgsConfig;
+          inherit overlays;
         };
 
         # Common special args for all hosts
@@ -69,7 +88,7 @@
               self'
               inputs'
               ;
-            pkgs-unstable = pkgs-unstable;
+            inherit pkgs-unstable;
             stablePkgs = pkgsForHost;
           }
           // extraSpecialArgs;
@@ -85,6 +104,7 @@
               # Base system configuration
               {
                 nixpkgs.config = pkgsConfig;
+                nixpkgs.overlays = overlays;
 
                 # Nix settings
                 nix = {
@@ -103,8 +123,8 @@
                   };
                 };
 
-                # System version
-                system.stateVersion = systemVersion;
+                # System version (mkDefault allows host-specific override)
+                system.stateVersion = nixpkgsInput.lib.mkDefault systemVersion;
 
                 # Set hostname
                 networking.hostName = nixpkgsInput.lib.mkDefault hostname;
@@ -142,7 +162,7 @@
   in {
     # NixOS Configurations - Generated from hosts definition
     nixosConfigurations =
-      inputs.nixpkgs.lib.mapAttrs (name: hostConfig: mkNixosSystem hostConfig) hosts
+      inputs.nixpkgs.lib.mapAttrs (_name: mkNixosSystem) hosts
       // {
         # Compatibility aliases for systems with different hostnames
         nixos = mkNixosSystem hosts.desktop;
@@ -152,5 +172,98 @@
         # Legacy alias for backward compatibility
         default = mkNixosSystem hosts.desktop;
       };
+
+    # Colmena configuration for remote deployment
+    # Usage: colmena build, colmena apply --on <host>
+    # Note: Colmena requires special args that match what nixosSystem provides
+    colmena = let
+      # Helper to create colmena node config from our hosts definition
+      mkColmenaNode = _hostName: hostConfig: {pkgs, ...}: let
+        nixpkgsInput = hostConfig.nixpkgsInput or inputs.nixpkgs;
+        systemVersion = let
+          inherit (nixpkgsInput.lib) version;
+          versionParts = builtins.splitVersion version;
+          major = builtins.head versionParts;
+          minor = builtins.elemAt versionParts 1;
+        in "${major}.${minor}";
+
+        pkgs-unstable = import inputs.nixpkgs-unstable {
+          system = "x86_64-linux";
+          config = pkgsConfig;
+          inherit overlays;
+        };
+      in {
+        deployment = {
+          targetHost = hostConfig.hostname;
+          targetUser = "root";
+          allowLocalDeployment = true;
+          tags =
+            if _hostName == "desktop"
+            then ["desktop" "workstation" "canary"]
+            else if _hostName == "laptop"
+            then ["laptop" "portable"]
+            else if _hostName == "server"
+            then ["server" "production"]
+            else [];
+        };
+
+        imports = [../hosts/${hostConfig.configPath}/configuration.nix];
+
+        # Provide the same specialArgs that mkNixosSystem provides
+        _module.args = {
+          inherit inputs;
+          systemVersion = systemVersion;
+          system = hostConfig.system;
+          hostname = hostConfig.hostname;
+          inherit pkgs-unstable;
+          stablePkgs = pkgs;
+          # self' and inputs' are not available in colmena context
+        };
+      };
+    in {
+      meta = {
+        nixpkgs = import inputs.nixpkgs {
+          system = "x86_64-linux";
+          config = pkgsConfig;
+          inherit overlays;
+        };
+
+        # Node-specific nixpkgs (for different channels per host)
+        nodeNixpkgs = {
+          desktop = import inputs.nixpkgs-unstable {
+            system = "x86_64-linux";
+            config = pkgsConfig;
+            inherit overlays;
+          };
+          laptop = import inputs.nixpkgs {
+            system = "x86_64-linux";
+            config = pkgsConfig;
+            inherit overlays;
+          };
+          server = import inputs.nixpkgs {
+            system = "x86_64-linux";
+            config = pkgsConfig;
+            inherit overlays;
+          };
+        };
+
+        # Special args available to all nodes
+        specialArgs = {
+          inherit inputs;
+        };
+      };
+
+      # Default configuration applied to all nodes
+      defaults = {...}: {
+        # Common settings for all colmena-managed nodes
+        nixpkgs.config = pkgsConfig;
+        nixpkgs.overlays = overlays;
+      };
+
+      # Generate node configs from hosts definition
+      desktop = mkColmenaNode "desktop" hosts.desktop;
+      laptop = mkColmenaNode "laptop" hosts.laptop;
+      server = mkColmenaNode "server" hosts.server;
+    };
   };
 }

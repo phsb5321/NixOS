@@ -46,7 +46,7 @@ in {
   config = lib.mkIf cfg.enable {
     # Base sops configuration
     sops = {
-      defaultSopsFile = cfg.defaultSopsFile;
+      inherit (cfg) defaultSopsFile;
       age.keyFile = cfg.ageKeyFile;
 
       # Example secrets (disabled by default)

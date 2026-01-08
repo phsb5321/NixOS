@@ -3,7 +3,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: let
   cfg = config.modules.desktop.gnome;
@@ -58,6 +57,11 @@ in {
     # X11 support for non-Wayland
     services.xserver.enable = !cfg.wayland.enable;
 
+    # JUSTIFIED: Fix for PT-BR ABNT2 keyboard deadkeys in Ghostty/Zellij on Wayland
+    # Override ibus.nix default (which sets "ibus") after nixpkgs 2025-12 update
+    # Must use mkForce because ibus.nix uses direct assignment, not mkDefault
+    environment.variables.GTK_IM_MODULE = lib.mkIf cfg.wayland.enable (lib.mkForce "simple");
+
     # Wayland environment variables
     environment.sessionVariables = lib.mkMerge [
       # Wayland-specific
@@ -67,7 +71,7 @@ in {
         GDK_BACKEND = "wayland,x11";
         QT_QPA_PLATFORM = "wayland;xcb";
         MOZ_ENABLE_WAYLAND = "1";
-        GTK_CSD = "1";
+        GTK_CSD = "1"; # Enable client-side decorations (recommended for Wayland)
         CLUTTER_BACKEND = "wayland";
         WLR_DRM_NO_ATOMIC = "1";
 
@@ -81,6 +85,7 @@ in {
         NIXOS_OZONE_WL = "1";
         CHROME_OZONE_PLATFORM_WAYLAND = "1";
         ELECTRON_ENABLE_WAYLAND = "1";
+        ELECTRON_OZONE_PLATFORM_HINT = "auto";
       })
 
       # WebRTC screen sharing

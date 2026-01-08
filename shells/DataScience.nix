@@ -1,4 +1,7 @@
 {pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
+  # Import shared testing toolchain
+  testingToolchain = import ./testing-toolchain.nix {inherit pkgs;};
+
   # Python environment with comprehensive data science stack
   dataScienceEnv = pkgs.python3.withPackages (ps:
     with ps; [
@@ -139,9 +142,12 @@ in
       zlib
       bzip2
       xz
-    ];
+    ] ++ testingToolchain.packages;
 
     shellHook = ''
+      # Testing toolchain configuration
+      ${testingToolchain.shellHook}
+
       # Set up library paths
       export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:${pkgs.libGL}/lib:$LD_LIBRARY_PATH
 
