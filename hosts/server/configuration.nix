@@ -36,6 +36,9 @@ in {
     };
     firewall = {
       enable = true;
+      # JUSTIFIED: Disable custom nftables ruleset - conflicts with nixos-fw table
+      # The custom 'inet filter' table blocks SSH because it doesn't include port rules
+      useNftables = lib.mkForce false;
       developmentPorts = [22 3000]; # SSH and development server
     };
   };
