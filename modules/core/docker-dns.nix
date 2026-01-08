@@ -1,10 +1,5 @@
 # modules/core/docker-dns.nix
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}: {
+{pkgs, ...}: {
   # Configure Docker with explicit DNS settings
   virtualisation.docker = {
     enable = true;

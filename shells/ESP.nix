@@ -1,4 +1,7 @@
 {pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
+  # Import shared testing toolchain
+  testingToolchain = import ./testing-toolchain.nix {inherit pkgs;};
+
   # All packages for the shell must come from the stable branch (pkgs)
   pythonEnv = pkgs.python3.withPackages (
     ps:
@@ -48,9 +51,12 @@
   allPackages = builtins.concatLists (map (group: group.packages) packageGroups);
 in
   pkgs.mkShell {
-    buildInputs = allPackages;
+    buildInputs = allPackages ++ testingToolchain.packages;
 
     shellHook = ''
+          # Testing toolchain configuration
+          ${testingToolchain.shellHook}
+
           # Create helper functions for MicroPython development
           setup_micropython_project() {
             if [ -z "$1" ]; then
@@ -181,6 +187,7 @@ in
           echo "  - Arduino IDE: arduino-ide"
           echo
           echo "First time? Run 'setup_environment' to complete the installation"
+          echo "Run 'test-toolchain-diagnose' to verify testing setup"
     '';
 
     MICROPY_PORT = "/dev/ttyUSB0";

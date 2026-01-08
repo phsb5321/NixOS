@@ -107,11 +107,11 @@ in {
     # Enable Plex Media Server
     services.plex = {
       enable = true;
-      dataDir = cfg.dataDir;
-      openFirewall = cfg.openFirewall;
-      package = cfg.package;
-      user = cfg.user;
-      group = cfg.group;
+      inherit (cfg) dataDir;
+      inherit (cfg) openFirewall;
+      inherit (cfg) package;
+      inherit (cfg) user;
+      inherit (cfg) group;
     };
 
     # Allow unfree packages (Plex is proprietary)

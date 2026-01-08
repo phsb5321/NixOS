@@ -159,6 +159,7 @@ in {
     # Power management
     services.power-profiles-daemon.enable = lib.mkIf cfg.powerManagement (lib.mkDefault true);
     services.thermald.enable = lib.mkIf cfg.powerManagement (lib.mkDefault false);
+    # JUSTIFIED: TLP conflicts with power-profiles-daemon, must be disabled when GNOME power is on
     services.tlp.enable = lib.mkIf cfg.powerManagement (lib.mkForce false);
 
     # System support

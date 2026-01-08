@@ -1,11 +1,7 @@
-# NixOS Server Configuration - Simplified modular approach like laptop
+# NixOS Server Configuration - Profile-Based (New Architecture)
 # VM host running GNOME in X11 mode for compatibility
 {
-  config,
   pkgs,
-  pkgs-unstable,
-  stablePkgs,
-  inputs,
   systemVersion,
   hostname,
   lib,
@@ -14,16 +10,25 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../../profiles/server.nix
     ./gnome.nix
+  ] ++ lib.optionals (builtins.pathExists ./server-secrets.nix) [
+    ./server-secrets.nix # Local secrets file (gitignored)
   ];
 
+  # ===== PROFILE-BASED CONFIGURATION =====
+  # Server profile enables: SSH, minimal hardware
+  modules.profiles.server.enable = true;
+
   # Host-specific metadata
+  # JUSTIFIED: hostname comes from flake, must override module default
   modules.networking.hostName = lib.mkForce hostname;
 
   # Override shared networking config for server-specific needs
   modules.networking = {
     dns = {
-      enableSystemdResolved = lib.mkForce false; # Override for manual DNS
+      # JUSTIFIED: Server requires manual DNS for stability (no systemd-resolved)
+      enableSystemdResolved = lib.mkForce false;
       enableDNSOverTLS = lib.mkForce false;
     };
     firewall = {
@@ -33,15 +38,16 @@
   };
 
   # Manual DNS configuration for server stability
+  # JUSTIFIED: Server uses static DNS, not NetworkManager-managed
   networking = {
     nameservers = lib.mkForce ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
     networkmanager.dns = lib.mkForce "none";
   };
 
-  # Disable systemd-resolved to avoid conflicts
+  # JUSTIFIED: Must disable systemd-resolved to avoid conflicts with manual DNS
   services.resolved.enable = lib.mkForce false;
 
-  # Disable gaming module - not needed for server and prevents NVIDIA vars
+  # JUSTIFIED: Gaming module adds NVIDIA env vars that break VirtIO-GPU
   modules.core.gaming.enable = lib.mkForce false;
 
   # Explicitly enable X11 for VM compatibility with proper video drivers
@@ -58,8 +64,8 @@
     '';
   };
 
-  # Disable Qt theming due to qgnomeplatform Qt6 build issues on stable nixpkgs
-  # This is a known issue - see: https://github.com/NixOS/nixpkgs/issues/315121
+  # JUSTIFIED: Qt6 build failure on stable nixpkgs - known issue
+  # See: https://github.com/NixOS/nixpkgs/issues/315121
   qt = {
     enable = lib.mkForce false;
   };
@@ -206,8 +212,17 @@
 
   # Cloudflare Tunnel - Secure external access to Audiobookshelf
   # Provides https://audiobooks.home301server.com.br/audiobookshelf/
+  # IMPORTANT: Tunnel credentials must be set up locally on the server:
+  #   1. cloudflared tunnel login
+  #   2. cloudflared tunnel create audiobookshelf
+  #   3. Copy credentials to ~/.cloudflared/
+  #   4. Create ~/.cloudflared/config.yml with tunnel ID and ingress rules
+  # The tunnel is ENABLED via server-secrets.nix (gitignored) which sets:
+  #   - enable = true
+  #   - tunnelId
+  #   - credentialsFile
   modules.services.cloudflareTunnel = {
-    enable = true;
+    # enable = false by default; enabled via server-secrets.nix
     tunnelName = "audiobookshelf";
     user = "notroot";
   };
@@ -238,14 +253,14 @@
     }
   ];
 
-  # Configure console keymap to match original config
+  # JUSTIFIED: Server requires explicit keyboard layout (not inherited from X11)
   console.keyMap = lib.mkForce "br-abnt2";
 
   # Enable automatic login for the user (matching original config)
   services.displayManager.autoLogin.enable = true;
   services.displayManager.autoLogin.user = "notroot";
 
-  # Enable selected desktop packages
+  # JUSTIFIED: Server profile doesn't import common.nix directly, needs explicit enables
   modules.packages = {
     browsers.enable = lib.mkForce true;
     media.enable = lib.mkForce true;

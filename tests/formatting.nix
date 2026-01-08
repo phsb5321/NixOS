@@ -1,10 +1,6 @@
 # ~/NixOS/tests/formatting.nix
 # Code formatting and linting tests
-{
-  pkgs,
-  lib,
-  ...
-}: {
+{pkgs, ...}: {
   # Formatting check script
   format-check = pkgs.writeShellScriptBin "format-check" ''
     set -euo pipefail

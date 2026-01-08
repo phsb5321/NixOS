@@ -29,7 +29,7 @@
     };
 
     systemVersion = let
-      version = nixpkgsInput.lib.version;
+      inherit (nixpkgsInput.lib) version;
       versionParts = builtins.splitVersion version;
       major = builtins.head versionParts;
       minor = builtins.elemAt versionParts 1;
@@ -81,8 +81,6 @@
   }: {
     config,
     lib,
-    pkgs,
-    pkgs-unstable,
     ...
   }: {
     options.modules.packages.${name} =
@@ -111,7 +109,6 @@
   }: {
     config,
     lib,
-    pkgs,
     ...
   }: let
     cfg = config.modules.packages.categories.${name};
@@ -176,7 +173,6 @@
   }: {
     config,
     lib,
-    pkgs,
     ...
   }: let
     cfg = config.modules.gpu.${vendor};
@@ -216,7 +212,6 @@
   }: {
     config,
     lib,
-    pkgs,
     ...
   }: let
     cfg = config.modules.core.document-tools.${name};
@@ -239,10 +234,9 @@
 
   # Auto-import all .nix files in a directory
   # Usage: mkImportList ./path/to/modules "*.nix"
-  mkImportList = path: pattern:
-    let
-      files = builtins.readDir path;
-      nixFiles = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) files;
-    in
-      map (name: path + "/${name}") (lib.attrNames nixFiles);
+  mkImportList = path: _pattern: let
+    files = builtins.readDir path;
+    nixFiles = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) files;
+  in
+    map (name: path + "/${name}") (lib.attrNames nixFiles);
 }
