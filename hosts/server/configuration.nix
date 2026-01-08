@@ -12,6 +12,8 @@
     ../../modules
     ../../profiles/server.nix
     ./gnome.nix
+  ] ++ lib.optionals (builtins.pathExists ./server-secrets.nix) [
+    ./server-secrets.nix # Local secrets file (gitignored)
   ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
@@ -210,10 +212,17 @@
 
   # Cloudflare Tunnel - Secure external access to Audiobookshelf
   # Provides https://audiobooks.home301server.com.br/audiobookshelf/
+  # IMPORTANT: Tunnel credentials must be set up locally on the server:
+  #   1. cloudflared tunnel login
+  #   2. cloudflared tunnel create audiobookshelf
+  #   3. Copy credentials to ~/.cloudflared/
+  #   4. Create ~/.cloudflared/config.yml with tunnel ID and ingress rules
+  # The tunnelId and credentialsFile must be set via server-secrets.nix (gitignored)
   modules.services.cloudflareTunnel = {
     enable = true;
     tunnelName = "audiobookshelf";
     user = "notroot";
+    # tunnelId and credentialsFile imported from server-secrets.nix
   };
 
   # Audiobookshelf Guardian - Health monitoring and protection

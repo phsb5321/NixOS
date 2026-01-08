@@ -64,6 +64,10 @@ secrets.nix
 *.secrets.nix
 plex-qbittorrent-scripts/
 
+# Host-specific secret files (contain tunnel IDs, API keys, etc.)
+hosts/*/server-secrets.nix
+hosts/*-secrets.nix
+
 # Cloudflare tunnel config (contains tunnel IDs)
 cloudflare-tunnel-config.yml
 
