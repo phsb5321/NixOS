@@ -1,5 +1,8 @@
 # ~/NixOS/shells/Rust.nix
-{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}:
+{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
+  # Import shared testing toolchain
+  testingToolchain = import ./testing-toolchain.nix {inherit pkgs;};
+in
 pkgs.mkShell {
   nativeBuildInputs = with pkgs; [
     pkg-config
@@ -35,14 +38,19 @@ pkgs.mkShell {
     pango
     webkitgtk_4_1
     openssl
-  ];
+  ] ++ testingToolchain.packages;
 
   shellHook = ''
+    # Testing toolchain configuration
+    ${testingToolchain.shellHook}
+
     # Set up Rust-related environment variables
     export RUST_BACKTRACE=1
 
     echo "Minimal Rust development environment is ready!"
     echo "Rust version: $(rustc --version)"
     echo "Cargo version: $(cargo --version)"
+    echo ""
+    echo "Run 'test-toolchain-diagnose' to verify testing setup"
   '';
 }
