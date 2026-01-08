@@ -14,8 +14,8 @@ in {
 
     tunnelId = lib.mkOption {
       type = lib.types.str;
-      default = "7d1704a0-512f-4a54-92c4-d9bf0b4561c3";
-      description = "Cloudflare tunnel ID";
+      description = "Cloudflare tunnel ID (no default - must be set explicitly, never commit to git)";
+      # No default - must be configured per-host to avoid committing secrets
     };
 
     tunnelName = lib.mkOption {
@@ -32,8 +32,8 @@ in {
 
     credentialsFile = lib.mkOption {
       type = lib.types.path;
-      default = "/home/notroot/.cloudflared/7d1704a0-512f-4a54-92c4-d9bf0b4561c3.json";
-      description = "Path to Cloudflare tunnel credentials file";
+      description = "Path to Cloudflare tunnel credentials file (typically ~/.cloudflared/<tunnel-id>.json)";
+      # No default - derived from tunnelId, must be configured per-host
     };
 
     user = lib.mkOption {
