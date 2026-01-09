@@ -7,6 +7,7 @@
   ...
 }: let
   cfg = config.modules.desktop.gnome;
+  coreAppsCfg = cfg.coreApps;
 in {
   options.modules.desktop.gnome = {
     enable = lib.mkEnableOption "GNOME desktop environment";
@@ -58,6 +59,188 @@ in {
         type = lib.types.str;
         default = "Bibata-Modern-Ice";
         description = "Cursor theme name";
+      };
+    };
+
+    # GNOME Core Applications Suite (T001-T008)
+    # Provides granular control over GNOME application installation
+    coreApps = {
+      # Master switch for all GNOME core applications
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable GNOME core applications suite";
+      };
+
+      # Full suite toggle - when false, disables productivity, media, scanner, connections
+      fullSuite = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable full application suite (set false for minimal server installs)";
+      };
+
+      # Utilities: calculator, clocks, weather, characters, font viewer, decibels
+      utilities = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME utility applications";
+        };
+        calculator = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Calculator";
+        };
+        clocks = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Clocks";
+        };
+        weather = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Weather";
+        };
+        characters = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Characters";
+        };
+        fontViewer = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Font Viewer";
+        };
+        decibels = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Decibels audio player";
+        };
+      };
+
+      # Productivity: calendar, contacts, maps (depends on fullSuite)
+      productivity = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME productivity applications";
+        };
+        calendar = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Calendar";
+        };
+        contacts = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Contacts";
+        };
+        maps = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Maps";
+        };
+      };
+
+      # Media: loupe (image), showtime (video), snapshot (camera)
+      media = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME media applications";
+        };
+        imageViewer = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Loupe image viewer";
+        };
+        videoPlayer = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Showtime video player";
+        };
+        camera = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Snapshot camera";
+        };
+      };
+
+      # Documents: papers (PDF viewer), simple-scan (scanner)
+      documents = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME document applications";
+        };
+        viewer = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Papers PDF viewer";
+        };
+        scanner = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Simple Scan";
+        };
+      };
+
+      # System Tools: system monitor, logs, console, help, connections, dconf-editor
+      systemTools = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME system tools";
+        };
+        systemMonitor = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME System Monitor";
+        };
+        logs = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Logs";
+        };
+        console = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Console";
+        };
+        help = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Yelp help viewer";
+        };
+        connections = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Connections (remote desktop client)";
+        };
+        dconfEditor = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable dconf Editor";
+        };
+      };
+
+      # File Management: baobab (disk analyzer), gnome-disk-utility
+      fileManagement = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME file management tools";
+        };
+        diskAnalyzer = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Baobab disk analyzer";
+        };
+        diskUtility = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable GNOME Disk Utility";
+        };
       };
     };
   };
@@ -117,41 +300,56 @@ in {
     services.upower.enable = lib.mkIf cfg.coreServices true;
 
     # Exclude unwanted GNOME packages
-    environment.gnome.excludePackages = with pkgs; [
-      # Apps
-      gnome-photos
-      gnome-tour
-      cheese # Webcam app
-      gnome-music
-      gedit
-      epiphany # GNOME Web browser
-      geary # Email client
-      gnome-characters
-      totem # Video player
-      gnome-calendar
-      gnome-contacts
-      gnome-maps
-
-      # Games
-      tali # Poker game
-      iagno # Go game
-      hitori # Sudoku game
-      atomix # Puzzle game
-      gnome-chess
-      gnome-mahjongg
-      gnome-mines
-      gnome-sudoku
-      gnome-tetravex
-      quadrapassel # Tetris
-      five-or-more
-      four-in-a-row
-      gnome-taquin
-      gnome-klotski
-      gnome-nibbles
-      gnome-robots
-      lightsoff
-      swell-foop
-    ];
+    # Conditionally exclude apps based on coreApps settings
+    environment.gnome.excludePackages = with pkgs;
+      # Always excluded apps (replaced by modern alternatives or unwanted)
+      [
+        gnome-photos # Replaced by loupe
+        gnome-tour
+        cheese # Replaced by snapshot
+        gnome-music # Replaced by decibels
+        gedit # Replaced by gnome-text-editor
+        epiphany # GNOME Web browser
+        geary # Email client
+        totem # Replaced by showtime
+        eog # Replaced by loupe
+        evince # Replaced by papers
+      ]
+      # Conditionally exclude productivity apps when fullSuite is disabled
+      ++ (lib.optionals (!(coreAppsCfg.enable && coreAppsCfg.fullSuite && coreAppsCfg.productivity.enable && coreAppsCfg.productivity.calendar)) [
+        gnome-calendar
+      ])
+      ++ (lib.optionals (!(coreAppsCfg.enable && coreAppsCfg.fullSuite && coreAppsCfg.productivity.enable && coreAppsCfg.productivity.contacts)) [
+        gnome-contacts
+      ])
+      ++ (lib.optionals (!(coreAppsCfg.enable && coreAppsCfg.fullSuite && coreAppsCfg.productivity.enable && coreAppsCfg.productivity.maps)) [
+        gnome-maps
+      ])
+      # Conditionally exclude characters when utilities.characters is disabled
+      ++ (lib.optionals (!(coreAppsCfg.enable && coreAppsCfg.utilities.enable && coreAppsCfg.utilities.characters)) [
+        gnome-characters
+      ])
+      # Games - always excluded
+      ++ [
+        tali # Poker game
+        iagno # Go game
+        hitori # Sudoku game
+        atomix # Puzzle game
+        gnome-chess
+        gnome-mahjongg
+        gnome-mines
+        gnome-sudoku
+        gnome-tetravex
+        quadrapassel # Tetris
+        five-or-more
+        four-in-a-row
+        gnome-taquin
+        gnome-klotski
+        gnome-nibbles
+        gnome-robots
+        lightsoff
+        swell-foop
+      ];
 
     # dconf support
     programs.dconf.enable = true;
@@ -229,6 +427,49 @@ in {
         gnome-themes-extra
         gtk-engine-murrine
         adw-gtk3 # Adwaita-like theme for GTK3
-      ]);
+      ])
+      # =====================================================
+      # GNOME Core Apps Suite (T009-T016)
+      # =====================================================
+      # Utilities: calculator, clocks, weather, characters, font viewer, decibels
+      ++ (lib.optionals (coreAppsCfg.enable && coreAppsCfg.utilities.enable) (
+        (lib.optional coreAppsCfg.utilities.calculator gnome-calculator)
+        ++ (lib.optional coreAppsCfg.utilities.clocks gnome-clocks)
+        ++ (lib.optional coreAppsCfg.utilities.weather gnome-weather)
+        ++ (lib.optional coreAppsCfg.utilities.characters gnome-characters)
+        ++ (lib.optional coreAppsCfg.utilities.fontViewer gnome-font-viewer)
+        ++ (lib.optional coreAppsCfg.utilities.decibels decibels)
+      ))
+      # Productivity: calendar, contacts, maps (only when fullSuite enabled)
+      ++ (lib.optionals (coreAppsCfg.enable && coreAppsCfg.fullSuite && coreAppsCfg.productivity.enable) (
+        (lib.optional coreAppsCfg.productivity.calendar gnome-calendar)
+        ++ (lib.optional coreAppsCfg.productivity.contacts gnome-contacts)
+        ++ (lib.optional coreAppsCfg.productivity.maps gnome-maps)
+      ))
+      # Media: loupe (image viewer), showtime (video), snapshot (camera)
+      ++ (lib.optionals (coreAppsCfg.enable && coreAppsCfg.fullSuite && coreAppsCfg.media.enable) (
+        (lib.optional coreAppsCfg.media.imageViewer loupe)
+        ++ (lib.optional coreAppsCfg.media.videoPlayer showtime)
+        ++ (lib.optional coreAppsCfg.media.camera snapshot)
+      ))
+      # Documents: papers (PDF viewer), simple-scan (scanner)
+      ++ (lib.optionals (coreAppsCfg.enable && coreAppsCfg.documents.enable) (
+        (lib.optional coreAppsCfg.documents.viewer papers)
+        ++ (lib.optional (coreAppsCfg.fullSuite && coreAppsCfg.documents.scanner) simple-scan)
+      ))
+      # System Tools: monitor, logs, console, help, connections, dconf-editor
+      ++ (lib.optionals (coreAppsCfg.enable && coreAppsCfg.systemTools.enable) (
+        (lib.optional coreAppsCfg.systemTools.systemMonitor gnome-system-monitor)
+        ++ (lib.optional coreAppsCfg.systemTools.logs gnome-logs)
+        ++ (lib.optional coreAppsCfg.systemTools.console gnome-console)
+        ++ (lib.optional coreAppsCfg.systemTools.help yelp)
+        ++ (lib.optional (coreAppsCfg.fullSuite && coreAppsCfg.systemTools.connections) gnome-connections)
+        ++ (lib.optional coreAppsCfg.systemTools.dconfEditor dconf-editor)
+      ))
+      # File Management: baobab (disk analyzer), gnome-disk-utility
+      ++ (lib.optionals (coreAppsCfg.enable && coreAppsCfg.fileManagement.enable) (
+        (lib.optional coreAppsCfg.fileManagement.diskAnalyzer baobab)
+        ++ (lib.optional coreAppsCfg.fileManagement.diskUtility gnome-disk-utility)
+      ));
   };
 }
