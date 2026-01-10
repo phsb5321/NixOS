@@ -1,0 +1,377 @@
+#!/usr/bin/env bash
+# device-list - List connected serial devices and recommend best port for ESP32
+#
+# Usage: ./scripts/device-list [OPTIONS]
+#
+# Options:
+#   --json          Output as JSON
+#   --first         Output only the recommended port path
+#   --filter <pat>  Filter devices by description pattern
+#
+# Exit codes:
+#   0 - At least one device found
+#   1 - No ESP-compatible devices found
+#   2 - PlatformIO not available
+#
+# Environment:
+#   UPLOAD_PORT - If set and device exists, force as recommended
+
+set -euo pipefail
+
+# --- Configuration ---
+VERSION="1.0.0"
+
+# VID:PID scoring table for ESP-compatible chips
+# Higher score = more likely to be an ESP32 board
+# Format: "vid:pid:score:chipname"
+declare -a VID_PID_SCORES=(
+    "10c4:ea60:90:CP2102"       # Silicon Labs CP210x - very common ESP32
+    "1a86:7523:85:CH340"        # WCH CH340 - common ESP32-CAM
+    "1a86:55d4:85:CH9102"       # WCH CH9102 - newer CH340 variant
+    "0403:6001:80:FT232R"       # FTDI FT232R - quality adapters
+    "0403:6014:80:FT232H"       # FTDI FT232H - high-speed
+    "0403:6015:80:FT231X"       # FTDI FT231X
+    "303a:1001:95:ESP32-S2"     # Espressif native USB
+    "303a:1002:95:ESP32-S3"     # Espressif native USB
+    "303a:80d1:95:ESP32-C3"     # Espressif native USB
+    "303a:80d4:95:ESP32-C6"     # Espressif native USB
+    "067b:2303:60:PL2303"       # Prolific - older adapters
+    "2341:0043:70:Arduino"      # Arduino Uno
+    "2341:0001:70:Arduino"      # Arduino Mega
+)
+
+# --- Globals ---
+OUTPUT_JSON=false
+OUTPUT_FIRST=false
+FILTER_PATTERN=""
+
+# --- Functions ---
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+List connected serial devices and recommend best port for ESP32 operations.
+
+Options:
+  --json          Output as JSON instead of human-readable
+  --first         Output only the recommended port path
+  --filter <pat>  Filter devices by description pattern (case-insensitive)
+  -h, --help      Show this help message
+  -v, --version   Show version
+
+Exit codes:
+  0 - At least one device found
+  1 - No ESP-compatible devices found
+  2 - PlatformIO not available
+
+Environment:
+  UPLOAD_PORT     If set and device exists, force as recommended
+EOF
+}
+
+# Get score for a VID:PID pair
+get_vid_pid_score() {
+    local vid="$1"
+    local pid="$2"
+    local search="${vid,,}:${pid,,}"  # lowercase
+    
+    for entry in "${VID_PID_SCORES[@]}"; do
+        IFS=':' read -r e_vid e_pid score chipname <<< "$entry"
+        if [[ "${e_vid}:${e_pid}" == "$search" ]]; then
+            echo "$score"
+            return
+        fi
+    done
+    echo "50"  # Default score for unknown devices
+}
+
+# Get chip name for a VID:PID pair
+get_chipname() {
+    local vid="$1"
+    local pid="$2"
+    local search="${vid,,}:${pid,,}"
+    
+    for entry in "${VID_PID_SCORES[@]}"; do
+        IFS=':' read -r e_vid e_pid score chipname <<< "$entry"
+        if [[ "${e_vid}:${e_pid}" == "$search" ]]; then
+            echo "$chipname"
+            return
+        fi
+    done
+    echo "Unknown"
+}
+
+# Parse PlatformIO device list output
+parse_devices() {
+    local pio_output="$1"
+    local devices=()
+    local current_port=""
+    local current_desc=""
+    local current_hwid=""
+    
+    # Parse the human-readable pio device list output
+    # Format:
+    # /dev/ttyUSB0
+    # ├── Description: CP2102 USB to UART Bridge Controller
+    # ├── Hardware ID: USB VID:PID=10C4:EA60 SER=0001 LOCATION=1-1.2
+    # └── ...
+    
+    while IFS= read -r line; do
+        # Detect port line (starts with /)
+        if [[ "$line" =~ ^(/dev/[a-zA-Z0-9]+) ]]; then
+            # Save previous device if exists
+            if [[ -n "$current_port" ]]; then
+                devices+=("${current_port}|${current_desc}|${current_hwid}")
+            fi
+            current_port="${BASH_REMATCH[1]}"
+            current_desc=""
+            current_hwid=""
+        elif [[ "$line" =~ Description:\ (.+)$ ]]; then
+            current_desc="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ Hardware\ ID:\ (.+)$ ]]; then
+            current_hwid="${BASH_REMATCH[1]}"
+        fi
+    done <<< "$pio_output"
+    
+    # Save last device
+    if [[ -n "$current_port" ]]; then
+        devices+=("${current_port}|${current_desc}|${current_hwid}")
+    fi
+    
+    printf '%s\n' "${devices[@]}"
+}
+
+# Extract VID/PID from hardware ID string
+# Input: "USB VID:PID=10C4:EA60 SER=0001 LOCATION=1-1.2"
+extract_vid_pid() {
+    local hwid="$1"
+    local vid="" pid="" serial=""
+    
+    if [[ "$hwid" =~ VID:PID=([0-9A-Fa-f]+):([0-9A-Fa-f]+) ]]; then
+        vid="${BASH_REMATCH[1],,}"  # lowercase
+        pid="${BASH_REMATCH[2],,}"
+    fi
+    
+    if [[ "$hwid" =~ SER=([^ ]+) ]]; then
+        serial="${BASH_REMATCH[1]}"
+    fi
+    
+    echo "${vid}:${pid}:${serial}"
+}
+
+# Check if port exists in device list
+port_exists() {
+    local port="$1"
+    shift
+    local devices=("$@")
+    
+    for device in "${devices[@]}"; do
+        IFS='|' read -r dev_port _ _ <<< "$device"
+        if [[ "$dev_port" == "$port" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Main function
+main() {
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --json)
+                OUTPUT_JSON=true
+                shift
+                ;;
+            --first)
+                OUTPUT_FIRST=true
+                shift
+                ;;
+            --filter)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --filter requires a pattern argument" >&2
+                    exit 1
+                fi
+                FILTER_PATTERN="$2"
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -v|--version)
+                echo "device-list version $VERSION"
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Check for PlatformIO
+    if ! command -v pio &> /dev/null; then
+        if $OUTPUT_JSON; then
+            echo '{"error": "PlatformIO not found", "exit_code": 2}'
+        else
+            echo "Error: PlatformIO (pio) not found in PATH" >&2
+            echo "Hint: Enter the ESP development shell with: nix-shell -p platformio" >&2
+        fi
+        exit 2
+    fi
+    
+    # Get device list from PlatformIO
+    local pio_output
+    pio_output=$(pio device list 2>/dev/null) || {
+        if $OUTPUT_JSON; then
+            echo '{"error": "Failed to list devices", "exit_code": 2}'
+        else
+            echo "Error: Failed to run 'pio device list'" >&2
+        fi
+        exit 2
+    }
+    
+    # Parse devices
+    mapfile -t raw_devices < <(parse_devices "$pio_output")
+    
+    # Process and score devices
+    declare -a scored_devices=()
+    
+    for device in "${raw_devices[@]}"; do
+        [[ -z "$device" ]] && continue
+        
+        IFS='|' read -r port desc hwid <<< "$device"
+        
+        # Apply filter if specified
+        if [[ -n "$FILTER_PATTERN" ]]; then
+            if ! echo "$desc" | grep -qi "$FILTER_PATTERN"; then
+                continue
+            fi
+        fi
+        
+        # Extract VID/PID
+        local vid_pid_serial
+        vid_pid_serial=$(extract_vid_pid "$hwid")
+        IFS=':' read -r vid pid serial <<< "$vid_pid_serial"
+        
+        # Get score
+        local score
+        score=$(get_vid_pid_score "$vid" "$pid")
+        
+        # Get chip name
+        local chipname
+        chipname=$(get_chipname "$vid" "$pid")
+        
+        # Store with score for sorting
+        scored_devices+=("${score}|${port}|${desc}|${hwid}|${vid}|${pid}|${serial}|${chipname}")
+    done
+    
+    # Check if any devices found
+    if [[ ${#scored_devices[@]} -eq 0 ]]; then
+        if $OUTPUT_JSON; then
+            echo '{"devices": [], "recommended_port": null, "count": 0, "exit_code": 1}'
+        elif ! $OUTPUT_FIRST; then
+            echo "No ESP-compatible serial devices found" >&2
+            echo "" >&2
+            echo "Troubleshooting:" >&2
+            echo "  1. Check USB cable is connected" >&2
+            echo "  2. Try a different USB port" >&2
+            echo "  3. Run: lsusb | grep -i serial" >&2
+        fi
+        exit 1
+    fi
+    
+    # Sort by score (descending)
+    IFS=$'\n' sorted_devices=($(sort -t'|' -k1 -rn <<< "${scored_devices[*]}"))
+    unset IFS
+    
+    # Determine recommended port
+    local recommended_port=""
+    
+    # Check if UPLOAD_PORT is set and exists
+    if [[ -n "${UPLOAD_PORT:-}" ]]; then
+        for device in "${sorted_devices[@]}"; do
+            IFS='|' read -r score port _ <<< "$device"
+            if [[ "$port" == "$UPLOAD_PORT" ]]; then
+                recommended_port="$UPLOAD_PORT"
+                break
+            fi
+        done
+    fi
+    
+    # If no override or not found, use highest score
+    if [[ -z "$recommended_port" ]]; then
+        IFS='|' read -r _ recommended_port _ <<< "${sorted_devices[0]}"
+    fi
+    
+    # Output based on format
+    if $OUTPUT_FIRST; then
+        echo "$recommended_port"
+        exit 0
+    fi
+    
+    if $OUTPUT_JSON; then
+        # Build JSON output
+        local json_devices="["
+        local first=true
+        
+        for device in "${sorted_devices[@]}"; do
+            IFS='|' read -r score port desc hwid vid pid serial chipname <<< "$device"
+            
+            local is_recommended="false"
+            [[ "$port" == "$recommended_port" ]] && is_recommended="true"
+            
+            $first || json_devices+=","
+            first=false
+            
+            json_devices+=$(cat <<EOF
+{
+    "port": "$port",
+    "description": "$desc",
+    "hwid": "$hwid",
+    "vendor": "$vid",
+    "product": "$pid",
+    "serial": "$serial",
+    "chipname": "$chipname",
+    "score": $score,
+    "recommended": $is_recommended
+  }
+EOF
+)
+        done
+        
+        json_devices+="]"
+        
+        cat <<EOF
+{
+  "devices": $json_devices,
+  "recommended_port": "$recommended_port",
+  "count": ${#sorted_devices[@]}
+}
+EOF
+    else
+        # Human-readable output
+        echo "Detected Serial Devices:"
+        local idx=1
+        
+        for device in "${sorted_devices[@]}"; do
+            IFS='|' read -r score port desc hwid vid pid serial chipname <<< "$device"
+            
+            local marker=""
+            [[ "$port" == "$recommended_port" ]] && marker=" (recommended)"
+            
+            printf "  %d. %s - %s [%s:%s]%s\n" "$idx" "$port" "${desc:-$chipname}" "$vid" "$pid" "$marker"
+            ((idx++))
+        done
+        
+        echo ""
+        echo "Recommended: $recommended_port"
+    fi
+    
+    exit 0
+}
+
+main "$@"
