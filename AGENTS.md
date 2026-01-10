@@ -53,9 +53,14 @@ main                    # Production-ready, rarely touched directly
 
 Run this at session start and before committing:
 ```bash
-git branch --show-current
-# If on a feature branch, plan to merge back before session ends
+./scripts/branch-check
 ```
+
+This script will:
+- Show current branch status
+- Warn if on a feature branch (exit code 1)
+- Provide merge instructions if needed
+- Show uncommitted changes
 
 ### Merge Checklist
 
