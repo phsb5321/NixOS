@@ -1,0 +1,306 @@
+#!/usr/bin/env bash
+# pio-env - Resolve PlatformIO environment settings for the current project
+#
+# Usage: ./scripts/pio-env [OPTIONS]
+#
+# Options:
+#   --env <name>    PlatformIO environment to use (default: auto-detect)
+#   --json          Output as JSON
+#
+# Exit codes:
+#   0 - Successfully resolved environment
+#   1 - platformio.ini not found
+#   2 - Specified --env not found in platformio.ini
+#   3 - No devices available for auto-detection
+#
+# Environment:
+#   PIO_ENV       Override environment name
+#   UPLOAD_PORT   Override upload port
+#   MONITOR_PORT  Override monitor port
+#   BAUD_RATE     Override baud rate
+
+set -euo pipefail
+
+# --- Configuration ---
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --- Globals ---
+OUTPUT_JSON=false
+SPECIFIED_ENV=""
+
+# --- Functions ---
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Resolve PlatformIO environment settings for the current project.
+
+Options:
+  --env <name>    PlatformIO environment to use (default: auto-detect from platformio.ini)
+  --json          Output as JSON instead of shell-sourceable format
+  -h, --help      Show this help message
+  -v, --version   Show version
+
+Exit codes:
+  0 - Successfully resolved environment
+  1 - platformio.ini not found
+  2 - Specified --env not found in platformio.ini
+  3 - No devices available for auto-detection
+
+Environment variables (override detection):
+  PIO_ENV         Environment name
+  UPLOAD_PORT     Upload serial port
+  MONITOR_PORT    Monitor serial port
+  BAUD_RATE       Serial baud rate
+EOF
+}
+
+# Find platformio.ini by walking up directory tree
+find_platformio_ini() {
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/platformio.ini" ]]; then
+            echo "$dir/platformio.ini"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    return 1
+}
+
+# Parse default_envs from platformio.ini
+# Returns first environment from: 1) default_envs, 2) first [env:*] section
+get_default_env() {
+    local ini_file="$1"
+    
+    # Try default_envs first
+    local default_envs
+    default_envs=$(grep -E '^default_envs\s*=' "$ini_file" 2>/dev/null | head -1 | sed 's/.*=\s*//' | tr -d ' ' | cut -d',' -f1)
+    
+    if [[ -n "$default_envs" ]]; then
+        echo "$default_envs"
+        return 0
+    fi
+    
+    # Fall back to first [env:*] section
+    local first_env
+    first_env=$(grep -E '^\[env:' "$ini_file" 2>/dev/null | head -1 | sed 's/\[env:\(.*\)\]/\1/')
+    
+    if [[ -n "$first_env" ]]; then
+        echo "$first_env"
+        return 0
+    fi
+    
+    return 1
+}
+
+# Check if environment exists in platformio.ini
+env_exists() {
+    local ini_file="$1"
+    local env_name="$2"
+    
+    grep -qE "^\[env:${env_name}\]" "$ini_file" 2>/dev/null
+}
+
+# Get value from platformio.ini section
+# Usage: get_ini_value file section key [default]
+get_ini_value() {
+    local ini_file="$1"
+    local section="$2"
+    local key="$3"
+    local default="${4:-}"
+    
+    local in_section=false
+    local value=""
+    
+    while IFS= read -r line; do
+        # Check for section start
+        if [[ "$line" =~ ^\[([^\]]+)\] ]]; then
+            if [[ "${BASH_REMATCH[1]}" == "$section" ]]; then
+                in_section=true
+            else
+                in_section=false
+            fi
+            continue
+        fi
+        
+        # If in target section, look for key
+        if $in_section && [[ "$line" =~ ^${key}[[:space:]]*=[[:space:]]*(.+)$ ]]; then
+            value="${BASH_REMATCH[1]}"
+            # Remove comments
+            value="${value%%#*}"
+            value="${value%%;;*}"
+            # Trim whitespace
+            value="${value#"${value%%[![:space:]]*}"}"
+            value="${value%"${value##*[![:space:]]}"}"
+            break
+        fi
+    done < "$ini_file"
+    
+    if [[ -n "$value" ]]; then
+        echo "$value"
+    else
+        echo "$default"
+    fi
+}
+
+# Get device using device-list script
+get_recommended_port() {
+    local device_list_script="$SCRIPT_DIR/device-list"
+    
+    if [[ -x "$device_list_script" ]]; then
+        "$device_list_script" --first 2>/dev/null || echo ""
+    else
+        # Fallback: try direct pio device list
+        pio device list 2>/dev/null | grep -E '^/dev/' | head -1 || echo ""
+    fi
+}
+
+# Main function
+main() {
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --env)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --env requires an environment name" >&2
+                    exit 1
+                fi
+                SPECIFIED_ENV="$2"
+                shift 2
+                ;;
+            --json)
+                OUTPUT_JSON=true
+                shift
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -v|--version)
+                echo "pio-env version $VERSION"
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Find platformio.ini
+    local ini_file
+    if ! ini_file=$(find_platformio_ini); then
+        if $OUTPUT_JSON; then
+            echo '{"error": "platformio.ini not found", "exit_code": 1}'
+        else
+            echo "Error: platformio.ini not found" >&2
+            echo "Hint: Run this from a PlatformIO project directory" >&2
+        fi
+        exit 1
+    fi
+    
+    # Determine environment name
+    local env_name="${PIO_ENV:-${SPECIFIED_ENV:-}}"
+    
+    if [[ -z "$env_name" ]]; then
+        # Auto-detect from platformio.ini
+        if ! env_name=$(get_default_env "$ini_file"); then
+            if $OUTPUT_JSON; then
+                echo '{"error": "No environment found in platformio.ini", "exit_code": 2}'
+            else
+                echo "Error: No environment found in platformio.ini" >&2
+            fi
+            exit 2
+        fi
+    fi
+    
+    # Verify environment exists
+    if ! env_exists "$ini_file" "$env_name"; then
+        if $OUTPUT_JSON; then
+            echo "{\"error\": \"Environment '$env_name' not found in platformio.ini\", \"exit_code\": 2}"
+        else
+            echo "Error: Environment '$env_name' not found in platformio.ini" >&2
+            echo "Available environments:" >&2
+            grep -E '^\[env:' "$ini_file" | sed 's/\[env:\(.*\)\]/  - \1/' >&2
+        fi
+        exit 2
+    fi
+    
+    # Get values from platformio.ini
+    local section="env:$env_name"
+    local board
+    board=$(get_ini_value "$ini_file" "$section" "board" "")
+    
+    local platform
+    platform=$(get_ini_value "$ini_file" "$section" "platform" "espressif32")
+    
+    local framework
+    framework=$(get_ini_value "$ini_file" "$section" "framework" "arduino")
+    
+    local upload_speed
+    upload_speed=$(get_ini_value "$ini_file" "$section" "upload_speed" "921600")
+    
+    local monitor_speed
+    monitor_speed=$(get_ini_value "$ini_file" "$section" "monitor_speed" "115200")
+    
+    # Determine ports (environment variables override ini values)
+    local upload_port="${UPLOAD_PORT:-$(get_ini_value "$ini_file" "$section" "upload_port" "")}"
+    local monitor_port="${MONITOR_PORT:-$(get_ini_value "$ini_file" "$section" "monitor_port" "")}"
+    local baud_rate="${BAUD_RATE:-$monitor_speed}"
+    
+    # Auto-detect ports if not specified
+    if [[ -z "$upload_port" || -z "$monitor_port" ]]; then
+        local detected_port
+        detected_port=$(get_recommended_port)
+        
+        if [[ -z "$detected_port" ]]; then
+            if $OUTPUT_JSON; then
+                echo '{"error": "No devices available for port auto-detection", "exit_code": 3}'
+            else
+                echo "Warning: No devices detected for port auto-detection" >&2
+            fi
+            # Don't exit - continue with empty ports
+        fi
+        
+        [[ -z "$upload_port" ]] && upload_port="$detected_port"
+        [[ -z "$monitor_port" ]] && monitor_port="$detected_port"
+    fi
+    
+    # Output results
+    if $OUTPUT_JSON; then
+        cat <<EOF
+{
+  "pio_env": "$env_name",
+  "upload_port": "$upload_port",
+  "monitor_port": "$monitor_port",
+  "baud_rate": $baud_rate,
+  "upload_speed": $upload_speed,
+  "board": "$board",
+  "platform": "$platform",
+  "framework": "$framework",
+  "platformio_ini": "$ini_file"
+}
+EOF
+    else
+        # Shell-sourceable output
+        cat <<EOF
+PIO_ENV=$env_name
+UPLOAD_PORT=$upload_port
+MONITOR_PORT=$monitor_port
+BAUD_RATE=$baud_rate
+UPLOAD_SPEED=$upload_speed
+BOARD=$board
+PLATFORM=$platform
+FRAMEWORK=$framework
+PLATFORMIO_INI=$ini_file
+EOF
+    fi
+    
+    exit 0
+}
+
+main "$@"

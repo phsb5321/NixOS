@@ -186,6 +186,16 @@ in
           echo "  - PlatformIO: platformio"
           echo "  - Arduino IDE: arduino-ide"
           echo
+          echo "🤖 AI/Agent-Friendly Scripts (for PlatformIO projects):"
+          echo "  Scripts location: ~/.config/esp-scripts/"
+          echo "  Copy to your project: cp -r ~/.config/esp-scripts ./scripts"
+          echo "  Then use:"
+          echo "    ./scripts/device-list   - Detect ESP32 devices"
+          echo "    ./scripts/flash         - Upload firmware"
+          echo "    ./scripts/monitor       - Serial monitor with logging"
+          echo "    ./scripts/reset         - Reset board from bootloader"
+          echo "    make flash-monitor      - Flash and verify (with Makefile.template)"
+          echo
           echo "First time? Run 'setup_environment' to complete the installation"
           echo "Run 'test-toolchain-diagnose' to verify testing setup"
     '';

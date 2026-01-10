@@ -1,0 +1,112 @@
+# ESP32 Project Makefile
+# Copy to your PlatformIO project root
+# Assumes scripts are in ./scripts/ directory
+#
+# Usage:
+#   make device        # List connected devices
+#   make flash         # Build and upload firmware
+#   make monitor       # Start serial monitor
+#   make flash-monitor # Flash then verify boot
+#   make reset         # Reset the board
+#   make snapshot      # Capture serial snapshot
+
+.PHONY: device flash monitor flash-monitor reset snapshot clean-logs help
+
+SCRIPTS_DIR := ./scripts
+MONITOR_SECONDS ?= 10
+
+# Show help
+help:
+	@echo "ESP32 Development Targets:"
+	@echo ""
+	@echo "  make device        - List connected serial devices"
+	@echo "  make flash         - Build and upload firmware"
+	@echo "  make monitor       - Start serial monitor (Ctrl+C to stop)"
+	@echo "  make flash-monitor - Flash and verify boot output"
+	@echo "  make reset         - Reset the board"
+	@echo "  make snapshot      - Capture 10s of serial output"
+	@echo "  make clean-logs    - Remove old log files (7+ days)"
+	@echo ""
+	@echo "Environment variables:"
+	@echo "  UPLOAD_PORT=/dev/ttyUSB0   - Override port"
+	@echo "  PIO_ENV=myenv              - Override environment"
+	@echo "  MONITOR_SECONDS=30         - Monitor timeout"
+	@echo ""
+
+# List detected devices
+device:
+	@$(SCRIPTS_DIR)/device-list
+
+# List devices as JSON (for agent parsing)
+device-json:
+	@$(SCRIPTS_DIR)/device-list --json
+
+# Build and upload firmware
+flash:
+	@$(SCRIPTS_DIR)/flash
+
+# Flash with verbose output
+flash-verbose:
+	@$(SCRIPTS_DIR)/flash --verbose
+
+# Flash without reset (for debugging)
+flash-no-reset:
+	@$(SCRIPTS_DIR)/flash --no-reset
+
+# Start serial monitor
+monitor:
+	@$(SCRIPTS_DIR)/monitor
+
+# Monitor with timeout (for agents)
+monitor-timeout:
+	@MONITOR_SECONDS=$(MONITOR_SECONDS) $(SCRIPTS_DIR)/monitor --timeout $(MONITOR_SECONDS)
+
+# Flash then verify boot output
+flash-monitor: flash
+	@sleep 2
+	@$(SCRIPTS_DIR)/serial-snapshot --seconds 5
+
+# Reset the board
+reset:
+	@$(SCRIPTS_DIR)/reset
+
+# Reset with specific method
+reset-esptool:
+	@$(SCRIPTS_DIR)/reset --method esptool
+
+reset-manual:
+	@$(SCRIPTS_DIR)/reset --method manual
+
+# Capture serial snapshot (for boot verification)
+snapshot:
+	@$(SCRIPTS_DIR)/serial-snapshot --seconds $(MONITOR_SECONDS)
+
+# Quiet snapshot (raw output only, for parsing)
+snapshot-quiet:
+	@$(SCRIPTS_DIR)/serial-snapshot --seconds $(MONITOR_SECONDS) --quiet
+
+# Clean old log files (older than 7 days)
+clean-logs:
+	@echo "Removing log files older than 7 days..."
+	@find logs -name "serial-*.log" -mtime +7 -delete 2>/dev/null || true
+	@echo "Done."
+
+# Show environment settings
+env:
+	@$(SCRIPTS_DIR)/pio-env
+
+env-json:
+	@$(SCRIPTS_DIR)/pio-env --json
+
+# Convenience: Full development cycle
+cycle: flash-monitor monitor-timeout
+
+# Agent-friendly: returns JSON for all operations
+agent-flash:
+	@$(SCRIPTS_DIR)/flash 2>&1 && echo '{"status": "success"}' || echo '{"status": "failed", "exit_code": $$?}'
+
+agent-device:
+	@$(SCRIPTS_DIR)/device-list --json
+
+agent-env:
+	@$(SCRIPTS_DIR)/pio-env --json
