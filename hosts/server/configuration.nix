@@ -58,19 +58,10 @@ in {
   # JUSTIFIED: Gaming module adds NVIDIA env vars that break VirtIO-GPU
   modules.core.gaming.enable = lib.mkForce false;
 
-  # Explicitly enable X11 for VM compatibility with proper video drivers
-  services.xserver = {
-    enable = true;
-    # Video driver configuration for Proxmox QEMU VM
-    # Supports both VirtIO-GPU and QXL display types
-    videoDrivers = ["modesetting" "qxl" "virtio"];
-
-    # Enable DRI3 for hardware acceleration in VirtIO-GPU VMs
-    # This fixes "libEGL warning: DRI3 error: Could not get DRI3 device"
-    deviceSection = ''
-      Option "DRI" "3"
-    '';
-  };
+  # Video driver configuration for Proxmox QEMU VM
+  # Note: services.xserver.enable is managed by wayland.nix module
+  # These settings are still used by GDM/Wayland for GPU configuration
+  services.xserver.videoDrivers = ["modesetting" "qxl" "virtio"];
 
   # JUSTIFIED: Qt6 build failure on stable nixpkgs - known issue
   # See: https://github.com/NixOS/nixpkgs/issues/315121
@@ -291,6 +282,7 @@ in {
     wget
     git
     claude-code
+    opencode
     uv # Python package and environment manager
     sshpass # For SSH automation
     sshfs # For mounting remote filesystems

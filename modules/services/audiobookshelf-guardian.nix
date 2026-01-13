@@ -18,6 +18,8 @@
     set -euo pipefail
 
     LOG_FILE="/var/log/audiobookshelf-guardian.log"
+    MAX_RETRIES=3
+    RETRY_DELAY=10
 
     log() {
       echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
@@ -25,6 +27,23 @@
 
     error() {
       echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1" | tee -a "$LOG_FILE"
+    }
+
+    # Retry wrapper for curl commands
+    retry_curl() {
+      local url="$1"
+      local attempt=1
+      while [ $attempt -le $MAX_RETRIES ]; do
+        if timeout 10 ${pkgs.curl}/bin/curl -f -s "$url" >/dev/null 2>&1; then
+          return 0
+        fi
+        if [ $attempt -lt $MAX_RETRIES ]; then
+          log "Attempt $attempt failed for $url, retrying in ''${RETRY_DELAY}s..."
+          sleep $RETRY_DELAY
+        fi
+        attempt=$((attempt + 1))
+      done
+      return 1
     }
 
     log "=== Audiobookshelf Health Check Starting ==="
@@ -36,9 +55,9 @@
     fi
     log "✓ Docker container is running"
 
-    # 2. Check if service responds on localhost
-    if ! timeout 10 ${pkgs.curl}/bin/curl -f -s http://localhost:13378/audiobookshelf/ >/dev/null; then
-      error "Audiobookshelf not responding on http://localhost:13378/audiobookshelf/"
+    # 2. Check if service responds on localhost (with retries)
+    if ! retry_curl "http://localhost:13378/audiobookshelf/"; then
+      error "Audiobookshelf not responding on http://localhost:13378/audiobookshelf/ after $MAX_RETRIES attempts"
       exit 1
     fi
     log "✓ Local access working: http://localhost:13378/audiobookshelf/"
@@ -130,11 +149,12 @@ in {
 
   config = lib.mkIf cfg.enable {
     # Health check service that runs on startup
+    # Note: Initial boot check is triggered by timer after 2min delay to avoid race condition
     systemd.services.audiobookshelf-health-check = {
       description = "Audiobookshelf Health Check";
-      after = ["audiobookshelf.service" "cloudflared-tunnel.service"];
+      after = ["audiobookshelf.service" "cloudflared-tunnel.service" "docker.service"];
       wants = ["audiobookshelf.service"];
-      wantedBy = ["multi-user.target"];
+      # Removed from multi-user.target - timer handles startup check with delay
 
       serviceConfig = {
         Type = "oneshot";
@@ -151,7 +171,8 @@ in {
       wantedBy = ["timers.target"];
 
       timerConfig = {
-        OnBootSec = "5min";
+        # Wait 2 minutes after boot for container to fully start
+        OnBootSec = "2min";
         OnUnitActiveSec = "${toString cfg.healthCheckInterval}s";
         Unit = "audiobookshelf-health-check.service";
       };

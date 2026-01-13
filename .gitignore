@@ -14,7 +14,8 @@ Thumbs.db
 
 # Nix build artifacts
 /result
-/result-
+/result-*
+result-*
 *.drv
 *.out
 *.tmp
@@ -76,3 +77,33 @@ CLAUDE.md
 .specify/
 specs/
 .opencode/
+handoff.md
+
+# AI assistant context files
+*.claude
+*.cursor
+.cursorrules
+.aider*
+.continue/
+.codeium/
+.tabnine/
+.copilot/
+AGENTS.md
+
+# Refactoring documentation (per-branch artifacts)
+ARCHITECTURE_IMPROVEMENT_PLAN.md
+BRANCH_STRATEGY.md
+DNS_FIX_README.md
+DOTFILES_ANALYSIS.md
+FLAKE_USAGE.md
+MODULAR_ARCHITECTURE.md
+REFACTORING_OVERVIEW.md
+REFACTORING_SUMMARY.md
+migration-to-flakes.md
+
+# One-off scripts and patches (host-specific or temporary)
+*.patch
+fix-*.sh
+
+# sops configuration (host-specific secrets config)
+.sops.yaml

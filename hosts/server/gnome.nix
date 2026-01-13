@@ -1,14 +1,16 @@
 # Server Host - GNOME Configuration
-# Proxmox VM X11 setup optimized for VirtIO-GPU
+# Proxmox VM setup optimized for VirtIO-GPU
+# NOTE: GNOME 49+ is Wayland-only (X11 sessions removed upstream)
 {
   config,
   lib,
   ...
 }: {
-  # Enable GNOME with X11 for VM compatibility
+  # Enable GNOME with Wayland (required for GNOME 49+)
+  # GNOME 49 removed gnome-xorg.desktop, so X11 mode no longer works
   modules.desktop.gnome = {
     enable = true;
-    wayland.enable = false; # X11 for Proxmox VM compatibility
+    wayland.enable = true; # Required: GNOME 49 removed X11 session support
 
     # Minimal extensions for server use
     extensions = {
