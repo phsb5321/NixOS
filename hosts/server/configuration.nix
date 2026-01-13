@@ -104,6 +104,9 @@ in {
     LIBGL_ALWAYS_SOFTWARE = "0";
     # Mesa DRI driver configuration for VMs
     MESA_LOADER_DRIVER_OVERRIDE = "virtio_gpu";
+    # Disable AMD Vulkan (RADV) - not applicable to VirtIO-GPU
+    # This suppresses "radv/amdgpu: failed to initialize device" errors
+    AMD_VULKAN_ICD = "NONE";
     # GSK_RENDERER is now set in gnome.nix
   };
 
@@ -290,6 +293,9 @@ in {
     # Proxmox VM guest tools
     qemu-utils
     spice-vdagent
+
+    # X11 utilities for Xwayland compatibility
+    xorg.xprop
   ];
 
   # System state version
