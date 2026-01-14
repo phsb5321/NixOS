@@ -162,20 +162,25 @@
   };
 
   # ===== SYNCTHING - Sync with Laptop over Tailscale =====
-  # Device IDs and Tailscale IPs need to be filled in after first run
-  # Run `syncthing --device-id` on each device to get IDs
-  # Get Tailscale IPs with `tailscale ip -4`
+  # SETUP INSTRUCTIONS:
+  # 1. Get device IDs: syncthing --device-id (on each device)
+  # 2. Get Tailscale IPs: tailscale ip -4 (on each device)
+  # 3. Replace PLACEHOLDER-ID below with laptop's actual device ID
+  # 4. Uncomment tailscaleIP and set desktop's Tailscale IP
+  # 5. Update laptop addresses with laptop's Tailscale IP
+  # 6. Rebuild: sudo nixos-rebuild switch --flake .#desktop
   modules.services.syncthing = {
     enable = true;
     tailscaleOnly = true;
-    # tailscaleIP = "100.x.x.x"; # Fill in desktop's Tailscale IP
+    # tailscaleIP = "100.x.x.x"; # TODO: Fill in desktop's Tailscale IP
 
     devices = {
-      # Fill in after getting device IDs
-      # laptop = {
-      #   id = "XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX";
-      #   addresses = ["tcp://100.x.x.x:22000"]; # Laptop's Tailscale IP
-      # };
+      # TODO: Replace PLACEHOLDER-ID with actual laptop device ID
+      # Get it by running: syncthing --device-id (on laptop)
+      laptop = {
+        id = "AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA";
+        addresses = ["dynamic"]; # TODO: Change to ["tcp://100.x.x.x:22000"] with laptop's Tailscale IP
+      };
     };
 
     folders = {
