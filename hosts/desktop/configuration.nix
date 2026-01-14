@@ -313,6 +313,12 @@
   # ===== HARDWARE =====
   hardware.cpu.intel.updateMicrocode = true;
 
+  # ESP32/Arduino USB-serial device support
+  modules.hardware.espDevices = {
+    enable = true;
+    usePlatformioRules = true; # Use official PlatformIO udev rules
+  };
+
   # ===== PROGRAMS =====
   # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
 
@@ -322,6 +328,8 @@
   # ===== HOST-SPECIFIC USER CONFIGURATION =====
   users.groups.plugdev = {};
   users.users.notroot.extraGroups = lib.mkAfter [
+    "wheel"
+    "networkmanager"
     "dialout"
     "libvirtd"
     "plugdev"

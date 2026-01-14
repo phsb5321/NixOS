@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# monitor - Non-interactive serial monitor with file logging
+# monitor - Serial monitor with file logging (works in interactive & non-interactive modes)
 #
 # Usage: ./scripts/monitor [OPTIONS]
 #
@@ -9,11 +9,13 @@
 #   --timeout <sec>    Exit after N seconds (0 = never)
 #   --no-log           Don't write to log file
 #   --log-dir <path>   Log file directory (default: ./logs)
+#   --force-pio        Force PlatformIO monitor (requires TTY)
+#   --force-pyserial   Force pyserial monitor (works without TTY)
 #
 # Exit codes:
 #   0 - Normal exit (Ctrl+C or timeout)
 #   1 - Port error (permission denied, port busy)
-#   2 - PlatformIO device monitor unavailable
+#   2 - No serial monitor available
 #
 # Environment:
 #   MONITOR_PORT     Override port
@@ -33,6 +35,8 @@ BAUD="${BAUD_RATE:-115200}"
 TIMEOUT="${MONITOR_SECONDS:-0}"
 LOG_ENABLED=true
 LOG_DIR="${ESP_LOG_DIR:-./logs}"
+FORCE_PIO=false
+FORCE_PYSERIAL=false
 
 # --- Functions ---
 
@@ -40,7 +44,9 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Non-interactive serial monitor with file logging and optional timeout.
+Serial monitor with file logging. Works in both interactive and non-interactive
+environments (pipes, scripts, CI). Automatically uses pyserial when no TTY is
+available, and PlatformIO when running interactively.
 
 Options:
   --port <path>      Serial port path (default: auto-detect)
@@ -48,6 +54,8 @@ Options:
   --timeout <sec>    Exit after N seconds (0 = never, default: 0)
   --no-log           Don't write to log file
   --log-dir <path>   Log file directory (default: ./logs)
+  --force-pio        Force PlatformIO monitor (requires TTY)
+  --force-pyserial   Force pyserial monitor (works without TTY)
   -h, --help         Show this help message
   -v, --version      Show version
 
@@ -73,6 +81,94 @@ get_auto_port() {
     else
         pio device list 2>/dev/null | grep -E '^/dev/' | head -1 || echo ""
     fi
+}
+
+# Run pyserial-based monitor (works without TTY)
+# Arguments: port baud timeout log_file
+run_pyserial_monitor() {
+    local port="$1"
+    local baud="$2"
+    local timeout_sec="$3"
+    local log_file="$4"
+    
+    python3 << PYEOF
+import serial
+import sys
+import signal
+import time
+
+# Configuration from bash
+PORT = "$port"
+BAUD = $baud
+TIMEOUT_SEC = $timeout_sec
+LOG_FILE = "$log_file" if "$log_file" else None
+
+# Global flag for clean shutdown
+running = True
+
+def signal_handler(sig, frame):
+    global running
+    running = False
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+def main():
+    global running
+    log_fh = None
+    ser = None
+    
+    try:
+        # Open log file if specified
+        if LOG_FILE:
+            log_fh = open(LOG_FILE, 'a', buffering=1)
+        
+        # Open serial port
+        ser = serial.Serial(PORT, BAUD, timeout=0.1)
+        
+        start_time = time.time()
+        
+        while running:
+            # Check timeout
+            if TIMEOUT_SEC > 0:
+                elapsed = time.time() - start_time
+                if elapsed >= TIMEOUT_SEC:
+                    break
+            
+            # Read available data
+            try:
+                if ser.in_waiting > 0:
+                    data = ser.read(ser.in_waiting)
+                else:
+                    data = ser.read(1)  # Blocking read with timeout
+                
+                if data:
+                    text = data.decode('utf-8', errors='replace')
+                    sys.stdout.write(text)
+                    sys.stdout.flush()
+                    
+                    if log_fh:
+                        log_fh.write(text)
+                        log_fh.flush()
+            except serial.SerialException as e:
+                print(f"\nSerial error: {e}", file=sys.stderr)
+                return 1
+                
+    except serial.SerialException as e:
+        print(f"Failed to open port: {e}", file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if ser and ser.is_open:
+            ser.close()
+        if log_fh:
+            log_fh.close()
+    
+    return 0
+
+sys.exit(main())
+PYEOF
 }
 
 # Main function
@@ -106,6 +202,14 @@ main() {
                 ;;
             --no-log)
                 LOG_ENABLED=false
+                shift
+                ;;
+            --force-pio)
+                FORCE_PIO=true
+                shift
+                ;;
+            --force-pyserial)
+                FORCE_PYSERIAL=true
                 shift
                 ;;
             --log-dir)
@@ -179,25 +283,58 @@ main() {
     if [[ "$TIMEOUT" -gt 0 ]]; then
         echo "Timeout: $TIMEOUT seconds"
     fi
-    echo "Press Ctrl+C to stop"
-    echo "---"
     
     # Determine which monitor to use
     local monitor_cmd=""
+    local has_tty=false
     
-    if command -v pio &> /dev/null; then
+    # Check if we have a TTY
+    if [[ -t 0 ]] && [[ -t 1 ]]; then
+        has_tty=true
+    fi
+    
+    # Determine monitor backend
+    if $FORCE_PYSERIAL; then
+        monitor_cmd="pyserial"
+    elif $FORCE_PIO; then
+        if ! $has_tty; then
+            echo "Error: --force-pio requires an interactive terminal (TTY)" >&2
+            echo "Remove --force-pio or run in an interactive shell" >&2
+            exit 2
+        fi
         monitor_cmd="pio"
-    elif command -v picocom &> /dev/null; then
+    elif $has_tty && command -v pio &> /dev/null; then
+        # Interactive mode: prefer pio for better experience
+        monitor_cmd="pio"
+    elif command -v python3 &> /dev/null && python3 -c "import serial" 2>/dev/null; then
+        # Non-interactive or no pio: use pyserial
+        monitor_cmd="pyserial"
+    elif command -v picocom &> /dev/null && $has_tty; then
+        # Fallback to picocom if interactive
         monitor_cmd="picocom"
     else
-        echo "Error: No serial monitor available (need pio or picocom)" >&2
+        echo "Error: No serial monitor available" >&2
+        echo "" >&2
+        echo "Install one of:" >&2
+        echo "  - pyserial: pip install pyserial (works non-interactively)" >&2
+        echo "  - platformio: pip install platformio (interactive only)" >&2
+        echo "  - picocom: available in most package managers" >&2
         exit 2
     fi
     
-    # Build monitor command
+    if ! $has_tty; then
+        echo "Mode: non-interactive (using $monitor_cmd)"
+    fi
+    echo "Press Ctrl+C to stop"
+    echo "---"
+    
+    # Build and run monitor command
     local exit_code=0
     
-    if [[ "$monitor_cmd" == "pio" ]]; then
+    if [[ "$monitor_cmd" == "pyserial" ]]; then
+        # Python-based serial monitor (works without TTY)
+        run_pyserial_monitor "$PORT" "$BAUD" "$TIMEOUT" "$log_file" || exit_code=$?
+    elif [[ "$monitor_cmd" == "pio" ]]; then
         # PlatformIO device monitor
         local pio_args=(device monitor --port "$PORT" --baud "$BAUD" --raw)
         
