@@ -11,7 +11,6 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
-    # inputs.sops-nix.nixosModules.sops  # Disabled until sops-nix is configured
   ];
 
   # Allow insecure packages for USB boot creation tool and development
@@ -60,22 +59,22 @@
       clipboard = true;
       gsconnect = true;
       workspaceIndicator = true;
-      soundOutputChooser = true; # Add missing extension from desktop
-      productivity = true; # Enable productivity bundle
-      
-      # Popular additional extensions (disabled by default)
-      blurMyShell = false; # Beautiful blur effects
-      popShell = false; # Tiling window management
-      burnMyWindows = false; # Window close animations
-      windowList = false; # Taskbar-style window list
-      removableDriveMenu = true; # Useful for laptop
-      altTab = true; # Better Alt+Tab behavior
-      systemMonitor = true; # System monitoring extension
-      batteryClock = true; # Battery info in top bar - useful for laptop
-      gpuStats = false; # GPU monitoring (less useful on laptop)
-      netspeedSimplified = true; # Network speed monitoring
-      windowTitles = false; # Window titles on panel
-      topIndicators = true; # Top indicators (TopHat)
+      soundOutputChooser = true;
+      productivity = true;
+
+      # Popular additional extensions
+      blurMyShell = false;
+      popShell = false;
+      burnMyWindows = false;
+      windowList = false;
+      removableDriveMenu = true;
+      altTab = true;
+      systemMonitor = true;
+      batteryClock = true;
+      gpuStats = false;
+      netspeedSimplified = true;
+      windowTitles = false;
+      topIndicators = true;
     };
 
     # Settings
@@ -90,7 +89,7 @@
 
     # Wayland configuration - Force X11 for NVIDIA compatibility
     wayland = {
-      enable = lib.mkForce false; # Use X11 for NVIDIA laptop
+      enable = lib.mkForce false;
       electronSupport = false;
       screenSharing = false;
       variant = "software";
@@ -105,8 +104,8 @@
       chrome = true;
       brave = true;
       librewolf = true;
-      zen = true; # Enable Zen browser - user wants desktop similarity
-      firefoxNightly = true; # Enable Firefox Nightly
+      zen = true;
+      firefoxNightly = true;
     };
 
     # Development tools
@@ -131,7 +130,7 @@
       vlc = true;
       spotify = true;
       discord = true;
-      streaming = true; # Enable streaming like desktop - user wants desktop similarity
+      streaming = true;
       imageEditing = true;
     };
 
@@ -141,15 +140,15 @@
       performance = true;
       launchers = true;
       wine = true;
-      gpuControl = false; # NVIDIA disabled for laptop
-      minecraft = false; # Match desktop setting
+      gpuControl = false;
+      minecraft = false;
     };
 
     # Utilities
     utilities = {
       enable = true;
       diskManagement = true;
-      fileSync = false; # Syncthing handled by profile
+      fileSync = false; # Syncthing handled separately
       compression = true;
       security = true;
       pdfViewer = true;
@@ -189,7 +188,7 @@
     mongodb-compass
 
     # Fun extension
-    gnomeExtensions.runcat # Running cat shows CPU usage
+    gnomeExtensions.runcat
 
     # Communication
     telegram-desktop
@@ -235,20 +234,15 @@
     podman-compose
 
     # Utilities
-    ventoy-full # Bootable USB creation
-
-    # Fun extension
-    gnomeExtensions.runcat # Running cat shows CPU usage
-    # AI Development
-    claude-code
+    ventoy-full
 
     # NVIDIA tools (for when discrete GPU is used manually)
     nvidia-system-monitor-qt
     nvtopPackages.full
 
     # Laptop-specific tools
-    fprintd # Fingerprint support
-    iw # WiFi management
+    fprintd
+    iw
     wirelesstools
   ];
 
@@ -274,6 +268,80 @@
   # SSD optimization
   services.fstrim.enable = true;
 
+  # ===== SYNCTHING - Sync with Desktop over Tailscale =====
+  # Device IDs and Tailscale IPs need to be filled in after first run
+  # Run `syncthing --device-id` on each device to get IDs
+  # Get Tailscale IPs with `tailscale ip -4`
+  modules.services.syncthing = {
+    enable = true;
+    tailscaleOnly = true;
+    # tailscaleIP = "100.x.x.x"; # Fill in laptop's Tailscale IP
+
+    devices = {
+      # Fill in after getting device IDs
+      # desktop = {
+      #   id = "XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX";
+      #   addresses = ["tcp://100.x.x.x:22000"]; # Desktop's Tailscale IP
+      # };
+    };
+
+    folders = {
+      # Code projects - bidirectional sync
+      code = {
+        path = "/home/notroot/Documents/Code";
+        devices = ["desktop"];
+        ignorePerms = true;
+        versioning = {
+          type = "staggered";
+          params = {
+            cleanInterval = "3600";
+            maxAge = "2592000"; # 30 days
+          };
+        };
+      };
+
+      # Firefox profile - bidirectional sync
+      firefox-profile = {
+        path = "/home/notroot/.mozilla/firefox";
+        devices = ["desktop"];
+        ignorePerms = true;
+        versioning = {
+          type = "simple";
+          params.keep = "5";
+        };
+      };
+
+      # NixOS configuration - bidirectional sync
+      nixos-config = {
+        path = "/home/notroot/NixOS";
+        devices = ["desktop"];
+        ignorePerms = true;
+        versioning = {
+          type = "staggered";
+          params = {
+            cleanInterval = "3600";
+            maxAge = "2592000";
+          };
+        };
+      };
+
+      # SSH keys and config (receive only for security)
+      ssh-config = {
+        path = "/home/notroot/.ssh";
+        devices = ["desktop"];
+        type = "receiveonly";
+        ignorePerms = false;
+      };
+
+      # Dotfiles/chezmoi
+      dotfiles = {
+        path = "/home/notroot/.local/share/chezmoi";
+        devices = ["desktop"];
+        ignorePerms = true;
+      };
+    };
+  };
+
   # ===== NETWORKING =====
   modules.networking = {
     enable = true;
@@ -287,30 +355,10 @@
   # Prevent NetworkManager from blocking boot
   systemd.services.NetworkManager-wait-online.enable = false;
 
-  # ===== SECRETS MANAGEMENT =====
-  # Disabled WiFi secret until sops-nix is properly configured
-  # sops = {
-  #   defaultSopsFile = ../../secrets/laptop.yaml;
-  #   age.keyFile = "/var/lib/sops-nix/key.txt";
-  #
-  #   secrets = {
-  #     wifi_live_tim_4122_psk = {
-  #       mode = "0400";
-  #     };
-  #   };
-  # };
-
   modules.networking.wifi = {
     enable = true;
-    enablePowersave = true; # For laptop battery life
-    networks = {
-      # WiFi network configuration - using NetworkManager GUI for now
-      # "LIVE TIM_4122" = {
-      #   pskFile = config.sops.secrets.wifi_live_tim_4122_psk.path;
-      #   priority = 100;
-      #   autoConnect = true;
-      # };
-    };
+    enablePowersave = true;
+    networks = {};
   };
 
   modules.networking.tailscale = {
@@ -324,8 +372,8 @@
 
   modules.networking.firewall = {
     enable = true;
-    allowedServices = [ "ssh" ];
-    developmentPorts = [ 3000 8080 ];
+    allowedServices = ["ssh"];
+    developmentPorts = [3000 8080];
     tailscaleCompatible = true;
   };
 
@@ -369,24 +417,20 @@
       latex = {
         enable = true;
         minimal = false;
-<<<<<<< HEAD
         extraPackages = with pkgs; [
           biber
           texlive.combined.scheme-context
         ];
-=======
->>>>>>> origin/host/server
       };
       markdown = {
         enable = true;
         lsp = true;
-<<<<<<< HEAD
         linting = {
           enable = true;
           markdownlint = true;
           vale = {
             enable = true;
-            styles = [ "google" "write-good" ];
+            styles = ["google" "write-good"];
           };
           linkCheck = true;
         };
@@ -415,17 +459,6 @@
     };
   };
 
-
-=======
-        linting.enable = true;
-        formatting.enable = true;
-        preview.enable = true;
-        utilities.enable = true;
-      };
-    };
-  };
-
->>>>>>> origin/host/server
   # ===== DOTFILES =====
   modules.dotfiles = {
     enable = true;
@@ -439,22 +472,21 @@
   # OpenGL/Vulkan for gaming
   hardware.graphics = {
     enable = true;
-    enable32Bit = true; # For Steam and 32-bit games
+    enable32Bit = true;
   };
 
-  # Laptop hardware module (already configured by profile, but can override)
+  # Laptop hardware module
   modules.hardware.laptop = {
     enable = true;
 
     # Disable hybrid graphics - causes blank screen
     graphics = {
-      hybridGraphics = false; # NVIDIA disabled
+      hybridGraphics = false;
       intelBusId = "PCI:0:2:0";
       nvidiaBusId = "PCI:1:0:0";
     };
 
-<<<<<<< HEAD
-    # Touchpad configuration - always enabled
+    # Touchpad configuration
     touchpad = {
       enable = true;
       naturalScrolling = true;
@@ -462,13 +494,11 @@
       disableWhileTyping = true;
     };
 
-=======
->>>>>>> origin/host/server
     batteryManagement.chargeThreshold = 85;
 
     powerManagement = {
       profile = "balanced";
-      suspendTimeout = 900; # 15 minutes
+      suspendTimeout = 900;
     };
   };
 
@@ -483,137 +513,96 @@
       timeout = 3;
     };
 
-<<<<<<< HEAD
     kernelParams = lib.mkMerge [
       [
         "quiet"
         "splash"
-        "i915.enable_fbc=1" # Frame buffer compression
-        "i915.enable_psr=2" # Panel self refresh
-        "nvme.noacpi=1" # Better NVMe power management
-        
-        # ACPI fixes for SAC1 BufferField BIOS errors
-        "acpi=strict" # Force strict ACPI compliance
-        
-        # Nouveau/NVIDIA fixes for hybrid graphics issues  
-        "nouveau.modeset=0" # Disable nouveau kernel mode setting
-        "nvidia-drm.modeset=0" # Disable NVIDIA DRM mode setting
-        "nomodeset" # Fallback - disable kernel mode setting entirely
+        "i915.enable_fbc=1"
+        "i915.enable_psr=2"
+        "nvme.noacpi=1"
+        "acpi=strict"
+        "nouveau.modeset=0"
+        "nvidia-drm.modeset=0"
+        "nomodeset"
       ]
-      (lib.mkAfter ["loglevel=3"]) # Ensure loglevel=3 overrides default loglevel=4
+      (lib.mkAfter ["loglevel=3"])
     ];
 
-    # Fix iwlwifi warnings during boot
     extraModprobeConfig = ''
-      # Intel Wi-Fi firmware configuration
       options iwlwifi bt_coex_active=0 swcrypto=1 11n_disable=0
       options iwlmvm power_scheme=1
-      
-      # Blacklist nouveau to prevent MMU faults and conflicts
       blacklist nouveau
       blacklist nvidia
       blacklist nvidia_drm
       blacklist nvidia_modeset
     '';
 
-    # Blacklist kernel modules that cause issues
     blacklistedKernelModules = [
-      "nouveau"        # Prevent nouveau MMU faults  
-      "nvidia"         # Blacklist NVIDIA drivers (hybrid graphics disabled)
-      "nvidia_drm" 
+      "nouveau"
+      "nvidia"
+      "nvidia_drm"
       "nvidia_modeset"
-      "acpi_power_meter" # Fix for ACPI SAC1 BufferField errors
+      "acpi_power_meter"
     ];
 
-    # Plymouth disabled - incompatible with systemd initrd
     plymouth.enable = false;
-=======
-    kernelParams = [
-      "quiet"
-      "splash"
-      "i915.enable_fbc=1" # Frame buffer compression
-      "i915.enable_psr=2" # Panel self refresh
-      "nvme.noacpi=1" # Better NVMe power management
-    ];
-
-    plymouth = {
-      enable = true;
-      theme = "breeze";
-    };
->>>>>>> origin/host/server
-
     initrd.systemd.enable = true;
   };
 
   # ===== USER CONFIGURATION =====
-<<<<<<< HEAD
   users.groups.plugdev = {};
-  
+
   users.users.notroot = {
     isNormalUser = true;
     description = "Not Root";
-    shell = pkgs.zsh; # Set ZSH as default shell
-=======
-  users.users.notroot = {
-    isNormalUser = true;
-    description = "Not Root";
->>>>>>> origin/host/server
+    shell = pkgs.zsh;
     extraGroups = [
       "networkmanager"
       "wheel"
-      "video" # Brightness control
-      "input" # Touchpad gestures
-      "power" # Power management
-<<<<<<< HEAD
-      "dialout" # Like desktop
-      "libvirtd" # Like desktop
-      "plugdev" # Like desktop
+      "video"
+      "input"
+      "power"
+      "dialout"
+      "libvirtd"
+      "plugdev"
     ];
   };
 
-  # Enable ZSH system-wide and set as default
+  # Enable ZSH system-wide
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
 
   # ===== TOUCHPAD PERMANENT ENABLE =====
-  # Systemd service to ensure touchpad is always enabled and cannot be disabled
   systemd.user.services.touchpad-always-enabled = {
     description = "Force touchpad to always be enabled";
-    wantedBy = [ "graphical-session.target" ];
-    after = [ "graphical-session.target" ];
+    wantedBy = ["graphical-session.target"];
+    after = ["graphical-session.target"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       ExecStart = "${pkgs.glib}/bin/gsettings set org.gnome.desktop.peripherals.touchpad send-events 'enabled'";
-      # Run on every dconf change to re-enable if disabled
       Restart = "on-failure";
       RestartSec = "5s";
     };
   };
 
-  # Also set it at system level as default
-  programs.dconf.profiles.user.databases = [{
-    settings = {
-      "org/gnome/desktop/peripherals/touchpad" = {
-        send-events = "enabled";
+  programs.dconf.profiles.user.databases = [
+    {
+      settings = {
+        "org/gnome/desktop/peripherals/touchpad" = {
+          send-events = "enabled";
+        };
       };
-    };
-  }];
+    }
+  ];
 
   # ===== ENVIRONMENT VARIABLES =====
   environment.sessionVariables = {
-    # Touchpad gestures in Firefox
     MOZ_USE_XINPUT2 = "1";
-
-    # Electron apps scaling
     ELECTRON_FORCE_IS_PACKAGED = "true";
     ELECTRON_TRASH = "gio";
-
-    # Steam optimizations
     STEAM_RUNTIME = "1";
     STEAM_RUNTIME_HEAVY = "1";
-
-    # DXVK optimizations
     DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
     DXVK_LOG_LEVEL = "warn";
   };
@@ -630,7 +619,7 @@
       enable = true;
       backlogLimit = 8192;
       failureMode = "printk";
-      rules = [ "-a exit,always -F arch=b64 -S execve" ];
+      rules = ["-a exit,always -F arch=b64 -S execve"];
     };
 
     apparmor = {
@@ -639,7 +628,7 @@
     };
   };
 
-  # ===== PROGRAMS (like desktop) =====
+  # ===== PROGRAMS =====
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
@@ -648,30 +637,5 @@
   };
 
   # ===== SYSTEM STATE VERSION =====
-  # system.stateVersion is managed by modules.core
-=======
-    ];
-  };
-
-  # ===== ENVIRONMENT VARIABLES =====
-  environment.sessionVariables = {
-    # Touchpad gestures in Firefox
-    MOZ_USE_XINPUT2 = "1";
-
-    # Electron apps scaling
-    ELECTRON_FORCE_IS_PACKAGED = "true";
-    ELECTRON_TRASH = "gio";
-
-    # Steam optimizations
-    STEAM_RUNTIME = "1";
-    STEAM_RUNTIME_HEAVY = "1";
-
-    # DXVK optimizations
-    DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
-    DXVK_LOG_LEVEL = "warn";
-  };
-
-  # ===== SYSTEM STATE VERSION =====
   system.stateVersion = systemVersion;
->>>>>>> origin/host/server
 }
