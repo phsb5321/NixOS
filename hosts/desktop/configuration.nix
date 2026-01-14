@@ -322,6 +322,8 @@
   # ===== HOST-SPECIFIC USER CONFIGURATION =====
   users.groups.plugdev = {};
   users.users.notroot.extraGroups = lib.mkAfter [
+    "wheel"
+    "networkmanager"
     "dialout"
     "libvirtd"
     "plugdev"
