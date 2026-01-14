@@ -161,6 +161,80 @@
     passwordAuthentication = false;
   };
 
+  # ===== SYNCTHING - Sync with Laptop over Tailscale =====
+  # Device IDs and Tailscale IPs need to be filled in after first run
+  # Run `syncthing --device-id` on each device to get IDs
+  # Get Tailscale IPs with `tailscale ip -4`
+  modules.services.syncthing = {
+    enable = true;
+    tailscaleOnly = true;
+    # tailscaleIP = "100.x.x.x"; # Fill in desktop's Tailscale IP
+
+    devices = {
+      # Fill in after getting device IDs
+      # laptop = {
+      #   id = "XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX";
+      #   addresses = ["tcp://100.x.x.x:22000"]; # Laptop's Tailscale IP
+      # };
+    };
+
+    folders = {
+      # Code projects - bidirectional sync
+      code = {
+        path = "/home/notroot/Documents/Code";
+        devices = ["laptop"];
+        ignorePerms = true;
+        versioning = {
+          type = "staggered";
+          params = {
+            cleanInterval = "3600";
+            maxAge = "2592000"; # 30 days
+          };
+        };
+      };
+
+      # Firefox profile - bidirectional sync
+      firefox-profile = {
+        path = "/home/notroot/.mozilla/firefox";
+        devices = ["laptop"];
+        ignorePerms = true;
+        versioning = {
+          type = "simple";
+          params.keep = "5";
+        };
+      };
+
+      # NixOS configuration - bidirectional sync
+      nixos-config = {
+        path = "/home/notroot/NixOS";
+        devices = ["laptop"];
+        ignorePerms = true;
+        versioning = {
+          type = "staggered";
+          params = {
+            cleanInterval = "3600";
+            maxAge = "2592000";
+          };
+        };
+      };
+
+      # SSH keys and config (send only - desktop is source of truth)
+      ssh-config = {
+        path = "/home/notroot/.ssh";
+        devices = ["laptop"];
+        type = "sendonly";
+        ignorePerms = false;
+      };
+
+      # Dotfiles/chezmoi
+      dotfiles = {
+        path = "/home/notroot/.local/share/chezmoi";
+        devices = ["laptop"];
+        ignorePerms = true;
+      };
+    };
+  };
+
   # ===== NETWORKING =====
   modules.networking.tailscale = {
     enable = true;
