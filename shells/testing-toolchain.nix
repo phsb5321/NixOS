@@ -11,10 +11,8 @@
 #       # ... other shell hooks
 #     '';
 #   }
-{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}:
-let
+{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
   # Get the directory where this file is located for script paths
-  toolchainDir = builtins.toString ./.;
   scriptsDir = builtins.toString ../scripts;
 in {
   # Packages to add to buildInputs
@@ -30,13 +28,13 @@ in {
     nodejs_22
 
     # Selenium WebDriver executables
-    chromedriver  # Chrome/Chromium WebDriver
-    geckodriver   # Firefox WebDriver
+    chromedriver # Chrome/Chromium WebDriver
+    geckodriver # Firefox WebDriver
 
     # Debugging and diagnostic utilities
-    jq        # JSON parsing for diagnostics and test output
-    curl      # HTTP debugging and health checks
-    ripgrep   # Fast text search in logs and output
+    jq # JSON parsing for diagnostics and test output
+    curl # HTTP debugging and health checks
+    ripgrep # Fast text search in logs and output
   ];
 
   # Shell hook to set environment variables and add diagnostic command

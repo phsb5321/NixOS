@@ -1,0 +1,19 @@
+# Cloudflare Tunnel Configuration for Audiobookshelf
+# Location: ~/.cloudflared/config.yml
+#
+# To start tunnel:
+# cloudflared tunnel --config ~/.cloudflared/config.yml run audiobookshelf
+#
+# Tunnel Details:
+# - Tunnel ID: 7d1704a0-512f-4a54-92c4-d9bf0b4561c3
+# - Credentials: ~/.cloudflared/7d1704a0-512f-4a54-92c4-d9bf0b4561c3.json
+
+tunnel: 7d1704a0-512f-4a54-92c4-d9bf0b4561c3
+credentials-file: /home/notroot/.cloudflared/7d1704a0-512f-4a54-92c4-d9bf0b4561c3.json
+
+ingress:
+  - hostname: audiobooks.home301server.com.br
+    service: http://192.168.1.169:13378
+    originRequest:
+      noTLSVerify: true
+  - service: http_status:404

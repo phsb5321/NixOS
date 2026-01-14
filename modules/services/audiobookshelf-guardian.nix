@@ -43,12 +43,17 @@
     fi
     log "✓ Local access working: http://localhost:13378/audiobookshelf/"
 
-    # 3. Check if JavaScript assets are accessible
-    if ! timeout 5 ${pkgs.curl}/bin/curl -f -s http://localhost:13378/audiobookshelf/_nuxt/580e7b4.js >/dev/null 2>&1; then
-      error "JavaScript assets not accessible!"
+    # 3. Check if JavaScript assets are accessible (dynamically find any _nuxt/*.js file)
+    JS_FILE=$(timeout 5 ${pkgs.curl}/bin/curl -s http://localhost:13378/audiobookshelf/ | ${pkgs.gnugrep}/bin/grep -oE '_nuxt/[a-zA-Z0-9]+\.js' | head -1)
+    if [ -z "$JS_FILE" ]; then
+      error "No JavaScript assets found in page!"
       exit 1
     fi
-    log "✓ JavaScript assets accessible"
+    if ! timeout 5 ${pkgs.curl}/bin/curl -f -s "http://localhost:13378/audiobookshelf/$JS_FILE" >/dev/null 2>&1; then
+      error "JavaScript assets not accessible: $JS_FILE"
+      exit 1
+    fi
+    log "✓ JavaScript assets accessible: $JS_FILE"
 
     # 4. Check data directory exists and has content
     if [ ! -d "/var/lib/audiobookshelf/config" ]; then

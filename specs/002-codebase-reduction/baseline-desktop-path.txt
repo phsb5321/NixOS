@@ -1,0 +1,1 @@
+/nix/store/0lpa7byxn0c1wwy1inp4wk4q7yp1xjpz-nixos-system-nixos-desktop-25.11.20251123.ee09932
