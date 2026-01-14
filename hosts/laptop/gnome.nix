@@ -7,6 +7,12 @@
     wayland.enable = false; # X11 for Intel/NVIDIA compatibility
     settings.enable = true; # Common dconf settings from module
 
+    # GNOME Core Apps - Full Suite for laptop
+    coreApps = {
+      enable = true;
+      fullSuite = true; # All categories enabled
+    };
+
     # Laptop extension set (battery conscious)
     extensions = {
       enable = true;

@@ -36,6 +36,27 @@
             });
           };
       })
+
+      # WORKAROUND: Downgrade wireplumber to 0.5.12 to fix GNOME crash on Bluetooth audio
+      # Bug: WirePlumber 0.5.13 causes gsd-media-keys and gnome-shell to crash when
+      # connecting Bluetooth headphones in Handsfree mode.
+      # Upstream issues:
+      #   - https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/5053
+      #   - https://gitlab.gnome.org/GNOME/libgnome-volume-control/-/merge_requests/31
+      #   - https://github.com/NixOS/nixpkgs/issues/475202
+      # TODO: Remove this overlay once upstream fix lands in nixpkgs
+      (_final: prev: {
+        wireplumber = prev.wireplumber.overrideAttrs (oldAttrs: rec {
+          version = "0.5.12";
+          src = prev.fetchFromGitLab {
+            domain = "gitlab.freedesktop.org";
+            owner = "pipewire";
+            repo = "wireplumber";
+            rev = version;
+            hash = "sha256-3LdERBiPXal+OF7tgguJcVXrqycBSmD3psFzn4z5krY=";
+          };
+        });
+      })
     ];
 
     # Helper function to create a NixOS system with perSystem context

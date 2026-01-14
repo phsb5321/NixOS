@@ -10,6 +10,35 @@
     enable = true;
     wayland.enable = false; # X11 for Proxmox VM compatibility
 
+    # GNOME Core Apps - Minimal Suite for server
+    # Only essential tools: system monitor, console, logs, disk utility, papers
+    coreApps = {
+      enable = true;
+      fullSuite = false; # Minimal set (disables productivity, media, scanner, connections)
+      utilities.enable = false; # No calculator, clocks, weather
+      media.enable = false; # No camera, video player, image viewer
+      productivity.enable = false; # No calendar, contacts, maps
+      documents = {
+        enable = true;
+        viewer = true; # Papers PDF viewer
+        scanner = false; # No scanner hardware on server
+      };
+      systemTools = {
+        enable = true;
+        systemMonitor = true;
+        logs = true;
+        console = true;
+        help = true;
+        connections = false; # No remote desktop client needed
+        dconfEditor = true;
+      };
+      fileManagement = {
+        enable = true;
+        diskAnalyzer = true; # Baobab
+        diskUtility = true;
+      };
+    };
+
     # Minimal extensions for server use
     extensions = {
       enable = true;

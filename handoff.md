@@ -1,8 +1,35 @@
 # NixOS Configuration Handoff Guide
 
-**Last Updated:** 2026-01-08  
+**Last Updated:** 2026-01-10  
 **Repository:** https://github.com/phsb5321/NixOS  
 **Active PR:** https://github.com/phsb5321/NixOS/pull/7
+
+---
+
+## CRITICAL: Branch Workflow
+
+**Before starting any work, check your branch:**
+```bash
+git branch --show-current
+```
+
+**If on a feature branch:** Plan to merge back to `host/desktop` before session ends.
+
+**Standard workflow:**
+```bash
+# 1. Start from host branch
+git checkout host/desktop
+
+# 2. For significant work, create feature branch
+git checkout -b NNN-feature-name
+
+# 3. Before ending session, ALWAYS merge back
+nix build .#nixosConfigurations.desktop.config.system.build.toplevel --dry-run
+git checkout host/desktop
+git merge feature-branch-name
+```
+
+See `AGENTS.md` for full branch workflow documentation.
 
 ---
 

@@ -2,6 +2,7 @@
 {
   imports = [
     ./laptop
+    ./esp-devices.nix
     ./forticlient.nix
   ];
 }

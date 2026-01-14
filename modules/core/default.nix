@@ -153,6 +153,7 @@ in {
         # azure-cli # Temporarily disabled - build failure with Python 3.13
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
+        firefox # Vanilla Firefox for extension development testing
         vdhcoapp
         inkscape
         codex

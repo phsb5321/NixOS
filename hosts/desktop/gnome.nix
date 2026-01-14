@@ -7,6 +7,12 @@
     wayland.enable = true;
     settings.enable = true; # Common dconf settings from module
 
+    # GNOME Core Apps - Full Suite for desktop
+    coreApps = {
+      enable = true;
+      fullSuite = true; # All categories enabled
+    };
+
     # Desktop extension set (full features)
     extensions = {
       enable = true;
