@@ -278,11 +278,10 @@
     # tailscaleIP = "100.x.x.x"; # Fill in laptop's Tailscale IP
 
     devices = {
-      # Fill in after getting device IDs
-      # desktop = {
-      #   id = "XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX-XXXXXXX";
-      #   addresses = ["tcp://100.x.x.x:22000"]; # Desktop's Tailscale IP
-      # };
+      desktop = {
+        id = "GBAOVC2-WXOS2NV-TOF6D7X-PR7734W-BDPSR6O-R7BEFJO-CGRLZVJ-ZTE76AU";
+        addresses = ["tcp://100.84.167.121:22000"]; # Desktop's Tailscale IP
+      };
     };
 
     folders = {
