@@ -172,7 +172,7 @@
   modules.services.syncthing = {
     enable = true;
     tailscaleOnly = true;
-    # tailscaleIP = "100.x.x.x"; # TODO: Fill in desktop's Tailscale IP
+    tailscaleIP = "100.84.167.121"; # Desktop's Tailscale IP
 
     devices = {
       # TODO: Replace PLACEHOLDER-ID with actual laptop device ID
