@@ -266,8 +266,10 @@
     dhcpcd.extraConfig = "nohook resolv.conf";
     nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     firewall.checkReversePath = "loose";
-    # Trust waydroid0 interface for firewall
-    firewall.trustedInterfaces = ["waydroid0"];
+    # Trust Tailscale and Waydroid interfaces for firewall
+    # tailscale0: Allow SSH and services over Tailscale VPN
+    # waydroid0: Android container networking
+    firewall.trustedInterfaces = ["tailscale0" "waydroid0"];
     # Allow DHCP and DNS ports for Waydroid
     firewall.allowedUDPPorts = [53 67];
     nftables.enable = true;
