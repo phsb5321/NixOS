@@ -1,4 +1,22 @@
-{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
+# ~/NixOS/shells/ESP.nix
+# ESP32/Arduino Development Environment
+#
+# Security Note: This shell may require insecure packages for toolchain compatibility.
+# Allowlist is scoped to this shell only - see docs/security/insecure-packages.md
+{
+  pkgs ? import <nixpkgs> {
+    config = {
+      allowUnfree = true;
+      # Scoped insecure package allowlist for ESP toolchain
+      # These packages are used for ESP32 secure boot signing and firmware verification
+      # Review quarterly and upgrade when platformio/esptool support newer versions
+      permittedInsecurePackages = [
+        # Add packages here if esptool or platformio require insecure dependencies
+        # Example: "python-ecdsa-0.19.0"  # CVE-XXXX - needed for secure boot signing
+      ];
+    };
+  },
+}: let
   # Import shared testing toolchain
   testingToolchain = import ./testing-toolchain.nix {inherit pkgs;};
 

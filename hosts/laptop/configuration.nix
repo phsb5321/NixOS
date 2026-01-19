@@ -282,7 +282,10 @@
     loader = {
       systemd-boot = {
         enable = true;
-        configurationLimit = 10;
+        # Boot safety: retain 15 generations for rollback (D2.1)
+        # Prevents /boot exhaustion on typical 512MB EFI partition
+        # See docs/research/laptop-stability.md for recovery playbooks
+        configurationLimit = 15;
       };
       efi.canTouchEfiVariables = true;
       timeout = 3;
