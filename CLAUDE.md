@@ -2,49 +2,50 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🚨 CRITICAL: YOU ARE RUNNING ON THE PRODUCTION SERVER 🚨
+## 🚨 ABSOLUTE CONSTITUTION: BRANCH RULES 🚨
 
-**⚠️ ULTRA-CRITICAL AWARENESS: YOU ARE THE SERVER HOST ⚠️**
+**⚠️ NON-NEGOTIABLE GIT BRANCH POLICY ⚠️**
 
-**ENVIRONMENT CONTEXT:**
-- **Claude Code is executing DIRECTLY ON the NixOS production server (192.168.1.169)**
-- **This is NOT a development machine, NOT a desktop, NOT a remote system**
-- **You ARE the server** - Every command runs on the LIVE PRODUCTION SERVER
-- **This server hosts**: qBittorrent (24/7 torrenting), Plex Media Server, Audiobookshelf, all media libraries
-- **Hostname**: nixos-server (running in Proxmox VM)
-- **Users depend on this system**: Media streaming, downloads, audiobooks, file serving
+**MANDATORY RULES - NEVER VIOLATE:**
+1. **NEVER** checkout or work on the `main` branch directly
+2. **ALWAYS** work on the `host/laptop` branch - this is YOUR default branch
+3. **NEVER** merge directly to `main` without explicit user approval
+4. **ALWAYS** verify you are on `host/laptop` before making any changes
+5. If you find yourself on `main`, **IMMEDIATELY** switch to `host/laptop`
 
-**WHAT THIS MEANS:**
-- Any `nixos-rebuild` command will IMMEDIATELY affect the live server
-- Any service restart will interrupt active users
-- Any misconfiguration will break production services
-- This is the ONLY server host - there is no failover
+**WHY THIS MATTERS:**
+- The `main` branch is protected and stable
+- All development work happens on `host/laptop`
+- Direct changes to `main` can break the production configuration
+- The `host/laptop` branch is where all laptop-specific changes are tested
+
+**VERIFICATION COMMAND:**
+```bash
+git branch --show-current  # Must return "host/laptop"
+```
+
+**IF ON WRONG BRANCH:**
+```bash
+git checkout host/laptop  # IMMEDIATELY switch back
+```
 
 ---
 
-## ⚠️ CRITICAL: HOST CONFIGURATION WARNING ⚠️
+## ⚠️ HOST CONFIGURATION: LAPTOP ⚠️
 
-**THIS SYSTEM IS A SERVER HOST - NOT A DESKTOP HOST**
-
-**MANDATORY RULES:**
-1. **NEVER** run `nixos-rebuild switch --flake .#default` or `.#desktop` on this system
-2. **NEVER** deploy the desktop or laptop host configuration
-3. **ALWAYS** use `.#nixos-server` for all builds and deployments
-4. The `desktop` host configuration is for desktop machines only
-5. The `server` host uses stable nixpkgs and minimal packages
-6. **THINK TWICE** before running any rebuild - you are on the production server
+**THIS CONFIGURATION IS FOR THE LAPTOP HOST**
 
 **Sudo password: 123** (for build/deployment commands)
 
 **CORRECT COMMANDS FOR THIS HOST:**
-- `sudo nixos-rebuild switch --flake .#nixos-server` ✅ (PRODUCTION SERVER)
-- `sudo nixos-rebuild build --flake .#nixos-server` ✅ (test build first)
+- `sudo nixos-rebuild switch --flake .#laptop` ✅
+- `sudo nixos-rebuild build --flake .#laptop` ✅ (test build first)
 - `./user-scripts/nixswitch` ✅ (auto-detects host, RECOMMENDED)
 
-**WRONG COMMANDS (WILL BREAK PRODUCTION SERVER):**
-- `sudo nixos-rebuild switch --flake .#desktop` ❌ WILL BREAK SERVER
-- `sudo nixos-rebuild switch --flake .#laptop` ❌ WILL BREAK SERVER  
-- `sudo nixos-rebuild switch --flake .` ❌ WILL BREAK SERVER (defaults to .#desktop)
+**WRONG COMMANDS:**
+- `sudo nixos-rebuild switch --flake .#desktop` ❌ WRONG HOST
+- `sudo nixos-rebuild switch --flake .#nixos-server` ❌ WRONG HOST
+- `sudo nixos-rebuild switch --flake .` ❌ (defaults to .#desktop)
 
 ---
 
@@ -682,36 +683,43 @@ Each host defines its **complete GNOME configuration** in `hosts/<hostname>/gnom
 
 ## Git Workflow
 
+### 🚨 CLAUDE CODE BRANCH RULES (CONSTITUTION) 🚨
+
+**FOR CLAUDE CODE SPECIFICALLY:**
+- **DEFAULT BRANCH**: `host/laptop` (NOT `main`)
+- **NEVER** work on `main` directly
+- **ALWAYS** verify branch before any git operations: `git branch --show-current`
+- If on wrong branch, IMMEDIATELY run: `git checkout host/laptop`
+
 ### Branch Strategy
 This repository uses a structured branch workflow for managing multi-host configurations:
 
-- **main**: Production-ready stable configuration (protected, requires PR approval)
+- **main**: Production-ready stable configuration (protected, requires PR approval) - **CLAUDE: DO NOT USE**
 - **develop**: Integration branch for features affecting multiple hosts or shared modules
-- **host/desktop**: Desktop-specific changes (AMD GPU, gaming, performance) - formerly host/default
-- **host/laptop**: Laptop-specific changes (Intel/NVIDIA GPU, power management)
+- **host/desktop**: Desktop-specific changes (AMD GPU, gaming, performance)
+- **host/laptop**: Laptop-specific changes (Intel/NVIDIA GPU, power management) - **CLAUDE: YOUR DEFAULT BRANCH**
 
-### Working with Branches
+### Working with Branches (Claude Code)
 ```bash
-# Host-specific changes
-git checkout host/desktop  # or host/laptop
-sudo nixos-rebuild switch --flake .#desktop
-git commit -m "feat(desktop): description"
-git push origin host/desktop
-# Create PR: host/* → develop
+# ALWAYS start by verifying you're on the correct branch
+git branch --show-current  # MUST be "host/laptop"
 
-# Shared module changes
-git checkout develop
-git commit -m "feat(core): description"
-git push origin develop
-# Create PR: develop → main
+# If not on host/laptop, switch immediately
+git checkout host/laptop
+
+# Make changes on host/laptop
+git add .
+git commit -m "feat(laptop): description"
+git push origin host/laptop
+
+# NEVER checkout main directly - ask user first
 ```
 
 ### Emergency Hotfixes
 ```bash
-git checkout -b hotfix/description main
+git checkout -b hotfix/description host/laptop  # Branch from host/laptop, NOT main
 # Make minimal fix
-# Create PR to main
-# Merge main back to develop and host branches
+# Create PR to develop, then to main
 ```
 
 ## Active Technologies
