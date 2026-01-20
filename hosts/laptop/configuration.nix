@@ -1,6 +1,7 @@
-# NixOS Laptop Configuration - Profile-Based (New Architecture)
-# This is the new modular configuration using laptop profile and profile-based modules
+# NixOS Laptop Configuration - Working Config
+# Synced from /etc/nixos/configuration.nix (the actual working system)
 {
+  config,
   pkgs,
   lib,
   systemVersion,
@@ -8,330 +9,364 @@
 }: {
   imports = [
     ./hardware-configuration.nix
-    ../../modules
-    ../../profiles/laptop.nix
   ];
 
-  # Allow insecure packages for USB boot creation tool
-  nixpkgs.config.permittedInsecurePackages = [
-    "ventoy-1.1.07" # Required for ventoy-full package
-  ];
+  # Bootloader
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 
-  # ===== LAPTOP PROFILE =====
-  # Laptop profile with standard variant for balanced performance/battery
-  modules.profiles.laptop = {
-    enable = true;
-    variant = "standard"; # Options: "ultrabook", "gaming", "workstation", "standard"
+  networking.hostName = "nixos-laptop";
 
-    gnomeExtensions = {
-      minimal = false; # Use full extension set
-      productivity = true; # Enable productivity extensions
-    };
-  };
+  # Enable networking
+  networking.networkmanager.enable = true;
 
-  # ===== GNOME DESKTOP =====
-  modules.desktop.gnome = {
-    enable = true;
-
-    # Base configuration
-    displayManager = true;
-    coreServices = true;
-    coreApplications = true;
-    themes = true;
-    portal = true;
-    powerManagement = true;
-
-    # Extensions
-    extensions = {
-      enable = true;
-      appIndicator = true;
-      dashToDock = true;
-      userThemes = true;
-      justPerfection = true;
-      vitals = true;
-      caffeine = true;
-      clipboard = true;
-      gsconnect = true;
-      workspaceIndicator = true;
-    };
-
-    # Settings
-    settings = {
-      enable = true;
-      darkMode = true;
-      animations = true;
-      hotCorners = false;
-      batteryPercentage = true;
-      weekday = true;
-    };
-
-    # Wayland configuration - Force X11 for NVIDIA compatibility
-    wayland = {
-      # JUSTIFIED: Hardware requirement - NVIDIA hybrid graphics causes blank screen with Wayland
-      enable = lib.mkForce false; # Use X11 for NVIDIA laptop
-      electronSupport = false;
-      screenSharing = false;
-      variant = "software";
-    };
-  };
-
-  # ===== PACKAGE CONFIGURATION =====
-  # Most defaults come from profiles/common.nix and profiles/laptop.nix
-  # Only host-specific overrides needed here
-  modules.packages = {
-    # Gaming - enabled on this laptop even though it's "standard" variant
-    # (profile only enables gaming for "gaming" variant by default)
-    gaming = {
-      enable = true;
-      performance = true;
-      launchers = true;
-      wine = true;
-    };
-  };
-
-  # ===== HOST-SPECIFIC PACKAGES =====
-  environment.systemPackages = with pkgs; [
-    # Development tools
-    insomnia
-    mongodb-compass
-
-    # Fun extension
-    gnomeExtensions.runcat # Running cat shows CPU usage
-
-    # Communication
-    slack
-    teams-for-linux
-    zoom-us
-
-    # Productivity
-    obsidian
-    logseq
-
-    # Cloud CLI
-    google-cloud-sdk
-
-    # Containerization
-    podman-compose
-
-    # Utilities
-    ventoy-full # Bootable USB creation
-
-    # AI Development
-    claude-code
-
-    # NVIDIA tools (for when discrete GPU is used manually)
-    nvidia-system-monitor-qt
-    nvtopPackages.full
-
-    # Laptop-specific tools
-    fprintd # Fingerprint support
-    iw # WiFi management
-    wirelesstools
-  ];
-
-  # ===== SERVICES =====
-  # Fingerprint reader
-  services.fprintd.enable = true;
-
-  # Thunderbolt support
-  services.hardware.bolt.enable = true;
-
-  # Location services
-  services.geoclue2.enable = true;
-
-  # Printing
-  services.printing = {
-    enable = true;
-    drivers = [
-      pkgs.hplip
-      pkgs.gutenprint
-    ];
-  };
-
-  # SSD optimization
-  services.fstrim.enable = true;
-
-  # ===== NETWORKING =====
-  modules.networking = {
-    enable = true;
-    hostName = "nixos-laptop";
-    enableNetworkManager = true;
-  };
-
-  # Enable WPA3/SAE support in NetworkManager using iwd backend
-  networking.networkmanager.wifi.backend = "iwd";
-
-  modules.networking.wifi = {
-    enable = true;
-    enablePowersave = true; # For laptop battery life
-    networks = {
-      # WiFi network configuration
-      "LIVE TIM_4122" = {
-        psk = "benicio-tem-4-patas-cinzas";
-        priority = 100;
-        autoConnect = true;
-      };
-    };
-  };
-
-  modules.networking.tailscale = {
-    enable = true;
-    useRoutingFeatures = "client";
-    extraUpFlags = [
-      "--accept-routes"
-      "--accept-dns"
-    ];
-  };
-
-  modules.networking.firewall = {
-    enable = true;
-    allowedServices = ["ssh"];
-    developmentPorts = [3000 8080];
-    tailscaleCompatible = true;
-  };
-
-  modules.networking.remoteDesktop = {
-    enable = true;
-    client.enable = true;
-    server.enable = false;
-    firewall.openPorts = false;
-  };
-
-  # ===== CORE MODULES =====
-  modules.core = {
-    enable = true;
-    stateVersion = systemVersion;
-    timeZone = "America/Recife";
-    defaultLocale = "en_US.UTF-8";
-
-    # ABNT2 keyboard for Brazil
-    keyboard = {
-      enable = true;
-      variant = ",abnt2";
-    };
-
-    # Gaming for Steam
-    gaming = {
-      enable = true;
-      enableSteam = true;
-    };
-
-    pipewire = {
-      enable = true;
-      highQualityAudio = true;
-      bluetooth.enable = true;
-      bluetooth.highQualityProfiles = true;
-      lowLatency = false;
-      tools.enable = true;
-    };
-
-    documentTools = {
-      enable = true;
-      latex = {
-        enable = true;
-        minimal = false;
-      };
-      markdown = {
-        enable = true;
-        lsp = true;
-        linting.enable = true;
-        formatting.enable = true;
-        preview.enable = true;
-        utilities.enable = true;
-      };
-    };
-  };
-
-  # ===== DOTFILES =====
-  modules.dotfiles = {
-    enable = true;
-    enableHelperScripts = true;
-  };
-
-  # ===== HARDWARE =====
-  # Enable WiFi firmware
+  # Enable WiFi firmware and drivers - CRITICAL FOR WIFI
   hardware.enableRedistributableFirmware = true;
 
-  # OpenGL/Vulkan for gaming
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true; # For Steam and 32-bit games
+  # Enable iwd backend for better WiFi support
+  networking.networkmanager.wifi.backend = "iwd";
+
+  # WiFi power management
+  networking.networkmanager.wifi.powersave = false;
+
+  # Set your time zone
+  time.timeZone = "America/Recife";
+
+  # Select internationalisation properties
+  i18n.defaultLocale = "en_US.UTF-8";
+
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "pt_BR.UTF-8";
+    LC_IDENTIFICATION = "pt_BR.UTF-8";
+    LC_MEASUREMENT = "pt_BR.UTF-8";
+    LC_MONETARY = "pt_BR.UTF-8";
+    LC_NAME = "pt_BR.UTF-8";
+    LC_NUMERIC = "pt_BR.UTF-8";
+    LC_PAPER = "pt_BR.UTF-8";
+    LC_TELEPHONE = "pt_BR.UTF-8";
+    LC_TIME = "pt_BR.UTF-8";
   };
 
-  # Laptop hardware module (already configured by profile, but can override)
-  modules.hardware.laptop = {
-    enable = true;
+  # Enable the X11 windowing system
+  services.xserver.enable = true;
 
-    # Disable hybrid graphics - causes blank screen
-    graphics = {
-      hybridGraphics = false; # NVIDIA disabled
-      intelBusId = "PCI:0:2:0";
-      nvidiaBusId = "PCI:1:0:0";
-    };
+  # Enable the GNOME Desktop Environment (using new option paths)
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
 
-    batteryManagement.chargeThreshold = 85;
-
-    powerManagement = {
-      profile = "balanced";
-      suspendTimeout = 900; # 15 minutes
-    };
+  # Configure keymap in X11
+  services.xserver.xkb = {
+    layout = "br";
+    variant = "";
   };
 
-  # ===== BOOT CONFIGURATION =====
-  boot = {
-    loader = {
-      systemd-boot = {
-        enable = true;
-        # Boot safety: retain 15 generations for rollback (D2.1)
-        # Prevents /boot exhaustion on typical 512MB EFI partition
-        # See docs/research/laptop-stability.md for recovery playbooks
-        configurationLimit = 15;
-      };
-      efi.canTouchEfiVariables = true;
-      timeout = 3;
-    };
+  # Configure console keymap
+  console.keyMap = "br-abnt2";
 
-    kernelParams = [
-      "quiet"
-      "splash"
-      "i915.enable_fbc=1" # Frame buffer compression
-      "i915.enable_psr=2" # Panel self refresh
-      "nvme.noacpi=1" # Better NVMe power management
+  # Enable CUPS to print documents
+  services.printing.enable = true;
+
+  # Enable sound with pipewire
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
+  # Enable docker
+  virtualisation.docker.enable = true;
+
+  # Enable zsh system-wide (required for user shell)
+  programs.zsh.enable = true;
+
+  # Define a user account
+  users.users.notroot = {
+    isNormalUser = true;
+    description = "Pedro Balbino";
+    shell = pkgs.zsh;  # Set zsh as default shell
+    extraGroups = ["networkmanager" "wheel" "docker"];
+    packages = with pkgs; [
+      # ===== BROWSERS =====
+      firefox
+      google-chrome
+      brave
+      librewolf
+
+      # ===== TERMINAL EMULATORS =====
+      ghostty
+      kitty
+      alacritty
+      gnome-terminal
+      wezterm
+
+      # ===== DEVELOPMENT TOOLS =====
+      # Editors
+      vscode
+      neovim
+      vim
+      nano
+      helix
+
+      # Version Control
+      git
+      git-lfs
+      gh
+      glab
+      lazygit
+      delta
+      gitg
+      chezmoi
+
+      # Runtimes & Languages
+      nodejs
+      python3
+      python3Packages.pip
+      rustc
+      cargo
+      go
+      jdk17
+      dotnet-runtime
+      php
+      ruby
+      elixir
+      lua
+      zig
+
+      # Language Servers
+      rust-analyzer
+      gopls
+      nodePackages.typescript-language-server
+      nodePackages.eslint
+      nodePackages.prettier
+      marksman
+      taplo
+      yaml-language-server
+      vscode-langservers-extracted
+      bash-language-server
+      shfmt
+      nixd
+      nil
+      pyright
+      ruff
+      black
+
+      # Database
+      sqlite
+      sqlite-utils
+      postgresql
+      mariadb
+      dbeaver-bin
+
+      # API Tools
+      insomnia
+      postman
+      httpie
+
+      # Containers
+      docker
+      docker-compose
+      podman
+
+      # Build Tools
+      cmake
+      gnumake
+      ninja
+      meson
+
+      # Modern Development Utilities
+      typst
+      just
+      direnv
+      jq
+      yq
+
+      # ===== MEDIA & COMMUNICATION =====
+      vlc
+      mpv
+      celluloid
+      obs-studio
+      gimp
+      blender
+      krita
+      kdePackages.kdenlive
+      inkscape
+      darktable
+      rawtherapee
+
+      # Communication
+      discord
+      telegram-desktop
+      slack
+      zoom-us
+      signal-desktop
+      element-desktop
+      wasistlos
+
+      # Music
+      spotify
+      audacity
+      amberol
+      lmms
+
+      # ===== PRODUCTIVITY =====
+      libreoffice
+      onlyoffice-desktopeditors
+      notion-app-enhanced
+      obsidian
+      logseq
+      joplin-desktop
+      evince
+      kdePackages.okular
+      zathura
+
+      # ===== TERMINAL & CLI TOOLS =====
+      zsh
+      fish
+      bash
+      oh-my-zsh
+      bat
+      eza
+      fd
+      ripgrep
+      fzf
+      zoxide
+      btop
+      htop
+      neofetch
+      tree
+      lsd
+      vivid
+      tldr
+      ncdu
+      duf
+      dust
+      procs
+      bandwhich
+      hyperfine
+
+      # File Management
+      ranger
+      nemo
+      yazi-unwrapped
+
+      # Network Tools
+      wget
+      curl
+      netcat-gnu
+      nmap
+      wireshark
+
+      # Terminal Multiplexers
+      tmux
+      screen
+      zellij
+
+      # ===== UTILITIES =====
+      unzip
+      zip
+      p7zip
+      unrar
+      gparted
+      baobab
+      gnupg
+      keepassxc
+      bitwarden-desktop
+      lshw
+      usbutils
+      pciutils
+      hwinfo
+
+      # ===== GNOME EXTENSIONS & TOOLS =====
+      gnome-tweaks
+      dconf-editor
+      gnome-extension-manager
+      gnomeExtensions.user-themes
+      gnomeExtensions.dash-to-dock
+      gnomeExtensions.appindicator
+      gnomeExtensions.vitals
+      gnomeExtensions.clipboard-indicator
+      gnomeExtensions.caffeine
+      gnomeExtensions.workspace-indicator
+      gnomeExtensions.sound-output-device-chooser
+      gnomeExtensions.gsconnect
+      gnomeExtensions.just-perfection
+
+      # ===== GAMING =====
+      steam
+      lutris
+      wine-staging
+      winetricks
+      protontricks
+      steam-run
+      dxvk
+      corectrl
+      prismlauncher
+
+      # ===== AUDIO/VIDEO TOOLS =====
+      audacity
+      lmms
+      easyeffects
+      pavucontrol
+      helvum
+      ffmpeg
+      handbrake
+
+      # ===== FONTS =====
+      nerd-fonts.jetbrains-mono
+      noto-fonts-color-emoji
+      noto-fonts
+      noto-fonts-cjk-sans
+
+      # ===== DEVELOPMENT ENVIRONMENTS =====
+      alejandra
+      nixfmt-classic
+
+      # ===== SYSTEM MONITORING =====
+      iotop
+      atop
+      smem
+      stress-ng
+      memtester
+
+      # ===== ADDITIONAL TOOLS =====
+      remmina
+      texlive.combined.scheme-full
+      ngrok
+      syncthing
+      iw
+      iwgtk
+      wpa_supplicant
+      d2
+      grc
+      starship
+      zsh-powerlevel10k
+      zsh-syntax-highlighting
+      zsh-autosuggestions
+      zsh-you-should-use
+      zsh-fast-syntax-highlighting
     ];
-
-    plymouth = {
-      enable = true;
-      theme = "breeze";
-    };
-
-    initrd.systemd.enable = true;
   };
 
-  # ===== HOST-SPECIFIC USER CONFIGURATION =====
-  # Base user defined in profiles/common.nix via profiles/laptop.nix
-  # Only add laptop-specific groups here
-  users.users.notroot.extraGroups = lib.mkAfter [
-    "power" # Power management
-  ];
+  # Enable automatic login for the user
+  services.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.user = "notroot";
 
-  # ===== ENVIRONMENT VARIABLES =====
-  environment.sessionVariables = {
-    # Touchpad gestures in Firefox
-    MOZ_USE_XINPUT2 = "1";
+  # Workaround for GNOME autologin
+  systemd.services."getty@tty1".enable = false;
+  systemd.services."autovt@tty1".enable = false;
 
-    # Electron apps scaling
-    ELECTRON_FORCE_IS_PACKAGED = "true";
-    ELECTRON_TRASH = "gio";
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
 
-    # Steam optimizations
-    STEAM_RUNTIME = "1";
-    STEAM_RUNTIME_HEAVY = "1";
+  # Enable additional services
+  services.openssh.enable = true;
 
-    # DXVK optimizations
-    DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
-    DXVK_LOG_LEVEL = "warn";
-  };
+  # Enable flatpak
+  services.flatpak.enable = true;
 
-  # ===== SYSTEM STATE VERSION =====
+  # System state version
   system.stateVersion = systemVersion;
 }
