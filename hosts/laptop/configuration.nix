@@ -61,20 +61,6 @@
       workspaceIndicator = true;
       soundOutputChooser = true;
       productivity = true;
-
-      # Popular additional extensions
-      blurMyShell = false;
-      popShell = false;
-      burnMyWindows = false;
-      windowList = false;
-      removableDriveMenu = true;
-      altTab = true;
-      systemMonitor = true;
-      batteryClock = true;
-      gpuStats = false;
-      netspeedSimplified = true;
-      windowTitles = false;
-      topIndicators = true;
     };
 
     # Settings
