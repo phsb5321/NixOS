@@ -123,12 +123,12 @@
     zoom-us
 
     # Productivity
-    notion-app-enhanced
+    libreoffice
 
     # Advanced media
     blender
     krita
-    kdePackages.kdenlive
+    # kdePackages.kdenlive  # Broken in nixpkgs-unstable (shaderc linking issue)
     inkscape
 
     # System monitoring
@@ -150,6 +150,16 @@
     # Development
     git-crypt
     gnupg
+
+    # Waydroid custom desktop entry (visible in GNOME, overrides default)
+    (pkgs.makeDesktopItem {
+      name = "waydroid";
+      desktopName = "Waydroid";
+      exec = "waydroid show-full-ui";
+      icon = "waydroid";
+      categories = ["System" "Emulator"];
+      comment = "Android container";
+    })
   ];
 
   # ===== SERVICES =====
@@ -175,11 +185,9 @@
     tailscaleIP = "100.84.167.121"; # Desktop's Tailscale IP
 
     devices = {
-      # TODO: Replace PLACEHOLDER-ID with actual laptop device ID
-      # Get it by running: syncthing --device-id (on laptop)
       laptop = {
-        id = "AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA";
-        addresses = ["dynamic"]; # TODO: Change to ["tcp://100.x.x.x:22000"] with laptop's Tailscale IP
+        id = "CJXGF4Y-4OJV2AQ-A2PIR34-TQPKFIX-2ZP6UPS-AGAAJJC-2ESGAAU-3KYQIQK";
+        addresses = ["dynamic"]; # Will resolve via local discovery or Tailscale
       };
     };
 
@@ -195,17 +203,6 @@
             cleanInterval = "3600";
             maxAge = "2592000"; # 30 days
           };
-        };
-      };
-
-      # Firefox profile - bidirectional sync
-      firefox-profile = {
-        path = "/home/notroot/.mozilla/firefox";
-        devices = ["laptop"];
-        ignorePerms = true;
-        versioning = {
-          type = "simple";
-          params.keep = "5";
         };
       };
 
@@ -277,19 +274,16 @@
 
   services.resolved = {
     enable = true;
-    dnssec = "allow-downgrade";
-    domains = ["~."];
-    fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
-    extraConfig = ''
-      DNSOverTLS=yes
-      DNS=8.8.8.8 8.8.4.4 1.1.1.1 1.0.0.1
-      FallbackDNS=8.8.8.8 8.8.4.4
-      Domains=~.
-      DNSSEC=allow-downgrade
-      DNSStubListener=yes
-      Cache=yes
-      DNSStubListenerExtra=0.0.0.0
-    '';
+    settings.Resolve = {
+      DNS = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
+      FallbackDNS = ["8.8.8.8" "8.8.4.4"];
+      Domains = ["~."];
+      DNSSEC = "allow-downgrade";
+      DNSOverTLS = "opportunistic";
+      DNSStubListener = "yes";
+      Cache = "yes";
+      DNSStubListenerExtra = "0.0.0.0";
+    };
   };
 
   # ===== CORE MODULES =====
@@ -445,6 +439,34 @@
   # Default waydroid 1.5.4+ already has LXC_USE_NFT="true" for nftables
   # Base module defaults to false, so simple enable works
   virtualisation.waydroid.enable = true;
+
+  # NAT for Waydroid internet connectivity
+  networking.nat = {
+    enable = true;
+    enableIPv6 = false;
+    externalInterface = "enp8s0"; # Main ethernet interface
+    internalInterfaces = ["waydroid0"];
+  };
+
+  # nftables NAT rules for Waydroid (networking.nat doesn't auto-generate for nftables)
+  networking.nftables.tables.waydroid-nat = {
+    family = "ip";
+    content = ''
+      chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        ip saddr 192.168.240.0/24 oifname != "waydroid0" masquerade
+      }
+      chain forward {
+        type filter hook forward priority filter; policy accept;
+        iifname "waydroid0" oifname != "waydroid0" accept
+        iifname != "waydroid0" oifname "waydroid0" ct state related,established accept
+      }
+    '';
+  };
+
+  # System-level Waydroid desktop entry (visible in GNOME, can't be overwritten by Waydroid)
+  environment.etc."xdg/autostart/waydroid-fix.desktop".enable = false; # Don't autostart
+  xdg.mime.enable = true;
 
   # Waydroid desktop entry hygiene - hide per-app launchers from GNOME
   # Replaces .desktop files with /dev/null symlinks to prevent clutter

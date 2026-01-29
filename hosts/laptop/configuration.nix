@@ -275,7 +275,7 @@
   modules.services.syncthing = {
     enable = true;
     tailscaleOnly = true;
-    # tailscaleIP = "100.x.x.x"; # Fill in laptop's Tailscale IP
+    # tailscaleIP = "100.x.x.x"; # Fill in after: tailscale ip -4
 
     devices = {
       desktop = {
