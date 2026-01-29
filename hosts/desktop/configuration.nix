@@ -187,7 +187,7 @@
     devices = {
       laptop = {
         id = "CJXGF4Y-4OJV2AQ-A2PIR34-TQPKFIX-2ZP6UPS-AGAAJJC-2ESGAAU-3KYQIQK";
-        addresses = ["dynamic"]; # Will resolve via local discovery or Tailscale
+        addresses = ["tcp://100.71.57.6:22000"]; # Laptop's Tailscale IP
       };
     };
 
