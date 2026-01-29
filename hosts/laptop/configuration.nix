@@ -91,7 +91,6 @@
       brave = true;
       librewolf = true;
       zen = true;
-      firefoxNightly = true;
     };
 
     # Development tools
