@@ -286,6 +286,14 @@
     };
   };
 
+  # ===== AMD GPU =====
+  # RX 5700 XT (Navi 10) - moved from modules/core to desktop-specific
+  modules.hardware.amdgpu = {
+    enable = true;
+    model = "navi10";
+    powerManagement = true;
+  };
+
   # ===== CORE MODULES =====
   modules.core = {
     enable = true;

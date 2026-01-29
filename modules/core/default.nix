@@ -112,12 +112,12 @@ in {
       };
     };
 
-    # Enable AMD GPU optimizations for RX 5700 XT
-    modules.hardware.amdgpu = {
-      enable = true;
-      model = "navi10"; # RX 5700 XT uses Navi 10
-      powerManagement = true;
-    };
+    # AMD GPU optimizations - DISABLED by default, enable in host-specific config
+    # modules.hardware.amdgpu = {
+    #   enable = true;
+    #   model = "navi10"; # RX 5700 XT uses Navi 10
+    #   powerManagement = true;
+    # };
 
     # Enable proper time synchronization for time-sensitive tokens
     services.timesyncd.enable = true;
