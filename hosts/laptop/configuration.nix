@@ -539,7 +539,7 @@
 
   users.users.notroot = {
     isNormalUser = true;
-    description = "Not Root";
+    description = lib.mkForce "Not Root";
     shell = pkgs.zsh;
     extraGroups = [
       "networkmanager"
