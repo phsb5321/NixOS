@@ -11,6 +11,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules
+    ../../profiles/laptop.nix
   ];
 
   # Allow insecure packages for USB boot creation tool and development
