@@ -204,20 +204,23 @@
             maxAge = "2592000"; # 30 days
           };
         };
-      };
-
-      # NixOS configuration - bidirectional sync
-      nixos-config = {
-        path = "/home/notroot/NixOS";
-        devices = ["laptop"];
-        ignorePerms = true;
-        versioning = {
-          type = "staggered";
-          params = {
-            cleanInterval = "3600";
-            maxAge = "2592000";
-          };
-        };
+        ignorePatterns = [
+          "**/postgres_data"
+          "**/mongo_data"
+          "**/mysql_data"
+          "**/redis_data"
+          "**/tmp_data"
+          "**/node_modules"
+          "**/.direnv"
+          "**/__pycache__"
+          "**/.venv"
+          "**/venv"
+          "**/target"
+          "**/.next"
+          "**/dist"
+          "**/.gradle"
+          "**/build"
+        ];
       };
 
       # SSH keys and config (send only - desktop is source of truth)
@@ -284,14 +287,6 @@
       Cache = "yes";
       DNSStubListenerExtra = "0.0.0.0";
     };
-  };
-
-  # ===== AMD GPU =====
-  # RX 5700 XT (Navi 10) - moved from modules/core to desktop-specific
-  modules.hardware.amdgpu = {
-    enable = true;
-    model = "navi10";
-    powerManagement = true;
   };
 
   # ===== CORE MODULES =====

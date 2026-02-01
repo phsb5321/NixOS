@@ -125,13 +125,18 @@ in {
           };
           rescanIntervalS = mkOption {
             type = types.int;
-            default = 3600;
-            description = "Rescan interval in seconds";
+            default = 60;
+            description = "Rescan interval in seconds (fallback if filesystem watcher misses changes)";
           };
           fsWatcherEnabled = mkOption {
             type = types.bool;
             default = true;
             description = "Enable filesystem watcher";
+          };
+          ignorePatterns = mkOption {
+            type = types.listOf types.str;
+            default = [];
+            description = "Patterns to write to .stignore (Syncthing ignore file) in the folder root";
           };
         };
       });
@@ -207,5 +212,19 @@ in {
     systemd.tmpfiles.rules = mapAttrsToList (name: folder:
       "d ${folder.path} 0755 ${cfg.user} ${cfg.group} -"
     ) cfg.folders;
+
+    # Write .stignore files for folders with ignorePatterns
+    system.activationScripts.syncthing-stignore = let
+      foldersWithIgnores = filterAttrs (_: folder: folder.ignorePatterns != []) cfg.folders;
+      stignoreFile = name: folder:
+        pkgs.writeText "stignore-${name}" (concatStringsSep "\n" (
+          ["// Managed by NixOS - do not edit manually"] ++ folder.ignorePatterns ++ [""]
+        ));
+    in
+      mkIf (foldersWithIgnores != {}) {
+        text = concatStringsSep "\n" (mapAttrsToList (name: folder: ''
+          install -o ${cfg.user} -g ${cfg.group} -m 644 ${stignoreFile name folder} "${folder.path}/.stignore"
+        '') foldersWithIgnores);
+      };
   };
 }

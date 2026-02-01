@@ -283,31 +283,23 @@
             maxAge = "2592000"; # 30 days
           };
         };
-      };
-
-      # Firefox profile - bidirectional sync
-      firefox-profile = {
-        path = "/home/notroot/.mozilla/firefox";
-        devices = ["desktop"];
-        ignorePerms = true;
-        versioning = {
-          type = "simple";
-          params.keep = "5";
-        };
-      };
-
-      # NixOS configuration - bidirectional sync
-      nixos-config = {
-        path = "/home/notroot/NixOS";
-        devices = ["desktop"];
-        ignorePerms = true;
-        versioning = {
-          type = "staggered";
-          params = {
-            cleanInterval = "3600";
-            maxAge = "2592000";
-          };
-        };
+        ignorePatterns = [
+          "**/postgres_data"
+          "**/mongo_data"
+          "**/mysql_data"
+          "**/redis_data"
+          "**/tmp_data"
+          "**/node_modules"
+          "**/.direnv"
+          "**/__pycache__"
+          "**/.venv"
+          "**/venv"
+          "**/target"
+          "**/.next"
+          "**/dist"
+          "**/.gradle"
+          "**/build"
+        ];
       };
 
       # SSH keys and config (receive only for security)
