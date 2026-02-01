@@ -208,10 +208,9 @@ in {
       ]
     );
 
-    # Swappiness for laptops (prefer RAM over swap)
+    # Swappiness for laptops — 60-80 is optimal for ZRAM compressed swap
     boot.kernel.sysctl = {
-      # JUSTIFIED: Laptop profile overrides base module's swappiness for battery optimization
-      "vm.swappiness" = lib.mkForce 10;
+      "vm.swappiness" = lib.mkForce 70;
       "vm.laptop_mode" = lib.mkDefault 5;
     };
 
