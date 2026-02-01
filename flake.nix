@@ -35,6 +35,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Hardware-specific NixOS modules
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+
     # Remote deployment tool
     colmena = {
       url = "github:zhaofengli/colmena";
