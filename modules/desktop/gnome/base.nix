@@ -302,7 +302,7 @@ in {
     # Exclude unwanted GNOME packages
     # Conditionally exclude apps based on coreApps settings
     environment.gnome.excludePackages = with pkgs;
-      # Always excluded apps (replaced by modern alternatives or unwanted)
+    # Always excluded apps (replaced by modern alternatives or unwanted)
       [
         gnome-photos # Replaced by loupe
         gnome-tour
