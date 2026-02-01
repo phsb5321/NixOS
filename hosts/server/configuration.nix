@@ -6,10 +6,7 @@
   hostname,
   lib,
   ...
-}: let
-  # Server secrets file path (gitignored, must exist on the actual server)
-  serverSecretsPath = /home/notroot/NixOS/hosts/server/server-secrets.nix;
-in {
+}: {
   imports =
     [
       ./hardware-configuration.nix
@@ -17,8 +14,8 @@ in {
       ../../profiles/server.nix
       ./gnome.nix
     ]
-    ++ lib.optionals (builtins.pathExists serverSecretsPath) [
-      serverSecretsPath # Local secrets file (gitignored)
+    ++ lib.optionals (builtins.pathExists ./server-secrets.nix) [
+      ./server-secrets.nix # Local secrets file (gitignored)
     ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
@@ -38,9 +35,6 @@ in {
     };
     firewall = {
       enable = true;
-      # JUSTIFIED: Disable custom nftables ruleset - conflicts with nixos-fw table
-      # The custom 'inet filter' table blocks SSH because it doesn't include port rules
-      useNftables = lib.mkForce false;
       developmentPorts = [22 3000]; # SSH and development server
     };
   };
@@ -225,14 +219,12 @@ in {
   #   2. cloudflared tunnel create audiobookshelf
   #   3. Copy credentials to ~/.cloudflared/
   #   4. Create ~/.cloudflared/config.yml with tunnel ID and ingress rules
-  # The tunnel is ENABLED via server-secrets.nix (gitignored) which sets:
-  #   - enable = true
-  #   - tunnelId
-  #   - credentialsFile
+  # The tunnelId and credentialsFile must be set via server-secrets.nix (gitignored)
   modules.services.cloudflareTunnel = {
-    # enable = false by default; enabled via server-secrets.nix
+    enable = true;
     tunnelName = "audiobookshelf";
     user = "notroot";
+    # tunnelId and credentialsFile imported from server-secrets.nix
   };
 
   # Audiobookshelf Guardian - Health monitoring and protection

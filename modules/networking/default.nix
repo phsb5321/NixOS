@@ -126,7 +126,9 @@
       # Disable legacy DHCP clients and conflicting services
       networking.useDHCP = false;
       networking.dhcpcd.enable = false;
-      networking.wireless.enable = false;
+      # Note: networking.wireless.enable is managed by NetworkManager wifi backend
+      # When using iwd backend, this must be false
+      # When using wpa_supplicant backend, NetworkManager handles it internally
 
       # ———————————————————————————————————————
       # systemd-resolved stub resolver

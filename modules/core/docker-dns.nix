@@ -1,5 +1,5 @@
 # modules/core/docker-dns.nix
-{pkgs, ...}: {
+{pkgs, lib, ...}: {
   # Configure Docker with explicit DNS settings
   virtualisation.docker = {
     enable = true;
@@ -37,9 +37,9 @@
       allowedTCPPorts = [2375 2376]; # Docker daemon ports
     };
 
-    # Enable NAT for Docker
-    nat.enable = true;
-    nat.enableIPv6 = true;
+    # Enable NAT for Docker (use mkDefault so hosts can override)
+    nat.enable = lib.mkDefault true;
+    nat.enableIPv6 = lib.mkDefault true;
   };
 
   # Add networking tools for troubleshooting

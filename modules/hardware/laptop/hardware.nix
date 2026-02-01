@@ -65,25 +65,18 @@ in {
     };
 
     # WiFi rfkill fix for Intel CNVi cards (8086:06f0)
-    # SOLUTION: Hardware WiFi toggle is F4 key on this laptop
     boot.kernelParams = [
       "rfkill.default_state=1" # Unblock WiFi by default
-      "iwlwifi.power_save=0" # Disable power saving for stability
-      "iwlwifi.bt_coex_active=0" # Disable Bluetooth coexistence if problematic
-      "pcie_aspm=off" # Disable PCIe power management (helps with CNVi)
       "acpi_osi=Linux" # ACPI compatibility for WiFi
       "acpi_backlight=video" # Use video backlight interface
     ];
 
-    # Module configuration for Intel CNVi WiFi (device 8086:06f0)
+    # Module configuration for Intel hardware
     boot.extraModprobeConfig = ''
-      # Intel CNVi WiFi specific configuration
-      options iwlwifi swcrypto=1 11n_disable=1
-      options iwlwifi power_save=0
-      options iwlwifi d0i3_disable=1
-      options iwlwifi uapsd_disable=1
+      # iwlmvm power scheme (1=active, 2=balanced, 3=low-power)
+      options iwlmvm power_scheme=1
 
-      # Intel graphics backlight configuration
+      # Intel graphics GuC submission
       options i915 enable_guc=2
     '';
 

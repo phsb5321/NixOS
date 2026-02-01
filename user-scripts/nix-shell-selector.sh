@@ -5,6 +5,18 @@ set -euo pipefail
 # Configuration
 CACHE_FILE="${HOME}/.nix-shell-cache"
 SHELLS_DIR="${HOME}/NixOS/shells"
+SELECT_ALL=false
+
+# Parse arguments
+for arg in "$@"; do
+  case "${arg}" in
+    --all) SELECT_ALL=true ;;
+    *)
+      echo "Usage: nix-shell-selector [--all]"
+      exit 1
+      ;;
+  esac
+done
 
 # Function to display styled messages
 display_message() {
@@ -48,30 +60,35 @@ for shell_file in "${shell_files[@]}"; do
   shell_options+=("${shell_name}")
 done
 
-# Check if a last-used shell is stored in the cache
-last_shell=""
-if [ -f "${CACHE_FILE}" ]; then
-  last_shell=$(<"${CACHE_FILE}")
-fi
-
-# Display a header using gum
-gum style --foreground 212 "🐚 Select your Nix Shell Environment(s) - Use Space to select, Enter to confirm"
-
-# Prompt user to select shells using gum with multi-select
-if [ -n "${last_shell}" ] && [[ " ${shell_options[*]} " == *" ${last_shell} "* ]]; then
-  choices=$(gum choose --no-limit --selected="${last_shell}" --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
+# Select shells: either all or interactive
+if [ "${SELECT_ALL}" = true ]; then
+  selected_shells=("${shell_options[@]}")
 else
-  choices=$(gum choose --no-limit --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
-fi
+  # Check if a last-used shell is stored in the cache
+  last_shell=""
+  if [ -f "${CACHE_FILE}" ]; then
+    last_shell=$(<"${CACHE_FILE}")
+  fi
 
-# Check if the user made any valid choices
-if [ -z "${choices}" ]; then
-  gum style --foreground 9 "😔 No valid selection made. Exiting."
-  exit 1
-fi
+  # Display a header using gum
+  gum style --foreground 212 "🐚 Select your Nix Shell Environment(s) - Use Space to select, Enter to confirm"
 
-# Convert choices to array
-mapfile -t selected_shells <<<"${choices}"
+  # Prompt user to select shells using gum with multi-select
+  if [ -n "${last_shell}" ] && [[ " ${shell_options[*]} " == *" ${last_shell} "* ]]; then
+    choices=$(gum choose --no-limit --selected="${last_shell}" --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
+  else
+    choices=$(gum choose --no-limit --item.foreground 2 --cursor.foreground 4 "${shell_options[@]}")
+  fi
+
+  # Check if the user made any valid choices
+  if [ -z "${choices}" ]; then
+    gum style --foreground 9 "😔 No valid selection made. Exiting."
+    exit 1
+  fi
+
+  # Convert choices to array
+  mapfile -t selected_shells <<<"${choices}"
+fi
 
 # Save the first chosen shell to the cache for future default selection
 echo "${selected_shells[0]}" >"${CACHE_FILE}"

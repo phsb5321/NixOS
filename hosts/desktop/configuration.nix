@@ -123,12 +123,12 @@
     zoom-us
 
     # Productivity
-    notion-app-enhanced
+    libreoffice
 
     # Advanced media
     blender
     krita
-    kdePackages.kdenlive
+    # kdePackages.kdenlive  # Broken in nixpkgs-unstable (shaderc linking issue)
     inkscape
 
     # System monitoring
@@ -150,6 +150,16 @@
     # Development
     git-crypt
     gnupg
+
+    # Waydroid custom desktop entry (visible in GNOME, overrides default)
+    (pkgs.makeDesktopItem {
+      name = "waydroid";
+      desktopName = "Waydroid";
+      exec = "waydroid show-full-ui";
+      icon = "waydroid";
+      categories = ["System" "Emulator"];
+      comment = "Android container";
+    })
   ];
 
   # ===== SERVICES =====
@@ -159,6 +169,75 @@
     enable = true;
     permitRootLogin = "no";
     passwordAuthentication = false;
+  };
+
+  # ===== SYNCTHING - Sync with Laptop over Tailscale =====
+  # SETUP INSTRUCTIONS:
+  # 1. Get device IDs: syncthing --device-id (on each device)
+  # 2. Get Tailscale IPs: tailscale ip -4 (on each device)
+  # 3. Replace PLACEHOLDER-ID below with laptop's actual device ID
+  # 4. Uncomment tailscaleIP and set desktop's Tailscale IP
+  # 5. Update laptop addresses with laptop's Tailscale IP
+  # 6. Rebuild: sudo nixos-rebuild switch --flake .#desktop
+  modules.services.syncthing = {
+    enable = true;
+    tailscaleOnly = true;
+    tailscaleIP = "100.84.167.121"; # Desktop's Tailscale IP
+
+    devices = {
+      laptop = {
+        id = "CJXGF4Y-4OJV2AQ-A2PIR34-TQPKFIX-2ZP6UPS-AGAAJJC-2ESGAAU-3KYQIQK";
+        addresses = ["tcp://100.71.57.6:22000"]; # Laptop's Tailscale IP
+      };
+    };
+
+    folders = {
+      # Code projects - bidirectional sync
+      code = {
+        path = "/home/notroot/Documents/Code";
+        devices = ["laptop"];
+        ignorePerms = true;
+        versioning = {
+          type = "staggered";
+          params = {
+            cleanInterval = "3600";
+            maxAge = "2592000"; # 30 days
+          };
+        };
+        ignorePatterns = [
+          "**/postgres_data"
+          "**/mongo_data"
+          "**/mysql_data"
+          "**/redis_data"
+          "**/tmp_data"
+          "**/node_modules"
+          "**/.direnv"
+          "**/__pycache__"
+          "**/.venv"
+          "**/venv"
+          "**/target"
+          "**/.next"
+          "**/dist"
+          "**/.gradle"
+          "**/build"
+        ];
+      };
+
+      # SSH keys and config (send only - desktop is source of truth)
+      ssh-config = {
+        path = "/home/notroot/.ssh";
+        devices = ["laptop"];
+        type = "sendonly";
+        ignorePerms = false;
+      };
+
+      # Dotfiles/chezmoi
+      dotfiles = {
+        path = "/home/notroot/.local/share/chezmoi";
+        devices = ["laptop"];
+        ignorePerms = true;
+      };
+    };
   };
 
   # ===== NETWORKING =====
@@ -187,8 +266,10 @@
     dhcpcd.extraConfig = "nohook resolv.conf";
     nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     firewall.checkReversePath = "loose";
-    # Trust waydroid0 interface for firewall
-    firewall.trustedInterfaces = ["waydroid0"];
+    # Trust Tailscale and Waydroid interfaces for firewall
+    # tailscale0: Allow SSH and services over Tailscale VPN
+    # waydroid0: Android container networking
+    firewall.trustedInterfaces = ["tailscale0" "waydroid0"];
     # Allow DHCP and DNS ports for Waydroid
     firewall.allowedUDPPorts = [53 67];
     nftables.enable = true;
@@ -196,19 +277,16 @@
 
   services.resolved = {
     enable = true;
-    dnssec = "allow-downgrade";
-    domains = ["~."];
-    fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
-    extraConfig = ''
-      DNSOverTLS=yes
-      DNS=8.8.8.8 8.8.4.4 1.1.1.1 1.0.0.1
-      FallbackDNS=8.8.8.8 8.8.4.4
-      Domains=~.
-      DNSSEC=allow-downgrade
-      DNSStubListener=yes
-      Cache=yes
-      DNSStubListenerExtra=0.0.0.0
-    '';
+    settings.Resolve = {
+      DNS = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
+      FallbackDNS = ["8.8.8.8" "8.8.4.4"];
+      Domains = ["~."];
+      DNSSEC = "allow-downgrade";
+      DNSOverTLS = "opportunistic";
+      DNSStubListener = "yes";
+      Cache = "yes";
+      DNSStubListenerExtra = "0.0.0.0";
+    };
   };
 
   # ===== CORE MODULES =====
@@ -313,12 +391,6 @@
   # ===== HARDWARE =====
   hardware.cpu.intel.updateMicrocode = true;
 
-  # ESP32/Arduino USB-serial device support
-  modules.hardware.espDevices = {
-    enable = true;
-    usePlatformioRules = true; # Use official PlatformIO udev rules
-  };
-
   # ===== PROGRAMS =====
   # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
 
@@ -370,6 +442,34 @@
   # Default waydroid 1.5.4+ already has LXC_USE_NFT="true" for nftables
   # Base module defaults to false, so simple enable works
   virtualisation.waydroid.enable = true;
+
+  # NAT for Waydroid internet connectivity
+  networking.nat = {
+    enable = true;
+    enableIPv6 = false;
+    externalInterface = "enp8s0"; # Main ethernet interface
+    internalInterfaces = ["waydroid0"];
+  };
+
+  # nftables NAT rules for Waydroid (networking.nat doesn't auto-generate for nftables)
+  networking.nftables.tables.waydroid-nat = {
+    family = "ip";
+    content = ''
+      chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        ip saddr 192.168.240.0/24 oifname != "waydroid0" masquerade
+      }
+      chain forward {
+        type filter hook forward priority filter; policy accept;
+        iifname "waydroid0" oifname != "waydroid0" accept
+        iifname != "waydroid0" oifname "waydroid0" ct state related,established accept
+      }
+    '';
+  };
+
+  # System-level Waydroid desktop entry (visible in GNOME, can't be overwritten by Waydroid)
+  environment.etc."xdg/autostart/waydroid-fix.desktop".enable = false; # Don't autostart
+  xdg.mime.enable = true;
 
   # Waydroid desktop entry hygiene - hide per-app launchers from GNOME
   # Replaces .desktop files with /dev/null symlinks to prevent clutter
