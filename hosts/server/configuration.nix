@@ -7,14 +7,16 @@
   lib,
   ...
 }: {
-  imports = [
-    ./hardware-configuration.nix
-    ../../modules
-    ../../profiles/server.nix
-    ./gnome.nix
-  ] ++ lib.optionals (builtins.pathExists ./server-secrets.nix) [
-    ./server-secrets.nix # Local secrets file (gitignored)
-  ];
+  imports =
+    [
+      ./hardware-configuration.nix
+      ../../modules
+      ../../profiles/server.nix
+      ./gnome.nix
+    ]
+    ++ lib.optionals (builtins.pathExists ./server-secrets.nix) [
+      ./server-secrets.nix # Local secrets file (gitignored)
+    ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
   # Server profile enables: SSH, minimal hardware

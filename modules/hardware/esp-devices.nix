@@ -51,11 +51,13 @@
   '';
 
   # Generate symlink rules from config
-  symlinkRules = lib.concatMapStrings (dev: ''
-    SUBSYSTEM=="tty", ATTRS{idVendor}=="${dev.vendor}", ATTRS{idProduct}=="${dev.product}"${
-      lib.optionalString (dev.serial != "") ", ATTRS{serial}==\"${dev.serial}\""
-    }, SYMLINK+="${dev.symlink}", MODE="0666", GROUP="dialout"
-  '') cfg.stableSymlinks;
+  symlinkRules =
+    lib.concatMapStrings (dev: ''
+      SUBSYSTEM=="tty", ATTRS{idVendor}=="${dev.vendor}", ATTRS{idProduct}=="${dev.product}"${
+        lib.optionalString (dev.serial != "") ", ATTRS{serial}==\"${dev.serial}\""
+      }, SYMLINK+="${dev.symlink}", MODE="0666", GROUP="dialout"
+    '')
+    cfg.stableSymlinks;
 in {
   options.modules.hardware.espDevices = {
     enable = lib.mkEnableOption "ESP32/Arduino USB-serial device support";
@@ -148,7 +150,8 @@ in {
       ]
       ++ map (user: {
         ${user}.extraGroups = lib.mkAfter ["dialout"];
-      }) cfg.extraUsers
+      })
+      cfg.extraUsers
     );
 
     # Disable ModemManager if requested

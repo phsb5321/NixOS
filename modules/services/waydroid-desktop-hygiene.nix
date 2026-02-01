@@ -24,6 +24,7 @@ with lib; let
     BACKUP_ENABLED="${toString cfg.backupEnabled}"
     BACKUP_DIR="$HOME/${cfg.backupDir}"
     HIDE_MAIN_LAUNCHER="${toString cfg.hideMainLauncher}"
+    SHOW_MAIN_LAUNCHER="${toString cfg.showMainLauncher}"
     APPS_DIR="$HOME/.local/share/applications"
 
     # Script state
@@ -280,6 +281,15 @@ in {
         Note: Waydroid already sets NoDisplay=true on this file by default.
         Enable this only if you want additional persistence against Waydroid
         overwriting the file.
+      '';
+    };
+
+    showMainLauncher = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Ensure the main Waydroid.desktop launcher is visible in GNOME.
+        Waydroid sets NoDisplay=true by default; this option fixes that.
       '';
     };
 

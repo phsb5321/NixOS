@@ -6,6 +6,12 @@
   pkgs,
   ...
 }: {
+  # ===== SUDO CONFIGURATION =====
+  security.sudo = {
+    enable = true;
+    wheelNeedsPassword = true;
+  };
+
   # ===== USER CONFIGURATION =====
   # This is the single source of truth for users.users.notroot
   # Host-specific groups should use lib.mkAfter to extend this definition
