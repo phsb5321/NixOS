@@ -277,16 +277,15 @@
 
   services.resolved = {
     enable = true;
-    settings.Resolve = {
-      DNS = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
-      FallbackDNS = ["8.8.8.8" "8.8.4.4"];
-      Domains = ["~."];
-      DNSSEC = "allow-downgrade";
-      DNSOverTLS = "opportunistic";
-      DNSStubListener = "yes";
-      Cache = "yes";
-      DNSStubListenerExtra = "0.0.0.0";
-    };
+    dnssec = "allow-downgrade";
+    dnsovertls = "opportunistic";
+    fallbackDns = ["8.8.8.8" "8.8.4.4"];
+    domains = ["~."];
+    extraConfig = ''
+      DNSStubListener=yes
+      DNSStubListenerExtra=0.0.0.0
+      Cache=yes
+    '';
   };
 
   # ===== CORE MODULES =====
@@ -296,6 +295,9 @@
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
 
+    # NOTE: Intel AX210 Bluetooth requires internal USB header cable from PCIe adapter
+    # to motherboard USB 2.0 header. If BT is missing after boot, verify cable connection.
+    # Diagnostic: lsusb | grep -i intel && sudo dmesg | grep -iE 'btusb|bluetooth'
     pipewire = {
       enable = true;
       highQualityAudio = true;
@@ -370,6 +372,9 @@
     ];
 
     kernel.sysctl = {
+      # IPv4 forwarding for Waydroid NAT (custom nftables rules handle masquerade)
+      "net.ipv4.conf.all.forwarding" = 1;
+      "net.ipv4.conf.default.forwarding" = 1;
       # JUSTIFIED: Gaming-optimized memory settings override base module defaults
       # Desktop requires aggressive swappiness=1 for gaming (base default is 10)
       "vm.swappiness" = lib.mkForce 1;
@@ -443,15 +448,7 @@
   # Base module defaults to false, so simple enable works
   virtualisation.waydroid.enable = true;
 
-  # NAT for Waydroid internet connectivity
-  networking.nat = {
-    enable = true;
-    enableIPv6 = false;
-    externalInterface = "enp8s0"; # Main ethernet interface
-    internalInterfaces = ["waydroid0"];
-  };
-
-  # nftables NAT rules for Waydroid (networking.nat doesn't auto-generate for nftables)
+  # nftables NAT rules for Waydroid (interface-agnostic, no hardcoded names)
   networking.nftables.tables.waydroid-nat = {
     family = "ip";
     content = ''
