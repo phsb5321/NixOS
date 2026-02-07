@@ -374,11 +374,7 @@
       variant = ",abnt2";
     };
 
-    # Gaming for Steam
-    gaming = {
-      enable = true;
-      enableSteam = true;
-    };
+    # Gaming - handled by modules/gaming/ (replaces old modules.core.gaming)
 
     pipewire = {
       enable = true;
@@ -435,6 +431,15 @@
       androidTools.enable = true;
     };
   };
+
+  # ===== GAMING MODULES (replaces old modules.core.gaming) =====
+  modules.gaming.steam = {
+    enable = true;
+    gamescopeSession.enable = true;
+    remotePlay.enable = true;
+  };
+  modules.gaming.gamemode.enable = true;
+  modules.gaming.mangohud.enable = true;
 
   # ===== DOTFILES =====
   modules.dotfiles = {
@@ -603,14 +608,6 @@
       enable = true;
       killUnconfinedConfinables = true;
     };
-  };
-
-  # ===== PROGRAMS =====
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;
   };
 
   # ===== SYSTEM STATE VERSION =====

@@ -129,7 +129,7 @@
     blender
     krita
     # kdePackages.kdenlive  # Broken in nixpkgs-unstable (shaderc linking issue)
-    inkscape
+    # inkscape provided by modules/core/document-tools/latex.nix
 
     # System monitoring
     iotop
@@ -354,6 +354,9 @@
     };
   };
 
+  # ===== DOCKER DNS =====
+  modules.core.dockerDns.enable = true;
+
   # ===== MEMORY MANAGEMENT =====
   # 3-layer defense against RAM exhaustion freezes (012-memory-limit-freeze-fix)
   # Layer 1: ZRAM compressed swap (zstd, 50% of 62GB RAM)
@@ -372,13 +375,11 @@
 
   # ===== BOOT CONFIGURATION =====
   boot = {
-    tmp.useTmpfs = true;
-    kernelPackages = pkgs.linuxPackages_6_6;
+    # tmp.useTmpfs handled by modules/core/base/system.nix (mkDefault)
+    kernelPackages = pkgs.linuxPackages_6_12;
 
     kernelParams = [
       "preempt=full"
-      "nohz_full=all"
-      "intel_pstate=disable" # 003-gaming-optimization: Disable Intel p-state for better GameMode control
     ];
 
     kernel.sysctl = {
@@ -386,14 +387,13 @@
       "net.ipv4.conf.all.forwarding" = 1;
       "net.ipv4.conf.default.forwarding" = 1;
       # Desktop I/O tuning (vm.swappiness and vm.page-cluster managed by memoryManagement module)
-      "vm.vfs_cache_pressure" = lib.mkForce 50;
-      "vm.dirty_ratio" = lib.mkForce 10;
-      "vm.dirty_background_ratio" = lib.mkForce 1;
+      "vm.dirty_ratio" = 15;
+      "vm.dirty_background_ratio" = 5;
       "vm.dirty_expire_centisecs" = 500;
       "vm.dirty_writeback_centisecs" = 100;
       "kernel.sched_autogroup_enabled" = 1;
       # JUSTIFIED: Gaming requires higher file descriptor limit than base default
-      "fs.file-max" = lib.mkForce 4194304;
+      "fs.file-max" = 4194304;
       "fs.aio-max-nr" = 1048576;
     };
 
@@ -405,9 +405,7 @@
 
   # ===== PROGRAMS =====
   # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
-
-  programs.zsh.enable = true;
-  users.defaultUserShell = pkgs.zsh;
+  # zsh and defaultUserShell are set in profiles/common.nix
 
   # ===== HOST-SPECIFIC USER CONFIGURATION =====
   users.groups.plugdev = {};
@@ -421,7 +419,7 @@
 
   # ===== POWER MANAGEMENT =====
   powerManagement = {
-    cpuFreqGovernor = "performance";
+    cpuFreqGovernor = "powersave"; # Let GameMode switch dynamically to performance
     resumeCommands = ''
       ${pkgs.systemd}/bin/systemctl restart systemd-resolved
       ${pkgs.systemd}/bin/systemctl restart NetworkManager
@@ -429,24 +427,9 @@
   };
 
   # ===== SECURITY =====
+  # PAM/GDM and AppArmor handled by modules/desktop/gnome/settings.nix and modules/core/base/system.nix
   security = {
-    pam.services = {
-      gdm.enableGnomeKeyring = true;
-      gdm-password.enableGnomeKeyring = true;
-    };
-
-    auditd.enable = true;
-    audit = {
-      enable = true;
-      backlogLimit = 8192;
-      failureMode = "printk";
-      rules = ["-a exit,always -F arch=b64 -S execve"];
-    };
-
-    apparmor = {
-      enable = true;
-      killUnconfinedConfinables = true;
-    };
+    # auditd disabled — execve rule generated 162GB logs on desktop
   };
 
   # ===== VIRTUALIZATION =====
@@ -480,9 +463,7 @@
   modules.services.waydroid-desktop-hygiene.enable = true;
 
   # ===== SYSTEMD SERVICES =====
-  # GNOME login fixes
-  systemd.services."getty@tty1".enable = false;
-  systemd.services."autovt@tty1".enable = false;
+  # GNOME login fixes (getty/autovt) are in modules/desktop/gnome/settings.nix
 
   # AMD GPU optimization
   systemd.services.amd-gpu-optimization = {
@@ -523,6 +504,5 @@
   };
 
   # ===== SYSTEM STATE VERSION =====
-  # Uses modules.core.stateVersion, but also set directly for clarity
-  system.stateVersion = "25.11";
+  # Canonical source: modules.core.stateVersion (line 294)
 }

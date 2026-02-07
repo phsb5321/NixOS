@@ -5,7 +5,6 @@
     ./syncthing.nix
     ./ssh.nix
     ./printing.nix
-    ./docker.nix
     # Server-specific services
     ./qbittorrent # Now a modular directory
     ./plex.nix

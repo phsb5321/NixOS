@@ -81,6 +81,8 @@ Before merging to host branch:
 ## Active Technologies
 - Nix (NixOS configuration language), NixOS 25.11 (unstable channel) + NixOS built-in modules (`zramSwap.*`, `services.earlyoom.*`, `systemd.*`), kernel zram module, systemd cgroups v2 (012-memory-limit-freeze-fix)
 - N/A (zram is RAM-only, no disk storage changes) (012-memory-limit-freeze-fix)
+- Nix (NixOS configuration language), NixOS 25.11 (unstable channel) + nixpkgs (unstable), NixOS module system, systemd, Docker, GNOME 45+ (013-desktop-config-hardening)
+- N/A (configuration-only changes, no data storage) (013-desktop-config-hardening)
 
 - Nix (NixOS flake configuration) + nixpkgs (stable for server/laptop, unstable for desktop), GNOME 45+ (001-gnome-suite-packages)
 
@@ -100,10 +102,10 @@ tests/
 Nix (NixOS flake configuration): Follow standard conventions
 
 ## Recent Changes
+- 013-desktop-config-hardening: Added Nix (NixOS configuration language), NixOS 25.11 (unstable channel) + nixpkgs (unstable), NixOS module system, systemd, Docker, GNOME 45+
 - 012-memory-limit-freeze-fix: Added Nix (NixOS configuration language), NixOS 25.11 (unstable channel) + NixOS built-in modules (`zramSwap.*`, `services.earlyoom.*`, `systemd.*`), kernel zram module, systemd cgroups v2
 - 001-gnome-suite-packages: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
-- 001-gnome-suite-packages: Added Nix (NixOS flake configuration) + nixpkgs (stable for server/laptop, unstable for desktop), GNOME 45+
 
 <!-- MANUAL ADDITIONS START -->
 

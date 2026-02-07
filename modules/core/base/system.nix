@@ -46,8 +46,8 @@ in {
         dates = "weekly";
         options = "--delete-older-than 30d";
       };
-      # Enable distributed builds for better performance
-      distributedBuilds = true;
+      # Distributed builds disabled (no remote builders configured)
+      distributedBuilds = false;
     };
 
     # Security configuration
@@ -80,9 +80,9 @@ in {
       kernel.sysctl = {
         # VM optimizations (can be overridden by host-specific configs)
         "vm.swappiness" = lib.mkDefault 10;
-        "vm.dirty_ratio" = 15;
-        "vm.dirty_background_ratio" = 5;
-        "vm.vfs_cache_pressure" = 50;
+        "vm.dirty_ratio" = lib.mkDefault 15;
+        "vm.dirty_background_ratio" = lib.mkDefault 5;
+        "vm.vfs_cache_pressure" = lib.mkDefault 50;
         # Network performance (can be overridden by networking module)
         "net.core.rmem_max" = lib.mkDefault 268435456;
         "net.core.wmem_max" = lib.mkDefault 268435456;
@@ -121,11 +121,8 @@ in {
       };
     };
 
-    # Basic systemd-resolved configuration (detailed DNS config in host-specific files)
-    services.resolved = {
-      enable = true;
-      fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
-    };
+    # Basic systemd-resolved (full DNS config in host-specific files or modules/networking/dns.nix)
+    services.resolved.enable = lib.mkDefault true;
 
     # Virtualization configuration
     virtualisation = {
