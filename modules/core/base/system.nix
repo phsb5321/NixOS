@@ -96,8 +96,7 @@ in {
         "net.ipv4.conf.all.send_redirects" = 0;
         "net.ipv4.conf.default.send_redirects" = 0;
       };
-      # ZRAM removed - causing application compatibility issues
-      # kernelModules = ["zram"];  # Disabled
+      # ZRAM swap is now managed by modules.core.memoryManagement
     };
 
     # Core system services

@@ -717,6 +717,8 @@ git checkout -b hotfix/description main
 ## Active Technologies
 - Nix 2.31.2 (functional, lazy evaluation) + nixpkgs 25.11 (nixos-unstable), flake-parts 1.0 (002-codebase-reduction)
 - Git repository, `/nix/store` (immutable store) (002-codebase-reduction)
+- Nix (NixOS module system, flake-based) + NixOS 25.11, PipeWire 1.4.9, WirePlumber, BlueZ, NetworkManager, iwlwifi/linux-firmware (011-ax210-network-stack)
+- N/A (declarative system configuration) (011-ax210-network-stack)
 
 ## Recent Changes
 - 002-codebase-reduction: Added Nix 2.31.2 (functional, lazy evaluation) + nixpkgs 25.11 (nixos-unstable), flake-parts 1.0

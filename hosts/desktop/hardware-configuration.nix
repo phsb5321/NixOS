@@ -27,7 +27,7 @@
     options = ["noatime"]; # Reduce SSD writes and improve I/O performance
   };
 
-  # Swap disabled - using RAM-only configuration (62GB RAM available)
+  # No disk swap - ZRAM compressed swap is managed by modules.core.memoryManagement
   swapDevices = [];
 
   # Enables DHCP on each ethernet and wireless interface.

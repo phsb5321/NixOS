@@ -272,6 +272,26 @@
         "type": "github"
       }
     },
+    "opencode": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1770411700,
+        "narHash": "sha256-Sp2kPFRWnyxpIZ9YJqYa4RIJDZxpz56C3qqKw72kMcg=",
+        "owner": "anomalyco",
+        "repo": "opencode",
+        "rev": "71930621fdfeb8f3d2b3baf956cd690cd699101a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "anomalyco",
+        "repo": "opencode",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "colmena": "colmena",
@@ -281,6 +301,7 @@
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
+        "opencode": "opencode",
         "sops-nix": "sops-nix",
         "zen-browser": "zen-browser"
       }

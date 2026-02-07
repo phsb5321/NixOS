@@ -25,6 +25,7 @@ in {
     ./gaming.nix
     ./java.nix
     ./docker-dns.nix
+    ./memory-management.nix
     ./pipewire.nix
     ./monitor-audio.nix
     ./document-tools

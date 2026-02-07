@@ -36,6 +36,11 @@
             });
           };
       })
+
+      # OpenCode bleeding edge from flake input
+      (_final: _prev: {
+        opencode = inputs.opencode.packages.${_final.system}.opencode;
+      })
     ];
 
     # Helper function to create a NixOS system with perSystem context
