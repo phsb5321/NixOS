@@ -17,13 +17,10 @@ in {
     virtualisation.docker = {
       enable = true;
 
-      # Use explicit command-line options to force DNS settings
+      # Command-line options for settings not supported in daemon.json
       extraOptions = ''
-        --dns=1.1.1.1 --dns=8.8.8.8 --dns=8.8.4.4
-        --dns-opt=timeout:2 --dns-opt=attempts:5
         --mtu=1500
         --ip-forward=true
-        --log-driver=journald
       '';
 
       # Declarative daemon.json (replaces imperative activationScript)
