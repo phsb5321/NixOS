@@ -354,6 +354,16 @@
     };
   };
 
+  # ===== MEMORY MANAGEMENT =====
+  # 3-layer defense against RAM exhaustion freezes (012-memory-limit-freeze-fix)
+  # Layer 1: ZRAM compressed swap (zstd, 50% of 62GB RAM)
+  # Layer 2: earlyoom (kills runaway processes before kernel OOM freezes desktop)
+  # Layer 3: cgroup limits on nix-daemon and Docker
+  modules.core.memoryManagement = {
+    enable = true;
+    # Defaults are tuned for 62GB desktop: zram 50%, earlyoom 5%/10%, nix-daemon 48G/56G, docker 40G
+  };
+
   # ===== DOTFILES =====
   modules.dotfiles = {
     enable = true;
@@ -375,15 +385,12 @@
       # IPv4 forwarding for Waydroid NAT (custom nftables rules handle masquerade)
       "net.ipv4.conf.all.forwarding" = 1;
       "net.ipv4.conf.default.forwarding" = 1;
-      # JUSTIFIED: Gaming-optimized memory settings override base module defaults
-      # Desktop requires aggressive swappiness=1 for gaming (base default is 10)
-      "vm.swappiness" = lib.mkForce 1;
+      # Desktop I/O tuning (vm.swappiness and vm.page-cluster managed by memoryManagement module)
       "vm.vfs_cache_pressure" = lib.mkForce 50;
       "vm.dirty_ratio" = lib.mkForce 10;
       "vm.dirty_background_ratio" = lib.mkForce 1;
       "vm.dirty_expire_centisecs" = 500;
       "vm.dirty_writeback_centisecs" = 100;
-      "vm.page-cluster" = 0;
       "kernel.sched_autogroup_enabled" = 1;
       # JUSTIFIED: Gaming requires higher file descriptor limit than base default
       "fs.file-max" = lib.mkForce 4194304;
