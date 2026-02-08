@@ -123,12 +123,9 @@ in {
           };
         };
       }
-      # NVIDIA suspend/resume services for Wayland (nvidia-only mode)
-      (lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") {
-        nvidia-suspend.enable = true;
-        nvidia-hibernate.enable = true;
-        nvidia-resume.enable = true;
-      })
+      # NOTE: NVIDIA suspend/resume services are automatically provided by
+      # hardware.nvidia.powerManagement.enable = true (set above)
+      # No manual service configuration needed for nvidia-only mode
       # Backlight permissions service
       (lib.mkIf cfg.display.brightnessControl {
         backlight-permissions = {
@@ -230,7 +227,6 @@ in {
         else "i965";
     };
 
-
     # Enable firmware updates
     services.fwupd.enable = true;
 
@@ -263,6 +259,5 @@ in {
       # Alternative approach for Intel graphics
       SUBSYSTEM=="drm", ACTION=="change", ENV{HOTPLUG}=="1", RUN+="${pkgs.systemd}/bin/systemctl --no-block start backlight-permissions.service"
     '';
-
   };
 }
