@@ -74,8 +74,21 @@ cloudflare-tunnel-config.yml
 # Syncthing versioning artifacts
 .stversions/
 
-# Speckit and AI assistant files
-CLAUDE.md
+# AI assistant files and settings (host-specific, not shared)
+.claude/
+.cursor/
+.aider*
+.continue/
+.codeium/
+.copilot/
+.tabnine/
+.opencode/
+
+# AI planning and specification files (host-specific)
 .specify/
 specs/
-.opencode/
+AGENTS.md
+.speckit/
+*.plan.md
+handoff.md
+TODO.md
