@@ -53,8 +53,10 @@ in {
     # Security configuration
     security = {
       sudo.wheelNeedsPassword = true;
-      # Disable auditd to prevent massive log files (162GB issue)
-      # auditd.enable = true;
+      # Disable auditd by default — generated 162GB+ logs on desktop (twice)
+      # Hosts that need audit (e.g. laptop) can override with lib.mkForce
+      auditd.enable = lib.mkDefault false;
+      audit.enable = lib.mkDefault false;
       apparmor = {
         enable = true;
         killUnconfinedConfinables = true;
@@ -62,6 +64,9 @@ in {
       polkit.enable = true;
       rtkit.enable = true;
     };
+
+    # Disable kernel audit subsystem to prevent ghost log accumulation
+    boot.kernel.sysctl."kernel.audit_enabled" = 0;
 
     # SSH configuration
     services.openssh = {
