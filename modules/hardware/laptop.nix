@@ -104,6 +104,17 @@ in {
         description = "Enable hybrid Intel/NVIDIA graphics support";
       };
 
+      primeMode = lib.mkOption {
+        type = lib.types.enum ["offload" "sync" "nvidia-only"];
+        default = "offload";
+        description = ''
+          GPU rendering mode:
+          - offload: Intel primary, NVIDIA on-demand (battery friendly, X11 only)
+          - sync: Both GPUs active, NVIDIA renders to Intel display (X11 only)
+          - nvidia-only: NVIDIA renders everything (best for Wayland, always-on)
+        '';
+      };
+
       intelBusId = lib.mkOption {
         type = lib.types.str;
         default = "PCI:0:2:0";
@@ -114,6 +125,12 @@ in {
         type = lib.types.str;
         default = "PCI:1:0:0";
         description = "NVIDIA GPU bus ID";
+      };
+
+      intelGeneration = lib.mkOption {
+        type = lib.types.enum ["haswell" "broadwell" "skylake" "kabylake" "coffeelake" "icelake" "tigerlake" "alderlake" "raptorlake"];
+        default = "tigerlake";
+        description = "Intel CPU/GPU generation for VA-API driver selection";
       };
     };
 
@@ -303,20 +320,26 @@ in {
       };
     };
 
-    # NVIDIA configuration for hybrid laptops for gaming performance
+    # NVIDIA configuration for hybrid laptops
     hardware.nvidia = lib.mkIf cfg.graphics.hybridGraphics {
       modesetting.enable = true;
-      powerManagement.enable = true;
-      powerManagement.finegrained = true;
       open = false; # Use proprietary drivers for GTX 1650
       nvidiaSettings = true;
       package = config.boot.kernelPackages.nvidiaPackages.production;
 
-      prime = {
-        offload = {
+      # Power management - disabled for nvidia-only (GPU always on)
+      powerManagement = {
+        enable = cfg.graphics.primeMode != "nvidia-only";
+        finegrained = cfg.graphics.primeMode == "offload";
+      };
+
+      # PRIME configuration - only for offload/sync modes (X11)
+      prime = lib.mkIf (cfg.graphics.primeMode != "nvidia-only") {
+        offload = lib.mkIf (cfg.graphics.primeMode == "offload") {
           enable = true;
           enableOffloadCmd = true;
         };
+        sync.enable = lib.mkIf (cfg.graphics.primeMode == "sync") true;
         intelBusId = cfg.graphics.intelBusId;
         nvidiaBusId = cfg.graphics.nvidiaBusId;
       };
@@ -327,6 +350,35 @@ in {
       "modesetting" # Intel
       "nvidia" # NVIDIA
     ];
+
+    # Early KMS for nvidia-only mode (required for Wayland)
+    boot.initrd.kernelModules = lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") [
+      "nvidia"
+      "nvidia_modeset"
+      "nvidia_uvm"
+      "nvidia_drm"
+      "i915" # Intel still needed for display output
+    ];
+
+    # Environment variables for nvidia-only Wayland rendering
+    environment.sessionVariables = lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") {
+      GBM_BACKEND = "nvidia-drm";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      WLR_NO_HARDWARE_CURSORS = "1";
+      # VA-API via Intel for video decode (more efficient)
+      LIBVA_DRIVER_NAME = lib.mkDefault (
+        if (builtins.elem cfg.graphics.intelGeneration ["tigerlake" "alderlake" "raptorlake" "icelake"])
+        then "iHD"
+        else "i965"
+      );
+    };
+
+    # NVIDIA suspend/resume services for Wayland
+    systemd.services = lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") {
+      nvidia-suspend.enable = true;
+      nvidia-hibernate.enable = true;
+      nvidia-resume.enable = true;
+    };
 
     # Enable firmware updates
     services.fwupd.enable = true;

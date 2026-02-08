@@ -277,16 +277,17 @@
 
   services.resolved = {
     enable = true;
-    dnssec = "allow-downgrade";
-    dnsovertls = "opportunistic";
-    fallbackDns = ["8.8.8.8" "8.8.4.4"];
-    domains = ["~."];
-    extraConfig = ''
-      DNSStubListener=yes
-      DNSStubListenerExtra=0.0.0.0
-      Cache=yes
-    '';
+    settings.Resolve = {
+      DNSSEC = "allow-downgrade";
+      DNSOverTLS = "opportunistic";
+      FallbackDNS = ["8.8.8.8" "8.8.4.4"];
+      Domains = "~.";
+      DNSStubListener = "yes";
+      DNSStubListenerExtra = "0.0.0.0";
+      Cache = "yes";
+    };
   };
+
 
   # ===== CORE MODULES =====
   modules.core = {
