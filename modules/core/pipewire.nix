@@ -87,7 +87,6 @@ in {
               else "8192";
           };
         };
-
       };
 
       # Bluetooth codec config via WirePlumber (NOT pipewire-pulse)
