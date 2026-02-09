@@ -46,15 +46,17 @@ in {
         dates = "weekly";
         options = "--delete-older-than 30d";
       };
-      # Enable distributed builds for better performance
-      distributedBuilds = true;
+      # Distributed builds disabled (no remote builders configured)
+      distributedBuilds = false;
     };
 
     # Security configuration
     security = {
       sudo.wheelNeedsPassword = true;
-      # Disable auditd to prevent massive log files (162GB issue)
-      # auditd.enable = true;
+      # Disable auditd by default — generated 162GB+ logs on desktop (twice)
+      # Hosts that need audit (e.g. laptop) can override with lib.mkForce
+      auditd.enable = lib.mkDefault false;
+      audit.enable = lib.mkDefault false;
       apparmor = {
         enable = true;
         killUnconfinedConfinables = true;
@@ -62,6 +64,9 @@ in {
       polkit.enable = true;
       rtkit.enable = true;
     };
+
+    # Disable kernel audit subsystem to prevent ghost log accumulation
+    boot.kernel.sysctl."kernel.audit_enabled" = 0;
 
     # SSH configuration
     services.openssh = {
@@ -80,9 +85,9 @@ in {
       kernel.sysctl = {
         # VM optimizations (can be overridden by host-specific configs)
         "vm.swappiness" = lib.mkDefault 10;
-        "vm.dirty_ratio" = 15;
-        "vm.dirty_background_ratio" = 5;
-        "vm.vfs_cache_pressure" = 50;
+        "vm.dirty_ratio" = lib.mkDefault 15;
+        "vm.dirty_background_ratio" = lib.mkDefault 5;
+        "vm.vfs_cache_pressure" = lib.mkDefault 50;
         # Network performance (can be overridden by networking module)
         "net.core.rmem_max" = lib.mkDefault 268435456;
         "net.core.wmem_max" = lib.mkDefault 268435456;
@@ -96,8 +101,7 @@ in {
         "net.ipv4.conf.all.send_redirects" = 0;
         "net.ipv4.conf.default.send_redirects" = 0;
       };
-      # ZRAM removed - causing application compatibility issues
-      # kernelModules = ["zram"];  # Disabled
+      # ZRAM swap is now managed by modules.core.memoryManagement
     };
 
     # Core system services
@@ -122,11 +126,8 @@ in {
       };
     };
 
-    # Basic systemd-resolved configuration (detailed DNS config in host-specific files)
-    services.resolved = {
-      enable = true;
-      fallbackDns = ["8.8.8.8" "8.8.4.4" "1.1.1.1"];
-    };
+    # Basic systemd-resolved (full DNS config in host-specific files or modules/networking/dns.nix)
+    services.resolved.enable = lib.mkDefault true;
 
     # Virtualization configuration
     virtualisation = {

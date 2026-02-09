@@ -22,9 +22,9 @@ in {
 
     # Feature modules
     ./fonts.nix
-    ./gaming.nix
     ./java.nix
     ./docker-dns.nix
+    ./memory-management.nix
     ./pipewire.nix
     ./monitor-audio.nix
     ./document-tools
@@ -45,12 +45,6 @@ in {
         cantarell-fonts
       ];
     };
-
-    # Enable gaming module
-    # DISABLED: Replaced by new modular gaming system in modules/gaming/
-    # modules.core.gaming = {
-    #   enable = true;
-    # };
 
     # Enable PipeWire module
     modules.core.pipewire = {
@@ -154,7 +148,7 @@ in {
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
         vdhcoapp
-        inkscape
+        # inkscape provided by modules/core/document-tools/latex.nix
         codex
         wrangler
         just
@@ -181,7 +175,7 @@ in {
         dog # Command-line DNS lookup tool (dig alternative)
 
         # System Monitoring
-        neofetch
+        fastfetch
         htop
         cmatrix
 

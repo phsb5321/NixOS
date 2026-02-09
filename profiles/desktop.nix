@@ -4,6 +4,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: {
   imports = [
@@ -28,6 +29,8 @@
     # Hardware
     hardware = {
       enableRedistributableFirmware = true;
+      enableAllFirmware = true;
+      firmware = with pkgs; [linux-firmware wireless-regdb];
       bluetooth.enable = true;
       graphics = {
         enable = true;

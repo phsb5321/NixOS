@@ -129,7 +129,7 @@
     blender
     krita
     # kdePackages.kdenlive  # Broken in nixpkgs-unstable (shaderc linking issue)
-    inkscape
+    # inkscape provided by modules/core/document-tools/latex.nix
 
     # System monitoring
     iotop
@@ -277,16 +277,15 @@
 
   services.resolved = {
     enable = true;
-    settings.Resolve = {
-      DNS = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
-      FallbackDNS = ["8.8.8.8" "8.8.4.4"];
-      Domains = ["~."];
-      DNSSEC = "allow-downgrade";
-      DNSOverTLS = "opportunistic";
-      DNSStubListener = "yes";
-      Cache = "yes";
-      DNSStubListenerExtra = "0.0.0.0";
-    };
+    dnssec = "allow-downgrade";
+    dnsovertls = "opportunistic";
+    fallbackDns = ["8.8.8.8" "8.8.4.4"];
+    domains = ["~."];
+    extraConfig = ''
+      DNSStubListener=yes
+      DNSStubListenerExtra=0.0.0.0
+      Cache=yes
+    '';
   };
 
   # ===== CORE MODULES =====
@@ -296,6 +295,9 @@
     timeZone = "America/Recife";
     defaultLocale = "en_US.UTF-8";
 
+    # NOTE: Intel AX210 Bluetooth requires internal USB header cable from PCIe adapter
+    # to motherboard USB 2.0 header. If BT is missing after boot, verify cable connection.
+    # Diagnostic: lsusb | grep -i intel && sudo dmesg | grep -iE 'btusb|bluetooth'
     pipewire = {
       enable = true;
       highQualityAudio = true;
@@ -352,6 +354,19 @@
     };
   };
 
+  # ===== DOCKER DNS =====
+  modules.core.dockerDns.enable = true;
+
+  # ===== MEMORY MANAGEMENT =====
+  # 3-layer defense against RAM exhaustion freezes (012-memory-limit-freeze-fix)
+  # Layer 1: ZRAM compressed swap (zstd, 50% of 62GB RAM)
+  # Layer 2: earlyoom (kills runaway processes before kernel OOM freezes desktop)
+  # Layer 3: cgroup limits on nix-daemon and Docker
+  modules.core.memoryManagement = {
+    enable = true;
+    # Defaults are tuned for 62GB desktop: zram 50%, earlyoom 5%/10%, nix-daemon 48G/56G, docker 40G
+  };
+
   # ===== DOTFILES =====
   modules.dotfiles = {
     enable = true;
@@ -360,28 +375,25 @@
 
   # ===== BOOT CONFIGURATION =====
   boot = {
-    tmp.useTmpfs = true;
-    kernelPackages = pkgs.linuxPackages_6_6;
+    # tmp.useTmpfs handled by modules/core/base/system.nix (mkDefault)
+    kernelPackages = pkgs.linuxPackages_6_12;
 
     kernelParams = [
       "preempt=full"
-      "nohz_full=all"
-      "intel_pstate=disable" # 003-gaming-optimization: Disable Intel p-state for better GameMode control
     ];
 
     kernel.sysctl = {
-      # JUSTIFIED: Gaming-optimized memory settings override base module defaults
-      # Desktop requires aggressive swappiness=1 for gaming (base default is 10)
-      "vm.swappiness" = lib.mkForce 1;
-      "vm.vfs_cache_pressure" = lib.mkForce 50;
-      "vm.dirty_ratio" = lib.mkForce 10;
-      "vm.dirty_background_ratio" = lib.mkForce 1;
+      # IPv4 forwarding for Waydroid NAT (custom nftables rules handle masquerade)
+      "net.ipv4.conf.all.forwarding" = 1;
+      "net.ipv4.conf.default.forwarding" = 1;
+      # Desktop I/O tuning (vm.swappiness and vm.page-cluster managed by memoryManagement module)
+      "vm.dirty_ratio" = 15;
+      "vm.dirty_background_ratio" = 5;
       "vm.dirty_expire_centisecs" = 500;
       "vm.dirty_writeback_centisecs" = 100;
-      "vm.page-cluster" = 0;
       "kernel.sched_autogroup_enabled" = 1;
       # JUSTIFIED: Gaming requires higher file descriptor limit than base default
-      "fs.file-max" = lib.mkForce 4194304;
+      "fs.file-max" = 4194304;
       "fs.aio-max-nr" = 1048576;
     };
 
@@ -393,9 +405,7 @@
 
   # ===== PROGRAMS =====
   # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
-
-  programs.zsh.enable = true;
-  users.defaultUserShell = pkgs.zsh;
+  # zsh and defaultUserShell are set in profiles/common.nix
 
   # ===== HOST-SPECIFIC USER CONFIGURATION =====
   users.groups.plugdev = {};
@@ -409,7 +419,7 @@
 
   # ===== POWER MANAGEMENT =====
   powerManagement = {
-    cpuFreqGovernor = "performance";
+    cpuFreqGovernor = "powersave"; # Let GameMode switch dynamically to performance
     resumeCommands = ''
       ${pkgs.systemd}/bin/systemctl restart systemd-resolved
       ${pkgs.systemd}/bin/systemctl restart NetworkManager
@@ -417,24 +427,9 @@
   };
 
   # ===== SECURITY =====
+  # PAM/GDM and AppArmor handled by modules/desktop/gnome/settings.nix and modules/core/base/system.nix
   security = {
-    pam.services = {
-      gdm.enableGnomeKeyring = true;
-      gdm-password.enableGnomeKeyring = true;
-    };
-
-    auditd.enable = true;
-    audit = {
-      enable = true;
-      backlogLimit = 8192;
-      failureMode = "printk";
-      rules = ["-a exit,always -F arch=b64 -S execve"];
-    };
-
-    apparmor = {
-      enable = true;
-      killUnconfinedConfinables = true;
-    };
+    # auditd disabled — execve rule generated 162GB logs on desktop
   };
 
   # ===== VIRTUALIZATION =====
@@ -443,15 +438,7 @@
   # Base module defaults to false, so simple enable works
   virtualisation.waydroid.enable = true;
 
-  # NAT for Waydroid internet connectivity
-  networking.nat = {
-    enable = true;
-    enableIPv6 = false;
-    externalInterface = "enp8s0"; # Main ethernet interface
-    internalInterfaces = ["waydroid0"];
-  };
-
-  # nftables NAT rules for Waydroid (networking.nat doesn't auto-generate for nftables)
+  # nftables NAT rules for Waydroid (interface-agnostic, no hardcoded names)
   networking.nftables.tables.waydroid-nat = {
     family = "ip";
     content = ''
@@ -476,9 +463,7 @@
   modules.services.waydroid-desktop-hygiene.enable = true;
 
   # ===== SYSTEMD SERVICES =====
-  # GNOME login fixes
-  systemd.services."getty@tty1".enable = false;
-  systemd.services."autovt@tty1".enable = false;
+  # GNOME login fixes (getty/autovt) are in modules/desktop/gnome/settings.nix
 
   # AMD GPU optimization
   systemd.services.amd-gpu-optimization = {
@@ -519,6 +504,5 @@
   };
 
   # ===== SYSTEM STATE VERSION =====
-  # Uses modules.core.stateVersion, but also set directly for clarity
-  system.stateVersion = "25.11";
+  # Canonical source: modules.core.stateVersion (line 294)
 }

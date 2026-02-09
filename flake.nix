@@ -20,6 +20,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # OpenCode bleeding edge (AI coding agent)
+    opencode = {
+      url = "github:anomalyco/opencode";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
 

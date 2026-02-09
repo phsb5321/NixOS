@@ -49,9 +49,6 @@
   # JUSTIFIED: Must disable systemd-resolved to avoid conflicts with manual DNS
   services.resolved.enable = lib.mkForce false;
 
-  # JUSTIFIED: Gaming module adds NVIDIA env vars that break VirtIO-GPU
-  modules.core.gaming.enable = lib.mkForce false;
-
   # Explicitly enable X11 for VM compatibility with proper video drivers
   services.xserver = {
     enable = true;

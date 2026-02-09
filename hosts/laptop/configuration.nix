@@ -374,11 +374,7 @@
       variant = ",abnt2";
     };
 
-    # Gaming for Steam
-    gaming = {
-      enable = true;
-      enableSteam = true;
-    };
+    # Gaming - handled by modules/gaming/ (replaces old modules.core.gaming)
 
     pipewire = {
       enable = true;
@@ -435,6 +431,15 @@
       androidTools.enable = true;
     };
   };
+
+  # ===== GAMING MODULES (replaces old modules.core.gaming) =====
+  modules.gaming.steam = {
+    enable = true;
+    gamescopeSession.enable = true;
+    remotePlay.enable = true;
+  };
+  modules.gaming.gamemode.enable = true;
+  modules.gaming.mangohud.enable = true;
 
   # ===== DOTFILES =====
   modules.dotfiles = {
@@ -598,19 +603,17 @@
       failureMode = "printk";
       rules = ["-a exit,always -F arch=b64 -S execve"];
     };
+    # Prevent audit log from consuming all disk space (execve rule is verbose)
+    auditd.settings = {
+      max_log_file = 100; # MB — rotate at 100 MB
+      num_logs = 5; # Keep 5 rotated files (500 MB max)
+      max_log_file_action = "rotate";
+    };
 
     apparmor = {
       enable = true;
       killUnconfinedConfinables = true;
     };
-  };
-
-  # ===== PROGRAMS =====
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;
   };
 
   # ===== SYSTEM STATE VERSION =====

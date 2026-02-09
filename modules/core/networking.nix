@@ -18,7 +18,7 @@ in {
 
     interfaces = mkOption {
       type = with types; listOf str;
-      default = ["enp8s0" "wlp9s0"]; # Common interface patterns
+      default = []; # Discovered dynamically via /sys/class/net/ enumeration
       description = "Network interfaces to configure power management for";
     };
   };
@@ -151,14 +151,20 @@ in {
         fix_ipv6_routing() {
           echo "Attempting to fix IPv6 routing issues..."
 
+          DEFAULT_IFACE=$(ip route show default | awk '{print $5}' | head -1)
+          if [ -z "$DEFAULT_IFACE" ]; then
+            echo "No default route interface found, skipping IPv6 fix"
+            return
+          fi
+
           # Clear problematic IPv6 routes
           ip -6 route flush table cache 2>/dev/null || true
 
-          # Restart IPv6 on the interface
-          echo 0 > /proc/sys/net/ipv6/conf/enp8s0/disable_ipv6 2>/dev/null || true
-          echo 1 > /proc/sys/net/ipv6/conf/enp8s0/disable_ipv6 2>/dev/null || true
+          # Restart IPv6 on the default route interface
+          echo 0 > /proc/sys/net/ipv6/conf/$DEFAULT_IFACE/disable_ipv6 2>/dev/null || true
+          echo 1 > /proc/sys/net/ipv6/conf/$DEFAULT_IFACE/disable_ipv6 2>/dev/null || true
           sleep 2
-          echo 0 > /proc/sys/net/ipv6/conf/enp8s0/disable_ipv6 2>/dev/null || true
+          echo 0 > /proc/sys/net/ipv6/conf/$DEFAULT_IFACE/disable_ipv6 2>/dev/null || true
 
           # Wait for IPv6 autoconfiguration
           sleep 5
@@ -168,9 +174,12 @@ in {
         while true; do
           sleep 900  # Test every 15 minutes (much less aggressive)
 
-          # Check physical cable connection first
-          if [ -f /sys/class/net/enp8s0/carrier ] && [ "$(cat /sys/class/net/enp8s0/carrier)" != "1" ]; then
-            echo "Physical cable disconnected on enp8s0"
+          # Detect the default route interface dynamically
+          DEFAULT_IFACE=$(ip route show default | awk '{print $5}' | head -1)
+
+          # Check physical cable connection first (if wired interface detected)
+          if [ -n "$DEFAULT_IFACE" ] && [ -f /sys/class/net/$DEFAULT_IFACE/carrier ] && [ "$(cat /sys/class/net/$DEFAULT_IFACE/carrier)" != "1" ]; then
+            echo "Physical cable disconnected on $DEFAULT_IFACE"
             sleep 30  # Wait for potential reconnection
             continue
           fi
@@ -190,7 +199,9 @@ in {
             # More conservative approach - only log, don't restart services aggressively
             echo "Connectivity still problematic. Logging status for manual review..."
             echo "Interface status:"
-            ip addr show enp8s0 | head -10
+            if [ -n "$DEFAULT_IFACE" ]; then
+              ip addr show $DEFAULT_IFACE | head -10
+            fi
             echo "IPv6 routes:"
             ip -6 route show | head -10
             echo "Device status:"
