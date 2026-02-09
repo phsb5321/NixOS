@@ -143,7 +143,7 @@
       # Primary desktop system
       desktop = {
         system = "x86_64-linux";
-        hostname = "nixos-desktop";
+        hostname = "desktop";
         configPath = "desktop"; # Maps to hosts/desktop/
         nixpkgsInput = inputs.nixpkgs-unstable; # Use unstable as the main channel
       };
