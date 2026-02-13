@@ -1,34 +1,8 @@
 # Laptop Host - GNOME Configuration
-# Wayland setup for GNOME 49+ (host-specific overrides only)
+# dconf settings and extension activation (host-specific overrides only)
+# Module options (extensions.*, settings.*) are in configuration.nix
 {lib, ...}: {
-  # Enable GNOME with common settings
-  modules.desktop.gnome = {
-    enable = true;
-    wayland.enable = true; # Required for GNOME 49+ (X11 sessions removed)
-    settings.enable = true; # Common dconf settings from module
-
-    # GNOME Core Apps - Full Suite for laptop
-    coreApps = {
-      enable = true;
-      fullSuite = true; # All categories enabled
-    };
-
-    # Laptop extension set (battery conscious)
-    extensions = {
-      enable = true;
-      appIndicator = true;
-      dashToDock = true;
-      userThemes = true;
-      justPerfection = true;
-      vitals = true;
-      caffeine = true;
-      clipboard = true;
-      gsconnect = true;
-      workspaceIndicator = true;
-    };
-  };
-
-  # Laptop-specific dconf settings (power savings)
+  # Laptop-specific dconf settings (power savings, extension activation)
   programs.dconf.profiles.user.databases = [
     {
       lockAll = false;
@@ -45,6 +19,7 @@
             "clipboard-indicator@tudmotu.com"
             "gsconnect@andyholmes.github.io"
             "workspace-indicator@gnome-shell-extensions.gcampax.github.com"
+            "sound-output-device-chooser@kgshank.net"
           ];
           favorite-apps = [
             "org.gnome.Nautilus.desktop"

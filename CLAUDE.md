@@ -246,3 +246,10 @@ dotfiles-status
 # Enter dev shell
 ./user-scripts/nix-shell-selector.sh
 ```
+
+## Active Technologies
+- Nix (NixOS configuration language) + NixOS modules, nixos-hardware flake, nixpkgs (stable channel) (011-laptop-gaming-setup)
+- N/A (system configuration, no database) (011-laptop-gaming-setup)
+
+## Recent Changes
+- 011-laptop-gaming-setup: Added Nix (NixOS configuration language) + NixOS modules, nixos-hardware flake, nixpkgs (stable channel)

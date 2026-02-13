@@ -12,6 +12,7 @@
     ./hardware-configuration.nix
     ../../modules
     ../../profiles/laptop.nix
+    ./gnome.nix
   ];
 
   # Allow insecure packages for USB boot creation tool and development
@@ -438,8 +439,18 @@
     gamescopeSession.enable = true;
     remotePlay.enable = true;
   };
-  modules.gaming.gamemode.enable = true;
+  modules.gaming.gamemode = {
+    enable = true;
+    customStart = "${pkgs.libnotify}/bin/notify-send 'GameMode' 'Performance mode activated' -i input-gaming";
+    customEnd = "${pkgs.libnotify}/bin/notify-send 'GameMode' 'Performance mode deactivated' -i input-gaming";
+  };
   modules.gaming.mangohud.enable = true;
+
+  # Gamescope compositor with capability wrapper for real-time scheduling
+  programs.gamescope = {
+    enable = true;
+    capSysNice = true;
+  };
 
   # ===== DOTFILES =====
   modules.dotfiles = {
@@ -473,9 +484,8 @@
       nvidiaBusId = "PCI:1:0:0";
     };
 
-    # Touchpad configuration
+    # Touchpad configuration (always enabled by the laptop module - cannot be disabled)
     touchpad = {
-      enable = true;
       naturalScrolling = true;
       tapToClick = true;
       disableWhileTyping = true;
@@ -491,6 +501,26 @@
 
   # NOTE: NVIDIA power management now handled by modules.hardware.laptop.graphics
   # primeMode = "nvidia-only" automatically disables finegrained PM (GPU always on)
+
+  # ===== GAMING SPECIALISATION =====
+  # Boot menu entry with performance-optimized settings for gaming sessions
+  # Select from systemd-boot menu; default profile retains battery-saving behavior
+  specialisation.gaming.configuration = {
+    system.nixos.tags = ["gaming"];
+
+    # Override power management for maximum performance
+    modules.hardware.laptop.powerManagement = {
+      profile = lib.mkForce "performance";
+      autoSuspend = lib.mkForce false;
+    };
+
+    # Full battery charge (no 85% threshold)
+    modules.hardware.laptop.batteryManagement.chargeThreshold = lib.mkForce null;
+
+    # Ensure power-profiles-daemon is set to performance
+    # (TLP is force-disabled by GNOME module, so ppd is the active manager)
+    services.power-profiles-daemon.enable = lib.mkForce true;
+  };
 
   # ===== BOOT CONFIGURATION =====
   boot = {
@@ -559,29 +589,9 @@
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
 
-  # ===== TOUCHPAD PERMANENT ENABLE =====
-  systemd.user.services.touchpad-always-enabled = {
-    description = "Force touchpad to always be enabled";
-    wantedBy = ["graphical-session.target"];
-    after = ["graphical-session.target"];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.glib}/bin/gsettings set org.gnome.desktop.peripherals.touchpad send-events 'enabled'";
-      Restart = "on-failure";
-      RestartSec = "5s";
-    };
-  };
-
-  programs.dconf.profiles.user.databases = [
-    {
-      settings = {
-        "org/gnome/desktop/peripherals/touchpad" = {
-          send-events = "enabled";
-        };
-      };
-    }
-  ];
+  # ===== TOUCHPAD =====
+  # Touchpad is always enabled and permanently locked by the laptop hardware module.
+  # See modules/hardware/laptop/hardware.nix for the implementation.
 
   # ===== ENVIRONMENT VARIABLES =====
   # NOTE: NVIDIA Wayland vars (GBM_BACKEND, __GLX_VENDOR_LIBRARY_NAME, WLR_NO_HARDWARE_CURSORS)
@@ -594,6 +604,9 @@
     STEAM_RUNTIME_HEAVY = "1";
     DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
     DXVK_LOG_LEVEL = "warn";
+    # NVIDIA performance tuning
+    __GL_VRR_ALLOWED = "1"; # Enable variable refresh rate
+    __GL_MaxFramesAllowed = "1"; # Reduce input lag
   };
 
   # ===== SECURITY =====

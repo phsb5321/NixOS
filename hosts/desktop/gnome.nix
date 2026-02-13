@@ -1,37 +1,8 @@
 # Desktop Host - GNOME Configuration
-# AMD GPU Wayland-optimized setup (host-specific overrides only)
+# dconf settings and extension activation (host-specific overrides only)
+# Module options (extensions.*, settings.*) are in configuration.nix
 {lib, ...}: {
-  # Enable GNOME with common settings
-  modules.desktop.gnome = {
-    enable = true;
-    wayland.enable = true;
-    settings.enable = true; # Common dconf settings from module
-
-    # GNOME Core Apps - Full Suite for desktop
-    coreApps = {
-      enable = true;
-      fullSuite = true; # All categories enabled
-    };
-
-    # Desktop extension set (full features)
-    extensions = {
-      enable = true;
-      appIndicator = true;
-      dashToDock = true;
-      userThemes = true;
-      justPerfection = true;
-      vitals = true;
-      caffeine = true;
-      clipboard = true;
-      gsconnect = true;
-      workspaceIndicator = true;
-      soundOutput = true;
-      unite = true;
-      launchNewInstance = true;
-    };
-  };
-
-  # Desktop-specific dconf settings (AMD GPU optimizations, power)
+  # Desktop-specific dconf settings (AMD GPU optimizations, power, extension activation)
   programs.dconf.profiles.user.databases = [
     {
       lockAll = false;

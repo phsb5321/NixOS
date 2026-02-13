@@ -9,6 +9,7 @@
     ./hardware-configuration.nix
     ../../modules
     ../../profiles/desktop.nix
+    ./gnome.nix
   ];
 
   # ===== PROFILE-BASED CONFIGURATION =====

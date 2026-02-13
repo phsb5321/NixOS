@@ -72,11 +72,8 @@ in {
     };
 
     touchpad = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable touchpad support";
-      };
+      # NOTE: No enable option - touchpad is ALWAYS enabled when laptop module is active.
+      # This is intentional to prevent the touchpad from ever being disabled.
 
       naturalScrolling = lib.mkOption {
         type = lib.types.bool;
@@ -205,8 +202,8 @@ in {
     # Display configuration
     # Night light is handled by GNOME settings, not environment variables
 
-    # Touchpad configuration
-    services.libinput = lib.mkIf cfg.touchpad.enable {
+    # Touchpad configuration (always enabled - cannot be disabled)
+    services.libinput = {
       enable = true;
       touchpad = {
         naturalScrolling = cfg.touchpad.naturalScrolling;
@@ -216,6 +213,61 @@ in {
         accelSpeed = "0";
       };
     };
+
+    # Force touchpad to stay enabled at the GNOME/desktop level.
+    # Three-layer enforcement:
+    #   1. dconf system database with lock (prevents GUI changes)
+    #   2. Oneshot service writes dconf on login (overrides stale user db)
+    #   3. Monitor service watches dconf and immediately reverts any change
+    systemd.user.services.touchpad-always-enabled = {
+      description = "Force touchpad enabled on login (dconf write)";
+      wantedBy = ["graphical-session.target"];
+      after = ["graphical-session.target" "dbus.socket"];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = pkgs.writeShellScript "touchpad-force-enable" ''
+          # Write directly to dconf (does not need a schema, more reliable than gsettings)
+          ${pkgs.dconf}/bin/dconf write /org/gnome/desktop/peripherals/touchpad/send-events "'enabled'"
+        '';
+        Restart = "on-failure";
+        RestartSec = "2s";
+      };
+    };
+
+    systemd.user.services.touchpad-monitor = {
+      description = "Watch dconf and revert any touchpad disable";
+      wantedBy = ["graphical-session.target"];
+      after = ["graphical-session.target" "touchpad-always-enabled.service" "dbus.socket"];
+      serviceConfig = {
+        Type = "simple";
+        Restart = "always";
+        RestartSec = "3s";
+        ExecStart = pkgs.writeShellScript "touchpad-monitor" ''
+          ${pkgs.dconf}/bin/dconf watch /org/gnome/desktop/peripherals/touchpad/send-events | while read -r line; do
+            case "$line" in
+              *disabled*|*Disabled*)
+                ${pkgs.dconf}/bin/dconf write /org/gnome/desktop/peripherals/touchpad/send-events "'enabled'"
+                ;;
+            esac
+          done
+        '';
+      };
+    };
+
+    # Declarative dconf: set touchpad enabled and lock it so the GNOME UI cannot change it
+    programs.dconf.profiles.user.databases = [
+      {
+        settings = {
+          "org/gnome/desktop/peripherals/touchpad" = {
+            send-events = "enabled";
+          };
+        };
+        locks = [
+          "/org/gnome/desktop/peripherals/touchpad/send-events"
+        ];
+      }
+    ];
 
     # Essential laptop packages
     environment.systemPackages = with pkgs;

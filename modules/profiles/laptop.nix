@@ -76,7 +76,6 @@ in {
       };
 
       touchpad = {
-        enable = true;
         naturalScrolling = true;
         tapToClick = true;
         disableWhileTyping = true;
