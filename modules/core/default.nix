@@ -147,7 +147,7 @@ in {
         # azure-cli # Temporarily disabled - build failure with Python 3.13
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
-        vdhcoapp
+        # vdhcoapp removed: VDH >= 10 no longer needs companion app
         # inkscape provided by modules/core/document-tools/latex.nix
         codex
         wrangler
@@ -232,8 +232,6 @@ in {
       zsh.enable = true;
       dconf.enable = true;
 
-      # Enable ADB for Android development (adds udev rules + adbusers group)
-      adb.enable = true;
     };
   };
 }

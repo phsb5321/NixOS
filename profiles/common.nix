@@ -68,13 +68,11 @@
       security = lib.mkDefault true;
       pdfViewer = lib.mkDefault true;
       messaging = lib.mkDefault true;
-      fonts = lib.mkDefault true;
     };
 
     # Terminal - modern CLI environment
     terminal = {
       enable = lib.mkDefault true;
-      fonts = lib.mkDefault true;
       shell = lib.mkDefault true;
       theme = lib.mkDefault true;
       modernTools = lib.mkDefault true;

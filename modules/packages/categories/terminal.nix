@@ -11,12 +11,6 @@ in {
   options.modules.packages.terminal = {
     enable = lib.mkEnableOption "terminal and shell tools";
 
-    fonts = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Install terminal fonts (JetBrains Mono Nerd Font, Noto)";
-    };
-
     shell = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -62,15 +56,8 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-    # Fonts
-      (lib.optionals cfg.fonts [
-        nerd-fonts.jetbrains-mono
-        noto-fonts-color-emoji
-        noto-fonts
-        noto-fonts-cjk-sans
-      ])
-      # Shell
-      ++ (lib.optionals cfg.shell [
+    # Shell
+      (lib.optionals cfg.shell [
         zsh
         oh-my-zsh
       ])
@@ -80,10 +67,8 @@ in {
         starship
         grc
       ])
-      # Modern tools
+      # Modern tools (eza, bat already in core)
       ++ (lib.optionals cfg.modernTools [
-        eza
-        bat
         vivid
       ])
       # Plugins
@@ -93,23 +78,19 @@ in {
         zsh-you-should-use
         zsh-fast-syntax-highlighting
       ])
-      # Editor
+      # Editor (zoxide already in core)
       ++ (lib.optionals cfg.editor [
         neovim
         ffmpeg
-        zoxide
       ])
-      # Applications
+      # Applications (remmina, zellij already in core; texlive in latex module)
       ++ (lib.optionals cfg.applications [
         yazi-unwrapped
-        texlive.combined.scheme-full
         dbeaver-bin
         amberol
-        remmina
         obsidian
         d2
         ngrok
-        zellij
       ])
       # Extra packages
       ++ cfg.extraPackages;

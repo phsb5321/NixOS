@@ -63,7 +63,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-    # Performance tools
+      # Performance tools
       (lib.optionals cfg.performance [
         gamemode
         gamescope
@@ -91,16 +91,13 @@ in {
       ++ (lib.optionals cfg.minecraft [
         prismlauncher
       ])
-      # New gaming tools section
+      # Performance overlay config (goverlay for MangoHud GUI)
       ++ (lib.optionals cfg.performanceTools [
-        mangohud # FPS/GPU overlay
-        goverlay # MangoHud GUI configurator
-        gamemode # Process optimizer
+        goverlay
       ])
+      # Proton management
       ++ (lib.optionals cfg.protonTools [
-        protontricks # Prefix manager
-        protonup-qt # GE-Proton installer
-        winetricks # Wine configuration
+        protonup-qt
       ])
       # Extra packages
       ++ cfg.extraPackages;

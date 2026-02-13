@@ -277,11 +277,11 @@
     dnsovertls = "opportunistic";
     fallbackDns = ["8.8.8.8" "8.8.4.4"];
     domains = ["~."];
-    extraConfig = ''
-      DNSStubListener=yes
-      DNSStubListenerExtra=0.0.0.0
-      Cache=yes
-    '';
+    settings.Resolve = {
+      DNSStubListener = "yes";
+      DNSStubListenerExtra = "0.0.0.0";
+      Cache = "yes";
+    };
   };
 
   # ===== CORE MODULES =====
