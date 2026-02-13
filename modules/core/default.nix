@@ -198,6 +198,7 @@ in {
         alejandra
         nixd
         nil
+        nh
 
         # Container Tools
         podman-compose

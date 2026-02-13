@@ -121,6 +121,10 @@
     telegram-desktop
     slack
     zoom-us
+    hexchat
+    polari
+    halloy
+    element-desktop
 
     # Productivity
     libreoffice
@@ -448,7 +452,6 @@
 
   # System-level Waydroid desktop entry (visible in GNOME, can't be overwritten by Waydroid)
   environment.etc."xdg/autostart/waydroid-fix.desktop".enable = false; # Don't autostart
-  xdg.mime.enable = true;
 
   # Waydroid desktop entry hygiene - hide per-app launchers from GNOME
   # Replaces .desktop files with /dev/null symlinks to prevent clutter
