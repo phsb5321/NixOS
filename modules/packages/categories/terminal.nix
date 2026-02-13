@@ -86,11 +86,6 @@ in {
       # Applications (remmina, zellij already in core; texlive in latex module)
       ++ (lib.optionals cfg.applications [
         yazi-unwrapped
-        dbeaver-bin
-        amberol
-        obsidian
-        d2
-        ngrok
       ])
       # Extra packages
       ++ cfg.extraPackages;

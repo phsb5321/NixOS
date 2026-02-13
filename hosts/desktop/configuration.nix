@@ -313,10 +313,6 @@
       latex = {
         enable = true;
         minimal = false;
-        extraPackages = with pkgs; [
-          biber
-          texlive.combined.scheme-context
-        ];
       };
       markdown = {
         enable = true;

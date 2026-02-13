@@ -81,11 +81,9 @@
       applications = lib.mkDefault true;
     };
 
-    # Audio/Video - basic audio support
+    # Audio/Video - patchbay and webcam (pipewire/easyeffects/pavucontrol handled by core.pipewire)
     audioVideo = {
       enable = lib.mkDefault true;
-      pipewire = lib.mkDefault true;
-      audioEffects = lib.mkDefault true;
       audioControl = lib.mkDefault true;
       webcam = lib.mkDefault true;
     };

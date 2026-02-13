@@ -11,22 +11,10 @@ in {
   options.modules.packages.audioVideo = {
     enable = lib.mkEnableOption "audio/video tools";
 
-    pipewire = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Install PipeWire and WirePlumber";
-    };
-
-    audioEffects = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Install EasyEffects for audio processing";
-    };
-
     audioControl = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Install audio control tools (PulseAudio Volume Control, Helvum)";
+      description = "Install audio patchbay (Helvum)";
     };
 
     webcam = lib.mkOption {
@@ -44,14 +32,9 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-      lib.optionals cfg.pipewire [
-        pipewire
-        wireplumber
-      ]
-      ++ lib.optionals cfg.audioEffects [easyeffects]
-      ++ lib.optionals cfg.audioControl [
-        pavucontrol
-        helvum
+    # pipewire, wireplumber, easyeffects, pavucontrol already provided by modules.core.pipewire
+      lib.optionals cfg.audioControl [
+        helvum # Patchbay for PipeWire (not in pipewire.nix)
       ]
       ++ lib.optionals cfg.webcam [guvcview]
       ++ cfg.extraPackages;

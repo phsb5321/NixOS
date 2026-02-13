@@ -140,16 +140,11 @@ in {
         openssl
         nmap
         gum
-        piper-tts
         jq
         popsicle
         stablePkgs.awscli2
-        # azure-cli # Temporarily disabled - build failure with Python 3.13
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
-        # vdhcoapp removed: VDH >= 10 no longer needs companion app
-        # inkscape provided by modules/core/document-tools/latex.nix
-        codex
         wrangler
         just
         infisical
@@ -172,26 +167,20 @@ in {
         sd # Intuitive find & replace CLI (sed alternative)
         tealdeer # Fast tldr client (tldr command)
         choose # Human-friendly cut alternative
-        dog # Command-line DNS lookup tool (dig alternative)
 
         # System Monitoring
         fastfetch
         htop
-        cmatrix
 
         # Development Tools
         git
         gh
         gcc
-        stow
         xclip
         lazygit
 
-        # Remote Desktop & Network Tools
+        # Remote Desktop
         remmina # Remote desktop client with VNC, RDP, SSH, SPICE support
-        freerdp # Free RDP client (latest version for better compatibility)
-        tigervnc # VNC client and server
-        gnome-connections # GNOME's remote desktop client (alternative)
 
         # Terminals and Shells
         zellij
@@ -202,17 +191,8 @@ in {
         elixir
         nodejs_22
         go
-        terraform
         elixir-ls
-        # nosql-workbench  # Temporarily disabled due to download issues
-        deno
-        postgresql
-        supabase-cli
-        # pkgs-unstable.zed-editor # Disabled due to hash mismatch - will re-enable after fix
         pkgs-unstable.ghostty
-        # pkgs-unstable.kitty # Temporarily disabled due to test failures
-        stockfish
-        chromium
 
         # Nix Tools
         alejandra
