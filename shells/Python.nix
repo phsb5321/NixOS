@@ -178,11 +178,11 @@ in
         openssl
         libGL
         libGLU
-        xorg.libX11
-        xorg.libXext
-        xorg.libXrender
-        xorg.libICE
-        xorg.libSM
+        libx11
+        libxext
+        libxrender
+        libice
+        libsm
 
         # Graphics and media libraries
         glib
@@ -216,7 +216,7 @@ in
 
     # Configure environment variables for OpenCV
     LIBGL_PATH = "${pkgs.libGL}/lib";
-    LIBX11_PATH = "${pkgs.xorg.libX11}/lib";
+    LIBX11_PATH = "${pkgs.libx11}/lib";
 
     # Add pkg-config to find system libraries
     nativeBuildInputs = [pkgs.pkg-config];

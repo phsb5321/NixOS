@@ -135,17 +135,16 @@
       # ———————————————————————————————————————
       services.resolved = {
         enable = cfg.dns.enableSystemdResolved;
-        dnssec = "allow-downgrade";
-        fallbackDns = selectedDNS;
-        extraConfig = ''
-          DNSOverTLS=${
+        settings.Resolve = {
+          DNSSEC = "allow-downgrade";
+          FallbackDNS = selectedDNS;
+          DNSOverTLS =
             if cfg.dns.enableDNSOverTLS
             then "yes"
-            else "no"
-          }
-          Cache=yes
-          DNSStubListener=yes
-        '';
+            else "no";
+          Cache = "yes";
+          DNSStubListener = "yes";
+        };
       };
 
       # ———————————————————————————————————————

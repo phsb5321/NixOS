@@ -48,9 +48,9 @@ in {
       # GUI dependencies
       gtk3
       glib
-      xorg.libX11
-      xorg.libXrender
-      xorg.libXtst
+      libx11
+      libxrender
+      libxtst
       alsa-lib
       cairo
       pango
@@ -75,9 +75,9 @@ in {
         pkgs.glib
         pkgs.libGL
         pkgs.mesa
-        pkgs.xorg.libX11
-        pkgs.xorg.libXrender
-        pkgs.xorg.libXtst
+        pkgs.libx11
+        pkgs.libxrender
+        pkgs.libxtst
         pkgs.alsa-lib
         pkgs.cairo
         pkgs.pango
@@ -96,9 +96,9 @@ in {
         pkgs.glib
         pkgs.libGL
         pkgs.mesa
-        pkgs.xorg.libX11
-        pkgs.xorg.libXrender
-        pkgs.xorg.libXtst
+        pkgs.libx11
+        pkgs.libxrender
+        pkgs.libxtst
         pkgs.alsa-lib
         pkgs.cairo
         pkgs.pango

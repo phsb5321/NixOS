@@ -39,7 +39,7 @@
 
       # OpenCode bleeding edge from flake input
       (_final: _prev: {
-        opencode = inputs.opencode.packages.${_final.system}.opencode;
+        opencode = inputs.opencode.packages.${_final.stdenv.hostPlatform.system}.opencode;
       })
     ];
 

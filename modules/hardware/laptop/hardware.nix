@@ -33,7 +33,7 @@ in {
 
         # Display control
         brightnessctl
-        xorg.xbacklight
+        xbacklight
         light
 
         # Battery monitoring

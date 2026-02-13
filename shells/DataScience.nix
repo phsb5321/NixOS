@@ -131,8 +131,8 @@ in
         # Graphics libraries (for matplotlib, etc.)
         libGL
         libGLU
-        xorg.libX11
-        xorg.libXext
+        libx11
+        libxext
 
         # For rendering
         cairo
