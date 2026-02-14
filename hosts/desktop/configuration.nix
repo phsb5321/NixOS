@@ -269,12 +269,16 @@
 
   # DNS configuration
   networking = {
+    wireless.enable = lib.mkForce false; # Desktop is wired-only, disable WiFi
     dhcpcd.extraConfig = "nohook resolv.conf";
     nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     # Waydroid-specific: trust its interface, allow DHCP/DNS
     firewall.trustedInterfaces = ["waydroid0"];
     firewall.allowedUDPPorts = [53 67];
   };
+
+  # Disable WiFi in NetworkManager - desktop is ethernet-only
+  networking.networkmanager.unmanaged = ["interface-name:wlp9s0"];
 
   services.resolved = {
     enable = true;
