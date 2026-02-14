@@ -145,6 +145,9 @@ in {
         stablePkgs.awscli2
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
+        # vdhcoapp # Removed - VDH >= 10 doesn't require companion app (repo archived)
+        # inkscape provided by modules/core/document-tools/latex.nix
+        codex
         wrangler
         just
         infisical
@@ -212,7 +215,8 @@ in {
       nix-ld.enable = true;
       zsh.enable = true;
       dconf.enable = true;
-
+      # NOTE: programs.adb removed - systemd 258+ handles uaccess rules automatically
+      # ADB is now provided via android-tools package in modules/core/java.nix
     };
   };
 }

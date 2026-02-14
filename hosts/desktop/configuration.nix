@@ -281,7 +281,7 @@
       DNSSEC = "allow-downgrade";
       DNSOverTLS = "opportunistic";
       FallbackDNS = ["8.8.8.8" "8.8.4.4"];
-      Domains = ["~."];
+      Domains = "~.";
       DNSStubListener = "yes";
       DNSStubListenerExtra = "0.0.0.0";
       Cache = "yes";

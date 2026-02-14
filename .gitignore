@@ -95,6 +95,9 @@ handoff.md
 .augment*
 dotfiles/CLAUDE.md
 dotfiles/dot_claude/
+.speckit/
+*.plan.md
+TODO.md
 
 # AI assistant context files
 *.claude

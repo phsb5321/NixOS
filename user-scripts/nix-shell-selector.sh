@@ -124,7 +124,12 @@ else
 
   # Generate the combined shell content
   cat >"${temp_shell}" <<EOF
-{ pkgs ? import <nixpkgs> {config.allowUnfree = true;} }:
+{ pkgs ? import <nixpkgs> {
+  config.allowUnfree = true;
+  config.permittedInsecurePackages = [
+    "python3.12-ecdsa-0.19.1"
+  ];
+} }:
 
 pkgs.mkShell {
   # Import all selected shells and combine their inputs

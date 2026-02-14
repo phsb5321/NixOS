@@ -91,45 +91,105 @@ in {
       wireless-regdb # WiFi regulatory database
     ];
 
-    # Create aggressive systemd service to unblock WiFi on boot
-    systemd.services.wifi-unblock = {
-      description = "Aggressively unblock WiFi on boot";
-      wantedBy = ["multi-user.target"];
-      after = ["systemd-modules-load.service"];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = pkgs.writeShellScript "wifi-unblock" ''
-          # Multiple attempts to unblock WiFi
-          ${pkgs.util-linux}/bin/rfkill unblock wifi
-          ${pkgs.util-linux}/bin/rfkill unblock all
+    # Systemd services for laptop hardware
+    systemd.services = lib.mkMerge [
+      # WiFi unblock service
+      {
+        wifi-unblock = {
+          description = "Aggressively unblock WiFi on boot";
+          wantedBy = ["multi-user.target"];
+          after = ["systemd-modules-load.service"];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = pkgs.writeShellScript "wifi-unblock" ''
+              # Multiple attempts to unblock WiFi
+              ${pkgs.util-linux}/bin/rfkill unblock wifi
+              ${pkgs.util-linux}/bin/rfkill unblock all
 
-          # Try direct sysfs approach if available
-          if [ -w /sys/class/rfkill/rfkill1/soft ]; then
-            echo 0 > /sys/class/rfkill/rfkill1/soft
-          fi
+              # Try direct sysfs approach if available
+              if [ -w /sys/class/rfkill/rfkill1/soft ]; then
+                echo 0 > /sys/class/rfkill/rfkill1/soft
+              fi
 
-          # Reload iwlwifi module
-          ${pkgs.kmod}/bin/modprobe -r iwlwifi || true
-          sleep 2
-          ${pkgs.kmod}/bin/modprobe iwlwifi
+              # Reload iwlwifi module
+              ${pkgs.kmod}/bin/modprobe -r iwlwifi || true
+              sleep 2
+              ${pkgs.kmod}/bin/modprobe iwlwifi
 
-          # Final unblock attempt
-          ${pkgs.util-linux}/bin/rfkill unblock wifi
-        '';
-      };
-    };
+              # Final unblock attempt
+              ${pkgs.util-linux}/bin/rfkill unblock wifi
+            '';
+          };
+        };
+      }
+      # NOTE: NVIDIA suspend/resume services are automatically provided by
+      # hardware.nvidia.powerManagement.enable = true (set above)
+      # No manual service configuration needed for nvidia-only mode
+      # Backlight permissions service
+      (lib.mkIf cfg.display.brightnessControl {
+        backlight-permissions = {
+          description = "Set backlight permissions";
+          wantedBy = ["graphical.target"];
+          after = ["systemd-backlight@backlight:intel_backlight.service"];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = pkgs.writeShellScript "backlight-permissions" ''
+              # Wait for backlight device
+              sleep 2
 
-    # NVIDIA configuration for hybrid laptops for gaming performance
+              # Try to find any backlight device
+              for device in /sys/class/backlight/*; do
+                if [ -e "$device/brightness" ]; then
+                  echo "Found backlight device: $device"
+                  chmod 666 "$device/brightness" || true
+                  chgrp video "$device/brightness" || true
+                fi
+              done
+
+              # Load i915 module if not loaded
+              if ! lsmod | grep -q "^i915 "; then
+                ${pkgs.kmod}/bin/modprobe i915
+                sleep 2
+              fi
+
+              # Check again after loading i915
+              for device in /sys/class/backlight/*; do
+                if [ -e "$device/brightness" ]; then
+                  chmod 666 "$device/brightness" || true
+                fi
+              done
+            '';
+          };
+        };
+      })
+    ];
+
+    # NVIDIA configuration for hybrid laptops
     hardware.nvidia = lib.mkIf cfg.graphics.hybridGraphics {
+      # Required for Wayland
       modesetting.enable = true;
+
+      # Power management (critical for suspend/resume)
       powerManagement.enable = true;
-      powerManagement.finegrained = true;
-      open = false; # Use proprietary drivers for GTX 1650
+
+      # Fine-grained power management only works with offload mode
+      # In nvidia-only mode, GPU is always on
+      powerManagement.finegrained = cfg.graphics.primeMode == "offload";
+
+      # Use open kernel modules for Turing+ (GTX 16xx, RTX 20xx+)
+      # GTX 1650 is Turing, so open = true is recommended
+      open = true;
+
       nvidiaSettings = true;
+
+      # Use production driver (stable)
       package = config.boot.kernelPackages.nvidiaPackages.production;
 
-      prime = {
+      # PRIME configuration - only for offload mode
+      # nvidia-only mode doesn't use PRIME at all (NVIDIA renders everything natively)
+      prime = lib.mkIf (cfg.graphics.primeMode == "offload") {
         offload = {
           enable = true;
           enableOffloadCmd = true;
@@ -139,11 +199,33 @@ in {
       };
     };
 
-    # Video drivers
-    services.xserver.videoDrivers = lib.mkIf cfg.graphics.hybridGraphics [
-      "modesetting" # Intel
-      "nvidia" # NVIDIA
+    # Video drivers - NVIDIA only for nvidia-only mode
+    services.xserver.videoDrivers = lib.mkIf cfg.graphics.hybridGraphics (
+      if cfg.graphics.primeMode == "nvidia-only"
+      then ["nvidia"]
+      else ["modesetting" "nvidia"]
+    );
+
+    # Early KMS for nvidia-only mode (required for Wayland)
+    boot.initrd.kernelModules = lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") [
+      "nvidia"
+      "nvidia_modeset"
+      "nvidia_uvm"
+      "nvidia_drm"
+      "i915" # Intel still needed for display output (panel connection)
     ];
+
+    # Environment variables for nvidia-only Wayland rendering
+    environment.sessionVariables = lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") {
+      GBM_BACKEND = "nvidia-drm";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      WLR_NO_HARDWARE_CURSORS = "1";
+      # VA-API via Intel for video decode (more power efficient)
+      LIBVA_DRIVER_NAME =
+        if (builtins.elem cfg.graphics.intelGeneration ["tigerlake" "alderlake" "raptorlake" "icelake"])
+        then "iHD"
+        else "i965";
+    };
 
     # Enable firmware updates
     services.fwupd.enable = true;
@@ -177,42 +259,5 @@ in {
       # Alternative approach for Intel graphics
       SUBSYSTEM=="drm", ACTION=="change", ENV{HOTPLUG}=="1", RUN+="${pkgs.systemd}/bin/systemctl --no-block start backlight-permissions.service"
     '';
-
-    # Systemd service to ensure backlight device exists
-    systemd.services.backlight-permissions = lib.mkIf cfg.display.brightnessControl {
-      description = "Set backlight permissions";
-      wantedBy = ["graphical.target"];
-      after = ["systemd-backlight@backlight:intel_backlight.service"];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = pkgs.writeShellScript "backlight-permissions" ''
-          # Wait for backlight device
-          sleep 2
-
-          # Try to find any backlight device
-          for device in /sys/class/backlight/*; do
-            if [ -e "$device/brightness" ]; then
-              echo "Found backlight device: $device"
-              chmod 666 "$device/brightness" || true
-              chgrp video "$device/brightness" || true
-            fi
-          done
-
-          # Load i915 module if not loaded
-          if ! lsmod | grep -q "^i915 "; then
-            ${pkgs.kmod}/bin/modprobe i915
-            sleep 2
-          fi
-
-          # Check again after loading i915
-          for device in /sys/class/backlight/*; do
-            if [ -e "$device/brightness" ]; then
-              chmod 666 "$device/brightness" || true
-            fi
-          done
-        '';
-      };
-    };
   };
 }

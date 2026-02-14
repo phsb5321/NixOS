@@ -16,7 +16,7 @@
 
   # Allow insecure packages for USB boot creation tool and development
   nixpkgs.config.permittedInsecurePackages = [
-    "ventoy-1.1.07" # Required for ventoy-full package
+    "ventoy-1.1.10" # Required for ventoy-full package (uses binary blobs)
     "gradle-7.6.6" # Required for Java development - Gradle 7 EOL but needed for compatibility
   ];
 
@@ -74,12 +74,12 @@
       weekday = true;
     };
 
-    # Wayland configuration - Force X11 for NVIDIA compatibility
+    # Wayland configuration - Required for GNOME 49+ (X11 sessions removed)
     wayland = {
-      enable = lib.mkForce false;
-      electronSupport = false;
-      screenSharing = false;
-      variant = "software";
+      enable = true;
+      electronSupport = true;
+      screenSharing = true;
+      variant = "hardware";
     };
   };
 
@@ -461,9 +461,14 @@
   modules.hardware.laptop = {
     enable = true;
 
-    # Disable hybrid graphics - causes blank screen
+    # Hybrid graphics: NVIDIA as primary renderer (nvidia-only mode)
+    # NVIDIA renders everything natively - best for Wayland performance
+    # Note: offload/sync modes are X11-only and don't work on GNOME 49+ Wayland
     graphics = {
-      hybridGraphics = false;
+      hybridGraphics = true;
+      primeMode = "nvidia-only"; # NVIDIA renders all, GPU always on for performance
+      intelGeneration = "tigerlake"; # Intel Tiger Lake for VA-API driver selection
+      # Bus IDs kept for reference (not used in nvidia-only mode)
       intelBusId = "PCI:0:2:0";
       nvidiaBusId = "PCI:1:0:0";
     };
@@ -479,10 +484,13 @@
     batteryManagement.chargeThreshold = 85;
 
     powerManagement = {
-      profile = "balanced";
+      profile = "performance";
       suspendTimeout = 900;
     };
   };
+
+  # NOTE: NVIDIA power management now handled by modules.hardware.laptop.graphics
+  # primeMode = "nvidia-only" automatically disables finegrained PM (GPU always on)
 
   # ===== BOOT CONFIGURATION =====
   boot = {
@@ -495,6 +503,11 @@
       timeout = 3;
     };
 
+    # NOTE: Early KMS initrd modules now handled by modules.hardware.laptop.graphics
+    # when primeMode = "nvidia-only" (nvidia, nvidia_modeset, nvidia_uvm, nvidia_drm, i915)
+
+    # GPU configuration for nvidia-only mode on Wayland
+    # NVIDIA renders everything, Intel panel just receives the output
     kernelParams = lib.mkMerge [
       [
         "quiet"
@@ -502,10 +515,8 @@
         "i915.enable_fbc=1"
         "i915.enable_psr=2"
         "nvme.noacpi=1"
-        "acpi=strict"
         "nouveau.modeset=0"
-        "nvidia-drm.modeset=0"
-        "nomodeset"
+        "initcall_blacklist=simpledrm_platform_driver_init"
       ]
       (lib.mkAfter ["loglevel=3"])
     ];
@@ -514,16 +525,10 @@
       options iwlwifi bt_coex_active=0 swcrypto=1 11n_disable=0
       options iwlmvm power_scheme=1
       blacklist nouveau
-      blacklist nvidia
-      blacklist nvidia_drm
-      blacklist nvidia_modeset
     '';
 
     blacklistedKernelModules = [
       "nouveau"
-      "nvidia"
-      "nvidia_drm"
-      "nvidia_modeset"
       "acpi_power_meter"
     ];
 
@@ -579,6 +584,8 @@
   ];
 
   # ===== ENVIRONMENT VARIABLES =====
+  # NOTE: NVIDIA Wayland vars (GBM_BACKEND, __GLX_VENDOR_LIBRARY_NAME, WLR_NO_HARDWARE_CURSORS)
+  # and suspend/resume services now handled by modules.hardware.laptop.graphics
   environment.sessionVariables = {
     MOZ_USE_XINPUT2 = "1";
     ELECTRON_FORCE_IS_PACKAGED = "true";
@@ -589,26 +596,16 @@
     DXVK_LOG_LEVEL = "warn";
   };
 
-  # ===== SECURITY (like desktop) =====
+  # ===== SECURITY =====
   security = {
     pam.services = {
       gdm.enableGnomeKeyring = true;
       gdm-password.enableGnomeKeyring = true;
     };
 
-    auditd.enable = true;
-    audit = {
-      enable = true;
-      backlogLimit = 8192;
-      failureMode = "printk";
-      rules = ["-a exit,always -F arch=b64 -S execve"];
-    };
-    # Prevent audit log from consuming all disk space (execve rule is verbose)
-    auditd.settings = {
-      max_log_file = 100; # MB — rotate at 100 MB
-      num_logs = 5; # Keep 5 rotated files (500 MB max)
-      max_log_file_action = "rotate";
-    };
+    # NOTE: auditd with execve rule disabled - generates 162GB+ logs on active systems
+    # Enable only for specific security auditing needs
+    auditd.enable = false;
 
     apparmor = {
       enable = true;

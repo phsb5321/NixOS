@@ -67,10 +67,10 @@ in {
     services.resolved = {
       enable = true;
 
-      # Structured settings for systemd-resolved [Resolve] section
+      # Tailscale-compatible configuration using settings.Resolve
       settings.Resolve = {
-        DNS = lib.concatStringsSep " " (cfg.primaryServers ++ cfg.fallbackServers);
-        FallbackDNS = lib.concatStringsSep " " cfg.fallbackServers;
+        DNS = cfg.primaryServers ++ cfg.fallbackServers;
+        FallbackDNS = cfg.fallbackServers;
         Domains = "~.";
 
         # Security settings
