@@ -390,7 +390,7 @@ in {
     wget
     git
     claude-code
-    opencode
+    # opencode  # Disabled: bun uses CPU instructions not available in this VM
     uv # Python package and environment manager
     sshpass # For SSH automation
     sshfs # For mounting remote filesystems
@@ -401,6 +401,10 @@ in {
 
     # X11 utilities for Xwayland compatibility
     xorg.xprop
+
+    # Nix helper tool (from desktop branch)
+    nh
+    alejandra  # Nix formatter
   ];
 
   # System state version
