@@ -69,10 +69,14 @@ in {
       description = "Enable Workspace Indicator extension";
     };
 
+    # NOTE: soundOutputChooser removed — the extension was discontinued and
+    # does not work on GNOME 45+.  GNOME 45+ has native Quick Settings for
+    # audio output switching.  Kept as a no-op alias so existing configs
+    # that set it to true won't fail evaluation.
     soundOutputChooser = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Enable Sound Output Device Chooser extension";
+      description = "Deprecated no-op (sound-output-device-chooser is dead on GNOME 45+)";
     };
 
     unite = lib.mkOption {
@@ -132,24 +136,85 @@ in {
     };
   };
 
-  config = lib.mkIf (cfg.enable && cfg.extensions.enable) {
-    # Extension packages
-    environment.systemPackages = with pkgs;
-      (lib.optionals cfg.extensions.appIndicator [gnomeExtensions.appindicator])
-      ++ (lib.optionals cfg.extensions.dashToDock [gnomeExtensions.dash-to-dock])
-      ++ (lib.optionals cfg.extensions.userThemes [gnomeExtensions.user-themes])
-      ++ (lib.optionals cfg.extensions.justPerfection [gnomeExtensions.just-perfection])
-      ++ (lib.optionals (cfg.extensions.vitals || cfg.extensions.productivity) [gnomeExtensions.vitals])
-      ++ (lib.optionals (cfg.extensions.caffeine || cfg.extensions.productivity) [gnomeExtensions.caffeine])
-      ++ (lib.optionals (cfg.extensions.clipboard || cfg.extensions.productivity) [gnomeExtensions.clipboard-indicator])
-      ++ (lib.optionals cfg.extensions.gsconnect [gnomeExtensions.gsconnect])
-      ++ (lib.optionals cfg.extensions.workspaceIndicator [gnomeExtensions.workspace-indicator])
-      ++ (lib.optionals cfg.extensions.soundOutputChooser [gnomeExtensions.sound-output-device-chooser])
-      ++ (lib.optionals cfg.extensions.unite [gnomeExtensions.unite])
-      ++ (lib.optionals cfg.extensions.launchNewInstance [gnomeExtensions.launch-new-instance]);
+  config = lib.mkIf (cfg.enable && cfg.extensions.enable) (let
+    # Single source of truth: map each option to its package and dconf UUID.
+    # Adding a new extension only requires adding one entry here.
+    extensionMap = [
+      {
+        cond = cfg.extensions.appIndicator;
+        pkg = pkgs.gnomeExtensions.appindicator;
+        uuid = "appindicatorsupport@rgcjonas.gmail.com";
+      }
+      {
+        cond = cfg.extensions.dashToDock;
+        pkg = pkgs.gnomeExtensions.dash-to-dock;
+        uuid = "dash-to-dock@micxgx.gmail.com";
+      }
+      {
+        cond = cfg.extensions.userThemes;
+        pkg = pkgs.gnomeExtensions.user-themes;
+        uuid = "user-theme@gnome-shell-extensions.gcampax.github.com";
+      }
+      {
+        cond = cfg.extensions.justPerfection;
+        pkg = pkgs.gnomeExtensions.just-perfection;
+        uuid = "just-perfection-desktop@just-perfection";
+      }
+      {
+        cond = cfg.extensions.vitals || cfg.extensions.productivity;
+        pkg = pkgs.gnomeExtensions.vitals;
+        uuid = "Vitals@CoreCoding.com";
+      }
+      {
+        cond = cfg.extensions.caffeine || cfg.extensions.productivity;
+        pkg = pkgs.gnomeExtensions.caffeine;
+        uuid = "caffeine@patapon.info";
+      }
+      {
+        cond = cfg.extensions.clipboard || cfg.extensions.productivity;
+        pkg = pkgs.gnomeExtensions.clipboard-indicator;
+        uuid = "clipboard-indicator@tudmotu.com";
+      }
+      {
+        cond = cfg.extensions.gsconnect;
+        pkg = pkgs.gnomeExtensions.gsconnect;
+        uuid = "gsconnect@andyholmes.github.io";
+      }
+      {
+        cond = cfg.extensions.workspaceIndicator;
+        pkg = pkgs.gnomeExtensions.workspace-indicator;
+        uuid = "workspace-indicator@gnome-shell-extensions.gcampax.github.com";
+      }
+      {
+        cond = cfg.extensions.unite;
+        pkg = pkgs.gnomeExtensions.unite;
+        uuid = "unite@hardpixel.eu";
+      }
+      {
+        cond = cfg.extensions.launchNewInstance;
+        pkg = pkgs.gnomeExtensions.launch-new-instance;
+        uuid = "launch-new-instance@gnome-shell-extensions.gcampax.github.com";
+      }
+    ];
 
-    # Note: dconf settings are intentionally minimal at system level
-    # Users should configure GNOME settings through the GUI or home-manager
-    # System-level dconf configuration has been removed to avoid GVariant complexity
-  };
+    # Filter to only enabled extensions
+    enabledExtensions = builtins.filter (e: e.cond) extensionMap;
+  in {
+    # Install extension packages
+    environment.systemPackages = map (e: e.pkg) enabledExtensions;
+
+    # Auto-generate dconf enabled-extensions list from the same source of truth.
+    # This ensures every installed extension is activated, and no activated
+    # extension is missing its package. Host gnome.nix files no longer need
+    # to maintain their own enabled-extensions lists.
+    programs.dconf.profiles.user.databases = [
+      {
+        settings = {
+          "org/gnome/shell" = {
+            enabled-extensions = map (e: e.uuid) enabledExtensions;
+          };
+        };
+      }
+    ];
+  });
 }

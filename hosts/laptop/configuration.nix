@@ -61,7 +61,8 @@
       clipboard = true;
       gsconnect = true;
       workspaceIndicator = true;
-      soundOutputChooser = true;
+      # soundOutputChooser removed: extension is dead on GNOME 45+
+      # GNOME 45+ has native Quick Settings for audio output switching
       productivity = true;
     };
 
