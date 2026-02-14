@@ -64,34 +64,27 @@ in {
 
   config = lib.mkIf cfg.enable {
     # systemd-resolved configuration with Tailscale compatibility
+    # Uses legacy options for compatibility across nixpkgs versions
     services.resolved = {
       enable = true;
-
-      # Structured settings for systemd-resolved [Resolve] section
-      settings.Resolve = {
-        DNS = lib.concatStringsSep " " (cfg.primaryServers ++ cfg.fallbackServers);
-        FallbackDNS = lib.concatStringsSep " " cfg.fallbackServers;
-        Domains = "~.";
-
-        # Security settings
-        DNSSEC =
-          if cfg.enableDnssec
-          then "allow-downgrade"
-          else "false";
-        DNSOverTLS =
-          if cfg.enableDoT
-          then "yes"
-          else "no";
-
-        # Tailscale compatibility settings
-        DNSStubListener = "yes";
-        DNSStubListenerExtra = "0.0.0.0";
-        Cache = "yes";
-
-        # Prevent conflicts with Tailscale MagicDNS
-        ReadEtcHosts = "yes";
-        ResolveUnicastSingleLabel = "yes";
-      };
+      domains = ["~."];
+      dns = cfg.primaryServers ++ cfg.fallbackServers;
+      fallbackDns = cfg.fallbackServers;
+      dnssec =
+        if cfg.enableDnssec
+        then "allow-downgrade"
+        else "false";
+      dnsovertls =
+        if cfg.enableDoT
+        then "opportunistic"
+        else "false";
+      extraConfig = ''
+        DNSStubListener=yes
+        DNSStubListenerExtra=0.0.0.0
+        Cache=yes
+        ReadEtcHosts=yes
+        ResolveUnicastSingleLabel=yes
+      '';
     };
 
     # DNS health monitoring system

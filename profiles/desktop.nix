@@ -30,7 +30,7 @@
     hardware = {
       enableRedistributableFirmware = true;
       enableAllFirmware = true;
-      firmware = with pkgs; [linux-firmware wireless-regdb];
+      firmware = with pkgs; [linux-firmware]; # wireless-regdb removed: desktop is wired-only
       bluetooth.enable = true;
       graphics = {
         enable = true;

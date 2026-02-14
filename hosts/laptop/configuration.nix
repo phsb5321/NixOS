@@ -139,14 +139,11 @@
       security = true;
       pdfViewer = true;
       messaging = true;
-      fonts = true;
     };
 
     # Audio/Video
     audioVideo = {
       enable = true;
-      pipewire = true;
-      audioEffects = true;
       audioControl = true;
       webcam = true;
     };
@@ -154,7 +151,6 @@
     # Terminal
     terminal = {
       enable = true;
-      fonts = true;
       shell = true;
       theme = true;
       modernTools = true;
