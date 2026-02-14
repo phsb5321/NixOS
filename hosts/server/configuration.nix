@@ -6,7 +6,12 @@
   hostname,
   lib,
   ...
-}: {
+}: let
+  # ESC character for ANSI color codes (Nix has no \e literal)
+  esc = builtins.fromJSON ''"\u001b"'';
+  c = code: "${esc}[${code}m";
+  reset = c "0";
+in {
   imports =
     [
       ./hardware-configuration.nix
@@ -78,9 +83,90 @@
     useOSProber = true;
   };
 
+  # ===== 2-LAYER MEMORY MANAGEMENT (No Swap) =====
+  # Server has 24GB RAM - no swap, rely on earlyoom and cgroup limits
+  modules.core.memoryManagement = {
+    enable = true;
+
+    # Layer 1: ZRAM disabled - server should not swap
+    zram.enable = false;
+
+    # Layer 2: earlyoom (kill runaway processes before system freeze)
+    earlyoom = {
+      enable = true;
+      freeMemThresholdPercent = 5;
+      freeSwapThresholdPercent = 100; # Effectively disabled since no swap
+      enableNotifications = false; # No desktop on server
+      # Prefer killing high-memory processes, avoid critical services
+      preferRegex = "(nix-daemon|docker|node|python)";
+      avoidRegex = "(sshd|systemd|greetd|qbittorrent|plex|audiobookshelf)";
+    };
+
+    # Layer 3: Cgroup limits (sized for 24GB server)
+    nixDaemon = {
+      memoryHigh = "18G"; # Soft limit
+      memoryMax = "20G"; # Hard limit
+    };
+    docker = {
+      memoryMax = "16G"; # Docker container limit
+    };
+  };
+
+  # Disable all swap devices
+  swapDevices = lib.mkForce [];
+  zramSwap.enable = lib.mkForce false;
+
+  # ===== KERNEL I/O TUNING (FR-007) =====
+  # Prevent jbd2 blocked-task panics and optimize for server workloads
+  boot.kernel.sysctl = {
+    "kernel.hung_task_timeout_secs" = 300; # Increase from 120s (HDD in VM can exceed 120s under load)
+    "vm.dirty_ratio" = 40; # Allow 40% dirty pages before blocking (default: 20%)
+    "vm.dirty_background_ratio" = 10; # Start background writeback at 10%
+
+    # ===== NETWORK QoS - Prevent torrent traffic from starving SSH =====
+    "net.ipv4.tcp_congestion_control" = "bbr"; # Google BBR: low latency under load
+    "net.core.default_qdisc" = "cake"; # CAKE qdisc for new interfaces
+    "net.ipv4.tcp_fastopen" = 3; # TFO for client + server
+    "net.ipv4.tcp_slow_start_after_idle" = 0; # Keep cwnd after idle
+    "net.ipv4.tcp_mtu_probing" = 1; # Auto-discover MTU
+  };
+
+  # ===== I/O SCHEDULER (FR-007) =====
+  # mq-deadline is optimal for HDDs with sequential I/O (torrent downloads, media streaming)
+  services.udev.extraRules = ''
+    ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="mq-deadline"
+  '';
+
   # Proxmox VM hardware optimization
   services.qemuGuest.enable = true;
   services.spice-vdagentd.enable = true;
+
+  # ===== NETWORK QoS - CAKE Traffic Shaping =====
+  # CAKE with diffserv4 auto-prioritizes interactive traffic (SSH) over bulk (torrents)
+  # No bandwidth limits - qBittorrent gets full speed, but SSH packets go first
+  systemd.services.network-qos = {
+    description = "Configure CAKE QoS on network interface";
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.iproute2}/bin/tc qdisc replace dev ens18 root cake diffserv4 nat wash";
+      ExecStop = "${pkgs.iproute2}/bin/tc qdisc replace dev ens18 root fq_codel";
+    };
+  };
+
+  # Lower qBittorrent CPU and I/O priority so SSH/interactive sessions get resources first
+  # Nice 10 = lower CPU priority; IOSchedulingPriority 7 = lowest best-effort I/O priority
+  systemd.services.qbittorrent.serviceConfig = {
+    Nice = 10;
+    IOSchedulingClass = "best-effort";
+    IOSchedulingPriority = 7;
+  };
+
+  # Enable nix-ld for dynamically linked binaries (claude-code, etc.)
+  programs.nix-ld.enable = true;
 
   # Enable 3D acceleration for Proxmox VMs with VirtIO-GPU
   hardware.graphics = {
@@ -260,6 +346,26 @@
   # Enable automatic login for the user (matching original config)
   services.displayManager.autoLogin.enable = true;
   services.displayManager.autoLogin.user = "notroot";
+
+  # ===== SSH WELCOME BANNER =====
+  # Nice MOTD shown on SSH login and local console (via PAM)
+  users.motd = ''
+    ${c "38;5;39"}╔═══════════════════════════════════════════════════════════════╗
+    ║${reset} ${c "1;37"} NixOS Server${reset} ${c "38;5;245"}•${reset} ${c "38;5;75"}Media & Services Hub${reset}                          ${c "38;5;39"}║
+    ╠═══════════════════════════════════════════════════════════════╣${reset}
+    ${c "38;5;39"}║${reset}  ${c "38;5;208"}󰒍${reset}  Plex          ${c "38;5;245"}:${reset} ${c "38;5;255"}http://192.168.1.169:32400${reset}              ${c "38;5;39"}║
+    ║${reset}  ${c "38;5;40"}󰦐${reset}  qBittorrent   ${c "38;5;245"}:${reset} ${c "38;5;255"}http://192.168.1.169:8080${reset}               ${c "38;5;39"}║
+    ║${reset}  ${c "38;5;135"}󰋋${reset}  Audiobookshelf${c "38;5;245"}:${reset} ${c "38;5;255"}https://audiobooks.home301server.com.br${reset} ${c "38;5;39"}║
+    ╠═══════════════════════════════════════════════════════════════╣${reset}
+    ${c "38;5;39"}║${reset}  ${c "38;5;245"}Storage:${reset} ${c "38;5;255"}/mnt/torrents${reset} ${c "38;5;245"}(2TB)${reset}                               ${c "38;5;39"}║
+    ║${reset}  ${c "38;5;245"}Config:${reset}  ${c "38;5;255"}~/NixOS${reset} ${c "38;5;245"}(flake.nix)${reset}                              ${c "38;5;39"}║
+    ╚═══════════════════════════════════════════════════════════════╝${reset}
+
+  '';
+
+  # Disable SSH's own PrintMotd - PAM (via users.motd) handles it
+  # This prevents the MOTD from showing twice on SSH login
+  services.openssh.settings.PrintMotd = false;
 
   # JUSTIFIED: Server profile doesn't import common.nix directly, needs explicit enables
   modules.packages = {

@@ -166,7 +166,7 @@
       # Server using stable for reliability
       server = {
         system = "x86_64-linux";
-        hostname = "nixos-server";
+        hostname = "server";
         configPath = "server";
         nixpkgsInput = inputs.nixpkgs; # Explicitly stable
       };
