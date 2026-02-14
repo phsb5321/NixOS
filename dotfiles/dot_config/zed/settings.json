@@ -146,8 +146,8 @@
     "enabled_in_text_threads": false
   },
 
-  // ===== AGENT CONFIGURATION (Your existing config) =====
-  /* Duplicated key auto-commented: "agent": {
+  // ===== AGENT CONFIGURATION =====
+  "agent": {
     "play_sound_when_agent_done": true,
     "profiles": {
       "write": {
@@ -180,17 +180,7 @@
     "default_model": {
       "provider": "copilot_chat",
       "model": "claude-sonnet-4"
-    }
-  }, */
-
-  // ===== ASSISTANT CONFIGURATION =====
-  "agent": {
-    "enabled": true,
-    "default_model": {
-      "provider": "copilot_chat",
-      "model": "gpt-4"
     },
-    "dock": "right",
     "default_width": 400,
     "button": true
   },
@@ -208,10 +198,7 @@
         },
         "options": {
           "nixos": {
-            "expr": "(builtins.getFlake \"/home/notroot/NixOS\").nixosConfigurations.default.options"
-          },
-          "home-manager": {
-            "expr": "(builtins.getFlake \"/home/notroot/NixOS\").homeConfigurations.\"notroot@nixos\".options"
+            "expr": "(builtins.getFlake (toString ./.)).nixosConfigurations.desktop.options"
           }
         }
       }

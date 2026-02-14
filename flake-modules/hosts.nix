@@ -39,7 +39,7 @@
 
       # OpenCode bleeding edge from flake input
       (_final: _prev: {
-        opencode = inputs.opencode.packages.${_final.system}.opencode;
+        opencode = inputs.opencode.packages.${_final.stdenv.hostPlatform.system}.opencode;
       })
     ];
 
@@ -143,7 +143,7 @@
       # Primary desktop system
       desktop = {
         system = "x86_64-linux";
-        hostname = "nixos-desktop";
+        hostname = "desktop";
         configPath = "desktop"; # Maps to hosts/desktop/
         nixpkgsInput = inputs.nixpkgs-unstable; # Use unstable as the main channel
       };

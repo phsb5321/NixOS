@@ -141,14 +141,11 @@
       security = true;
       pdfViewer = true;
       messaging = true;
-      fonts = true;
     };
 
     # Audio/Video
     audioVideo = {
       enable = true;
-      pipewire = true;
-      audioEffects = true;
       audioControl = true;
       webcam = true;
     };
@@ -156,7 +153,6 @@
     # Terminal
     terminal = {
       enable = true;
-      fonts = true;
       shell = true;
       theme = true;
       modernTools = true;
@@ -617,9 +613,19 @@
       gdm-password.enableGnomeKeyring = true;
     };
 
-    # NOTE: auditd with execve rule disabled - generates 162GB+ logs on active systems
-    # Enable only for specific security auditing needs
-    auditd.enable = false;
+    auditd.enable = true;
+    audit = {
+      enable = true;
+      backlogLimit = 8192;
+      failureMode = "printk";
+      rules = ["-a exit,always -F arch=b64 -S execve"];
+    };
+    # Prevent audit log from consuming all disk space (execve rule is verbose)
+    auditd.settings = {
+      max_log_file = 100; # MB — rotate at 100 MB
+      num_logs = 5; # Keep 5 rotated files (500 MB max)
+      max_log_file_action = "rotate";
+    };
 
     apparmor = {
       enable = true;
