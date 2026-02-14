@@ -14,8 +14,9 @@
       ../../profiles/server.nix
       ./gnome.nix
     ]
-    ++ lib.optionals (builtins.pathExists ./server-secrets.nix) [
-      ./server-secrets.nix # Local secrets file (gitignored)
+    # server-secrets.nix is gitignored, so use absolute path for impure builds
+    ++ lib.optionals (builtins.pathExists /home/notroot/NixOS/hosts/server/server-secrets.nix) [
+      /home/notroot/NixOS/hosts/server/server-secrets.nix
     ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
@@ -49,12 +50,9 @@
   # JUSTIFIED: Must disable systemd-resolved to avoid conflicts with manual DNS
   services.resolved.enable = lib.mkForce false;
 
-  # JUSTIFIED: Gaming module adds NVIDIA env vars that break VirtIO-GPU
-  modules.core.gaming.enable = lib.mkForce false;
-
   # Explicitly enable X11 for VM compatibility with proper video drivers
   services.xserver = {
-    enable = true;
+    enable = lib.mkForce true;
     # Video driver configuration for Proxmox QEMU VM
     # Supports both VirtIO-GPU and QXL display types
     videoDrivers = ["modesetting" "qxl" "virtio"];
