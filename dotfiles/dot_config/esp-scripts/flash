@@ -1,0 +1,355 @@
+#!/usr/bin/env bash
+# flash - Upload firmware to ESP32 with automatic port detection and reset
+#
+# Usage: ./scripts/flash [OPTIONS]
+#
+# Options:
+#   --env <name>     PlatformIO environment
+#   --port <path>    Serial port path
+#   --no-reset       Skip post-upload reset
+#   --no-verify      Skip boot verification
+#   --verbose        Show PlatformIO output in real-time
+#
+# Exit codes:
+#   0 - Upload successful, boot verified (or --no-verify)
+#   1 - User-fixable error (permissions, bootloader mode)
+#   2 - Environment error (no port, pio error)
+#   3 - Hardware error (upload failed after retry)
+#
+# Environment:
+#   PIO_ENV           Override environment
+#   UPLOAD_PORT       Override port
+#   ESP_RESET_METHOD  Reset method: dtr (default), esptool, manual
+
+set -euo pipefail
+
+# --- Configuration ---
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --- Globals ---
+ENV_NAME=""
+PORT=""
+NO_RESET=false
+NO_VERIFY=false
+VERBOSE=false
+
+# --- Functions ---
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Upload firmware to ESP32 with automatic port detection and post-upload reset.
+
+Options:
+  --env <name>     PlatformIO environment (default: auto-detect from platformio.ini)
+  --port <path>    Serial port path (default: auto-detect)
+  --no-reset       Skip post-upload reset
+  --no-verify      Skip boot verification
+  --verbose        Show PlatformIO output in real-time
+  -h, --help       Show this help message
+  -v, --version    Show version
+
+Exit codes:
+  0 - Upload successful, boot verified (or --no-verify)
+  1 - User-fixable error (permissions, bootloader mode)
+  2 - Environment error (no port, pio error)
+  3 - Hardware error (upload failed after retry)
+
+Environment:
+  PIO_ENV           Override environment
+  UPLOAD_PORT       Override port
+  ESP_RESET_METHOD  Reset method: dtr (default), esptool, manual
+EOF
+}
+
+# Print error with fix instructions
+print_permission_error() {
+    local port="$1"
+    cat >&2 <<EOF
+
+ERROR: Permission denied on $port
+
+FIX: Ensure you are in the dialout group:
+  1. Check: groups | grep dialout
+  2. If missing, your NixOS config should include:
+     modules.hardware.espDevices.enable = true;
+  3. After rebuild: logout and login again
+  4. Quick test: newgrp dialout
+
+EOF
+}
+
+print_bootloader_error() {
+    cat >&2 <<EOF
+
+ERROR: Board not responding (upload timeout)
+
+FIX: Board may need manual bootloader mode:
+  1. Hold the BOOT button (IO0)
+  2. Tap the RESET button
+  3. Release BOOT
+  4. Run: ./scripts/flash
+
+EOF
+}
+
+print_port_busy_error() {
+    local port="$1"
+    cat >&2 <<EOF
+
+ERROR: Port $port is busy
+
+FIX: Another process may be using the port:
+  1. Check: lsof $port
+  2. Kill the process or close the serial monitor
+  3. Try again
+
+EOF
+}
+
+# Source pio-env to get environment settings
+get_env_settings() {
+    local pio_env_script="$SCRIPT_DIR/pio-env"
+    
+    if [[ ! -x "$pio_env_script" ]]; then
+        echo "Error: pio-env script not found at $pio_env_script" >&2
+        return 1
+    fi
+    
+    # Build arguments
+    local args=()
+    [[ -n "$ENV_NAME" ]] && args+=(--env "$ENV_NAME")
+    
+    # Get settings
+    local output
+    if ! output=$("$pio_env_script" "${args[@]}" 2>&1); then
+        echo "$output" >&2
+        return 1
+    fi
+    
+    # Source the output
+    eval "$output"
+}
+
+# Run PlatformIO upload
+run_upload() {
+    local env="$1"
+    local port="$2"
+    
+    local args=(run -t upload)
+    [[ -n "$env" ]] && args+=(-e "$env")
+    [[ -n "$port" ]] && args+=(--upload-port "$port")
+    
+    echo "  Command: pio ${args[*]}"
+    echo ""
+    
+    local exit_code=0
+    local output=""
+    
+    if $VERBOSE; then
+        # Real-time output
+        pio "${args[@]}" 2>&1 || exit_code=$?
+    else
+        # Capture output
+        output=$(pio "${args[@]}" 2>&1) || exit_code=$?
+        
+        # Show abbreviated output
+        if [[ $exit_code -eq 0 ]]; then
+            echo "$output" | grep -E '(Building|Uploading|SUCCESS|\[SUCCESS\]|Writing|Wrote)' | head -20 || true
+        else
+            echo "$output" | tail -30
+        fi
+    fi
+    
+    # Analyze exit code and output for specific errors
+    if [[ $exit_code -ne 0 ]]; then
+        if echo "$output" | grep -qi "permission denied"; then
+            print_permission_error "$port"
+            return 1
+        elif echo "$output" | grep -qi "resource busy\|device or resource busy"; then
+            print_port_busy_error "$port"
+            return 1
+        elif echo "$output" | grep -qi "connect\|connecting\.\.\.\|failed to connect\|timed out"; then
+            print_bootloader_error
+            return 1
+        else
+            echo "" >&2
+            echo "ERROR: Upload failed (exit code: $exit_code)" >&2
+            return 3
+        fi
+    fi
+    
+    return 0
+}
+
+# Run reset script
+run_reset() {
+    local port="$1"
+    local reset_script="$SCRIPT_DIR/reset"
+    
+    if [[ ! -x "$reset_script" ]]; then
+        echo "Warning: reset script not found, skipping reset" >&2
+        return 0
+    fi
+    
+    local args=(--port "$port")
+    $NO_VERIFY && args+=(--no-verify)
+    
+    "$reset_script" "${args[@]}"
+}
+
+# Main function
+main() {
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --env)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --env requires an environment name" >&2
+                    exit 1
+                fi
+                ENV_NAME="$2"
+                shift 2
+                ;;
+            --port)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --port requires a path" >&2
+                    exit 1
+                fi
+                PORT="$2"
+                shift 2
+                ;;
+            --no-reset)
+                NO_RESET=true
+                shift
+                ;;
+            --no-verify)
+                NO_VERIFY=true
+                shift
+                ;;
+            --verbose)
+                VERBOSE=true
+                shift
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -v|--version)
+                echo "flash version $VERSION"
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Check for PlatformIO
+    if ! command -v pio &> /dev/null; then
+        echo "Error: PlatformIO (pio) not found in PATH" >&2
+        echo "Hint: Enter the ESP development shell with: nix-shell shells/ESP.nix" >&2
+        exit 2
+    fi
+    
+    # Get environment settings
+    echo "Flash ESP32 Firmware"
+    echo "===================="
+    
+    # Override with environment variables
+    [[ -n "${PIO_ENV:-}" ]] && ENV_NAME="$PIO_ENV"
+    [[ -n "${UPLOAD_PORT:-}" ]] && PORT="$UPLOAD_PORT"
+    
+    # Get settings from pio-env
+    if ! get_env_settings 2>/dev/null; then
+        # pio-env failed, but we might have manual overrides
+        if [[ -z "$PORT" ]]; then
+            echo "Error: Could not determine upload port" >&2
+            echo "Hint: Set UPLOAD_PORT or run from a PlatformIO project directory" >&2
+            exit 2
+        fi
+    fi
+    
+    # Use pio-env results if not overridden
+    PORT="${PORT:-${UPLOAD_PORT:-}}"
+    ENV_NAME="${ENV_NAME:-${PIO_ENV:-}}"
+    
+    # Final validation
+    if [[ -z "$PORT" ]]; then
+        echo "Error: No upload port available" >&2
+        echo "" >&2
+        echo "Troubleshooting:" >&2
+        echo "  1. Connect ESP32 via USB" >&2
+        echo "  2. Run: ./scripts/device-list" >&2
+        echo "  3. Set port: UPLOAD_PORT=/dev/ttyUSB0 ./scripts/flash" >&2
+        exit 2
+    fi
+    
+    # Check port exists
+    if [[ ! -e "$PORT" ]]; then
+        echo "Error: Port $PORT does not exist" >&2
+        exit 2
+    fi
+    
+    # Check port permissions
+    if [[ ! -r "$PORT" || ! -w "$PORT" ]]; then
+        print_permission_error "$PORT"
+        exit 1
+    fi
+    
+    echo "Environment: ${ENV_NAME:-default}"
+    echo "Port: $PORT"
+    echo ""
+    
+    # Step 1: Build and Upload
+    echo "[1/3] Building and uploading firmware..."
+    echo "       Board: ${BOARD:-unknown}"
+    echo "       Platform: ${PLATFORM:-espressif32}"
+    echo ""
+    
+    local upload_exit=0
+    if ! run_upload "$ENV_NAME" "$PORT"; then
+        upload_exit=$?
+        exit $upload_exit
+    fi
+    
+    echo ""
+    echo "       Upload: SUCCESS"
+    
+    # Step 2: Reset (unless --no-reset)
+    if $NO_RESET; then
+        echo ""
+        echo "[2/3] Skipping reset (--no-reset)"
+        echo "[3/3] Skipping verification"
+        echo ""
+        echo "SUCCESS: Firmware uploaded"
+        exit 0
+    fi
+    
+    echo ""
+    echo "[2/3] Resetting board..."
+    
+    # Small delay to let upload complete
+    sleep 0.5
+    
+    # Step 3: Reset and verify
+    echo ""
+    echo "[3/3] Verifying boot..."
+    
+    if run_reset "$PORT"; then
+        echo ""
+        echo "SUCCESS: Firmware uploaded and verified"
+        exit 0
+    else
+        echo ""
+        echo "WARNING: Board may need manual reset" >&2
+        echo "         Press the RESET button on your ESP32" >&2
+        exit 1
+    fi
+}
+
+main "$@"

@@ -36,6 +36,11 @@
             });
           };
       })
+
+      # OpenCode bleeding edge from flake input
+      (_final: _prev: {
+        opencode = inputs.opencode.packages.${_final.stdenv.hostPlatform.system}.opencode;
+      })
     ];
 
     # Helper function to create a NixOS system with perSystem context
@@ -138,7 +143,7 @@
       # Primary desktop system
       desktop = {
         system = "x86_64-linux";
-        hostname = "nixos-desktop";
+        hostname = "desktop";
         configPath = "desktop"; # Maps to hosts/desktop/
         nixpkgsInput = inputs.nixpkgs-unstable; # Use unstable as the main channel
       };
@@ -149,6 +154,13 @@
         hostname = "nixos-laptop";
         configPath = "laptop"; # Maps to hosts/laptop/
         # Uses stable nixpkgs by default
+        extraModules = [
+          inputs.nixos-hardware.nixosModules.common-cpu-intel
+          inputs.nixos-hardware.nixosModules.common-gpu-intel
+          inputs.nixos-hardware.nixosModules.common-gpu-nvidia-disable
+          inputs.nixos-hardware.nixosModules.common-pc-laptop
+          inputs.nixos-hardware.nixosModules.common-pc-laptop-ssd
+        ];
       };
 
       # Server using stable for reliability

@@ -1,0 +1,256 @@
+#!/usr/bin/env bash
+# monitor - Non-interactive serial monitor with file logging
+#
+# Usage: ./scripts/monitor [OPTIONS]
+#
+# Options:
+#   --port <path>      Serial port path (default: auto-detect)
+#   --baud <rate>      Baud rate (default: 115200)
+#   --timeout <sec>    Exit after N seconds (0 = never)
+#   --no-log           Don't write to log file
+#   --log-dir <path>   Log file directory (default: ./logs)
+#
+# Exit codes:
+#   0 - Normal exit (Ctrl+C or timeout)
+#   1 - Port error (permission denied, port busy)
+#   2 - PlatformIO device monitor unavailable
+#
+# Environment:
+#   MONITOR_PORT     Override port
+#   BAUD_RATE        Override baud rate
+#   MONITOR_SECONDS  Override timeout
+#   ESP_LOG_DIR      Override log directory
+
+set -euo pipefail
+
+# --- Configuration ---
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --- Globals ---
+PORT=""
+BAUD="${BAUD_RATE:-115200}"
+TIMEOUT="${MONITOR_SECONDS:-0}"
+LOG_ENABLED=true
+LOG_DIR="${ESP_LOG_DIR:-./logs}"
+
+# --- Functions ---
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Non-interactive serial monitor with file logging and optional timeout.
+
+Options:
+  --port <path>      Serial port path (default: auto-detect)
+  --baud <rate>      Baud rate (default: 115200)
+  --timeout <sec>    Exit after N seconds (0 = never, default: 0)
+  --no-log           Don't write to log file
+  --log-dir <path>   Log file directory (default: ./logs)
+  -h, --help         Show this help message
+  -v, --version      Show version
+
+Exit codes:
+  0 - Normal exit (Ctrl+C or timeout)
+  1 - Port error (permission denied, port busy)
+  2 - Serial monitor unavailable
+
+Environment:
+  MONITOR_PORT       Override port
+  BAUD_RATE          Override baud rate
+  MONITOR_SECONDS    Override timeout (equivalent to --timeout)
+  ESP_LOG_DIR        Override log directory
+EOF
+}
+
+# Get port from device-list
+get_auto_port() {
+    local device_list_script="$SCRIPT_DIR/device-list"
+    
+    if [[ -x "$device_list_script" ]]; then
+        "$device_list_script" --first 2>/dev/null || echo ""
+    else
+        pio device list 2>/dev/null | grep -E '^/dev/' | head -1 || echo ""
+    fi
+}
+
+# Main function
+main() {
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --port)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --port requires a path" >&2
+                    exit 1
+                fi
+                PORT="$2"
+                shift 2
+                ;;
+            --baud)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --baud requires a number" >&2
+                    exit 1
+                fi
+                BAUD="$2"
+                shift 2
+                ;;
+            --timeout)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --timeout requires a number" >&2
+                    exit 1
+                fi
+                TIMEOUT="$2"
+                shift 2
+                ;;
+            --no-log)
+                LOG_ENABLED=false
+                shift
+                ;;
+            --log-dir)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --log-dir requires a path" >&2
+                    exit 1
+                fi
+                LOG_DIR="$2"
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -v|--version)
+                echo "monitor version $VERSION"
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Get port (env override, then argument, then auto-detect)
+    PORT="${MONITOR_PORT:-$PORT}"
+    
+    if [[ -z "$PORT" ]]; then
+        PORT=$(get_auto_port)
+    fi
+    
+    if [[ -z "$PORT" ]]; then
+        echo "Error: No serial port found" >&2
+        echo "Run: ./scripts/device-list" >&2
+        exit 1
+    fi
+    
+    # Verify port exists
+    if [[ ! -e "$PORT" ]]; then
+        echo "Error: Port $PORT does not exist" >&2
+        exit 1
+    fi
+    
+    # Check permissions
+    if [[ ! -r "$PORT" || ! -w "$PORT" ]]; then
+        echo "Error: Permission denied on $PORT" >&2
+        echo "" >&2
+        echo "FIX: Add yourself to dialout group:" >&2
+        echo "  1. Enable: modules.hardware.espDevices.enable = true;" >&2
+        echo "  2. Rebuild NixOS and logout/login" >&2
+        exit 1
+    fi
+    
+    # Setup logging
+    local log_file=""
+    if $LOG_ENABLED; then
+        mkdir -p "$LOG_DIR"
+        log_file="$LOG_DIR/serial-$(date +%Y%m%d-%H%M%S).log"
+    fi
+    
+    # Print header
+    echo "ESP32 Serial Monitor"
+    echo "===================="
+    echo "Port: $PORT"
+    echo "Baud: $BAUD"
+    if $LOG_ENABLED; then
+        echo "Log: $log_file"
+    fi
+    if [[ "$TIMEOUT" -gt 0 ]]; then
+        echo "Timeout: $TIMEOUT seconds"
+    fi
+    echo "Press Ctrl+C to stop"
+    echo "---"
+    
+    # Determine which monitor to use
+    local monitor_cmd=""
+    
+    if command -v pio &> /dev/null; then
+        monitor_cmd="pio"
+    elif command -v picocom &> /dev/null; then
+        monitor_cmd="picocom"
+    else
+        echo "Error: No serial monitor available (need pio or picocom)" >&2
+        exit 2
+    fi
+    
+    # Build monitor command
+    local exit_code=0
+    
+    if [[ "$monitor_cmd" == "pio" ]]; then
+        # PlatformIO device monitor
+        local pio_args=(device monitor --port "$PORT" --baud "$BAUD" --raw)
+        
+        if [[ "$TIMEOUT" -gt 0 ]]; then
+            if $LOG_ENABLED; then
+                timeout "$TIMEOUT" pio "${pio_args[@]}" 2>&1 | tee -a "$log_file" || exit_code=$?
+            else
+                timeout "$TIMEOUT" pio "${pio_args[@]}" || exit_code=$?
+            fi
+        else
+            if $LOG_ENABLED; then
+                pio "${pio_args[@]}" 2>&1 | tee -a "$log_file" || exit_code=$?
+            else
+                pio "${pio_args[@]}" || exit_code=$?
+            fi
+        fi
+    else
+        # Picocom fallback
+        local picocom_args=(-b "$BAUD" --noreset --noinit "$PORT")
+        
+        if [[ "$TIMEOUT" -gt 0 ]]; then
+            if $LOG_ENABLED; then
+                timeout "$TIMEOUT" picocom "${picocom_args[@]}" 2>&1 | tee -a "$log_file" || exit_code=$?
+            else
+                timeout "$TIMEOUT" picocom "${picocom_args[@]}" || exit_code=$?
+            fi
+        else
+            if $LOG_ENABLED; then
+                picocom "${picocom_args[@]}" 2>&1 | tee -a "$log_file" || exit_code=$?
+            else
+                picocom "${picocom_args[@]}" || exit_code=$?
+            fi
+        fi
+    fi
+    
+    echo "---"
+    
+    # Handle exit
+    if [[ "$TIMEOUT" -gt 0 ]] && [[ $exit_code -eq 124 ]]; then
+        echo "Stopped: timeout after $TIMEOUT seconds"
+        exit_code=0
+    elif [[ $exit_code -eq 130 ]] || [[ $exit_code -eq 0 ]]; then
+        echo "Stopped: user interrupt"
+        exit_code=0
+    fi
+    
+    if $LOG_ENABLED && [[ -f "$log_file" ]]; then
+        local line_count
+        line_count=$(wc -l < "$log_file" 2>/dev/null || echo 0)
+        echo "Log saved: $log_file ($line_count lines)"
+    fi
+    
+    exit $exit_code
+}
+
+main "$@"

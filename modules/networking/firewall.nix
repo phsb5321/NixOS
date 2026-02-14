@@ -101,57 +101,9 @@ in {
       '';
     };
 
-    # Enable nftables when requested
-    networking.nftables = lib.mkIf cfg.useNftables {
-      enable = true;
-
-      # Basic nftables ruleset
-      ruleset = ''
-        table inet filter {
-          chain input {
-            type filter hook input priority filter;
-
-            # Allow loopback
-            iifname "lo" accept
-
-            ${lib.optionalString cfg.tailscaleCompatible ''
-          # Allow Tailscale
-          iifname "tailscale0" accept
-        ''}
-
-            # Allow established and related connections
-            ct state {established, related} accept
-
-            # Allow ICMP
-            icmp type echo-request accept
-            icmpv6 type echo-request accept
-
-            # Default policy
-            policy drop;
-          }
-
-          chain forward {
-            type filter hook forward priority filter;
-
-            ${lib.optionalString cfg.tailscaleCompatible ''
-          # Allow Tailscale forwarding
-          iifname "tailscale0" accept
-          oifname "tailscale0" accept
-        ''}
-
-            # Allow established and related
-            ct state {established, related} accept
-
-            policy drop;
-          }
-
-          chain output {
-            type filter hook output priority filter;
-            policy accept;
-          }
-        }
-      '';
-    };
+    # Enable nftables backend for NixOS firewall (no custom ruleset needed —
+    # NixOS generates proper nftables rules from allowedTCPPorts, trustedInterfaces, etc.)
+    networking.nftables.enable = lib.mkIf cfg.useNftables true;
 
     # Additional packages for firewall management
     environment.systemPackages = with pkgs; [

@@ -126,24 +126,25 @@
       # Disable legacy DHCP clients and conflicting services
       networking.useDHCP = false;
       networking.dhcpcd.enable = false;
-      networking.wireless.enable = false;
+      # Note: networking.wireless.enable is managed by NetworkManager wifi backend
+      # When using iwd backend, this must be false
+      # When using wpa_supplicant backend, NetworkManager handles it internally
 
       # ———————————————————————————————————————
       # systemd-resolved stub resolver
       # ———————————————————————————————————————
       services.resolved = {
         enable = cfg.dns.enableSystemdResolved;
-        dnssec = "allow-downgrade";
-        fallbackDns = selectedDNS;
-        extraConfig = ''
-          DNSOverTLS=${
+        settings.Resolve = {
+          DNSSEC = "allow-downgrade";
+          FallbackDNS = selectedDNS;
+          DNSOverTLS =
             if cfg.dns.enableDNSOverTLS
             then "yes"
-            else "no"
-          }
-          Cache=yes
-          DNSStubListener=yes
-        '';
+            else "no";
+          Cache = "yes";
+          DNSStubListener = "yes";
+        };
       };
 
       # ———————————————————————————————————————

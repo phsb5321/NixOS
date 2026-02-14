@@ -47,12 +47,6 @@ in {
       description = "Install messaging apps (Ferdium)";
     };
 
-    fonts = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Install essential fonts";
-    };
-
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [];
@@ -72,10 +66,9 @@ in {
       ++ (lib.optionals cfg.fileSync [
         syncthing
       ])
-      # Compression
+      # Compression (unzip already in core)
       ++ (lib.optionals cfg.compression [
         pigz
-        unzip
       ])
       # Security
       ++ (lib.optionals cfg.security [
@@ -89,14 +82,6 @@ in {
       # Messaging
       ++ (lib.optionals cfg.messaging [
         ferdium
-      ])
-      # Fonts
-      ++ (lib.optionals cfg.fonts [
-        cantarell-fonts
-        liberation_ttf
-        noto-fonts
-        noto-fonts-cjk-sans
-        noto-fonts-color-emoji
       ])
       # Extra packages
       ++ cfg.extraPackages;

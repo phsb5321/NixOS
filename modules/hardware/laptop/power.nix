@@ -17,7 +17,7 @@ in {
       percentageLow = 15;
       percentageCritical = 5;
       percentageAction = 3;
-      criticalPowerAction = "Hibernate";
+      criticalPowerAction = "PowerOff"; # No swap device — hibernate would fail silently
     };
 
     # TLP for power management
@@ -34,7 +34,7 @@ in {
         # Battery charge thresholds (if supported by hardware)
         START_CHARGE_THRESH_BAT0 =
           lib.mkIf (cfg.batteryManagement.chargeThreshold != null)
-          (cfg.batteryManagement.chargeThreshold - 5);
+          40;
         STOP_CHARGE_THRESH_BAT0 = cfg.batteryManagement.chargeThreshold;
 
         # USB autosuspend

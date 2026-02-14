@@ -6,10 +6,7 @@
   hostname,
   lib,
   ...
-}: let
-  # Server secrets file path (gitignored, must exist on the actual server)
-  serverSecretsPath = /home/notroot/NixOS/hosts/server/server-secrets.nix;
-in {
+}: {
   imports =
     [
       ./hardware-configuration.nix
@@ -17,8 +14,8 @@ in {
       ../../profiles/server.nix
       ./gnome.nix
     ]
-    ++ lib.optionals (builtins.pathExists serverSecretsPath) [
-      serverSecretsPath # Local secrets file (gitignored)
+    ++ lib.optionals (builtins.pathExists ./server-secrets.nix) [
+      ./server-secrets.nix # Local secrets file (gitignored)
     ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
@@ -38,9 +35,6 @@ in {
     };
     firewall = {
       enable = true;
-      # JUSTIFIED: Disable custom nftables ruleset - conflicts with nixos-fw table
-      # The custom 'inet filter' table blocks SSH because it doesn't include port rules
-      useNftables = lib.mkForce false;
       developmentPorts = [22 3000]; # SSH and development server
     };
   };
@@ -58,10 +52,19 @@ in {
   # JUSTIFIED: Gaming module adds NVIDIA env vars that break VirtIO-GPU
   modules.core.gaming.enable = lib.mkForce false;
 
-  # Video driver configuration for Proxmox QEMU VM
-  # Note: services.xserver.enable is managed by wayland.nix module
-  # These settings are still used by GDM/Wayland for GPU configuration
-  services.xserver.videoDrivers = ["modesetting" "qxl" "virtio"];
+  # Explicitly enable X11 for VM compatibility with proper video drivers
+  services.xserver = {
+    enable = true;
+    # Video driver configuration for Proxmox QEMU VM
+    # Supports both VirtIO-GPU and QXL display types
+    videoDrivers = ["modesetting" "qxl" "virtio"];
+
+    # Enable DRI3 for hardware acceleration in VirtIO-GPU VMs
+    # This fixes "libEGL warning: DRI3 error: Could not get DRI3 device"
+    deviceSection = ''
+      Option "DRI" "3"
+    '';
+  };
 
   # JUSTIFIED: Qt6 build failure on stable nixpkgs - known issue
   # See: https://github.com/NixOS/nixpkgs/issues/315121
@@ -219,14 +222,12 @@ in {
   #   2. cloudflared tunnel create audiobookshelf
   #   3. Copy credentials to ~/.cloudflared/
   #   4. Create ~/.cloudflared/config.yml with tunnel ID and ingress rules
-  # The tunnel is ENABLED via server-secrets.nix (gitignored) which sets:
-  #   - enable = true
-  #   - tunnelId
-  #   - credentialsFile
+  # The tunnelId and credentialsFile must be set via server-secrets.nix (gitignored)
   modules.services.cloudflareTunnel = {
-    # enable = false by default; enabled via server-secrets.nix
+    enable = true;
     tunnelName = "audiobookshelf";
     user = "notroot";
+    # tunnelId and credentialsFile imported from server-secrets.nix
   };
 
   # Audiobookshelf Guardian - Health monitoring and protection

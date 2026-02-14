@@ -1,0 +1,326 @@
+#!/usr/bin/env bash
+# reset - Reset ESP32 out of bootloader/download mode
+#
+# Usage: ./scripts/reset [OPTIONS]
+#
+# Options:
+#   --port <path>     Serial port path (default: auto-detect)
+#   --method <type>   Reset method: dtr, esptool, manual (default: dtr)
+#   --no-verify       Skip boot output verification
+#   --timeout <sec>   Seconds to wait for boot verification (default: 5)
+#
+# Exit codes:
+#   0 - Reset successful, boot output detected
+#   1 - Reset failed, manual action needed
+#   2 - Port not found
+#
+# Environment:
+#   UPLOAD_PORT        Override port
+#   ESP_RESET_METHOD   Override method (dtr, esptool, manual)
+
+set -euo pipefail
+
+# --- Configuration ---
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --- Globals ---
+PORT=""
+METHOD="${ESP_RESET_METHOD:-dtr}"
+VERIFY=true
+TIMEOUT=5
+
+# --- Functions ---
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Reset ESP32 out of bootloader/download mode.
+
+Options:
+  --port <path>     Serial port path (default: auto-detect)
+  --method <type>   Reset method (default: dtr)
+                      dtr     - Toggle DTR/RTS lines via pyserial
+                      esptool - Use esptool.py hard_reset
+                      manual  - Prompt for physical button press
+  --no-verify       Skip boot output verification
+  --timeout <sec>   Seconds to wait for boot verification (default: 5)
+  -h, --help        Show this help message
+  -v, --version     Show version
+
+Exit codes:
+  0 - Reset successful, boot output detected (or --no-verify)
+  1 - Reset failed, manual action needed
+  2 - Port not found
+
+Environment:
+  UPLOAD_PORT        Override port
+  ESP_RESET_METHOD   Override method
+EOF
+}
+
+# Get port from device-list
+get_auto_port() {
+    local device_list_script="$SCRIPT_DIR/device-list"
+    
+    if [[ -x "$device_list_script" ]]; then
+        "$device_list_script" --first 2>/dev/null || echo ""
+    else
+        # Fallback
+        pio device list 2>/dev/null | grep -E '^/dev/' | head -1 || echo ""
+    fi
+}
+
+# Reset via DTR/RTS toggle using Python pyserial
+reset_dtr() {
+    local port="$1"
+    
+    echo "Resetting via DTR/RTS..."
+    
+    # Use Python to toggle DTR/RTS lines
+    python3 << EOF
+import serial
+import time
+import sys
+
+try:
+    ser = serial.Serial('$port', 115200, timeout=1)
+    
+    # Reset sequence similar to esptool
+    # Assert DTR and RTS (active low means setting them high pulls lines low)
+    ser.setDTR(False)  # DTR = HIGH
+    ser.setRTS(True)   # RTS = LOW (hold in reset)
+    time.sleep(0.1)
+    
+    ser.setDTR(True)   # DTR = LOW
+    ser.setRTS(False)  # RTS = HIGH (release reset)
+    time.sleep(0.05)
+    
+    ser.setDTR(False)  # Return to normal
+    
+    ser.close()
+    print("  DTR/RTS toggle complete")
+    sys.exit(0)
+    
+except serial.SerialException as e:
+    print(f"  Error: {e}", file=sys.stderr)
+    sys.exit(1)
+EOF
+    return $?
+}
+
+# Reset via esptool
+reset_esptool() {
+    local port="$1"
+    
+    echo "Resetting via esptool..."
+    
+    if ! command -v esptool.py &> /dev/null && ! command -v esptool &> /dev/null; then
+        echo "  Error: esptool not found" >&2
+        return 1
+    fi
+    
+    local esptool_cmd="esptool.py"
+    command -v esptool.py &> /dev/null || esptool_cmd="esptool"
+    
+    echo "  Command: $esptool_cmd --port $port --after hard_reset read_mac"
+    
+    # read_mac is a quick command that triggers reset afterward
+    if $esptool_cmd --port "$port" --after hard_reset read_mac > /dev/null 2>&1; then
+        echo "  esptool reset complete"
+        return 0
+    else
+        echo "  esptool reset failed" >&2
+        return 1
+    fi
+}
+
+# Manual reset prompt
+reset_manual() {
+    local port="$1"
+    
+    echo ""
+    echo "ACTION REQUIRED: Press the RESET button on your ESP32"
+    echo ""
+    echo "Waiting for serial activity..."
+    echo "  [Press RESET now]"
+    
+    # Wait for user to press reset - we'll detect activity via serial
+    return 0
+}
+
+# Verify boot output
+verify_boot() {
+    local port="$1"
+    local timeout="$2"
+    
+    echo "Waiting for boot output (${timeout}s)..."
+    
+    # Capture serial output for timeout seconds
+    local output
+    output=$(timeout "$timeout" python3 << EOF 2>/dev/null || true
+import serial
+import sys
+
+try:
+    ser = serial.Serial('$port', 115200, timeout=1)
+    boot_detected = False
+    
+    for _ in range($timeout * 10):  # 10 iterations per second
+        data = ser.read(1024)
+        if data:
+            text = data.decode('utf-8', errors='replace')
+            print(text, end='')
+            # Check for boot signatures
+            if 'rst:' in text.lower() or 'boot:' in text.lower() or 'esp-idf' in text.lower():
+                boot_detected = True
+                break
+    
+    ser.close()
+    sys.exit(0 if boot_detected else 1)
+    
+except Exception as e:
+    sys.exit(1)
+EOF
+)
+    local exit_code=$?
+    
+    if [[ $exit_code -eq 0 ]]; then
+        echo "Boot detected: YES"
+        return 0
+    else
+        echo "Boot detected: NO"
+        return 1
+    fi
+}
+
+# Main function
+main() {
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --port)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --port requires a path" >&2
+                    exit 1
+                fi
+                PORT="$2"
+                shift 2
+                ;;
+            --method)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --method requires a type (dtr, esptool, manual)" >&2
+                    exit 1
+                fi
+                METHOD="$2"
+                shift 2
+                ;;
+            --no-verify)
+                VERIFY=false
+                shift
+                ;;
+            --timeout)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --timeout requires a number" >&2
+                    exit 1
+                fi
+                TIMEOUT="$2"
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -v|--version)
+                echo "reset version $VERSION"
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Get port (env override, then argument, then auto-detect)
+    PORT="${UPLOAD_PORT:-$PORT}"
+    
+    if [[ -z "$PORT" ]]; then
+        PORT=$(get_auto_port)
+    fi
+    
+    if [[ -z "$PORT" ]]; then
+        echo "Error: No serial port found" >&2
+        echo "" >&2
+        echo "Troubleshooting:" >&2
+        echo "  1. Check USB cable is connected" >&2
+        echo "  2. Run: ./scripts/device-list" >&2
+        exit 2
+    fi
+    
+    # Verify port exists
+    if [[ ! -e "$PORT" ]]; then
+        echo "Error: Port $PORT does not exist" >&2
+        exit 2
+    fi
+    
+    echo "ESP32 Reset"
+    echo "==========="
+    echo "Port: $PORT"
+    echo "Method: $METHOD"
+    echo ""
+    
+    # Perform reset based on method
+    local reset_success=false
+    
+    case "$METHOD" in
+        dtr)
+            if reset_dtr "$PORT"; then
+                reset_success=true
+            fi
+            ;;
+        esptool)
+            if reset_esptool "$PORT"; then
+                reset_success=true
+            fi
+            ;;
+        manual)
+            reset_manual "$PORT"
+            reset_success=true  # Assume user will press the button
+            ;;
+        *)
+            echo "Error: Unknown reset method: $METHOD" >&2
+            echo "Valid methods: dtr, esptool, manual" >&2
+            exit 1
+            ;;
+    esac
+    
+    # Verify boot if requested
+    if $VERIFY; then
+        echo ""
+        if verify_boot "$PORT" "$TIMEOUT"; then
+            echo ""
+            echo "SUCCESS: Reset complete, board is running"
+            exit 0
+        else
+            echo ""
+            echo "WARNING: Boot output not detected" >&2
+            echo "" >&2
+            echo "The board may be stuck in download mode." >&2
+            echo "Try pressing the RESET button manually." >&2
+            exit 1
+        fi
+    else
+        if $reset_success; then
+            echo ""
+            echo "Reset command sent (verification skipped)"
+            exit 0
+        else
+            exit 1
+        fi
+    fi
+}
+
+main "$@"

@@ -22,9 +22,9 @@ in {
 
     # Feature modules
     ./fonts.nix
-    ./gaming.nix
     ./java.nix
     ./docker-dns.nix
+    ./memory-management.nix
     ./pipewire.nix
     ./monitor-audio.nix
     ./document-tools
@@ -45,12 +45,6 @@ in {
         cantarell-fonts
       ];
     };
-
-    # Enable gaming module
-    # DISABLED: Replaced by new modular gaming system in modules/gaming/
-    # modules.core.gaming = {
-    #   enable = true;
-    # };
 
     # Enable PipeWire module
     modules.core.pipewire = {
@@ -112,12 +106,12 @@ in {
       };
     };
 
-    # Enable AMD GPU optimizations for RX 5700 XT
-    modules.hardware.amdgpu = {
-      enable = true;
-      model = "navi10"; # RX 5700 XT uses Navi 10
-      powerManagement = true;
-    };
+    # AMD GPU optimizations - DISABLED by default, enable in host-specific config
+    # modules.hardware.amdgpu = {
+    #   enable = true;
+    #   model = "navi10"; # RX 5700 XT uses Navi 10
+    #   powerManagement = true;
+    # };
 
     # Enable proper time synchronization for time-sensitive tokens
     services.timesyncd.enable = true;
@@ -146,16 +140,11 @@ in {
         openssl
         nmap
         gum
-        piper-tts
         jq
         popsicle
         stablePkgs.awscli2
-        # azure-cli # Temporarily disabled - build failure with Python 3.13
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
-        vdhcoapp
-        inkscape
-        codex
         wrangler
         just
         infisical
@@ -178,26 +167,20 @@ in {
         sd # Intuitive find & replace CLI (sed alternative)
         tealdeer # Fast tldr client (tldr command)
         choose # Human-friendly cut alternative
-        dog # Command-line DNS lookup tool (dig alternative)
 
         # System Monitoring
-        neofetch
+        fastfetch
         htop
-        cmatrix
 
         # Development Tools
         git
         gh
         gcc
-        stow
         xclip
         lazygit
 
-        # Remote Desktop & Network Tools
+        # Remote Desktop
         remmina # Remote desktop client with VNC, RDP, SSH, SPICE support
-        freerdp # Free RDP client (latest version for better compatibility)
-        tigervnc # VNC client and server
-        gnome-connections # GNOME's remote desktop client (alternative)
 
         # Terminals and Shells
         zellij
@@ -208,22 +191,14 @@ in {
         elixir
         nodejs_22
         go
-        terraform
         elixir-ls
-        # nosql-workbench  # Temporarily disabled due to download issues
-        deno
-        postgresql
-        supabase-cli
-        # pkgs-unstable.zed-editor # Disabled due to hash mismatch - will re-enable after fix
         pkgs-unstable.ghostty
-        # pkgs-unstable.kitty # Temporarily disabled due to test failures
-        stockfish
-        chromium
 
         # Nix Tools
         alejandra
         nixd
         nil
+        nh
 
         # Container Tools
         podman-compose
@@ -238,8 +213,6 @@ in {
       zsh.enable = true;
       dconf.enable = true;
 
-      # Enable ADB for Android development (adds udev rules + adbusers group)
-      adb.enable = true;
     };
   };
 }

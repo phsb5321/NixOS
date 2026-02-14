@@ -13,6 +13,7 @@
 #   }
 {pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
   # Get the directory where this file is located for script paths
+  toolchainDir = builtins.toString ./.;
   scriptsDir = builtins.toString ../scripts;
 in {
   # Packages to add to buildInputs

@@ -72,23 +72,36 @@ hosts/*-secrets.nix
 # Cloudflare tunnel config (contains tunnel IDs)
 cloudflare-tunnel-config.yml
 
-# Speckit and AI assistant files
+# Syncthing versioning artifacts
+.stversions/
+
+# AI assistant files (host-specific, never share between machines)
 CLAUDE.md
+AGENTS.md
+.claude/
 .specify/
 specs/
 .opencode/
 handoff.md
+.aider*
+.cursor/
+.cursorrules
+.cursorignore
+.copilot/
+.github/copilot-*
+.cline/
+.windsurf/
+.gemini/
+.augment*
+dotfiles/CLAUDE.md
+dotfiles/dot_claude/
 
 # AI assistant context files
 *.claude
 *.cursor
-.cursorrules
-.aider*
 .continue/
 .codeium/
 .tabnine/
-.copilot/
-AGENTS.md
 
 # Refactoring documentation (per-branch artifacts)
 ARCHITECTURE_IMPROVEMENT_PLAN.md

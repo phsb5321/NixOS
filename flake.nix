@@ -20,6 +20,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # OpenCode bleeding edge (AI coding agent)
+    opencode = {
+      url = "github:anomalyco/opencode";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Flake utilities for better system handling
     flake-utils.url = "github:numtide/flake-utils";
 
@@ -34,6 +40,9 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Hardware-specific NixOS modules
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
 
     # Remote deployment tool
     colmena = {

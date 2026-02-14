@@ -1,11 +1,17 @@
 # Laptop Host - GNOME Configuration
-# Power-optimized X11 setup (host-specific overrides only)
+# Wayland setup for GNOME 49+ (host-specific overrides only)
 {lib, ...}: {
   # Enable GNOME with common settings
   modules.desktop.gnome = {
     enable = true;
-    wayland.enable = false; # X11 for Intel/NVIDIA compatibility
+    wayland.enable = true; # Required for GNOME 49+ (X11 sessions removed)
     settings.enable = true; # Common dconf settings from module
+
+    # GNOME Core Apps - Full Suite for laptop
+    coreApps = {
+      enable = true;
+      fullSuite = true; # All categories enabled
+    };
 
     # Laptop extension set (battery conscious)
     extensions = {
@@ -48,14 +54,18 @@
           ];
         };
 
-        # Mutter - power savings (no fancy features)
+        # Mutter - Wayland features for GNOME 49+
         "org/gnome/mutter" = {
           edge-tiling = true;
           dynamic-workspaces = true;
           workspaces-only-on-primary = true;
           center-new-windows = true;
-          experimental-features = lib.gvariant.mkEmptyArray lib.gvariant.type.string;
-          dynamic-triple-buffering = false;
+          experimental-features = [
+            "scale-monitor-framebuffer"
+            "xwayland-native-scaling"
+            "variable-refresh-rate"
+            "autoclose-xwayland"
+          ];
         };
 
         # Session - laptop idle (5 min)

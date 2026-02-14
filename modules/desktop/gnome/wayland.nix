@@ -68,16 +68,12 @@ in {
       (lib.mkIf cfg.wayland.enable {
         XDG_SESSION_TYPE = "wayland";
         XDG_CURRENT_DESKTOP = "GNOME";
-        GDK_BACKEND = "wayland,x11";
+        # NOTE: Do NOT set GDK_BACKEND - it breaks xdg-desktop-portal-gnome screen sharing
+        # GDK auto-detects the backend correctly on GNOME Wayland
         QT_QPA_PLATFORM = "wayland;xcb";
         MOZ_ENABLE_WAYLAND = "1";
         GTK_CSD = "1"; # Enable client-side decorations (recommended for Wayland)
         CLUTTER_BACKEND = "wayland";
-        WLR_DRM_NO_ATOMIC = "1";
-
-        # Performance optimizations
-        MUTTER_DEBUG_FORCE_KMS_MODE = "simple"; # Better GPU compatibility
-        CLUTTER_PAINT = "disable-clipped-redraws:disable-culling"; # Reduce redraws
       })
 
       # Electron Wayland support

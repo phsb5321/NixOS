@@ -54,8 +54,6 @@ in {
       lib.optionals cfg.vlc [vlc]
       ++ lib.optionals cfg.spotify [
         pkgs-unstable.spotify
-        spot
-        ncspot
       ]
       ++ lib.optionals cfg.discord [vesktop]
       ++ lib.optionals cfg.streaming [obs-studio]
