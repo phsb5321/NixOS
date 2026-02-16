@@ -156,7 +156,7 @@ in {
       enable = true;
       settings = {
         CPU_SCALING_GOVERNOR_ON_AC = "performance";
-        CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+        CPU_SCALING_GOVERNOR_ON_BAT = "schedutil"; # schedutil scales dynamically; avoids min-freq pinning on intel_cpufreq
         CPU_MIN_PERF_ON_AC = 0;
         CPU_MAX_PERF_ON_AC = 100;
         CPU_MIN_PERF_ON_BAT = 0;
@@ -271,7 +271,7 @@ in {
     # Module configuration for Intel CNVi WiFi (device 8086:06f0)
     boot.extraModprobeConfig = ''
       # Intel CNVi WiFi specific configuration
-      options iwlwifi swcrypto=1 11n_disable=1
+      options iwlwifi swcrypto=1 11n_disable=0
       options iwlwifi power_save=0
       options iwlwifi d0i3_disable=1
       options iwlwifi uapsd_disable=1
@@ -384,9 +384,14 @@ in {
     services.fwupd.enable = true;
 
     # CPU frequency scaling
+    # Map profile names to valid Linux governors ("balanced" isn't a real governor)
     powerManagement = {
       enable = true;
-      cpuFreqGovernor = lib.mkDefault cfg.powerManagement.profile;
+      cpuFreqGovernor = lib.mkDefault (
+        if cfg.powerManagement.profile == "performance"
+        then "performance"
+        else "schedutil" # "balanced" and "powersave" both map to schedutil (scales dynamically)
+      );
     };
 
     # ACPI event handling
