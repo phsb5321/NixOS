@@ -147,13 +147,13 @@
       # ———————————————————————————————————————
       services.resolved = {
         enable = cfg.dns.enableSystemdResolved;
-        dnssec = "allow-downgrade";
-        fallbackDns = selectedDNS;
-        dnsovertls = cfg.dns.dnsOverTLS;
-        extraConfig = ''
-          Cache=yes
-          DNSStubListener=yes
-        '';
+        settings.Resolve = {
+          DNSSEC = "allow-downgrade";
+          FallbackDNS = selectedDNS;
+          DNSOverTLS = cfg.dns.dnsOverTLS;
+          Cache = "yes";
+          DNSStubListener = "yes";
+        };
       };
 
       # ———————————————————————————————————————

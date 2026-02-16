@@ -277,7 +277,7 @@ in {
       WLR_NO_HARDWARE_CURSORS = "1";
       # VA-API via Intel for video decode (more power efficient)
       LIBVA_DRIVER_NAME =
-        if (builtins.elem cfg.graphics.intelGeneration ["tigerlake" "alderlake" "raptorlake" "icelake"])
+        if (builtins.elem cfg.graphics.intelGeneration ["coffeelake" "tigerlake" "alderlake" "raptorlake" "icelake"])
         then "iHD"
         else "i965";
     };

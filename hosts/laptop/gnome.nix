@@ -18,7 +18,7 @@
           ];
         };
 
-        # Mutter - Wayland features for GNOME 49+
+        # Mutter - desktop features
         "org/gnome/mutter" = {
           edge-tiling = true;
           dynamic-workspaces = true;
@@ -26,9 +26,6 @@
           center-new-windows = true;
           experimental-features = [
             "scale-monitor-framebuffer"
-            "xwayland-native-scaling"
-            "variable-refresh-rate"
-            "autoclose-xwayland"
           ];
         };
 

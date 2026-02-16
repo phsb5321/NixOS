@@ -76,12 +76,12 @@
       weekday = true;
     };
 
-    # Wayland configuration - Required for GNOME 49+ (X11 sessions removed)
+    # Wayland configuration - NVIDIA-only mode (nvidia-drm.modeset=1 required)
     wayland = {
       enable = true;
       electronSupport = true;
       screenSharing = true;
-      variant = "hardware";
+      variant = "hardware"; # NVIDIA renders via GBM backend
     };
   };
 
@@ -443,10 +443,12 @@
   };
   modules.gaming.mangohud.enable = true;
 
-  # Gamescope compositor with capability wrapper for real-time scheduling
+  # Gamescope compositor - capSysNice disabled because the capability wrapper
+  # fails inside Steam's FHS sandbox ("failed to inherit capabilities: Operation not permitted")
+  # Gamescope falls back to regular-priority threads without it, which is acceptable.
   programs.gamescope = {
     enable = true;
-    capSysNice = true;
+    capSysNice = false;
   };
 
   # ===== DOTFILES =====
@@ -469,16 +471,14 @@
   modules.hardware.laptop = {
     enable = true;
 
-    # Hybrid graphics: NVIDIA as primary renderer (nvidia-only mode)
-    # NVIDIA renders everything natively - best for Wayland performance
-    # Note: offload/sync modes are X11-only and don't work on GNOME 49+ Wayland
+    # Enable hybrid graphics with NVIDIA-only rendering for gaming
+    # GTX 1650 Mobile renders everything; Intel iGPU used only for display output
     graphics = {
       hybridGraphics = true;
-      primeMode = "nvidia-only"; # NVIDIA renders all, GPU always on for performance
-      intelGeneration = "tigerlake"; # Intel Tiger Lake for VA-API driver selection
-      # Bus IDs kept for reference (not used in nvidia-only mode)
+      primeMode = "nvidia-only";
       intelBusId = "PCI:0:2:0";
       nvidiaBusId = "PCI:1:0:0";
+      intelGeneration = "coffeelake"; # CML GT2 uses Coffee Lake-era i915
     };
 
     # Touchpad configuration (always enabled by the laptop module - cannot be disabled)
@@ -491,13 +491,12 @@
     batteryManagement.chargeThreshold = 85;
 
     powerManagement = {
-      profile = "performance";
+      profile = "balanced";
       suspendTimeout = 900;
     };
   };
 
-  # NOTE: NVIDIA power management now handled by modules.hardware.laptop.graphics
-  # primeMode = "nvidia-only" automatically disables finegrained PM (GPU always on)
+  # NVIDIA enabled in nvidia-only mode for gaming (GTX 1650 Mobile)
 
   # ===== GAMING SPECIALISATION =====
   # Boot menu entry with performance-optimized settings for gaming sessions
@@ -517,6 +516,9 @@
     # Ensure power-profiles-daemon is set to performance
     # (TLP is force-disabled by GNOME module, so ppd is the active manager)
     services.power-profiles-daemon.enable = lib.mkForce true;
+
+    # GPU performance optimizations for gaming
+    modules.gaming.gamemode.gpuOptimizations = lib.mkForce true;
   };
 
   # ===== BOOT CONFIGURATION =====
@@ -530,11 +532,10 @@
       timeout = 3;
     };
 
-    # NOTE: Early KMS initrd modules now handled by modules.hardware.laptop.graphics
-    # when primeMode = "nvidia-only" (nvidia, nvidia_modeset, nvidia_uvm, nvidia_drm, i915)
+    # NOTE: NVIDIA initrd modules are auto-configured by hardware.nix
+    # when hybridGraphics=true and primeMode="nvidia-only"
 
-    # GPU configuration for nvidia-only mode on Wayland
-    # NVIDIA renders everything, Intel panel just receives the output
+    # NVIDIA-only GPU configuration
     kernelParams = lib.mkMerge [
       [
         "quiet"
@@ -542,8 +543,9 @@
         "i915.enable_fbc=1"
         "i915.enable_psr=2"
         "nvme.noacpi=1"
-        "nouveau.modeset=0"
-        "initcall_blacklist=simpledrm_platform_driver_init"
+        "nouveau.modeset=0" # Block nouveau (using proprietary NVIDIA driver)
+        "nvidia-drm.modeset=1" # Required for Wayland with NVIDIA
+        "nvidia-drm.fbdev=1" # Framebuffer device for early console
       ]
       (lib.mkAfter ["loglevel=3"])
     ];
@@ -591,8 +593,7 @@
   # See modules/hardware/laptop/hardware.nix for the implementation.
 
   # ===== ENVIRONMENT VARIABLES =====
-  # NOTE: NVIDIA Wayland vars (GBM_BACKEND, __GLX_VENDOR_LIBRARY_NAME, WLR_NO_HARDWARE_CURSORS)
-  # and suspend/resume services now handled by modules.hardware.laptop.graphics
+  # NVIDIA-only Wayland rendering + Steam/gaming variables
   environment.sessionVariables = {
     MOZ_USE_XINPUT2 = "1";
     ELECTRON_FORCE_IS_PACKAGED = "true";
@@ -601,9 +602,6 @@
     STEAM_RUNTIME_HEAVY = "1";
     DXVK_STATE_CACHE_PATH = "/tmp/dxvk_cache";
     DXVK_LOG_LEVEL = "warn";
-    # NVIDIA performance tuning
-    __GL_VRR_ALLOWED = "1"; # Enable variable refresh rate
-    __GL_MaxFramesAllowed = "1"; # Reduce input lag
   };
 
   # ===== SECURITY =====
