@@ -488,10 +488,10 @@
       disableWhileTyping = true;
     };
 
-    batteryManagement.chargeThreshold = 85;
+    # No charge threshold — laptop is always plugged in
 
     powerManagement = {
-      profile = "balanced";
+      profile = "performance";
       suspendTimeout = 900;
     };
   };
@@ -499,23 +499,16 @@
   # NVIDIA enabled in nvidia-only mode for gaming (GTX 1650 Mobile)
 
   # ===== GAMING SPECIALISATION =====
-  # Boot menu entry with performance-optimized settings for gaming sessions
-  # Select from systemd-boot menu; default profile retains battery-saving behavior
+  # Default profile is already "performance", so this specialisation adds
+  # mitigations=off for a 5-15% gaming boost at the cost of CPU vulnerability
+  # mitigations. Select from systemd-boot menu.
   specialisation.gaming.configuration = {
-    system.nixos.tags = ["gaming"];
+    system.nixos.tags = ["gaming-mitigations-off"];
 
-    # Override power management for maximum performance
-    modules.hardware.laptop.powerManagement = {
-      profile = lib.mkForce "performance";
-      autoSuspend = lib.mkForce false;
-    };
+    boot.kernelParams = lib.mkAfter ["mitigations=off"];
 
-    # Full battery charge (no 85% threshold)
-    modules.hardware.laptop.batteryManagement.chargeThreshold = lib.mkForce null;
-
-    # Ensure power-profiles-daemon is set to performance
-    # (TLP is force-disabled by GNOME module, so ppd is the active manager)
-    services.power-profiles-daemon.enable = lib.mkForce true;
+    # Disable auto-suspend during gaming sessions
+    modules.hardware.laptop.powerManagement.autoSuspend = lib.mkForce false;
 
     # GPU performance optimizations for gaming
     modules.gaming.gamemode.gpuOptimizations = lib.mkForce true;
@@ -541,8 +534,10 @@
         "quiet"
         "splash"
         "i915.enable_fbc=1"
-        "i915.enable_psr=2"
-        "nvme.noacpi=1"
+        "i915.enable_psr=1" # PSR1 only — PSR2 causes flickering on Gen9 (Coffee Lake)
+        "nvme.noacpi=1" # Disables ACPI StorageD3Enable for suspend (not APST).
+        # FR-008: To test removal, do 5 suspend/resume cycles and check
+        # `journalctl -b | grep nvme` for disconnect errors. If none, remove.
         "nouveau.modeset=0" # Block nouveau (using proprietary NVIDIA driver)
         "nvidia-drm.modeset=1" # Required for Wayland with NVIDIA
         "nvidia-drm.fbdev=1" # Framebuffer device for early console
@@ -560,6 +555,13 @@
       "nouveau"
       "acpi_power_meter"
     ];
+
+    # BBR congestion control requires tcp_bbr module and fq qdisc.
+    # The bbr sysctl is set by modules/networking (optimizeTCP = true by default).
+    kernelModules = ["tcp_bbr"];
+    kernel.sysctl = {
+      "net.core.default_qdisc" = "fq";
+    };
 
     plymouth.enable = false;
     initrd.systemd.enable = true;
@@ -611,19 +613,11 @@
       gdm-password.enableGnomeKeyring = true;
     };
 
-    auditd.enable = true;
-    audit = {
-      enable = true;
-      backlogLimit = 8192;
-      failureMode = "printk";
-      rules = ["-a exit,always -F arch=b64 -S execve"];
-    };
-    # Prevent audit log from consuming all disk space (execve rule is verbose)
-    auditd.settings = {
-      max_log_file = 100; # MB — rotate at 100 MB
-      num_logs = 5; # Keep 5 rotated files (500 MB max)
-      max_log_file_action = "rotate";
-    };
+    # auditd disabled — execve rule generated 162GB logs on desktop, adds ~98.5%
+    # syscall overhead for monitored calls (Red Hat benchmarks). AppArmor provides
+    # MAC enforcement independently.
+    auditd.enable = false;
+    audit.enable = false;
 
     apparmor = {
       enable = true;

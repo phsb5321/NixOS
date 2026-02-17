@@ -1,11 +1,12 @@
 # ~/NixOS/modules/hardware/laptop/power.nix
 #
 # Module: Laptop Power Management
-# Purpose: Power management, battery optimization, CPU frequency scaling
+# Purpose: Power management, CPU frequency scaling, power-profiles-daemon
 # Part of: 001-module-optimization (T035-T039 - hardware/laptop.nix split)
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
   cfg = config.modules.hardware.laptop;
@@ -20,41 +21,26 @@ in {
       criticalPowerAction = "PowerOff"; # No swap device — hibernate would fail silently
     };
 
-    # TLP for power management
-    services.tlp = lib.mkIf cfg.powerManagement.enable {
-      enable = true;
-      settings = {
-        CPU_SCALING_GOVERNOR_ON_AC = "performance";
-        CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
-        CPU_MIN_PERF_ON_AC = 0;
-        CPU_MAX_PERF_ON_AC = 100;
-        CPU_MIN_PERF_ON_BAT = 0;
-        CPU_MAX_PERF_ON_BAT = 60;
-
-        # Battery charge thresholds (if supported by hardware)
-        START_CHARGE_THRESH_BAT0 =
-          lib.mkIf (cfg.batteryManagement.chargeThreshold != null)
-          40;
-        STOP_CHARGE_THRESH_BAT0 = cfg.batteryManagement.chargeThreshold;
-
-        # USB autosuspend
-        USB_AUTOSUSPEND = 1;
-
-        # PCIe power management
-        RUNTIME_PM_ON_AC = "auto";
-        RUNTIME_PM_ON_BAT = "auto";
-
-        # WiFi power saving
-        WIFI_PWR_ON_AC = "off";
-        WIFI_PWR_ON_BAT = "on";
-      };
-    };
-
     # Thermald for thermal management
     services.thermald.enable = cfg.powerManagement.enable;
 
-    # Power profiles daemon (alternative to TLP for GNOME integration)
-    services.power-profiles-daemon.enable = lib.mkIf (!config.services.tlp.enable) true;
+    # power-profiles-daemon is the active power manager (GNOME force-disables TLP).
+    # ppd manages EPP which is the actual performance control on HWP-capable CPUs.
+    services.power-profiles-daemon.enable = true;
+
+    # Set ppd to match the configured profile at boot
+    # (ppd defaults to "balanced" on every boot regardless of NixOS config)
+    systemd.services.ppd-set-profile = lib.mkIf cfg.powerManagement.enable {
+      description = "Set power-profiles-daemon profile to ${cfg.powerManagement.profile}";
+      after = ["power-profiles-daemon.service"];
+      wants = ["power-profiles-daemon.service"];
+      wantedBy = ["multi-user.target"];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.power-profiles-daemon}/bin/powerprofilesctl set ${cfg.powerManagement.profile}";
+        RemainAfterExit = true;
+      };
+    };
 
     # Logind configuration for lid and power button actions
     services.logind.settings.Login = lib.mkIf cfg.powerManagement.enable {
@@ -72,9 +58,16 @@ in {
     };
 
     # CPU frequency scaling
+    # intel_pstate active mode only accepts "performance" and "powersave".
+    # "powersave" enables HWP dynamic scaling via EPP — it is NOT the same as
+    # generic powersave. The actual performance level is controlled by ppd via EPP.
     powerManagement = {
       enable = true;
-      cpuFreqGovernor = lib.mkDefault cfg.powerManagement.profile;
+      cpuFreqGovernor = lib.mkDefault (
+        if cfg.powerManagement.profile == "performance"
+        then "performance"
+        else "powersave"
+      );
     };
   };
 }

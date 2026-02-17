@@ -60,17 +60,6 @@
       nix-ld.enable = true;
     };
 
-    # Optimize for battery
-    boot.kernel.sysctl = {
-      "vm.swappiness" = lib.mkForce 10;
-      "vm.laptop_mode" = 5;
-    };
-
-    # Enable zram for memory optimization
-    zramSwap = {
-      enable = true;
-      algorithm = "zstd";
-      memoryPercent = 25;
-    };
+    # Sysctls and zram managed by modules/profiles/laptop.nix — no duplicates here
   };
 }
