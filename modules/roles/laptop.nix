@@ -60,6 +60,6 @@
       nix-ld.enable = true;
     };
 
-    # Sysctls and zram managed by modules/profiles/laptop.nix — no duplicates here
+    # Sysctls and zram managed by profiles/laptop.nix — no duplicates here
   };
 }
