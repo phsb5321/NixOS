@@ -53,7 +53,10 @@ in {
         then "suspend"
         else "ignore";
       HandlePowerKey = "suspend";
-      IdleAction = "suspend";
+      IdleAction =
+        if cfg.powerManagement.autoSuspend
+        then "suspend"
+        else "ignore";
       IdleActionSec = "${toString cfg.powerManagement.suspendTimeout}s";
     };
 

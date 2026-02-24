@@ -492,6 +492,7 @@
 
     powerManagement = {
       profile = "performance";
+      autoSuspend = false; # Laptop is always plugged in — no idle suspend
       suspendTimeout = 900;
     };
   };

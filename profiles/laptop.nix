@@ -105,7 +105,7 @@ in {
           then "powersave"
           else "balanced"
         );
-        autoSuspend = cfg.variant != "gaming";
+        autoSuspend = lib.mkDefault (cfg.variant != "gaming");
         suspendTimeout =
           if cfg.variant == "ultrabook"
           then 600
