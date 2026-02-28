@@ -209,10 +209,14 @@ in {
                 sleep 2
               fi
 
-              # Check again after loading i915
+              # Check again after loading i915, and set max brightness
               for device in /sys/class/backlight/*; do
                 if [ -e "$device/brightness" ]; then
                   chmod 666 "$device/brightness" || true
+                  # Set brightness to maximum
+                  if [ -e "$device/max_brightness" ]; then
+                    cat "$device/max_brightness" > "$device/brightness" || true
+                  fi
                 fi
               done
             '';

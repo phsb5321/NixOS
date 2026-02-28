@@ -39,7 +39,7 @@
           sleep-inactive-ac-type = "suspend";
           sleep-inactive-battery-type = "suspend";
           power-button-action = "suspend";
-          idle-dim = true;
+          idle-dim = false;
           ambient-enabled = false;
         };
       };
