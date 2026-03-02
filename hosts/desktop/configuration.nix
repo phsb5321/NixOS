@@ -420,7 +420,7 @@
 
   # ===== POWER MANAGEMENT =====
   powerManagement = {
-    cpuFreqGovernor = "powersave"; # Let GameMode switch dynamically to performance
+    cpuFreqGovernor = "schedutil"; # Scales with CPU demand; GameMode still switches to performance
     resumeCommands = ''
       ${pkgs.systemd}/bin/systemctl restart systemd-resolved
       ${pkgs.systemd}/bin/systemctl restart NetworkManager
