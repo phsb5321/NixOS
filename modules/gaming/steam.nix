@@ -26,11 +26,32 @@ in {
       description = "Install GE-Proton custom compatibility tool";
     };
 
-    # Additional Steam FHS packages
+    # Additional packages added to environment.systemPackages
     extraPackages = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = "Additional packages to include in Steam FHS environment";
+      description = "Additional packages to add to system packages alongside Steam";
+    };
+
+    # Packages inside the Steam FHS sandbox (available to games)
+    extraFHSPackages = mkOption {
+      type = types.functionTo (types.listOf types.package);
+      default = pkgs':
+        with pkgs'; [
+          xorg.libXcursor
+          xorg.libXi
+          xorg.libXinerama
+          xorg.libXScrnSaver
+          libpng
+          libpulseaudio
+          libvorbis
+          stdenv.cc.cc.lib
+          libkrb5
+          keyutils
+          gamemode
+          mangohud
+        ];
+      description = "Packages to include inside the Steam FHS sandbox for game compatibility";
     };
 
     # Remote Play support
@@ -52,6 +73,11 @@ in {
     # Enable Steam with Proton
     programs.steam = {
       enable = true;
+
+      # Override Steam package to include FHS sandbox libraries
+      package = pkgs.steam.override {
+        extraPkgs = cfg.extraFHSPackages;
+      };
 
       # Remote Play firewall
       remotePlay.openFirewall = cfg.remotePlay.enable;

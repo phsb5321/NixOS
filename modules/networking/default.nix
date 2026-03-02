@@ -9,7 +9,8 @@
   imports = [
     ./tailscale.nix
     ./remote-desktop.nix
-    ./dns.nix
+    # dns.nix uses services.resolved options that may not exist on all nixpkgs versions.
+    # Import it explicitly in host configs that need it.
     ./firewall.nix
     ./wifi.nix
   ];
@@ -72,10 +73,21 @@
           description = "Run systemd-resolved stub on 127.0.0.53";
         };
 
+        dnsOverTLS = mkOption {
+          type = types.enum ["yes" "opportunistic" "no"];
+          default = "opportunistic";
+          description = ''
+            DNS-over-TLS mode for systemd-resolved.
+            "yes" = strict (fail if TLS unavailable);
+            "opportunistic" = try TLS, fall back to plaintext;
+            "no" = disable DoT entirely.
+          '';
+        };
+
         enableDNSOverTLS = mkOption {
           type = types.bool;
           default = true;
-          description = "Have systemd-resolved use DNS-over-TLS";
+          description = "Deprecated: use dnsOverTLS instead. When dnsOverTLS is set, this is ignored.";
         };
 
         primaryProvider = mkOption {
@@ -135,17 +147,13 @@
       # ———————————————————————————————————————
       services.resolved = {
         enable = cfg.dns.enableSystemdResolved;
-        dnssec = "allow-downgrade";
-        fallbackDns = selectedDNS;
-        extraConfig = ''
-          DNSOverTLS=${
-            if cfg.dns.enableDNSOverTLS
-            then "yes"
-            else "no"
-          }
-          Cache=yes
-          DNSStubListener=yes
-        '';
+        settings.Resolve = {
+          DNSSEC = "allow-downgrade";
+          FallbackDNS = selectedDNS;
+          DNSOverTLS = cfg.dns.dnsOverTLS;
+          Cache = "yes";
+          DNSStubListener = "yes";
+        };
       };
 
       # ———————————————————————————————————————

@@ -32,6 +32,7 @@
       # JUSTIFIED: Server requires manual DNS for stability (no systemd-resolved)
       enableSystemdResolved = lib.mkForce false;
       enableDNSOverTLS = lib.mkForce false;
+      dnsOverTLS = lib.mkForce "no";
     };
     firewall = {
       enable = true;

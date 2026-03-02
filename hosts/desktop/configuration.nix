@@ -9,6 +9,7 @@
     ./hardware-configuration.nix
     ../../modules
     ../../profiles/desktop.nix
+    ./gnome.nix
   ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
@@ -121,6 +122,10 @@
     telegram-desktop
     slack
     zoom-us
+    hexchat
+    polari
+    halloy
+    element-desktop
 
     # Productivity
     libreoffice
@@ -252,6 +257,7 @@
 
   modules.networking.firewall = {
     enable = true;
+    tailscaleCompatible = true;
     developmentPorts = [3000 3001 8080 8000];
   };
 
@@ -263,29 +269,28 @@
 
   # DNS configuration
   networking = {
+    wireless.enable = lib.mkForce false; # Desktop is wired-only, disable WiFi
     dhcpcd.extraConfig = "nohook resolv.conf";
     nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
-    firewall.checkReversePath = "loose";
-    # Trust Tailscale and Waydroid interfaces for firewall
-    # tailscale0: Allow SSH and services over Tailscale VPN
-    # waydroid0: Android container networking
-    firewall.trustedInterfaces = ["tailscale0" "waydroid0"];
-    # Allow DHCP and DNS ports for Waydroid
+    # Waydroid-specific: trust its interface, allow DHCP/DNS
+    firewall.trustedInterfaces = ["waydroid0"];
     firewall.allowedUDPPorts = [53 67];
-    nftables.enable = true;
   };
+
+  # Disable WiFi in NetworkManager - desktop is ethernet-only
+  networking.networkmanager.unmanaged = ["interface-name:wlp9s0"];
 
   services.resolved = {
     enable = true;
-    dnssec = "allow-downgrade";
-    dnsovertls = "opportunistic";
-    fallbackDns = ["8.8.8.8" "8.8.4.4"];
-    domains = ["~."];
-    extraConfig = ''
-      DNSStubListener=yes
-      DNSStubListenerExtra=0.0.0.0
-      Cache=yes
-    '';
+    settings.Resolve = {
+      DNSSEC = "allow-downgrade";
+      DNSOverTLS = "opportunistic";
+      FallbackDNS = ["8.8.8.8" "8.8.4.4"];
+      Domains = "~.";
+      DNSStubListener = "yes";
+      DNSStubListenerExtra = "0.0.0.0";
+      Cache = "yes";
+    };
   };
 
   # ===== CORE MODULES =====
@@ -317,10 +322,6 @@
       latex = {
         enable = true;
         minimal = false;
-        extraPackages = with pkgs; [
-          biber
-          texlive.combined.scheme-context
-        ];
       };
       markdown = {
         enable = true;
@@ -419,7 +420,7 @@
 
   # ===== POWER MANAGEMENT =====
   powerManagement = {
-    cpuFreqGovernor = "powersave"; # Let GameMode switch dynamically to performance
+    cpuFreqGovernor = "schedutil"; # Scales with CPU demand; GameMode still switches to performance
     resumeCommands = ''
       ${pkgs.systemd}/bin/systemctl restart systemd-resolved
       ${pkgs.systemd}/bin/systemctl restart NetworkManager
@@ -456,7 +457,6 @@
 
   # System-level Waydroid desktop entry (visible in GNOME, can't be overwritten by Waydroid)
   environment.etc."xdg/autostart/waydroid-fix.desktop".enable = false; # Don't autostart
-  xdg.mime.enable = true;
 
   # Waydroid desktop entry hygiene - hide per-app launchers from GNOME
   # Replaces .desktop files with /dev/null symlinks to prevent clutter

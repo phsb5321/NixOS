@@ -64,46 +64,27 @@ in {
 
   config = lib.mkIf cfg.enable {
     # systemd-resolved configuration with Tailscale compatibility
+    # Uses settings.Resolve for current nixpkgs API
     services.resolved = {
       enable = true;
-
-      # DNS servers configuration
-      fallbackDns = cfg.primaryServers ++ cfg.fallbackServers;
-
-      # Security and performance settings
-      dnssec =
-        if cfg.enableDnssec
-        then "allow-downgrade"
-        else "false";
-
-      # Tailscale-compatible configuration
-      extraConfig = ''
-        # DNS resolution settings
-        DNS=${lib.concatStringsSep " " (cfg.primaryServers ++ cfg.fallbackServers)}
-        FallbackDNS=${lib.concatStringsSep " " cfg.fallbackServers}
-        Domains=~.
-
-        # Security settings
-        DNSSEC=${
+      settings.Resolve = {
+        DNS = cfg.primaryServers ++ cfg.fallbackServers;
+        FallbackDNS = cfg.fallbackServers;
+        Domains = "~.";
+        DNSSEC =
           if cfg.enableDnssec
           then "allow-downgrade"
-          else "false"
-        }
-        DNSOverTLS=${
+          else "false";
+        DNSOverTLS =
           if cfg.enableDoT
-          then "yes"
-          else "no"
-        }
-
-        # Tailscale compatibility settings
-        DNSStubListener=yes
-        DNSStubListenerExtra=0.0.0.0
-        Cache=yes
-
-        # Prevent conflicts with Tailscale MagicDNS
-        ReadEtcHosts=yes
-        ResolveUnicastSingleLabel=yes
-      '';
+          then "opportunistic"
+          else "false";
+        DNSStubListener = "yes";
+        DNSStubListenerExtra = "0.0.0.0";
+        Cache = "yes";
+        ReadEtcHosts = "yes";
+        ResolveUnicastSingleLabel = "yes";
+      };
     };
 
     # DNS health monitoring system

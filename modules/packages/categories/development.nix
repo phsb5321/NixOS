@@ -15,7 +15,7 @@ in {
     editors = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Install code editors (VSCode, Cursor, Zed)";
+      description = "Install code editors (VSCode, Zed)";
     };
 
     apiTools = lib.mkOption {
@@ -90,7 +90,6 @@ in {
     # Code editors
       (lib.optionals cfg.editors [
         pkgs-unstable.vscode
-        code-cursor
         pkgs-unstable.zed-editor
       ])
       # API testing
@@ -98,31 +97,26 @@ in {
         bruno
         bruno-cli
       ])
-      # Language runtimes
+      # Language runtimes (go, nodejs_22 already in core)
       ++ (lib.optionals cfg.runtimes [
-        nodejs
         python3
         rustc
         cargo
-        go
         openjdk
       ])
-      # Compilers and build tools
+      # Compilers and build tools (gcc already in core)
       ++ (lib.optionals cfg.compilers [
         android-tools
         llvm
         clang
-        gcc
         gdb
         cmake
         ninja
         pkg-config
         mermaid-cli
       ])
-      # Language servers and formatters
+      # Language servers and formatters (nixd, nil already in core)
       ++ (lib.optionals cfg.languageServers [
-        nixd
-        nil
         nodePackages.typescript-language-server
         nodePackages.eslint
         nodePackages.prettier
@@ -138,32 +132,20 @@ in {
         ruff
         black
       ])
-      # Version control
+      # Version control (git, gh, lazygit already in core)
       ++ (lib.optionals cfg.versionControl [
         chezmoi
-        git
         git-lfs
-        gh
         glab
-        lazygit
         delta
       ])
-      # Modern utilities
+      # Modern utilities (just, jq, fd, ripgrep, bat, eza, zoxide, tree, htop already in core)
       ++ (lib.optionals cfg.utilities [
         typst
-        just
         direnv
         httpie
-        jq
         yq
-        fd
-        ripgrep
-        bat
-        eza
-        zoxide
         fzf
-        tree
-        htop
         btop
       ])
       # Database tools
@@ -183,9 +165,8 @@ in {
         ltrace
         perf-tools
       ])
-      # Network tools
+      # Network tools (nmap already in core)
       ++ (lib.optionals cfg.networking [
-        nmap
         wireshark
         tcpdump
       ])

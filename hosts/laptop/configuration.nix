@@ -12,11 +12,12 @@
     ./hardware-configuration.nix
     ../../modules
     ../../profiles/laptop.nix
+    ./gnome.nix
   ];
 
   # Allow insecure packages for USB boot creation tool and development
   nixpkgs.config.permittedInsecurePackages = [
-    "ventoy-1.1.07" # Required for ventoy-full package
+    "ventoy-1.1.10" # Required for ventoy-full package (uses binary blobs)
     "gradle-7.6.6" # Required for Java development - Gradle 7 EOL but needed for compatibility
   ];
 
@@ -60,7 +61,8 @@
       clipboard = true;
       gsconnect = true;
       workspaceIndicator = true;
-      soundOutputChooser = true;
+      # soundOutputChooser removed: extension is dead on GNOME 45+
+      # GNOME 45+ has native Quick Settings for audio output switching
       productivity = true;
     };
 
@@ -74,12 +76,12 @@
       weekday = true;
     };
 
-    # Wayland configuration - Force X11 for NVIDIA compatibility
+    # Wayland configuration - NVIDIA-only mode (nvidia-drm.modeset=1 required)
     wayland = {
-      enable = lib.mkForce false;
-      electronSupport = false;
-      screenSharing = false;
-      variant = "software";
+      enable = true;
+      electronSupport = true;
+      screenSharing = true;
+      variant = "hardware"; # NVIDIA renders via GBM backend
     };
   };
 
@@ -139,14 +141,11 @@
       security = true;
       pdfViewer = true;
       messaging = true;
-      fonts = true;
     };
 
     # Audio/Video
     audioVideo = {
       enable = true;
-      pipewire = true;
-      audioEffects = true;
       audioControl = true;
       webcam = true;
     };
@@ -154,7 +153,6 @@
     # Terminal
     terminal = {
       enable = true;
-      fonts = true;
       shell = true;
       theme = true;
       modernTools = true;
@@ -438,8 +436,20 @@
     gamescopeSession.enable = true;
     remotePlay.enable = true;
   };
-  modules.gaming.gamemode.enable = true;
+  modules.gaming.gamemode = {
+    enable = true;
+    customStart = "${pkgs.libnotify}/bin/notify-send 'GameMode' 'Performance mode activated' -i input-gaming";
+    customEnd = "${pkgs.libnotify}/bin/notify-send 'GameMode' 'Performance mode deactivated' -i input-gaming";
+  };
   modules.gaming.mangohud.enable = true;
+
+  # Gamescope compositor - capSysNice disabled because the capability wrapper
+  # fails inside Steam's FHS sandbox ("failed to inherit capabilities: Operation not permitted")
+  # Gamescope falls back to regular-priority threads without it, which is acceptable.
+  programs.gamescope = {
+    enable = true;
+    capSysNice = false;
+  };
 
   # ===== DOTFILES =====
   modules.dotfiles = {
@@ -461,27 +471,48 @@
   modules.hardware.laptop = {
     enable = true;
 
-    # Disable hybrid graphics - causes blank screen
+    # Enable hybrid graphics with NVIDIA-only rendering for gaming
+    # GTX 1650 Mobile renders everything; Intel iGPU used only for display output
     graphics = {
-      hybridGraphics = false;
+      hybridGraphics = true;
+      primeMode = "nvidia-only";
       intelBusId = "PCI:0:2:0";
       nvidiaBusId = "PCI:1:0:0";
+      intelGeneration = "coffeelake"; # CML GT2 uses Coffee Lake-era i915
     };
 
-    # Touchpad configuration
+    # Touchpad configuration (always enabled by the laptop module - cannot be disabled)
     touchpad = {
-      enable = true;
       naturalScrolling = true;
       tapToClick = true;
       disableWhileTyping = true;
     };
 
-    batteryManagement.chargeThreshold = 85;
+    # No charge threshold — laptop is always plugged in
 
     powerManagement = {
-      profile = "balanced";
+      profile = "performance";
+      autoSuspend = false; # Laptop is always plugged in — no idle suspend
       suspendTimeout = 900;
     };
+  };
+
+  # NVIDIA enabled in nvidia-only mode for gaming (GTX 1650 Mobile)
+
+  # ===== GAMING SPECIALISATION =====
+  # Default profile is already "performance", so this specialisation adds
+  # mitigations=off for a 5-15% gaming boost at the cost of CPU vulnerability
+  # mitigations. Select from systemd-boot menu.
+  specialisation.gaming.configuration = {
+    system.nixos.tags = ["gaming-mitigations-off"];
+
+    boot.kernelParams = lib.mkAfter ["mitigations=off"];
+
+    # Disable auto-suspend during gaming sessions
+    modules.hardware.laptop.powerManagement.autoSuspend = lib.mkForce false;
+
+    # GPU performance optimizations for gaming
+    modules.gaming.gamemode.gpuOptimizations = lib.mkForce true;
   };
 
   # ===== BOOT CONFIGURATION =====
@@ -495,17 +526,22 @@
       timeout = 3;
     };
 
+    # NOTE: NVIDIA initrd modules are auto-configured by hardware.nix
+    # when hybridGraphics=true and primeMode="nvidia-only"
+
+    # NVIDIA-only GPU configuration
     kernelParams = lib.mkMerge [
       [
         "quiet"
         "splash"
         "i915.enable_fbc=1"
-        "i915.enable_psr=2"
-        "nvme.noacpi=1"
-        "acpi=strict"
-        "nouveau.modeset=0"
-        "nvidia-drm.modeset=0"
-        "nomodeset"
+        "i915.enable_psr=1" # PSR1 only — PSR2 causes flickering on Gen9 (Coffee Lake)
+        "nvme.noacpi=1" # Disables ACPI StorageD3Enable for suspend (not APST).
+        # FR-008: To test removal, do 5 suspend/resume cycles and check
+        # `journalctl -b | grep nvme` for disconnect errors. If none, remove.
+        "nouveau.modeset=0" # Block nouveau (using proprietary NVIDIA driver)
+        "nvidia-drm.modeset=1" # Required for Wayland with NVIDIA
+        "nvidia-drm.fbdev=1" # Framebuffer device for early console
       ]
       (lib.mkAfter ["loglevel=3"])
     ];
@@ -514,18 +550,19 @@
       options iwlwifi bt_coex_active=0 swcrypto=1 11n_disable=0
       options iwlmvm power_scheme=1
       blacklist nouveau
-      blacklist nvidia
-      blacklist nvidia_drm
-      blacklist nvidia_modeset
     '';
 
     blacklistedKernelModules = [
       "nouveau"
-      "nvidia"
-      "nvidia_drm"
-      "nvidia_modeset"
       "acpi_power_meter"
     ];
+
+    # BBR congestion control requires tcp_bbr module and fq qdisc.
+    # The bbr sysctl is set by modules/networking (optimizeTCP = true by default).
+    kernelModules = ["tcp_bbr"];
+    kernel.sysctl = {
+      "net.core.default_qdisc" = "fq";
+    };
 
     plymouth.enable = false;
     initrd.systemd.enable = true;
@@ -554,31 +591,12 @@
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
 
-  # ===== TOUCHPAD PERMANENT ENABLE =====
-  systemd.user.services.touchpad-always-enabled = {
-    description = "Force touchpad to always be enabled";
-    wantedBy = ["graphical-session.target"];
-    after = ["graphical-session.target"];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.glib}/bin/gsettings set org.gnome.desktop.peripherals.touchpad send-events 'enabled'";
-      Restart = "on-failure";
-      RestartSec = "5s";
-    };
-  };
-
-  programs.dconf.profiles.user.databases = [
-    {
-      settings = {
-        "org/gnome/desktop/peripherals/touchpad" = {
-          send-events = "enabled";
-        };
-      };
-    }
-  ];
+  # ===== TOUCHPAD =====
+  # Touchpad is always enabled and permanently locked by the laptop hardware module.
+  # See modules/hardware/laptop/hardware.nix for the implementation.
 
   # ===== ENVIRONMENT VARIABLES =====
+  # NVIDIA-only Wayland rendering + Steam/gaming variables
   environment.sessionVariables = {
     MOZ_USE_XINPUT2 = "1";
     ELECTRON_FORCE_IS_PACKAGED = "true";
@@ -589,26 +607,18 @@
     DXVK_LOG_LEVEL = "warn";
   };
 
-  # ===== SECURITY (like desktop) =====
+  # ===== SECURITY =====
   security = {
     pam.services = {
       gdm.enableGnomeKeyring = true;
       gdm-password.enableGnomeKeyring = true;
     };
 
-    auditd.enable = true;
-    audit = {
-      enable = true;
-      backlogLimit = 8192;
-      failureMode = "printk";
-      rules = ["-a exit,always -F arch=b64 -S execve"];
-    };
-    # Prevent audit log from consuming all disk space (execve rule is verbose)
-    auditd.settings = {
-      max_log_file = 100; # MB — rotate at 100 MB
-      num_logs = 5; # Keep 5 rotated files (500 MB max)
-      max_log_file_action = "rotate";
-    };
+    # auditd disabled — execve rule generated 162GB logs on desktop, adds ~98.5%
+    # syscall overhead for monitored calls (Red Hat benchmarks). AppArmor provides
+    # MAC enforcement independently.
+    auditd.enable = false;
+    audit.enable = false;
 
     apparmor = {
       enable = true;

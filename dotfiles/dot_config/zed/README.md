@@ -9,7 +9,7 @@ Main configuration file with:
 - **Enhanced Nix Integration**: Uses `nixd` and `alejandra` for superior Nix language support
 - **Copilot Integration**: Optimized AI-powered code completion and suggestions
 - **Language Server Protocol**: Configured for 15+ programming languages
-- **UI/UX Optimizations**: Gruvbox Dark Hard theme, JetBrains Mono Nerd Font
+- **UI/UX Optimizations**: Ayu Dark theme, JetBrains Mono Nerd Font
 - **Agent Configuration**: Custom AI agent profiles with comprehensive tooling
 - **SSH Remote Development**: Pre-configured connections to your remote servers
 
@@ -47,7 +47,7 @@ Comprehensive Nix language snippets:
 - **Fallback LSP**: `nil` for compatibility
 - **Formatter**: `alejandra` with quiet mode
 - **Auto-formatting**: Format on save enabled
-- **Flake Integration**: Automatic NixOS and Home Manager options completion
+- **Flake Integration**: Automatic NixOS options completion
 
 ### AI-Powered Development
 - **GitHub Copilot**: Enabled with security exclusions for sensitive files
@@ -139,7 +139,7 @@ Comprehensive Nix language snippets:
 ## 🎨 Customization
 
 ### Theme and Fonts
-- **Theme**: Gruvbox Dark Hard (can be changed in settings)
+- **Theme**: Ayu Dark (can be changed in settings)
 - **Font**: JetBrainsMono Nerd Font Mono, 18px
 - **Fallback**: FiraCode Nerd Font Mono
 - **Terminal Font**: Same as editor for consistency
@@ -186,7 +186,7 @@ cp -r dot_config/zed ~/.config/
 To update language servers and tools, modify `modules/packages/default.nix` and rebuild your system:
 
 ```bash
-sudo nixos-rebuild switch --flake .#default
+sudo nixos-rebuild switch --flake .#desktop
 ```
 
 ## 🐛 Troubleshooting

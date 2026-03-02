@@ -34,6 +34,26 @@ in {
       default = true;
       description = "Enable kernel modesetting (required for Wayland)";
     };
+
+    shaderCache = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable NVIDIA shader disk cache optimization";
+      };
+
+      size = lib.mkOption {
+        type = lib.types.int;
+        default = 10737418240; # 10GB
+        description = "Maximum shader cache size in bytes";
+      };
+
+      skipCleanup = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Prevent automatic shader cache pruning";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -79,6 +99,17 @@ in {
       __GLX_VENDOR_LIBRARY_NAME = lib.mkDefault "nvidia";
       # Wayland support
       WLR_NO_HARDWARE_CURSORS = lib.mkDefault "1";
+    };
+
+    # Shader cache optimization
+    environment.sessionVariables = lib.mkIf cfg.shaderCache.enable {
+      __GL_SHADER_DISK_CACHE = "1";
+      __GL_SHADER_DISK_CACHE_SKIP_CLEANUP =
+        if cfg.shaderCache.skipCleanup
+        then "1"
+        else "0";
+      __GL_SHADER_DISK_CACHE_SIZE = toString cfg.shaderCache.size;
+      __GL_THREADED_OPTIMIZATIONS = "1";
     };
 
     # GPU tools

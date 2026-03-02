@@ -254,6 +254,12 @@ in {
     # Desktop Manager
     services.desktopManager.gnome.enable = true;
 
+    # Ensure icon caches are built at system build time so newly installed
+    # apps show icons immediately after nixos-rebuild without a reboot.
+    gtk.iconCache.enable = true;
+    xdg.icons.enable = true;
+    xdg.mime.enable = true;
+
     # XDG Desktop Portal
     xdg.portal = lib.mkIf cfg.portal {
       enable = true;
@@ -471,5 +477,15 @@ in {
         (lib.optional coreAppsCfg.fileManagement.diskAnalyzer baobab)
         ++ (lib.optional coreAppsCfg.fileManagement.diskUtility gnome-disk-utility)
       ));
+
+    # NOTE: GNOME Shell on Wayland does NOT auto-detect new apps after nixos-rebuild.
+    # Root cause: GLib's GAppInfoMonitor uses inotify, which resolves symlinks once
+    # at watch creation. NixOS swaps /run/current-system to a new Nix store path,
+    # but inotify still watches the OLD resolved inode (immutable store path).
+    # No activation script can fix this -- Shell.Eval is disabled in GNOME 49,
+    # and touching user-local dirs only resets user DesktopFileDir (not system dirs).
+    # A logout/login is required after installing new packages for them to appear
+    # in the GNOME app grid. Already-installed apps update icons immediately because
+    # gtk.iconCache.enable builds caches at Nix build time (above).
   };
 }

@@ -72,11 +72,8 @@ in {
     };
 
     touchpad = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable touchpad support";
-      };
+      # NOTE: No enable option - touchpad is ALWAYS enabled when laptop module is active.
+      # This is intentional to prevent the touchpad from ever being disabled.
 
       naturalScrolling = lib.mkOption {
         type = lib.types.bool;
@@ -104,6 +101,17 @@ in {
         description = "Enable hybrid Intel/NVIDIA graphics support";
       };
 
+      primeMode = lib.mkOption {
+        type = lib.types.enum ["offload" "sync" "nvidia-only"];
+        default = "offload";
+        description = ''
+          GPU rendering mode:
+          - offload: Intel primary, NVIDIA on-demand (battery friendly, X11 only)
+          - sync: Both GPUs active, NVIDIA renders to Intel display (X11 only)
+          - nvidia-only: NVIDIA renders everything (best for Wayland, always-on)
+        '';
+      };
+
       intelBusId = lib.mkOption {
         type = lib.types.str;
         default = "PCI:0:2:0";
@@ -114,6 +122,12 @@ in {
         type = lib.types.str;
         default = "PCI:1:0:0";
         description = "NVIDIA GPU bus ID";
+      };
+
+      intelGeneration = lib.mkOption {
+        type = lib.types.enum ["haswell" "broadwell" "skylake" "kabylake" "coffeelake" "icelake" "tigerlake" "alderlake" "raptorlake"];
+        default = "tigerlake";
+        description = "Intel CPU/GPU generation for VA-API driver selection";
       };
     };
 
@@ -139,7 +153,7 @@ in {
       enable = true;
       settings = {
         CPU_SCALING_GOVERNOR_ON_AC = "performance";
-        CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+        CPU_SCALING_GOVERNOR_ON_BAT = "schedutil"; # schedutil scales dynamically; avoids min-freq pinning on intel_cpufreq
         CPU_MIN_PERF_ON_AC = 0;
         CPU_MAX_PERF_ON_AC = 100;
         CPU_MIN_PERF_ON_BAT = 0;
@@ -188,8 +202,8 @@ in {
     # Display configuration
     # Night light is handled by GNOME settings, not environment variables
 
-    # Touchpad configuration
-    services.libinput = lib.mkIf cfg.touchpad.enable {
+    # Touchpad configuration (always enabled - cannot be disabled)
+    services.libinput = {
       enable = true;
       touchpad = {
         naturalScrolling = cfg.touchpad.naturalScrolling;
@@ -200,6 +214,61 @@ in {
       };
     };
 
+    # Force touchpad to stay enabled at the GNOME/desktop level.
+    # Three-layer enforcement:
+    #   1. dconf system database with lock (prevents GUI changes)
+    #   2. Oneshot service writes dconf on login (overrides stale user db)
+    #   3. Monitor service watches dconf and immediately reverts any change
+    systemd.user.services.touchpad-always-enabled = {
+      description = "Force touchpad enabled on login (dconf write)";
+      wantedBy = ["graphical-session.target"];
+      after = ["graphical-session.target" "dbus.socket"];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = pkgs.writeShellScript "touchpad-force-enable" ''
+          # Write directly to dconf (does not need a schema, more reliable than gsettings)
+          ${pkgs.dconf}/bin/dconf write /org/gnome/desktop/peripherals/touchpad/send-events "'enabled'"
+        '';
+        Restart = "on-failure";
+        RestartSec = "2s";
+      };
+    };
+
+    systemd.user.services.touchpad-monitor = {
+      description = "Watch dconf and revert any touchpad disable";
+      wantedBy = ["graphical-session.target"];
+      after = ["graphical-session.target" "touchpad-always-enabled.service" "dbus.socket"];
+      serviceConfig = {
+        Type = "simple";
+        Restart = "always";
+        RestartSec = "3s";
+        ExecStart = pkgs.writeShellScript "touchpad-monitor" ''
+          ${pkgs.dconf}/bin/dconf watch /org/gnome/desktop/peripherals/touchpad/send-events | while read -r line; do
+            case "$line" in
+              *disabled*|*Disabled*)
+                ${pkgs.dconf}/bin/dconf write /org/gnome/desktop/peripherals/touchpad/send-events "'enabled'"
+                ;;
+            esac
+          done
+        '';
+      };
+    };
+
+    # Declarative dconf: set touchpad enabled and lock it so the GNOME UI cannot change it
+    programs.dconf.profiles.user.databases = [
+      {
+        settings = {
+          "org/gnome/desktop/peripherals/touchpad" = {
+            send-events = "enabled";
+          };
+        };
+        locks = [
+          "/org/gnome/desktop/peripherals/touchpad/send-events"
+        ];
+      }
+    ];
+
     # Essential laptop packages
     environment.systemPackages = with pkgs;
       [
@@ -209,7 +278,7 @@ in {
 
         # Display control
         brightnessctl
-        xorg.xbacklight
+        xbacklight
         light
 
         # Battery monitoring
@@ -254,7 +323,7 @@ in {
     # Module configuration for Intel CNVi WiFi (device 8086:06f0)
     boot.extraModprobeConfig = ''
       # Intel CNVi WiFi specific configuration
-      options iwlwifi swcrypto=1 11n_disable=1
+      options iwlwifi swcrypto=1 11n_disable=0
       options iwlwifi power_save=0
       options iwlwifi d0i3_disable=1
       options iwlwifi uapsd_disable=1
@@ -303,20 +372,26 @@ in {
       };
     };
 
-    # NVIDIA configuration for hybrid laptops for gaming performance
+    # NVIDIA configuration for hybrid laptops
     hardware.nvidia = lib.mkIf cfg.graphics.hybridGraphics {
       modesetting.enable = true;
-      powerManagement.enable = true;
-      powerManagement.finegrained = true;
       open = false; # Use proprietary drivers for GTX 1650
       nvidiaSettings = true;
       package = config.boot.kernelPackages.nvidiaPackages.production;
 
-      prime = {
-        offload = {
+      # Power management - disabled for nvidia-only (GPU always on)
+      powerManagement = {
+        enable = cfg.graphics.primeMode != "nvidia-only";
+        finegrained = cfg.graphics.primeMode == "offload";
+      };
+
+      # PRIME configuration - only for offload/sync modes (X11)
+      prime = lib.mkIf (cfg.graphics.primeMode != "nvidia-only") {
+        offload = lib.mkIf (cfg.graphics.primeMode == "offload") {
           enable = true;
           enableOffloadCmd = true;
         };
+        sync.enable = lib.mkIf (cfg.graphics.primeMode == "sync") true;
         intelBusId = cfg.graphics.intelBusId;
         nvidiaBusId = cfg.graphics.nvidiaBusId;
       };
@@ -328,13 +403,47 @@ in {
       "nvidia" # NVIDIA
     ];
 
+    # Early KMS for nvidia-only mode (required for Wayland)
+    boot.initrd.kernelModules = lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") [
+      "nvidia"
+      "nvidia_modeset"
+      "nvidia_uvm"
+      "nvidia_drm"
+      "i915" # Intel still needed for display output
+    ];
+
+    # Environment variables for nvidia-only Wayland rendering
+    environment.sessionVariables = lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") {
+      GBM_BACKEND = "nvidia-drm";
+      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+      WLR_NO_HARDWARE_CURSORS = "1";
+      # VA-API via Intel for video decode (more efficient)
+      LIBVA_DRIVER_NAME = lib.mkDefault (
+        if (builtins.elem cfg.graphics.intelGeneration ["tigerlake" "alderlake" "raptorlake" "icelake"])
+        then "iHD"
+        else "i965"
+      );
+    };
+
+    # NVIDIA suspend/resume services for Wayland
+    systemd.services = lib.mkIf (cfg.graphics.hybridGraphics && cfg.graphics.primeMode == "nvidia-only") {
+      nvidia-suspend.enable = true;
+      nvidia-hibernate.enable = true;
+      nvidia-resume.enable = true;
+    };
+
     # Enable firmware updates
     services.fwupd.enable = true;
 
     # CPU frequency scaling
+    # Map profile names to valid Linux governors ("balanced" isn't a real governor)
     powerManagement = {
       enable = true;
-      cpuFreqGovernor = lib.mkDefault cfg.powerManagement.profile;
+      cpuFreqGovernor = lib.mkDefault (
+        if cfg.powerManagement.profile == "performance"
+        then "performance"
+        else "schedutil" # "balanced" and "powersave" both map to schedutil (scales dynamically)
+      );
     };
 
     # ACPI event handling

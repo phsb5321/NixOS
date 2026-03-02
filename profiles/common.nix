@@ -68,13 +68,11 @@
       security = lib.mkDefault true;
       pdfViewer = lib.mkDefault true;
       messaging = lib.mkDefault true;
-      fonts = lib.mkDefault true;
     };
 
     # Terminal - modern CLI environment
     terminal = {
       enable = lib.mkDefault true;
-      fonts = lib.mkDefault true;
       shell = lib.mkDefault true;
       theme = lib.mkDefault true;
       modernTools = lib.mkDefault true;
@@ -83,11 +81,9 @@
       applications = lib.mkDefault true;
     };
 
-    # Audio/Video - basic audio support
+    # Audio/Video - patchbay and webcam (pipewire/easyeffects/pavucontrol handled by core.pipewire)
     audioVideo = {
       enable = lib.mkDefault true;
-      pipewire = lib.mkDefault true;
-      audioEffects = lib.mkDefault true;
       audioControl = lib.mkDefault true;
       webcam = lib.mkDefault true;
     };

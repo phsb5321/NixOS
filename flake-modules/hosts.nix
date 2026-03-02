@@ -39,7 +39,7 @@
 
       # OpenCode bleeding edge from flake input
       (_final: _prev: {
-        opencode = inputs.opencode.packages.${_final.system}.opencode;
+        opencode = inputs.opencode.packages.${_final.stdenv.hostPlatform.system}.opencode;
       })
     ];
 
@@ -155,9 +155,7 @@
         configPath = "laptop"; # Maps to hosts/laptop/
         # Uses stable nixpkgs by default
         extraModules = [
-          inputs.nixos-hardware.nixosModules.common-cpu-intel
-          inputs.nixos-hardware.nixosModules.common-gpu-intel
-          inputs.nixos-hardware.nixosModules.common-gpu-nvidia-disable
+          inputs.nixos-hardware.nixosModules.common-cpu-intel # Transitively includes common-gpu-intel
           inputs.nixos-hardware.nixosModules.common-pc-laptop
           inputs.nixos-hardware.nixosModules.common-pc-laptop-ssd
         ];

@@ -246,11 +246,11 @@ with lib; let
 
     if command -v code &> /dev/null; then
         code "$DOTFILES_DIR"
-    elif command -v cursor &> /dev/null; then
-        cursor "$DOTFILES_DIR"
+    elif command -v zeditor &> /dev/null; then
+        zeditor "$DOTFILES_DIR"
     else
         echo "📁 Dotfiles directory: $DOTFILES_DIR"
-        echo "💡 Install VS Code or Cursor for direct editing."
+        echo "💡 Install VS Code or Zed for direct editing."
     fi
   '';
 

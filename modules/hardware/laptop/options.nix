@@ -69,11 +69,8 @@
     };
 
     touchpad = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable touchpad support";
-      };
+      # NOTE: No enable option - touchpad is ALWAYS enabled when laptop module is active.
+      # This is intentional to prevent the touchpad from ever being disabled.
 
       naturalScrolling = lib.mkOption {
         type = lib.types.bool;
@@ -101,16 +98,34 @@
         description = "Enable hybrid Intel/NVIDIA graphics support";
       };
 
+      primeMode = lib.mkOption {
+        type = lib.types.enum ["offload" "nvidia-only"];
+        default = "offload";
+        description = ''
+          PRIME mode for hybrid graphics on Wayland:
+          - offload: Intel primary, NVIDIA on-demand (battery friendly, X11 recommended)
+          - nvidia-only: NVIDIA renders everything (best performance, GPU always on, Wayland ready)
+
+          Note: sync/reverse-sync are X11-only and don't work on Wayland.
+        '';
+      };
+
       intelBusId = lib.mkOption {
         type = lib.types.str;
         default = "PCI:0:2:0";
-        description = "Intel GPU bus ID";
+        description = "Intel GPU bus ID (only used in offload mode)";
       };
 
       nvidiaBusId = lib.mkOption {
         type = lib.types.str;
         default = "PCI:1:0:0";
-        description = "NVIDIA GPU bus ID";
+        description = "NVIDIA GPU bus ID (only used in offload mode)";
+      };
+
+      intelGeneration = lib.mkOption {
+        type = lib.types.enum ["haswell" "broadwell" "skylake" "kabylake" "coffeelake" "icelake" "tigerlake" "alderlake" "raptorlake"];
+        default = "tigerlake";
+        description = "Intel CPU/GPU generation for VA-API driver selection (iHD for Tiger Lake+, i965 for older)";
       };
     };
 

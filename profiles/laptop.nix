@@ -105,7 +105,7 @@ in {
           then "powersave"
           else "balanced"
         );
-        autoSuspend = cfg.variant != "gaming";
+        autoSuspend = lib.mkDefault (cfg.variant != "gaming");
         suspendTimeout =
           if cfg.variant == "ultrabook"
           then 600
@@ -119,7 +119,6 @@ in {
       };
 
       touchpad = {
-        enable = true;
         naturalScrolling = true;
         tapToClick = true;
         disableWhileTyping = true;
@@ -153,7 +152,6 @@ in {
       [
         # Laptop essentials
         powertop
-        tlp
         acpi
         brightnessctl
       ]
@@ -208,10 +206,17 @@ in {
       ]
     );
 
-    # Swappiness for laptops — 60-80 is optimal for ZRAM compressed swap
     boot.kernel.sysctl = {
-      "vm.swappiness" = lib.mkForce 70;
-      "vm.laptop_mode" = lib.mkDefault 5;
+      # zram-optimized: high swappiness is correct because compressed RAM I/O is
+      # orders of magnitude faster than disk. Fedora/Arch recommend 180 with zram.
+      "vm.swappiness" = lib.mkForce 180;
+      # Single-page reads optimal for zram (sequential read-ahead is pointless
+      # for compressed in-memory swap)
+      "vm.page-cluster" = 0;
+      # Disable watermark boosting (causes unnecessary reclaim with zram)
+      "vm.watermark_boost_factor" = 0;
+      # Higher watermark scale for earlier background reclaim
+      "vm.watermark_scale_factor" = 125;
     };
 
     # Enable zram for better memory management
@@ -225,9 +230,11 @@ in {
       );
     };
 
-    # I/O scheduler optimized for SSDs (common in laptops)
+    # I/O schedulers: NVMe uses "none" for lowest latency (VU Amsterdam 2024 study).
+    # SATA SSD: mq-deadline is still appropriate.
     services.udev.extraRules = ''
       ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
+      ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
     '';
   };
 }

@@ -14,7 +14,7 @@ in {
     performance = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Install performance tools (GameMode, GameScope, MangoHud)";
+      description = "Install performance tools (GameMode, GameScope, MangoHud, Goverlay)";
     };
 
     launchers = lib.mkOption {
@@ -26,7 +26,7 @@ in {
     wine = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Install Wine and related tools";
+      description = "Install Wine, Proton tools, and compatibility layers";
     };
 
     gpuControl = lib.mkOption {
@@ -41,19 +41,6 @@ in {
       description = "Install Minecraft launcher (Prism Launcher)";
     };
 
-    # New gaming tools section
-    performanceTools = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Install performance monitoring tools (MangoHud, Goverlay)";
-    };
-
-    protonTools = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Install Proton management tools (protontricks, protonup-qt)";
-    };
-
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [];
@@ -63,25 +50,26 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-    # Performance tools
+    # Performance tools (btop already in dev utilities)
       (lib.optionals cfg.performance [
         gamemode
         gamescope
         mangohud
-        btop
+        goverlay
       ])
       # Game launchers
       ++ (lib.optionals cfg.launchers [
         heroic
         lutris
       ])
-      # Wine and compatibility
+      # Wine, Proton, and compatibility
       ++ (lib.optionals cfg.wine [
         protontricks
         winetricks
         steam-run
         wine-staging
         dxvk
+        protonup-qt
       ])
       # GPU control
       ++ (lib.optionals cfg.gpuControl [
@@ -90,17 +78,6 @@ in {
       # Minecraft
       ++ (lib.optionals cfg.minecraft [
         prismlauncher
-      ])
-      # New gaming tools section
-      ++ (lib.optionals cfg.performanceTools [
-        mangohud # FPS/GPU overlay
-        goverlay # MangoHud GUI configurator
-        gamemode # Process optimizer
-      ])
-      ++ (lib.optionals cfg.protonTools [
-        protontricks # Prefix manager
-        protonup-qt # GE-Proton installer
-        winetricks # Wine configuration
       ])
       # Extra packages
       ++ cfg.extraPackages;

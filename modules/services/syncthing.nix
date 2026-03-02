@@ -190,15 +190,19 @@ in {
         };
 
         # Device configuration
-        devices = mapAttrs (name: device: {
-          inherit (device) id addresses introducer;
-        }) cfg.devices;
+        devices =
+          mapAttrs (name: device: {
+            inherit (device) id addresses introducer;
+          })
+          cfg.devices;
 
         # Folder configuration
-        folders = mapAttrs (name: folder: {
-          inherit (folder) path devices type ignorePerms rescanIntervalS fsWatcherEnabled;
-          versioning = folder.versioning;
-        }) cfg.folders;
+        folders =
+          mapAttrs (name: folder: {
+            inherit (folder) path devices type ignorePerms rescanIntervalS fsWatcherEnabled;
+            versioning = folder.versioning;
+          })
+          cfg.folders;
       };
     };
 
@@ -209,9 +213,11 @@ in {
     };
 
     # Create sync directories
-    systemd.tmpfiles.rules = mapAttrsToList (name: folder:
-      "d ${folder.path} 0755 ${cfg.user} ${cfg.group} -"
-    ) cfg.folders;
+    systemd.tmpfiles.rules =
+      mapAttrsToList (
+        name: folder: "d ${folder.path} 0755 ${cfg.user} ${cfg.group} -"
+      )
+      cfg.folders;
 
     # Write .stignore files for folders with ignorePatterns
     system.activationScripts.syncthing-stignore = let
@@ -223,8 +229,9 @@ in {
     in
       mkIf (foldersWithIgnores != {}) {
         text = concatStringsSep "\n" (mapAttrsToList (name: folder: ''
-          install -o ${cfg.user} -g ${cfg.group} -m 644 ${stignoreFile name folder} "${folder.path}/.stignore"
-        '') foldersWithIgnores);
+            install -o ${cfg.user} -g ${cfg.group} -m 644 ${stignoreFile name folder} "${folder.path}/.stignore"
+          '')
+          foldersWithIgnores);
       };
   };
 }

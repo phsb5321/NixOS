@@ -1,4 +1,12 @@
-{pkgs ? import <nixpkgs> {config.allowUnfree = true;}}: let
+{
+  pkgs ?
+    import <nixpkgs> {
+      config.allowUnfree = true;
+      config.permittedInsecurePackages = [
+        "python3.12-ecdsa-0.19.1" # Required by platformio - CVE-2024-23342 is a timing attack, low risk for dev
+      ];
+    },
+}: let
   # Import shared testing toolchain
   testingToolchain = import ./testing-toolchain.nix {inherit pkgs;};
 
