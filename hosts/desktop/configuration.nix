@@ -173,7 +173,7 @@
   modules.services.ssh = {
     enable = true;
     permitRootLogin = "no";
-    passwordAuthentication = false;
+    passwordAuthentication = true;
   };
 
   # ===== SYNCTHING - Sync with Laptop over Tailscale =====
