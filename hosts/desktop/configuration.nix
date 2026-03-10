@@ -245,6 +245,20 @@
     };
   };
 
+  # ===== SAMBA MOUNTS =====
+  # Credentials file must be created manually (NOT in git):
+  #   sudo mkdir -p /etc/samba/credentials
+  #   echo -e 'username=notroot\npassword=YOUR_PASSWORD_HERE' | sudo tee /etc/samba/credentials/dokku-storage
+  #   sudo chmod 600 /etc/samba/credentials/dokku-storage
+  modules.services.sambaMounts = {
+    enable = true;
+    mounts.dokku-storage = {
+      remotePath = "//100.99.218.39/dokku-storage";
+      mountPoint = "/mnt/dokku";
+      credentialsFile = "/etc/samba/credentials/dokku-storage";
+    };
+  };
+
   # ===== NETWORKING =====
   modules.networking.tailscale = {
     enable = true;

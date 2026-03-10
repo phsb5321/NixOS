@@ -2,7 +2,7 @@
 # dconf settings (host-specific overrides only)
 # Extension installation AND activation are handled by modules/desktop/gnome/extensions.nix
 # Configure which extensions via modules.desktop.gnome.extensions.* in configuration.nix
-{lib, ...}: {
+{lib, pkgs, ...}: {
   # Desktop-specific dconf settings (AMD GPU optimizations, power)
   programs.dconf.profiles.user.databases = [
     {

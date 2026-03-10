@@ -14,5 +14,6 @@
     ./audiobookshelf-guardian.nix
     # Desktop-specific services
     ./waydroid-desktop-hygiene.nix
+    ./samba-mounts.nix
   ];
 }
