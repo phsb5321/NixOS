@@ -88,10 +88,6 @@ in {
         "vm.dirty_ratio" = lib.mkDefault 15;
         "vm.dirty_background_ratio" = lib.mkDefault 5;
         "vm.vfs_cache_pressure" = lib.mkDefault 50;
-        # Network performance (can be overridden by networking module)
-        "net.core.rmem_max" = lib.mkDefault 268435456;
-        "net.core.wmem_max" = lib.mkDefault 268435456;
-        "net.core.netdev_max_backlog" = lib.mkDefault 5000;
         # Security hardening
         "kernel.dmesg_restrict" = 1;
         "kernel.kptr_restrict" = 2;

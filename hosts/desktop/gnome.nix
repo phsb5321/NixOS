@@ -51,4 +51,10 @@
     "LIBVA_DRIVER_NAME" = "radeonsi";
     "VDPAU_DRIVER" = "radeonsi";
   };
+
+  # Askpass for GUI sudo prompts (used by nh, Claude Code, etc.)
+  programs.ssh.askPassword = "${pkgs.ssh-askpass-fullscreen}/bin/ssh-askpass-fullscreen";
+  environment.variables = {
+    "SUDO_ASKPASS" = "${pkgs.ssh-askpass-fullscreen}/bin/ssh-askpass-fullscreen";
+  };
 }

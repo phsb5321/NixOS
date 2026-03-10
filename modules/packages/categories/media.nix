@@ -27,7 +27,7 @@ in {
     discord = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Install Discord (Vesktop)";
+      description = "Install Discord";
     };
 
     streaming = lib.mkOption {
@@ -60,7 +60,7 @@ in {
           '';
         }))
       ]
-      ++ lib.optionals cfg.discord [vesktop]
+      ++ lib.optionals cfg.discord [discord]
       ++ lib.optionals cfg.streaming [obs-studio]
       ++ lib.optionals cfg.imageEditing [gimp]
       ++ cfg.extraPackages;

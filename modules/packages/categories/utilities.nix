@@ -47,6 +47,12 @@ in {
       description = "Install messaging apps (Ferdium)";
     };
 
+    finance = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Install finance tools (hledger)";
+    };
+
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [];
@@ -74,6 +80,7 @@ in {
       ++ (lib.optionals cfg.security [
         seahorse
         bleachbit
+        ssh-askpass-fullscreen
       ])
       # PDF viewer
       ++ (lib.optionals cfg.pdfViewer [
@@ -82,6 +89,12 @@ in {
       # Messaging
       ++ (lib.optionals cfg.messaging [
         ferdium
+      ])
+      # Finance
+      ++ (lib.optionals cfg.finance [
+        hledger
+        hledger-ui
+        hledger-web
       ])
       # Extra packages
       ++ cfg.extraPackages;
