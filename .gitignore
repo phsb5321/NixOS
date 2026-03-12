@@ -79,11 +79,6 @@ cloudflare-tunnel-config.yml
 CLAUDE.md
 AGENTS.md
 .claude/
-.specify/
-specs/
-.opencode/
-handoff.md
-.aider*
 .cursor/
 .cursorrules
 .cursorignore
@@ -93,18 +88,25 @@ handoff.md
 .windsurf/
 .gemini/
 .augment*
+.opencode/
+.aider*
+.continue/
+.codeium/
+.tabnine/
 dotfiles/CLAUDE.md
 dotfiles/dot_claude/
+
+# AI planning and specification files
+.specify/
+specs/
 .speckit/
 *.plan.md
+handoff.md
 TODO.md
 
 # AI assistant context files
 *.claude
 *.cursor
-.continue/
-.codeium/
-.tabnine/
 
 # Refactoring documentation (per-branch artifacts)
 ARCHITECTURE_IMPROVEMENT_PLAN.md

@@ -69,11 +69,8 @@
     };
 
     touchpad = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable touchpad support";
-      };
+      # NOTE: No enable option - touchpad is ALWAYS enabled when laptop module is active.
+      # This is intentional to prevent the touchpad from ever being disabled.
 
       naturalScrolling = lib.mkOption {
         type = lib.types.bool;

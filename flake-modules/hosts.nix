@@ -155,9 +155,7 @@
         configPath = "laptop"; # Maps to hosts/laptop/
         # Uses stable nixpkgs by default
         extraModules = [
-          inputs.nixos-hardware.nixosModules.common-cpu-intel
-          inputs.nixos-hardware.nixosModules.common-gpu-intel
-          inputs.nixos-hardware.nixosModules.common-gpu-nvidia-disable
+          inputs.nixos-hardware.nixosModules.common-cpu-intel # Transitively includes common-gpu-intel
           inputs.nixos-hardware.nixosModules.common-pc-laptop
           inputs.nixos-hardware.nixosModules.common-pc-laptop-ssd
         ];

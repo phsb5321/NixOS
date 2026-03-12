@@ -9,6 +9,7 @@
     ./hardware-configuration.nix
     ../../modules
     ../../profiles/desktop.nix
+    ./gnome.nix
   ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
@@ -244,6 +245,20 @@
     };
   };
 
+  # ===== SAMBA MOUNTS =====
+  # Credentials file must be created manually (NOT in git):
+  #   sudo mkdir -p /etc/samba/credentials
+  #   echo -e 'username=notroot\npassword=YOUR_PASSWORD_HERE' | sudo tee /etc/samba/credentials/dokku-storage
+  #   sudo chmod 600 /etc/samba/credentials/dokku-storage
+  modules.services.sambaMounts = {
+    enable = true;
+    mounts.dokku-storage = {
+      remotePath = "//100.99.218.39/dokku-storage";
+      mountPoint = "/mnt/dokku";
+      credentialsFile = "/etc/samba/credentials/dokku-storage";
+    };
+  };
+
   # ===== NETWORKING =====
   modules.networking.tailscale = {
     enable = true;
@@ -268,6 +283,7 @@
 
   # DNS configuration
   networking = {
+    wireless.enable = lib.mkForce false; # Desktop is wired-only, disable WiFi
     dhcpcd.extraConfig = "nohook resolv.conf";
     nameservers = ["8.8.8.8" "8.8.4.4" "1.1.1.1" "1.0.0.1"];
     # Waydroid-specific: trust its interface, allow DHCP/DNS
@@ -275,11 +291,14 @@
     firewall.allowedUDPPorts = [53 67];
   };
 
+  # Disable WiFi in NetworkManager - desktop is ethernet-only
+  networking.networkmanager.unmanaged = ["interface-name:wlp9s0"];
+
   services.resolved = {
     enable = true;
     settings.Resolve = {
-      DNSSEC = "allow-downgrade";
-      DNSOverTLS = "opportunistic";
+      DNSSEC = "no";
+      DNSOverTLS = "no";
       FallbackDNS = ["8.8.8.8" "8.8.4.4"];
       Domains = "~.";
       DNSStubListener = "yes";
@@ -391,9 +410,25 @@
       # JUSTIFIED: Gaming requires higher file descriptor limit than base default
       "fs.file-max" = 4194304;
       "fs.aio-max-nr" = 1048576;
+      # Network performance — TCP BBR + tuning
+      "net.core.default_qdisc" = "fq";
+      "net.ipv4.tcp_congestion_control" = "bbr";
+      "net.ipv4.tcp_fastopen" = 3;
+      "net.ipv4.tcp_slow_start_after_idle" = 0;
+      "net.ipv4.tcp_mtu_probing" = 1;
+      "net.ipv4.tcp_rmem" = "4096 131072 16777216";
+      "net.ipv4.tcp_wmem" = "4096 65536 16777216";
+      "net.core.rmem_max" = 16777216;
+      "net.core.wmem_max" = 16777216;
+      "net.core.netdev_max_backlog" = 16384;
+      "net.core.somaxconn" = 8192;
+      "net.ipv4.tcp_fin_timeout" = 15;
+      "net.ipv4.tcp_keepalive_time" = 300;
+      "net.ipv4.tcp_keepalive_intvl" = 30;
+      "net.ipv4.tcp_keepalive_probes" = 5;
     };
 
-    kernelModules = ["kvm-intel" "amdgpu"];
+    kernelModules = ["kvm-intel" "amdgpu" "tcp_bbr"];
   };
 
   # ===== HARDWARE =====
@@ -409,18 +444,21 @@
     "wheel"
     "networkmanager"
     "dialout"
-    "libvirtd"
     "plugdev"
   ];
 
   # ===== POWER MANAGEMENT =====
   powerManagement = {
-    cpuFreqGovernor = "powersave"; # Let GameMode switch dynamically to performance
+    cpuFreqGovernor = "schedutil"; # Scales with CPU demand; GameMode still switches to performance
     resumeCommands = ''
       ${pkgs.systemd}/bin/systemctl restart systemd-resolved
       ${pkgs.systemd}/bin/systemctl restart NetworkManager
     '';
   };
+
+  # Disable hibernate/hybrid-sleep but allow suspend
+  systemd.targets.hibernate.enable = false;
+  systemd.targets.hybrid-sleep.enable = false;
 
   # ===== SECURITY =====
   # PAM/GDM and AppArmor handled by modules/desktop/gnome/settings.nix and modules/core/base/system.nix
@@ -429,6 +467,12 @@
   };
 
   # ===== VIRTUALIZATION =====
+  # QEMU/KVM + virt-manager with SPICE display and Windows 11 support
+  modules.virtualization.libvirt = {
+    enable = true;
+    windowsSupport = true;
+  };
+
   # Waydroid - Android container for Linux (priority feature)
   # Default waydroid 1.5.4+ already has LXC_USE_NFT="true" for nftables
   # Base module defaults to false, so simple enable works

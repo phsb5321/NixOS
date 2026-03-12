@@ -27,7 +27,7 @@ in {
     discord = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Install Discord (Vesktop)";
+      description = "Install Discord";
     };
 
     streaming = lib.mkOption {
@@ -53,9 +53,14 @@ in {
     environment.systemPackages = with pkgs;
       lib.optionals cfg.vlc [vlc]
       ++ lib.optionals cfg.spotify [
-        pkgs-unstable.spotify
+        # Force Spotify to run under XWayland to avoid the ugly blue Chromium title bar on GNOME Wayland
+        (pkgs-unstable.spotify.overrideAttrs (old: {
+          postInstall = (old.postInstall or "") + ''
+            sed -i 's|^Exec=spotify|Exec=env WAYLAND_DISPLAY= spotify|' $out/share/applications/spotify.desktop
+          '';
+        }))
       ]
-      ++ lib.optionals cfg.discord [vesktop]
+      ++ lib.optionals cfg.discord [discord]
       ++ lib.optionals cfg.streaming [obs-studio]
       ++ lib.optionals cfg.imageEditing [gimp]
       ++ cfg.extraPackages;

@@ -50,7 +50,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs;
-      # Performance tools (btop already in dev utilities)
+    # Performance tools (btop already in dev utilities)
       (lib.optionals cfg.performance [
         gamemode
         gamescope

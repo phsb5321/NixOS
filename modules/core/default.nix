@@ -145,8 +145,6 @@ in {
         stablePkgs.awscli2
         rbw
         inputs.firefox-nightly.packages.${system}.firefox-nightly-bin
-        # vdhcoapp # Removed - VDH >= 10 doesn't require companion app (repo archived)
-        # inkscape provided by modules/core/document-tools/latex.nix
         codex
         wrangler
         just

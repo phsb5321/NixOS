@@ -29,8 +29,15 @@ in {
     boot.initrd.kernelModules = ["i915"];
 
     # Intel GPU kernel parameters
+    # Gen9 (Coffee Lake and earlier): GuC submission is unsupported, can cause GPU hangs.
+    # Use enable_guc=2 (HuC only) for hardware video encoding.
+    # Gen11+ (Ice Lake and later): GuC submission is supported, use enable_guc=3.
     boot.kernelParams = [
-      "i915.enable_guc=3" # Enable GuC and HuC firmware loading
+      (
+        if builtins.elem cfg.generation ["haswell" "broadwell" "skylake" "kabylake" "coffeelake"]
+        then "i915.enable_guc=2"
+        else "i915.enable_guc=3"
+      )
     ];
 
     # Graphics hardware

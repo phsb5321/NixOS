@@ -13,5 +13,6 @@
     ./gpu
     ./secrets
     ./gaming
+    ./virtualization
   ];
 }
