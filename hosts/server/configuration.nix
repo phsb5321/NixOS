@@ -12,21 +12,23 @@
   c = code: "${esc}[${code}m";
   reset = c "0";
 in {
-  imports =
-    [
-      ./hardware-configuration.nix
-      ../../modules
-      ../../profiles/server.nix
-      ./gnome.nix
-    ]
-    # server-secrets.nix is gitignored, so use absolute path for impure builds
-    ++ lib.optionals (builtins.pathExists /home/notroot/NixOS/hosts/server/server-secrets.nix) [
-      /home/notroot/NixOS/hosts/server/server-secrets.nix
-    ];
+  imports = [
+    ./hardware-configuration.nix
+    ../../modules
+    ../../profiles/server.nix
+    ./gnome.nix
+  ];
 
   # ===== PROFILE-BASED CONFIGURATION =====
   # Server profile enables: SSH, minimal hardware
   modules.profiles.server.enable = true;
+
+  # ===== SECRETS MANAGEMENT (sops-nix) =====
+  # Encrypted secrets are stored in secrets/server.yaml and decrypted at activation
+  modules.secrets = {
+    enable = true;
+    cloudflareTunnel.enable = true;
+  };
 
   # Host-specific metadata
   # JUSTIFIED: hostname comes from flake, must override module default
@@ -302,17 +304,13 @@ in {
 
   # Cloudflare Tunnel - Secure external access to Audiobookshelf
   # Provides https://audiobooks.home301server.com.br/audiobookshelf/
-  # IMPORTANT: Tunnel credentials must be set up locally on the server:
-  #   1. cloudflared tunnel login
-  #   2. cloudflared tunnel create audiobookshelf
-  #   3. Copy credentials to ~/.cloudflared/
-  #   4. Create ~/.cloudflared/config.yml with tunnel ID and ingress rules
-  # The tunnelId and credentialsFile must be set via server-secrets.nix (gitignored)
+  # Credentials are decrypted from secrets/server.yaml by sops-nix
+  # to /run/secrets/cloudflare_credentials at activation time
   modules.services.cloudflareTunnel = {
     enable = true;
     tunnelName = "audiobookshelf";
     user = "notroot";
-    # tunnelId and credentialsFile imported from server-secrets.nix
+    # credentialsFile defaults to /run/secrets/cloudflare_credentials (from sops-nix)
   };
 
   # Audiobookshelf Guardian - Health monitoring and protection
@@ -405,7 +403,7 @@ in {
 
     # Nix helper tool (from desktop branch)
     nh
-    alejandra  # Nix formatter
+    alejandra # Nix formatter
   ];
 
   # System state version

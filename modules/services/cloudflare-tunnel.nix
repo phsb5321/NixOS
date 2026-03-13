@@ -1,6 +1,7 @@
-# Cloudflare Tunnel Module
-# Automatically runs cloudflared tunnel for Audiobookshelf external access
-# Provides persistent tunnel that survives reboots
+# modules/services/cloudflare-tunnel.nix
+#
+# Module: Cloudflare Tunnel
+# Purpose: Runs cloudflared tunnel for external access to services (e.g., Audiobookshelf)
 {
   config,
   lib,
@@ -11,12 +12,6 @@
 in {
   options.modules.services.cloudflareTunnel = {
     enable = lib.mkEnableOption "Cloudflare Tunnel for Audiobookshelf";
-
-    tunnelId = lib.mkOption {
-      type = lib.types.str;
-      description = "Cloudflare tunnel ID (no default - must be set explicitly, never commit to git)";
-      # No default - must be configured per-host to avoid committing secrets
-    };
 
     tunnelName = lib.mkOption {
       type = lib.types.str;
@@ -32,8 +27,12 @@ in {
 
     credentialsFile = lib.mkOption {
       type = lib.types.path;
-      description = "Path to Cloudflare tunnel credentials file (typically ~/.cloudflared/<tunnel-id>.json)";
-      # No default - derived from tunnelId, must be configured per-host
+      default = "/run/secrets/cloudflare_credentials";
+      description = ''
+        Path to Cloudflare tunnel credentials JSON file.
+        Defaults to the sops-nix decrypted secret path.
+        Can be overridden to a manual path if not using sops-nix.
+      '';
     };
 
     user = lib.mkOption {

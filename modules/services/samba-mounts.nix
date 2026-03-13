@@ -110,7 +110,8 @@ in {
             )
             ++ m.extraOptions;
         };
-      }) cfg.mounts
+      })
+      cfg.mounts
     );
   };
 }

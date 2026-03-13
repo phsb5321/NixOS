@@ -1,5 +1,7 @@
-# ~/NixOS/modules/secrets/default.nix
-# Secrets management with sops-nix
+# modules/secrets/default.nix
+#
+# Module: Secrets Management
+# Purpose: Manages encrypted secrets with sops-nix (age encryption)
 {
   config,
   lib,
@@ -27,6 +29,21 @@ in {
       description = "Path to the age key file for decryption";
     };
 
+    # Cloudflare Tunnel secrets
+    cloudflareTunnel = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable Cloudflare tunnel credential secrets";
+      };
+
+      credentialsOwner = lib.mkOption {
+        type = lib.types.str;
+        default = "notroot";
+        description = "User who owns the decrypted credentials file";
+      };
+    };
+
     # Example secrets that can be enabled
     examples = {
       enableWifi = lib.mkOption {
@@ -49,8 +66,17 @@ in {
       inherit (cfg) defaultSopsFile;
       age.keyFile = cfg.ageKeyFile;
 
-      # Example secrets (disabled by default)
       secrets = lib.mkMerge [
+        # Cloudflare tunnel credentials (decrypted JSON file)
+        (lib.mkIf cfg.cloudflareTunnel.enable {
+          cloudflare_credentials = {
+            owner = cfg.cloudflareTunnel.credentialsOwner;
+            mode = "0400";
+            # This is the raw JSON content from the sops file,
+            # written to /run/secrets/cloudflare_credentials
+          };
+        })
+
         # WiFi password example
         (lib.mkIf cfg.examples.enableWifi {
           wifi_password = {
@@ -69,7 +95,7 @@ in {
     };
 
     # Ensure sops-nix key directory exists
-    system.activationScripts.setupSopsNix = lib.mkIf cfg.enable ''
+    system.activationScripts.setupSopsNix = ''
       mkdir -p $(dirname ${cfg.ageKeyFile})
     '';
   };

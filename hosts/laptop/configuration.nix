@@ -1,11 +1,9 @@
 # NixOS Laptop Configuration - Role-Based (New Architecture)
 # This is the new modular configuration using laptop profile and role-based modules
 {
-  config,
   pkgs,
   lib,
   systemVersion,
-  inputs,
   ...
 }: {
   imports = [

@@ -191,14 +191,14 @@ in {
 
         # Device configuration
         devices =
-          mapAttrs (name: device: {
+          mapAttrs (_: device: {
             inherit (device) id addresses introducer;
           })
           cfg.devices;
 
         # Folder configuration
         folders =
-          mapAttrs (name: folder: {
+          mapAttrs (_: folder: {
             inherit (folder) path devices type ignorePerms rescanIntervalS fsWatcherEnabled;
             versioning = folder.versioning;
           })
@@ -215,7 +215,7 @@ in {
     # Create sync directories
     systemd.tmpfiles.rules =
       mapAttrsToList (
-        name: folder: "d ${folder.path} 0755 ${cfg.user} ${cfg.group} -"
+        _: folder: "d ${folder.path} 0755 ${cfg.user} ${cfg.group} -"
       )
       cfg.folders;
 

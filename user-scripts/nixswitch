@@ -10,7 +10,7 @@ set -euo pipefail
 
 readonly SCRIPT_VERSION="9.0.0"
 readonly FLAKE_DIR="${NIXSWITCH_FLAKE_DIR:-$HOME/NixOS}"
-readonly LOG_DIR="${NIXSWITCH_LOG_DIR:-$HOME/.cache/nixos-rebuild}"
+readonly LOG_DIR="${NIXSWITCH_LOG_DIR:-$HOME/.cache/nixswitch}"
 
 # Subcommand to execute (default = full rebuild workflow)
 SUBCOMMAND="default"
@@ -801,11 +801,10 @@ perform_rebuild() {
     # Wait for formatting to complete
     [[ -n "${format_pid:-}" ]] && wait $format_pid && success "Code formatting completed"
 
-    # Execute rebuild
+    # Execute rebuild using nh (handles sudo internally)
     local rebuild_cmd=(
-        sudo nixos-rebuild switch
-        --flake "$FLAKE_DIR#$host"
-        --show-trace
+        nh os switch "$FLAKE_DIR"
+        -H "$host"
     )
 
     if gum spin \

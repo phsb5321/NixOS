@@ -55,9 +55,11 @@ in {
       ++ lib.optionals cfg.spotify [
         # Force Spotify to run under XWayland to avoid the ugly blue Chromium title bar on GNOME Wayland
         (pkgs-unstable.spotify.overrideAttrs (old: {
-          postInstall = (old.postInstall or "") + ''
-            sed -i 's|^Exec=spotify|Exec=env WAYLAND_DISPLAY= spotify|' $out/share/applications/spotify.desktop
-          '';
+          postInstall =
+            (old.postInstall or "")
+            + ''
+              sed -i 's|^Exec=spotify|Exec=env WAYLAND_DISPLAY= spotify|' $out/share/applications/spotify.desktop
+            '';
         }))
       ]
       ++ lib.optionals cfg.discord [discord]

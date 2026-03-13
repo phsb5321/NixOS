@@ -16,7 +16,7 @@
 
       # Lint check
       lint-check = pkgs.runCommand "lint-check" {} ''
-        ${pkgs.statix}/bin/statix check ${../.} > $out 2>&1
+        ${pkgs.statix}/bin/statix check ${../.} --config ${../statix.toml} > $out 2>&1
       '';
 
       # Dead code check
@@ -35,16 +35,21 @@
         alejandra # Nix formatter
         statix # Nix linter
         deadnix # Dead code detection
-        nixos-rebuild # System rebuild
+        nh # NixOS rebuild helper
+        sops # Secrets encryption
+        ssh-to-age # Convert SSH keys to age keys
         git # Version control
       ];
       shellHook = ''
         echo "NixOS Configuration Development Shell"
         echo "Available commands:"
-        echo "  alejandra .    - Format Nix files"
-        echo "  statix check . - Lint Nix files"
-        echo "  deadnix .      - Find dead code"
-        echo "  nix flake check - Run all checks"
+        echo "  alejandra .      - Format Nix files"
+        echo "  statix check .   - Lint Nix files"
+        echo "  deadnix .        - Find dead code"
+        echo "  nh os build .    - Build NixOS configuration"
+        echo "  nh os switch .   - Build and switch"
+        echo "  sops secrets/... - Edit encrypted secrets"
+        echo "  nix flake check  - Run all checks"
       '';
     };
 
@@ -77,14 +82,14 @@
 
     # Helper scripts for deployment
     packages = {
-      # Script to deploy to a specific host
+      # Script to deploy to a specific host (remote deployment still uses nixos-rebuild)
       deploy = pkgs.writeShellScriptBin "deploy" ''
         set -e
         HOST=''${1:-desktop}
 
         if [ -z "$HOST" ]; then
           echo "Usage: $0 <hostname>"
-          echo "Available hosts: desktop laptop"
+          echo "Available hosts: desktop laptop server"
           exit 1
         fi
 
@@ -92,12 +97,12 @@
         nixos-rebuild switch --flake .#$HOST --target-host $HOST --use-remote-sudo
       '';
 
-      # Script to build without switching
+      # Script to build without switching (uses nh for local builds)
       build = pkgs.writeShellScriptBin "build" ''
         set -e
-        HOST=''${1:-desktop}
+        HOST=''${1:-server}
         echo "Building configuration for $HOST..."
-        nixos-rebuild build --flake .#$HOST
+        ${pkgs.nh}/bin/nh os build . -H "$HOST"
       '';
     };
   };
