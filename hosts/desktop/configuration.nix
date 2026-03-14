@@ -285,7 +285,7 @@
       keepWeekly = 4;
       keepMonthly = 6;
     };
-    bandwidthLimit = "50M"; # Cap upload to avoid surprise data transfer costs
+    bandwidthLimit = 51200; # 50 MiB/s in KiB/s — cap upload to control S3 transfer costs
   };
 
   # ===== SAMBA MOUNTS =====

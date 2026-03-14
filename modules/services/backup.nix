@@ -72,9 +72,9 @@ in {
     };
 
     bandwidthLimit = lib.mkOption {
-      type = lib.types.str;
-      default = "50M";
-      description = "Upload bandwidth limit (e.g. 50M = 50 MiB/s) to control S3 transfer costs";
+      type = lib.types.int;
+      default = 51200;
+      description = "Upload bandwidth limit in KiB/s (default 51200 = 50 MiB/s) to control S3 transfer costs";
     };
   };
 
@@ -112,7 +112,7 @@ in {
 
       extraBackupArgs = [
         "--compression max" # zstd max compression — reduces S3 storage cost 50-70%
-        "--limit-upload ${cfg.bandwidthLimit}" # Cap upload to avoid surprise transfer costs
+        "--limit-upload ${toString cfg.bandwidthLimit}" # Cap upload KiB/s to avoid surprise transfer costs
         "--one-file-system" # Don't cross filesystem boundaries
         "--exclude-caches" # Skip directories with CACHEDIR.TAG
       ];
