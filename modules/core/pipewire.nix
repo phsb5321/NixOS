@@ -145,7 +145,7 @@ in {
           # Audio tools
           easyeffects # Audio effects processor
           pavucontrol # PulseAudio volume control (works with PipeWire)
-          helvum # PipeWire patchbay
+          crosspipe # PipeWire patchbay
 
           # Media tools that integrate well with PipeWire
           qpwgraph # Qt PipeWire Graph

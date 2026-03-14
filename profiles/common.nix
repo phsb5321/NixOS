@@ -10,6 +10,17 @@
   security.sudo = {
     enable = true;
     wheelNeedsPassword = true;
+    # nh os switch sudos: env, switch-to-configuration, nix-env, ln
+    # Store paths change per rebuild, so we allow env (nh wraps all cmds in env)
+    extraRules = [
+      {
+        users = [ "notroot" ];
+        commands = [
+          { command = "/nix/store/*/bin/env"; options = [ "NOPASSWD" ]; }
+          { command = "/run/current-system/sw/bin/env"; options = [ "NOPASSWD" ]; }
+        ];
+      }
+    ];
   };
 
   # ===== USER CONFIGURATION =====

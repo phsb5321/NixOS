@@ -14,7 +14,7 @@ in {
     audioControl = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Install audio patchbay (Helvum)";
+      description = "Install audio patchbay (crosspipe)";
     };
 
     webcam = lib.mkOption {
@@ -34,7 +34,7 @@ in {
     environment.systemPackages = with pkgs;
     # pipewire, wireplumber, easyeffects, pavucontrol already provided by modules.core.pipewire
       lib.optionals cfg.audioControl [
-        helvum # Patchbay for PipeWire (not in pipewire.nix)
+        crosspipe # Patchbay for PipeWire (not in pipewire.nix)
       ]
       ++ lib.optionals cfg.webcam [guvcview]
       ++ cfg.extraPackages;

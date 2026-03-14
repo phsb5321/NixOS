@@ -36,9 +36,10 @@
           idle-delay = lib.gvariant.mkUint32 900;
         };
 
-        # Power - desktop (always plugged in)
+        # Power - desktop (suspend when idle, Caffeine overrides when active)
         "org/gnome/settings-daemon/plugins/power" = {
-          sleep-inactive-ac-type = "nothing";
+          sleep-inactive-ac-type = "suspend";
+          sleep-inactive-ac-timeout = lib.gvariant.mkInt32 1800; # 30 min
           sleep-inactive-battery-type = "suspend";
           power-button-action = "interactive";
         };
