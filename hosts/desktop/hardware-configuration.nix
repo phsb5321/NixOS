@@ -15,6 +15,7 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/nvme0n1";
   boot.loader.grub.useOSProber = false;
+  boot.loader.grub.configurationLimit = 20; # Cap boot entries to prevent /boot bloat
 
   boot.initrd.availableKernelModules = ["xhci_pci" "ehci_pci" "nvme" "usbhid" "usb_storage" "sd_mod"];
   boot.initrd.kernelModules = ["amdgpu"];

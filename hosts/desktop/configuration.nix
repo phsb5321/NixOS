@@ -245,6 +245,49 @@
     };
   };
 
+  # ===== AUTOMATED BACKUPS TO S3 =====
+  # Cost-optimized: zstd max compression, bandwidth cap, tight retention
+  # One-time setup required:
+  #   1. aws s3 mb s3://nixos-desktop-backups --region us-east-1
+  #   2. sudo mkdir -p /etc/restic
+  #   3. echo "YOUR-STRONG-PASSWORD" | sudo tee /etc/restic/password && sudo chmod 600 /etc/restic/password
+  #   4. sudo tee /etc/restic/aws-env <<< $'AWS_ACCESS_KEY_ID=YOUR_KEY\nAWS_SECRET_ACCESS_KEY=YOUR_SECRET\nAWS_DEFAULT_REGION=us-east-1' && sudo chmod 600 /etc/restic/aws-env
+  #   5. After rebuild: sudo restic -r s3:s3.us-east-1.amazonaws.com/nixos-desktop-backups init
+  modules.services.backup = {
+    enable = true;
+    s3Bucket = "nixos-desktop-backups";
+    s3Region = "us-east-1";
+    paths = [
+      "/home/notroot/Documents"
+      "/home/notroot/.ssh"
+      "/home/notroot/.config"
+    ];
+    exclude = [
+      # Browser data (large, not worth backing up — re-login is fine)
+      "/home/notroot/.config/chromium"
+      "/home/notroot/.config/google-chrome"
+      "/home/notroot/.config/BraveSoftware"
+      # Electron app caches
+      "/home/notroot/.config/Code/CachedData"
+      "/home/notroot/.config/Code/CachedExtensions"
+      "/home/notroot/.config/Code/Cache"
+      "/home/notroot/.config/discord/Cache"
+      "/home/notroot/.config/Slack/Cache"
+      "/home/notroot/.config/spotify/Users"
+      # Large binary/media (not code, not config)
+      "/home/notroot/Documents/**/*.iso"
+      "/home/notroot/Documents/**/*.img"
+      "/home/notroot/Documents/**/*.qcow2"
+    ];
+    # Cost control: ~17 snapshots max at any time
+    retention = {
+      keepDaily = 7;
+      keepWeekly = 4;
+      keepMonthly = 6;
+    };
+    bandwidthLimit = "50M"; # Cap upload to avoid surprise data transfer costs
+  };
+
   # ===== SAMBA MOUNTS =====
   # Credentials file must be created manually (NOT in git):
   #   sudo mkdir -p /etc/samba/credentials
@@ -297,8 +340,8 @@
   services.resolved = {
     enable = true;
     settings.Resolve = {
-      DNSSEC = "no";
-      DNSOverTLS = "no";
+      DNSSEC = "allow-downgrade"; # Validate DNSSEC when available, fall back gracefully
+      DNSOverTLS = "opportunistic"; # Encrypt DNS when resolver supports TLS, fall back to plaintext
       FallbackDNS = ["8.8.8.8" "8.8.4.4"];
       Domains = "~.";
       DNSStubListener = "yes";
@@ -516,6 +559,20 @@
         echo "auto" > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
         echo "1" > /sys/class/drm/card0/device/power_dpm_state 2>/dev/null || true
       '';
+      # Hardening: partial sandbox (needs /sys write access for GPU tuning)
+      ProtectHome = true;
+      PrivateTmp = true;
+      PrivateDevices = false; # Needs device access for GPU
+      NoNewPrivileges = true;
+      ProtectKernelModules = true;
+      ProtectKernelLogs = true;
+      ProtectControlGroups = true;
+      ProtectClock = true;
+      ProtectHostname = true;
+      RestrictSUIDSGID = true;
+      RestrictRealtime = true;
+      LockPersonality = true;
+      UMask = "0077";
     };
   };
 
@@ -539,6 +596,25 @@
           ${pkgs.systemd}/bin/systemctl restart NetworkManager
         fi
       '';
+      # Hardening: heavy sandbox (lightweight network check, no root needed for resolvectl)
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      PrivateTmp = true;
+      PrivateDevices = true;
+      NoNewPrivileges = true;
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectKernelLogs = true;
+      ProtectControlGroups = true;
+      ProtectClock = true;
+      ProtectHostname = true;
+      RestrictNamespaces = true;
+      RestrictSUIDSGID = true;
+      RestrictRealtime = true;
+      LockPersonality = true;
+      MemoryDenyWriteExecute = true;
+      SystemCallArchitectures = "native";
+      UMask = "0077";
     };
   };
 

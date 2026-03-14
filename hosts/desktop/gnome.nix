@@ -31,16 +31,22 @@
           force-sync = false;
         };
 
-        # Session - desktop idle (15 min)
+        # Session - screen dims after 5 min idle
         "org/gnome/desktop/session" = {
-          idle-delay = lib.gvariant.mkUint32 900;
+          idle-delay = lib.gvariant.mkUint32 300;
         };
 
-        # Power - desktop (suspend when idle, Caffeine overrides when active)
+        # Screensaver - lock and blank screen after idle
+        "org/gnome/desktop/screensaver" = {
+          lock-enabled = true;
+          lock-delay = lib.gvariant.mkUint32 30; # Lock 30s after screen blanks
+          idle-activation-enabled = true;
+        };
+
+        # Power - suspend after 30 min idle on AC (Caffeine overrides when gaming)
         "org/gnome/settings-daemon/plugins/power" = {
           sleep-inactive-ac-type = "suspend";
           sleep-inactive-ac-timeout = lib.gvariant.mkInt32 1800; # 30 min
-          sleep-inactive-battery-type = "suspend";
           power-button-action = "interactive";
         };
       };

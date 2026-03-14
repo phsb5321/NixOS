@@ -76,6 +76,12 @@
       allowedTCPPorts = [22];
     };
 
+    # Prefer nftables firewall mode (auto lets Tailscale pick safest option,
+    # preserving masquerade for exit nodes while avoiding legacy iptables modules)
+    systemd.services.tailscaled.serviceConfig.Environment = [
+      "TS_DEBUG_FIREWALL_MODE=auto"
+    ];
+
     # Ensure Tailscale CLI is available
     environment.systemPackages = with pkgs; [
       tailscale

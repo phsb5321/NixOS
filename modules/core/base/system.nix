@@ -31,6 +31,10 @@ in {
         ];
         # Optimize builds
         builders-use-substitutes = true;
+        # Disk safety: trigger GC when free space drops below 1 GiB during builds
+        min-free = 1073741824;
+        # Disk safety: stop GC when 5 GiB free space is recovered
+        max-free = 5368709120;
         # Cache configuration
         substituters = [
           "https://cache.nixos.org/"
@@ -88,14 +92,32 @@ in {
         "vm.dirty_ratio" = lib.mkDefault 15;
         "vm.dirty_background_ratio" = lib.mkDefault 5;
         "vm.vfs_cache_pressure" = lib.mkDefault 50;
-        # Security hardening
-        "kernel.dmesg_restrict" = 1;
-        "kernel.kptr_restrict" = 2;
-        "net.ipv4.conf.all.log_martians" = 1;
+        # Security hardening — pointer/memory protections
+        "kernel.dmesg_restrict" = 1; # Restrict dmesg to root
+        "kernel.kptr_restrict" = 2; # Hide kernel pointers from unprivileged users
+        # Security hardening — BPF
+        "kernel.unprivileged_bpf_disabled" = 1; # Disable unprivileged BPF
+        "net.core.bpf_jit_harden" = 2; # Harden BPF JIT compiler
+        # Security hardening — filesystem protections
+        "fs.protected_fifos" = 2; # Protect FIFOs in world-writable dirs
+        "fs.protected_regular" = 2; # Protect regular files in world-writable dirs
+        # Security hardening — network
+        "net.ipv4.conf.all.log_martians" = 1; # Log suspicious packets
         "net.ipv4.conf.default.log_martians" = 1;
-        "net.ipv4.icmp_echo_ignore_broadcasts" = 1;
-        "net.ipv4.conf.all.send_redirects" = 0;
+        "net.ipv4.icmp_echo_ignore_broadcasts" = 1; # Ignore broadcast pings
+        "net.ipv4.conf.all.send_redirects" = 0; # Don't send ICMP redirects
         "net.ipv4.conf.default.send_redirects" = 0;
+        "net.ipv4.conf.all.accept_redirects" = 0; # Don't accept ICMP redirects
+        "net.ipv4.conf.default.accept_redirects" = 0;
+        "net.ipv6.conf.all.accept_redirects" = 0;
+        "net.ipv6.conf.default.accept_redirects" = 0;
+        "net.ipv4.conf.all.secure_redirects" = 0; # Don't accept secure redirects
+        "net.ipv4.conf.default.secure_redirects" = 0;
+        "net.ipv4.conf.all.accept_source_route" = 0; # Block source-routed packets
+        "net.ipv6.conf.all.accept_source_route" = 0;
+        # Security hardening — SYN flood protection
+        "net.ipv4.tcp_syncookies" = 1; # Enable SYN cookies
+        "net.ipv4.tcp_rfc1337" = 1; # RFC 1337 TIME-WAIT fix
       };
       # ZRAM swap is now managed by modules.core.memoryManagement
     };

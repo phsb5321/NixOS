@@ -13,6 +13,7 @@
     ./cloudflare-tunnel.nix
     ./audiobookshelf-guardian.nix
     # Desktop-specific services
+    ./backup.nix
     ./waydroid-desktop-hygiene.nix
     ./samba-mounts.nix
   ];
