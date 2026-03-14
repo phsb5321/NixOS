@@ -25,7 +25,7 @@
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/66429e28-aff7-4427-a85e-5f742179ae25";
     fsType = "ext4";
-    options = ["noatime"]; # Reduce SSD writes and improve I/O performance
+    options = ["noatime" "commit=30"]; # Reduce SSD writes: noatime + fewer journal flushes (30s vs default 5s)
   };
 
   # No disk swap - ZRAM compressed swap is managed by modules.core.memoryManagement

@@ -412,8 +412,17 @@
     };
   };
 
-  # ===== DOCKER DNS =====
+  # ===== DOCKER =====
   modules.core.dockerDns.enable = true;
+  # Docker log rotation — prevents silent disk bloat from container logs
+  virtualisation.docker.daemon.settings = {
+    log-driver = "json-file";
+    log-opts = {
+      max-size = "10m";
+      max-file = "3";
+    };
+    live-restore = true; # Keep containers running during daemon restart
+  };
 
   # ===== MEMORY MANAGEMENT =====
   # 3-layer defense against RAM exhaustion freezes (012-memory-limit-freeze-fix)
@@ -437,7 +446,9 @@
     kernelPackages = pkgs.linuxPackages_6_12;
 
     kernelParams = [
-      "preempt=full"
+      "preempt=full" # Full preemption for desktop responsiveness
+      "split_lock_detect=off" # Small perf win in some games (avoids #AC exception overhead)
+      "transparent_hugepage=madvise" # Apps opt-in to THP (Proton/Wine use this)
     ];
 
     kernel.sysctl = {
@@ -469,6 +480,8 @@
       "net.ipv4.tcp_keepalive_time" = 300;
       "net.ipv4.tcp_keepalive_intvl" = 30;
       "net.ipv4.tcp_keepalive_probes" = 5;
+      # Reduce bufferbloat for interactive apps (Google recommendation)
+      "net.ipv4.tcp_notsent_lowat" = 16384;
     };
 
     kernelModules = ["kvm-intel" "amdgpu" "tcp_bbr"];
@@ -480,6 +493,12 @@
   # ===== PROGRAMS =====
   # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
   # zsh and defaultUserShell are set in profiles/common.nix
+
+  # Gamescope — micro-compositor for better frame pacing, VRR, and FSR
+  programs.gamescope = {
+    enable = true;
+    capSysNice = true; # Allow priority boost for gamescope
+  };
 
   # ===== HOST-SPECIFIC USER CONFIGURATION =====
   users.groups.plugdev = {};
@@ -498,6 +517,13 @@
       ${pkgs.systemd}/bin/systemctl restart NetworkManager
     '';
   };
+
+  # Kernel memory tuning — MGLRU and THP optimization
+  systemd.tmpfiles.rules = [
+    "w /sys/kernel/mm/lru_gen/min_ttl_ms - - - - 1000" # MGLRU: prevent working set eviction during gaming load spikes
+    "w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise" # THP: sync defrag for madvise (games), async for background
+    "w /sys/kernel/mm/transparent_hugepage/khugepaged/defrag - - - - 1" # THP: enable khugepaged background defrag
+  ];
 
   # Disable hibernate/hybrid-sleep but allow suspend
   systemd.targets.hibernate.enable = false;

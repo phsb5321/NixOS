@@ -42,7 +42,7 @@ in {
         "amdgpu.gpu_recovery=1" # GPU hang recovery
       ]
       ++ lib.optionals cfg.powerManagement [
-        "amdgpu.ppfeaturemask=0xffffffff" # Enable all power features
+        "amdgpu.ppfeaturemask=0xfffd7fff" # All power features except GFXOFF (bit 15) + STUTTER (bit 17) — avoids flicker/suspend issues on RDNA1
       ];
 
     # Graphics hardware

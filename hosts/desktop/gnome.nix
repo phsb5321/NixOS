@@ -26,7 +26,7 @@
           dynamic-workspaces = true;
           workspaces-only-on-primary = false;
           center-new-windows = true;
-          experimental-features = ["scale-monitor-framebuffer" "rt-scheduler"];
+          experimental-features = ["scale-monitor-framebuffer" "rt-scheduler" "variable-refresh-rate"];
           dynamic-triple-buffering = true;
           force-sync = false;
         };
@@ -53,10 +53,16 @@
     }
   ];
 
-  # AMD GPU environment variables
+  # AMD GPU + gaming performance environment variables
   environment.sessionVariables = {
     "LIBVA_DRIVER_NAME" = "radeonsi";
     "VDPAU_DRIVER" = "radeonsi";
+    # OpenGL threaded dispatch — 5-15% FPS improvement in OpenGL games
+    "mesa_glthread" = "true";
+    # Async shader compilation in DXVK — reduces stutter in Proton games
+    "DXVK_ASYNC" = "1";
+    # FidelityFX Super Resolution in Wine/Proton fullscreen games
+    "WINE_FULLSCREEN_FSR" = "1";
   };
 
   # Askpass for GUI sudo prompts (used by nh, Claude Code, etc.)

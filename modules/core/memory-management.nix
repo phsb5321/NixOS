@@ -67,10 +67,10 @@ in {
 
       swappiness = mkOption {
         type = types.int;
-        default = 100;
+        default = 180;
         description = ''
           vm.swappiness value. Kernel docs recommend >100 for in-memory swap (ZRAM).
-          100 prefers ZRAM over disk swap without aggressively thrashing active pages.
+          180 strongly prefers ZRAM (decompressing from RAM is faster than SSD reads).
         '';
       };
     };
