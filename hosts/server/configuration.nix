@@ -388,6 +388,7 @@ in {
     # Additional server tools
     wget
     git
+    gh # GitHub CLI for repo management
     claude-code
     # opencode  # Disabled: bun uses CPU instructions not available in this VM
     uv # Python package and environment manager
