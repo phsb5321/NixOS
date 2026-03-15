@@ -201,9 +201,9 @@ in {
           "vm.page-cluster" = lib.mkForce 0;
         })
         {
-          # Reclaim VFS caches (dentries/inodes) more aggressively — frees slab memory
-          # Default 100 = equal pressure; 75 = moderately prefer reclaiming VFS caches
-          "vm.vfs_cache_pressure" = lib.mkForce 75;
+          # VFS cache pressure: 50 = prefer keeping dentries/inodes cached
+          # Faster git status, IDE indexing, and file operations in large repos
+          "vm.vfs_cache_pressure" = lib.mkDefault 50;
           # Proactively compact memory in the background to reduce fragmentation
           # Default 20; 40 = more aggressive compaction using spare CPU cycles
           "vm.compaction_proactiveness" = 40;

@@ -143,6 +143,14 @@
     numactl
     stress-ng
     memtester
+    mission-center # GTK4 Task Manager for GNOME (CPU/GPU/RAM/disk/network)
+    amdgpu_top # AMD GPU monitor — replaces abandoned radeontop
+    # turbostat available via: sudo ${config.boot.kernelPackages.turbostat}/bin/turbostat
+
+    # Log analysis & Nix store
+    lnav # Interactive log viewer with SQL queries on journalctl
+    nix-tree # Interactive Nix store dependency size browser
+    nix-output-monitor # Pretty build output (use `nom build` instead of `nix build`)
 
     # Memory analysis
     heaptrack
@@ -412,6 +420,14 @@
     };
   };
 
+  # ===== NIX DAEMON SCHEDULING =====
+  # Lower CPU/IO priority so desktop stays responsive during builds
+  nix.daemonCPUSchedPolicy = "batch"; # Non-interactive CPU scheduling
+  nix.daemonIOSchedClass = "idle"; # I/O only when desktop doesn't need it
+  nix.daemonIOSchedPriority = 7; # Lowest within class
+  # Route large nix builds to disk-backed /var/tmp instead of tmpfs (prevents OOM)
+  systemd.services.nix-daemon.environment.TMPDIR = "/var/tmp";
+
   # ===== DOCKER =====
   modules.core.dockerDns.enable = true;
   # Docker log rotation — prevents silent disk bloat from container logs
@@ -428,10 +444,12 @@
   # 3-layer defense against RAM exhaustion freezes (012-memory-limit-freeze-fix)
   # Layer 1: ZRAM compressed swap (zstd, 50% of 62GB RAM)
   # Layer 2: earlyoom (kills runaway processes before kernel OOM freezes desktop)
-  # Layer 3: cgroup limits on nix-daemon and Docker
+  # Layer 3: cgroup limits (lowered to guarantee 20GB+ for desktop apps)
   modules.core.memoryManagement = {
     enable = true;
-    # Defaults are tuned for 62GB desktop: zram 50%, earlyoom 5%/10%, nix-daemon 48G/56G, docker 40G
+    nixDaemon.memoryHigh = "32G"; # Was 48G — leaves more for IDE/browser
+    nixDaemon.memoryMax = "40G"; # Was 56G
+    docker.memoryMax = "24G"; # Was 40G
   };
 
   # ===== DOTFILES =====
@@ -494,6 +512,35 @@
   # Steam configuration moved to modules.gaming.steam (see GAMING CONFIGURATION section above)
   # zsh and defaultUserShell are set in profiles/common.nix
 
+  # Package discovery — replaces broken command-not-found on flakes
+  programs.command-not-found.enable = false; # Disable channel-based command-not-found
+  programs.nix-index = {
+    enable = true;
+    enableZshIntegration = true; # Auto-suggest packages for missing commands
+  };
+  programs.nix-index-database.comma.enable = true; # , cowsay = instant-run any package
+
+  # Auto-activate dev shells on cd into project directories
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true; # Persistent caching — re-entering is instant
+    silent = true; # Suppress noisy output
+  };
+
+  # NH module with automatic garbage collection
+  programs.nh = {
+    enable = true;
+    clean = {
+      enable = true;
+      extraArgs = "--keep-since 7d --keep 5";
+    };
+    flake = "/home/notroot/NixOS";
+  };
+
+  # Compiler cache for C/C++ source builds
+  programs.ccache.enable = true;
+  programs.ccache.cacheDir = "/var/cache/ccache";
+
   # Gamescope — micro-compositor for better frame pacing, VRR, and FSR
   programs.gamescope = {
     enable = true;
@@ -534,6 +581,47 @@
   security = {
     # auditd disabled — execve rule generated 162GB logs on desktop
   };
+
+  # ===== HEALTH MONITORING =====
+  # SMART disk health monitoring with desktop notifications
+  services.smartd = {
+    enable = true;
+    autodetect = true;
+    notifications = {
+      wall.enable = true;
+      systembus-notify.enable = true;
+    };
+  };
+  services.systembus-notify.enable = true;
+
+  # Network traffic tracking
+  services.vnstat.enable = true;
+
+  # Desktop notification on systemd service failure
+  systemd.services."notify-failure@" = {
+    description = "Desktop notification on service failure for %i";
+    serviceConfig = {
+      Type = "oneshot";
+      User = "notroot";
+      Environment = [
+        "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
+      ];
+    };
+    script = ''
+      ${pkgs.libnotify}/bin/notify-send \
+        --urgency=critical \
+        --app-name="systemd" \
+        "Service Failed: $1" \
+        "$(${pkgs.systemd}/bin/journalctl -u "$1" -n 3 --no-pager -o cat)"
+    '';
+    scriptArgs = "%i";
+  };
+
+  # Attach failure notifications to critical services
+  systemd.services.restic-backups-s3-daily.unitConfig.OnFailure = "notify-failure@%n.service";
+  systemd.services.docker.unitConfig.OnFailure = "notify-failure@%n.service";
+  systemd.services.tailscaled.unitConfig.OnFailure = "notify-failure@%n.service";
+  systemd.services.syncthing.unitConfig.OnFailure = "notify-failure@%n.service";
 
   # ===== VIRTUALIZATION =====
   # QEMU/KVM + virt-manager with SPICE display and Windows 11 support

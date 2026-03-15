@@ -20,9 +20,10 @@ in {
           "flakes"
         ];
         timeout = 14400; # 4 hours
-        # Performance optimizations
-        cores = 0; # Use all available cores
-        max-jobs = "auto"; # Auto-detect optimal parallel jobs
+        # Build parallelism: 6 concurrent derivations, each uses all cores
+        # Prevents OOM from 28 simultaneous builds on high-core-count systems
+        cores = 0;
+        max-jobs = 6;
         # Reliability improvements
         require-sigs = true;
         trusted-users = [
@@ -85,13 +86,18 @@ in {
     # Boot configuration with performance optimizations
     boot = {
       tmp.useTmpfs = lib.mkDefault true;
+      tmp.tmpfsSize = lib.mkDefault "25%"; # Limit tmpfs to prevent OOM during large builds
       # Performance kernel parameters
       kernel.sysctl = {
         # VM optimizations (can be overridden by host-specific configs)
         "vm.swappiness" = lib.mkDefault 10;
         "vm.dirty_ratio" = lib.mkDefault 15;
         "vm.dirty_background_ratio" = lib.mkDefault 5;
-        "vm.vfs_cache_pressure" = lib.mkDefault 50;
+        # vm.vfs_cache_pressure managed by modules/core/memory-management.nix
+        # Developer file watcher limits — VS Code, TypeScript LSP, Docker, webpack
+        "fs.inotify.max_user_watches" = 1048576; # 1M watches (JetBrains/VS Code recommend this)
+        "fs.inotify.max_user_instances" = 8192; # Multiple IDEs + Docker + watchers
+        "fs.inotify.max_queued_events" = 32768; # Handle burst of file change events
         # Security hardening — pointer/memory protections
         "kernel.dmesg_restrict" = 1; # Restrict dmesg to root
         "kernel.kptr_restrict" = 2; # Hide kernel pointers from unprivileged users

@@ -27,7 +27,6 @@ in {
           default = [
             "git"
             "colored-man-pages"
-            "command-not-found"
             "sudo"
             "history-substring-search"
           ];

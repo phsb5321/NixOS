@@ -146,6 +146,9 @@
         hostname = "desktop";
         configPath = "desktop"; # Maps to hosts/desktop/
         nixpkgsInput = inputs.nixpkgs-unstable; # Use unstable as the main channel
+        extraModules = [
+          inputs.nix-index-database.nixosModules.nix-index # Package discovery (replaces command-not-found)
+        ];
       };
 
       # Laptop system
