@@ -27,7 +27,7 @@
       pkgs.deno
     ])
     (mkPackageGroup "Development Frameworks and CLIs" [
-      pkgs.nodePackages.vercel
+      # vercel removed from nixpkgs (unmaintained) — install via: npm i -g vercel
       pkgs.nodePackages."@nestjs/cli"
     ])
     (mkPackageGroup "Testing Tools" [
