@@ -1,5 +1,18 @@
+# direnv configuration — auto-allow .envrc in trusted directories
+# Template: per-host whitelist paths (chezmoi manages per-hostname)
+
 [whitelist]
+{{- if eq .chezmoi.hostname "desktop" }}
 prefix = [
   "/home/notroot/Documents",
-  "/home/notroot/NixOS"
+  "/home/notroot/NixOS",
 ]
+{{- else if eq .chezmoi.hostname "nixos-laptop" }}
+prefix = [
+  "/home/notroot/Documents",
+  "/home/notroot/NixOS",
+]
+{{- else }}
+# Unknown host — whitelist nothing by default (run `direnv allow` manually)
+prefix = []
+{{- end }}
